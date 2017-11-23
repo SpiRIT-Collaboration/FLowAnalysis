@@ -10,8 +10,8 @@
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TClonesArray.h"
-#include "KatanaRoot/KatanaRoot_Load.h"
-#include "KyotoRoot/STTriggerArray.hh"
+//#include "KatanaRoot/KatanaRoot_Load.h"
+//#include "KyotoRoot/STTriggerArray.hh"
 
 
 
@@ -99,8 +99,8 @@ Double_t         ProjB;
 
 TClonesArray *trackArray  = NULL;
 TClonesArray *vertexArray = NULL;
-KatanaRoot   *katanaroot  = NULL;
-TriggerBox   *triggerbox  = NULL;
+STKatana     *katanaroot  = NULL;
+STTriggerBox *triggerbox  = NULL;
 TClonesArray *tpcParticle = NULL;
 
 TBranch      *brtrackArray;

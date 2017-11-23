@@ -241,7 +241,7 @@ void OutputTree(Int_t nmax)
   TString sdeb = ".s";
   if(nmax < 0)  sdeb = "";
 
-  TString foutname = "../data/run"+sRun+"_flw_v"+sVer+sdeb+".root";
+  TString foutname = "data/run"+sRun+"_flw_v"+sVer+sdeb+".root";
 
   fout = new TFile(foutname,"recreate");
   flw  = new TTree("flw","Beam and TPC track");
@@ -472,7 +472,7 @@ void SetKATANARoot()
 void SetKATANARoot_bt()
 {
   //----- KATANA data --------------------
-  gSystem->Load("KatanaRoot/KatanaRoot_Load_cpp.so");
+  //  gSystem->Load("KatanaRoot/KatanaRoot_Load_cpp.so");
 
   kChain = new TChain("tree");
 
@@ -481,7 +481,7 @@ void SetKATANARoot_bt()
   kChain->Add(ktnrootDir+"run"+sRun+".root");
 
   kChain -> SetBranchAddress("Katana",&katanaroot);
-  kChain -> SetBranchAddress("TriggerBox",&triggerbox);
+  kChain -> SetBranchAddress("STTriggerBox",&triggerbox);
 
 }
 

@@ -4,7 +4,7 @@
 #include "vector"
 #include <TObject.h>
 
-class Signal : public TObject
+class STKatanaSignal : public TObject
 {
  public:
   int Module;
@@ -19,12 +19,11 @@ class Signal : public TObject
   //  std::vector<float> peak_time;
   /* void AddPeak(float ampl, float tstart, float tstop, float tmax); */
   /* void Dump(); */
-  Signal(){};
-  ClassDef(Signal,3);
+  STKatanaSignal(){};
+  ClassDef(STKatanaSignal,3);
 };
-//ClassImp(Signal)
 
-class TriggerBox : public TObject
+class STTriggerBox : public TObject
 {
  public:
   unsigned long evnum;
@@ -38,12 +37,11 @@ class TriggerBox : public TObject
   int offset;
   std::vector<int> bitpattern;
   //void AddBitPattern(int bit);
-  TriggerBox(){};
+  STTriggerBox(){};
   //void Reset();
   //void SetUp();
-  ClassDef(TriggerBox,1);
+  ClassDef(STTriggerBox,1);
 };
-//ClassImp(TriggerBox)
 
 
 class STKatana : public TObject
@@ -56,8 +54,8 @@ class STKatana : public TObject
   //unsigned long time_stamp1;
   float max_veto;
   int mult; //! 
-  std::vector<Signal> signal;
-  void AddSignal(Signal & sig){
+  std::vector<STKatanaSignal> signal;
+  void AddSignal(STKatanaSignal & sig){
     signal.push_back(sig);
     mult++;
   };
@@ -66,6 +64,5 @@ class STKatana : public TObject
   STKatana();
   ClassDef(STKatana,0);
 };
-//ClassImp(STKatana)
 
 #endif
