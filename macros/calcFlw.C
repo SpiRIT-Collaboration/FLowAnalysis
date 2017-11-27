@@ -1,6 +1,6 @@
 #include "STFlowCorrection.hh"
 #include "FlowFunctions.h"
-#include "openRComp.C"
+#include "openFlw.C"
 
 TCanvas *cc[12];
 
@@ -87,14 +87,13 @@ void hpt_plot();
 void meanPx();
 void dndy();
 
-void calcRComp()
+void calcFlw()
 {
   gROOT->Reset();
 
   UInt_t ichain = 0;
 
-  //  gROOT->Macro("openRComp.C");
-  openRComp();
+  openFlw();
 
   rChain[ichain] = (TChain*)gROOT->FindObject(Form("rChain%d",ichain));
   if(rChain[ichain] != NULL) {    

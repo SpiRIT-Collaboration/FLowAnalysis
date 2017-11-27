@@ -1,5 +1,5 @@
-#ifndef  ASMPLW_GETEVENTSHH
-#define  ASMPLW_GETEVENTSHH
+#ifndef  FLW_PROCESS2HH
+#define  FLW_PROCESS2HH
 
 #include "TVector3.h"
 #include "TVector2.h"
@@ -33,7 +33,7 @@ Bool_t    CheckPID(STParticle *apart);
 
 void      LoadPIDFile();
 
-Int_t   iVer[3];
+Int_t   iVer[2];
 TString sRun;
 TString sMix;
 Bool_t  bMix;  // kTRUE mixing kFALSE real data

@@ -1,6 +1,6 @@
-#include "Assemble_flwv4.h"
+#include "flw_process1.h"
 //----------------------------------------------------------------------
-// Macro: Assemble_flwv4.C
+// Macro: flw_process1
 //  (c) Mizuki Kurata-Nishimura
 //   2017 Aug. 30 
 //----------------------------------------
@@ -13,7 +13,7 @@ void Setup()
 
   if( sRun=="" || sVer=="" || !DefineVersion() ) {
     cout << "Plase type " << endl;
-    cout << "$ RUN=#### VER=#.# root Assemble_flwv2.C" << endl;
+    cout << "$ RUN=#### VER=# root flw_process1.C" << endl;
     exit(0);
   }
 
@@ -34,7 +34,7 @@ void Setup()
   KATANA   = kFALSE; //kTRUE;
 }
 
-void Assemble_flwv4(Int_t nevt = -1)
+void flw_process1(Int_t nevt = -1)
 {
   //////////////////////////////////////////////////////////
   // The calibrated beam_run#.ridf.root can be loaded.
@@ -241,7 +241,7 @@ void OutputTree(Int_t nmax)
   TString sdeb = ".s";
   if(nmax < 0)  sdeb = "";
 
-  TString foutname = "data/run"+sRun+"_flw_v"+sVer+sdeb+".root";
+  TString foutname = "data/run"+sRun+"_f0.v"+sVer+sdeb+".root";
 
   fout = new TFile(foutname,"recreate");
   flw  = new TTree("flw","Beam and TPC track");
@@ -603,23 +603,34 @@ Bool_t DefineVersion()
 {
   Bool_t bfound = kFALSE;
 
-  TString ver = sVer + ".";
-  
-  for ( Int_t i = 0; i < 2; i++) {
-    if( ver.First(".") < 0 ) break;
+  Ssiz_t end = sVer.First(".");
 
-    Ssiz_t end = ver.First(".")  ;
-    TString ver1 = ver(0, end);
+  cout << " end " << end << endl;
+  if( end == -1) {
 
-    ver = ver(end+1, ver.Length());
+    iVer = atoi(sVer);
 
-    iVer[i] = atoi(ver1);
-
-    if(i==1) bfound = kTRUE;
+    bfound = kTRUE;
   }
+  //  TString ver = sVer + ".";
+  
+  // for ( Int_t i = 0; i < 2; i++) {
+  //   if( ver.First(".") < 0 ) break;
+
+  //   Ssiz_t end = ver.First(".")  ;
+  //   TString ver1 = ver(0, end);
+
+  //   ver = ver(end+1, ver.Length());
+
+  //   iVer[i] = atoi(ver1);
+
+  //   if(i==1) bfound = kTRUE;
+  // }
+
+  
   
   if(!bfound)
-    cout << " missing version number : " << iVer[0] << "." << iVer[1]  << endl;
+    cout << " missing version number v# " << endl;
 
   return bfound;
 

@@ -1,3 +1,7 @@
+
+Int_t   iVer;
+TString sVer;
+
 TCanvas *cc[6];
 
 const Int_t nbinx = 30;
@@ -77,19 +81,34 @@ Int_t  ichain = 0;
 void flatten_iphi_mtrkthetabin();
 void OutputTree(TChain *rCh);
 void flatten_Subevent();
+void SetEnvironment();
 
-void calcFlattenParameter()
+void flw_process3()
 {
   gROOT->Reset();
 
-  gROOT->Macro("openRComp.C");
+  gROOT->Macro("openFlw.C");
 
   rChain[ichain] = (TChain*)gROOT->FindObject(Form("rChain%d",ichain));
   if(rChain[ichain] == NULL ) exit(0);
 
 
+  SetEnvironment();
+
   flatten_iphi_mtrkthetabin();
 
+}
+
+void SetEnvironment()
+{
+  sVer = gSystem -> Getenv("VER");  // Version ID
+  if( sVer == "") {
+    cout << " Please type " << endl;
+    cout << "$ RUN0={####} DB0=#.# VER=# root flw_process3.C " << endl;
+    exit(0);
+  }
+    
+  iVer = atoi(sVer);
 }
 
 void flatten_iphi_mtrkthetabin()
@@ -262,8 +281,7 @@ void flatten_iphi_mtrkthetabin()
 	  haiphi[m]     ->Fill(aphi.at(k));	  
 	}
 	
-	TString comm = Form("m%dn%dmtktheta:flatten_iphi_mtrkthetabin; mtrack> %f && mtrack< %f theta> %f && theta< %f",
-			    j,i,mtrkbin[j],mtrkbin[j+1],thetabin[i],thetabin[i+1]);
+	TString comm = Form("cv%d.m%dn%d:flatten_iphi_mtrkthetabin; mtrack> %f && mtrack< %f theta> %f && theta< %f",iVer,j,i,mtrkbin[j],mtrkbin[j+1],thetabin[i],thetabin[i+1]);
 	cout << "save " << comm << endl;
 	flowcorr[j][i]-> SaveCorrectionFactor(comm);    
       }

@@ -10,7 +10,8 @@ void STFlowCorrection::Initialize(UInt_t ival1, UInt_t ival2)
   harm  = ival1;
   charm = harm;
 
-  irm   = ival2;
+  //irm   = ival2;
+  iver  = ival2;
 
   Init();
 }
@@ -52,17 +53,14 @@ void STFlowCorrection::clear()
 
 void STFlowCorrection::SetFileName()
 {
-  fname = "cf";
-
   TIter nnext((TCollection*)ChEle->GetListOfFiles());
 
   TString sval = ((TFile)nnext()->GetTitle()).GetName();
 
 
   Ssiz_t ifnd = sval.First("_")-7;
-  fname += sval(ifnd,sval.Length()-ifnd-4);
-
-
+  fname = sval(ifnd,sval.Length()-ifnd-4);
+  
 }
 
 void STFlowCorrection::SetFileName(TString sval)
@@ -77,8 +75,8 @@ UInt_t STFlowCorrection::GetCorrectionFactor(UInt_t val)
   std::cout << "STFlowCorrection::GetCorrectionFactor : "<< std::endl;
 
   TString header;
-  if(irm  == 1) header = "1->,";
-  else          header = "0->,";
+  // if(irm  == 1) header = "1->,";
+  // else          header = "0->,";
 
 
   std::fstream fin;

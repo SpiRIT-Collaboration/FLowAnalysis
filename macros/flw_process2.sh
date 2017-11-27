@@ -1,6 +1,5 @@
 #! /bin/bash                                                                                                       
 
-VERSION=4.1.0
 
 ## 132
 RUNNUMBER1=("2841" \
@@ -30,13 +29,17 @@ RUNNUMBER0=("2261" "2262" "2264" "2270" "2271" "2272" "2273" "2274" "2275" "2276
 "2402" "2429" "2432" "2433" "2434" "2437" "2438" "2439" "2440" "2442" "2453" "2461" "2462" "2463" \
 "2501" "2502" "2503" "2505" "2506" "2507" "2508" "2509")
 
+##--- for Process2 ------------------------------------
+RUNNUMBER1=("2844")
+VERSION=0.0
 MIXONLY=1
+
 ## 0 REAL and MIXed
 ## 1 REAL only
 ## 2 MIXed only
 
 
-function v2exe_flatten() {
+function process2() {
     typeset -i I=0
     
     if [ ${MIXONLY} -ne "2" ]; then
@@ -46,27 +49,27 @@ function v2exe_flatten() {
 	while(( I < ${#RUNNUMBER1[@]} ))
 	do
             RUN=${RUNNUMBER1[I]}
-	    LOG=asm${RUN}_v${VERSION}_${MIX}.log
-	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} root AsmFlw_getEvents_v2.C  '>&' $LOG 
-	    RUN=${RUN} VER=${VERSION} MIX=${MIX} root -b -q AsmFlw_getEvents_v2.C >& $LOG &
+	    LOG=log/proc2_${RUN}_v${VERSION}_${MIX}.log
+	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} root flw_process2.C  '>&' $LOG 
+	    RUN=${RUN} VER=${VERSION} MIX=${MIX} root -b -q flw_process2.C >& $LOG &
             let I++
 	    if [ $I -ge ${#RUNNUMBER1[@]} ]; then
 		break;
 	    fi
 	    
             RUN=${RUNNUMBER1[I]}
-	    LOG=asm${RUN}_v${VERSION}_${MIX}.log
-	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} root AsmFlw_getEvents_v2.C  '>&' $LOG 
-	    RUN=${RUN} VER=${VERSION} MIX=${MIX} root -b -q AsmFlw_getEvents_v2.C >& $LOG &
+	    LOG=log/proc2_${RUN}_v${VERSION}_${MIX}.log
+	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} root flw_process2.C  '>&' $LOG 
+	    RUN=${RUN} VER=${VERSION} MIX=${MIX} root -b -q flw_process2.C >& $LOG &
             let I++
 	    if [ $I -ge ${#RUNNUMBER1[@]} ]; then
 		break;
 	    fi
 	    
             RUN=${RUNNUMBER1[I]}
-	    LOG=asm${RUN}_v${VERSION}_${MIX}.log
-	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} root AsmFlw_getEvents_v2.C  '>&' $LOG 
-	    RUN=${RUN} VER=${VERSION} MIX=${MIX} root -b -q AsmFlw_getEvents_v2.C >& $LOG 
+	    LOG=log/proc2_${RUN}_v${VERSION}_${MIX}.log
+	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} root flw_process2.C  '>&' $LOG 
+	    RUN=${RUN} VER=${VERSION} MIX=${MIX} root -b -q flw_process2.C >& $LOG 
             let I++
 	done
     fi
@@ -78,27 +81,27 @@ function v2exe_flatten() {
 	while(( I < ${#RUNNUMBER1[@]} ))
 	do
 	    RUN=${RUNNUMBER1[I]}
-	    LOG=asm${RUN}_v${VERSION}_${MIX}.log
-	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} root AsmFlw_getEvents_v2.C  '>&' $LOG 
-	    RUN=${RUN} VER=${VERSION} MIX=${MIX} root -b -q AsmFlw_getEvents_v2.C >& $LOG &
+	    LOG=log/proc2_${RUN}_v${VERSION}_${MIX}.log
+	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} root flw_process2.C  '>&' $LOG 
+	    RUN=${RUN} VER=${VERSION} MIX=${MIX} root -b -q flw_process2.C >& $LOG &
 	    let I++
 	    if [ $I -ge ${#RUNNUMBER1[@]} ]; then
 		break;
 	    fi
 
 	    RUN=${RUNNUMBER1[I]}
-	    LOG=asm${RUN}_v${VERSION}_${MIX}.log
-	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} root AsmFlw_getEvents_v2.C  '>&' $LOG 
-	    RUN=${RUN} VER=${VERSION} MIX=${MIX} root -b -q AsmFlw_getEvents_v2.C >& $LOG &
+	    LOG=log/proc2_${RUN}_v${VERSION}_${MIX}.log
+	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} root flw_process2.C  '>&' $LOG 
+	    RUN=${RUN} VER=${VERSION} MIX=${MIX} root -b -q flw_process2.C >& $LOG &
 	    let I++
 	    if [ $I -ge ${#RUNNUMBER1[@]} ]; then
 		break;
 	    fi
 	    
 	    RUN=${RUNNUMBER1[I]}
-	    LOG=asm${RUN}_v${VERSION}_${MIX}.log
-	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} root AsmFlw_getEvents_v2.C  '>&' $LOG 
-	    RUN=${RUN} VER=${VERSION} MIX=${MIX} root -b -q AsmFlw_getEvents_v2.C >& $LOG 
+	    LOG=log/proc2_${RUN}_v${VERSION}_${MIX}.log
+	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} root flw_process2.C  '>&' $LOG 
+	    RUN=${RUN} VER=${VERSION} MIX=${MIX} root -b -q flw_process2.C >& $LOG 
 	    let I++
 	done
     fi
@@ -106,5 +109,5 @@ function v2exe_flatten() {
 }
 
 
-v2exe_flatten
+process2
 

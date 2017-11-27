@@ -9,7 +9,7 @@ UInt_t  isys[4]={9, 9, 9, 9};
 
 UInt_t OpenChain(UInt_t m = 0);
 
-void openRComp()
+void openFlw()
 {
   gROOT->Reset();
     
@@ -24,15 +24,18 @@ void openRComp()
   UInt_t ichain = 0;
 
   if( aRun[0] != "" && sDB[0] != ""){ 
+    std::cout << " RUN0 -> " << aRun[0] << " : DB0 -> " << sDB[0] << std::endl;
+
     isys[ichain] = OpenChain(ichain);
     if(isys[ichain] < 10) ichain++;
   }
   else
     std::cout << " RUN0 -> " << aRun[0] << " : DB0 -> " << sDB[0] << std::endl;
 
-  if( aRun[1] != "" && sDB[1] != "") 
+  if( aRun[1] != "" && sDB[1] != "") {
+    std::cout << " RUN1 -> " << aRun[1] << " : DB1 -> " << sDB[1] << std::endl;
     isys[ichain] = OpenChain(ichain);
-  
+  }
 }
 
 UInt_t GetSystem(UInt_t ival)
@@ -67,18 +70,17 @@ UInt_t OpenChain(UInt_t m)
   
   TString treename = "cflw";
   
-  if(sDB[0](1,4) == "flw_") // output of Assemble_flwv4.C run2841_flw_v4.1.root 
+  if(sDB[0](1,2) == "f0")       // output of flw_process1.C is run2844_f0.v0.root 
     treename = "flw";
 
-  else if(sDB[0](14,4) == "crdb" ) // output of getFalatten2DCorrected 
+  else if(sDB[0](10,3) == "_db" ) // output of flw_process4.C  run2844_rf.v0.0.0_db2844.v0.0.cv0.root  
       treename = "cflw";
 
-  else if(sDB[0](1,6) == "rdflw_")  // output of AsmFlw_getEvent_v2.C run2841_rdflw_v4.1.0.root
+  else if(sDB[0](1,2) == "rf")  // output of flw_prosess2.C run2841_rf_v4.1.0.root
     treename = "rflw";
 
-  else if(sDB[0](1,6) == "mxflw_") // output of AsmFlw_getEvent_v2.C run2841_mxflw_v4.1.0.root
+  else if(sDB[0](1,2) == "mf")  // output of flw_process2.C run2841_mf_v4.1.0.root
     treename = "mflw";
-
 
 
 
@@ -87,7 +89,7 @@ UInt_t OpenChain(UInt_t m)
   LChain[m] = new TChain(treename);
 
   for(Int_t i = 0; i < (Int_t)lrun.size(); i++){
-    TString rootdir = "../data"; 
+    TString rootdir = "data/"; 
 
     TString fname = Form("run%d",lrun.at(i))+fform;
     cout << fname << endl;

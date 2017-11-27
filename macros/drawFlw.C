@@ -18,11 +18,11 @@ TCut proton  = "fPID==2212";
 TCut deuteron= "fPID==1000010020";
 TCut triton  = "fPID==1000010030";
 
-void drawRComp()
+void drawFlw()
 {
   gROOT->Reset();
   
-  gROOT->Macro("openRComp.C");
+  gROOT->Macro("openFlw.C");
 
   rChain[ichain] = (TChain*)gROOT->FindObject(Form("rChain%d",ichain));
   if(rChain[ichain] != NULL) ichain++;

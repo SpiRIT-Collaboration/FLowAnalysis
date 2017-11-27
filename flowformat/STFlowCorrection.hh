@@ -24,6 +24,7 @@ class STFlowCorrection : public TObject {
 
  private :
   UInt_t     irm; // 1 = mix, otherwise real
+  UInt_t     iver;
   UInt_t     harm;
   UInt_t     charm;
   UInt_t    *indx;

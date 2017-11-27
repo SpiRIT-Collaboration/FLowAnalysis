@@ -1,12 +1,13 @@
-#include "AsmFlw_getEvents_v2.h"
+#include "flw_process2.h"
 //----------------------------------------------------------------------
-//   AsmFlw_getEvent.C  succeeded from AsmFlw_getMixing.C
-// (c) Mizuki Kurata-Nishimura 
+//  Flow analysis proces 2
+// (c) Mizuki Kurata-Nishimura
+//    23 Nov 2017 
 //----------------------------------------
 //   Particle selection and mixed events will be done.
 //
 //----------------------------------------------------------------------
-void AsmFlw_getEvents_v2(Long64_t nmax = -1)
+void flw_process2(Long64_t nmax = -1)
 {
   SetEnvironment();
 
@@ -85,7 +86,7 @@ void AsmFlw_getEvents_v2(Long64_t nmax = -1)
     mtrack = trackID.size();
     ntrack[3] = mtrack;
 
-    //    cout << " mtrack " << mtrack << endl;
+    //       cout << " mtrack " << mtrack << endl;
 
     if(mtrack > 0) {
       mflw->Fill();
@@ -150,7 +151,8 @@ void SetEnvironment()
 
   if(sRun =="" || sVer == "" ||sMix == "" ||!DefineVersion()) {
     cout << " Please type " << endl;
-    cout << "$ RUN=#### VER=#.#.# MIX=0(real) or 1(mix)  root AsmFlw_getEvents.C(Number of event) " << endl;
+    cout << "$ RUN=#### VER=#.# MIX=0(real) or 1(mix) root flw_process2.C(Number of event) " 
+	 << endl;
     exit(0);
   }
 
@@ -224,16 +226,19 @@ void Open()
 {
   LoadPIDFile();
 
-  TString fn = Form("run%d_flw_v"+sVer(0,3)+".root",iRun);
-  if( !gSystem->FindFile("../data/", fn) ) {
+  TString fnameBase = "run%d_f0.v";
+
+  TString fn = Form(fnameBase + sVer(0,1)+".root",iRun);
+  if( !gSystem->FindFile("data/", fn) ) {
     
+
     Int_t iver = atoi((TString)sVer(2,1));
 
     while( iver > -1 ){
       TString ss = Form(".%d",iver);
-      fn = Form("run%d_flw_v"+sVer(0,1)+ss+".root",iRun);
+      fn = Form(fnameBase + sVer(0,1)+ss+".root",iRun);
 
-      if( !gSystem->FindFile("../data/", fn) ) 
+      if( !gSystem->FindFile("data/", fn) ) 
 	iver--;
       else 
 	break;
@@ -257,13 +262,11 @@ void Open()
   fTree->SetBranchAddress("ntrack",ntrack);
   //  fTree->SetBranchAddress("kymult",&kymult);
 
-  if( iVer[0] > 1) {
-    fTree->SetBranchAddress("aoq",&aoq);
-    fTree->SetBranchAddress("z",&z);
-    fTree->SetBranchAddress("ProjA",&ProjA);
-    fTree->SetBranchAddress("ProjB",&ProjB);
-    fTree->SetBranchAddress("snbm",&snbm);
-  }
+  fTree->SetBranchAddress("aoq",&aoq);
+  fTree->SetBranchAddress("z",&z);
+  fTree->SetBranchAddress("ProjA",&ProjA);
+  fTree->SetBranchAddress("ProjB",&ProjB);
+  fTree->SetBranchAddress("snbm",&snbm);
 
   p_rot = new TClonesArray("TVector3",150);
 
@@ -279,7 +282,8 @@ void Initialize()
   mtrack = 0;
   mxntrk = 0;  
   numGoodTrack = 0;
-  for(Int_t i = 0; i< 7; i++) ntrack[i];
+
+  //  for(Int_t i = 0; i< 7; i++) ntrack[i] = 0;
   
   event.clear();
 
@@ -295,7 +299,7 @@ void Initialize()
 Long64_t GetMultiplicityDistribution()
 {
   // Multplicity histgram
-  TString mHistFile = Form("MultRoot/run%d.ngt_v"+sVer(0,3)+".root",iRun);
+  TString mHistFile = Form("MultRoot/run%d.ngt_v"+sVer(0,1)+".root",iRun);
   TString hf = mHistFile;
 
   Long64_t nEvt = 0;
@@ -361,15 +365,25 @@ void ResetPID(STParticle *apart)
 
 void LoadPIDFile()
 {
-  auto gcutFile = new TFile("gcutPID132Sn.root");
-  gProton   = (TCutG*)gcutFile->Get("gcutProton132Sn2");
-  gDeuteron = (TCutG*)gcutFile->Get("gcutDeutron132Sn");
-  gTriton   = (TCutG*)gcutFile->Get("gcutTriton132Sn");
-  gPip      = (TCutG*)gcutFile->Get("gcutPip132Sn");
-  gPim      = (TCutG*)gcutFile->Get("gcutPim132Sn");
+  TString fname = "gcutPID132Sn.ROOT";
+  TFile *gcutFile;
 
+  if( !gSystem->FindFile("data",fname) )
+    std::cout << " Graphical PID selection is not determined " << std::endl;
+  else {
+    std::cout << " Graphical PID selection, " << fname << ", is loaded " << std::endl;
 
-  gcutFile->Close();
+    gcutFile = new TFile(fname);
+
+    gProton   = (TCutG*)gcutFile->Get("gcutProton132Sn2");
+    gDeuteron = (TCutG*)gcutFile->Get("gcutDeutron132Sn");
+    gTriton   = (TCutG*)gcutFile->Get("gcutTriton132Sn");
+    gPip      = (TCutG*)gcutFile->Get("gcutPip132Sn");
+    gPim      = (TCutG*)gcutFile->Get("gcutPim132Sn");
+    
+
+    gcutFile->Close();
+  }
 }
 
 
@@ -380,15 +394,15 @@ void OutputTree(Long64_t nmax)
   // ROOT out
   TString sdeb = ".s";
   if(nmax < 0)  sdeb = "";
-  TString foutname = "../data/run"+sRun+"_";
+  TString foutname = "data/run"+sRun+"_";
 
   if( bMix ) {
-    foutname += "mxflw";
-    foutname += "_v"+sVer+".root";
+    foutname += "mf";
+    foutname += ".v"+sVer+".root";
   }
   else {
-    foutname += "rdflw";
-    foutname += "_v"+sVer+sdeb+".root";
+    foutname += "rf";
+    foutname += ".v"+sVer+sdeb+".root";
   }
   
   TString fo = foutname;
@@ -418,15 +432,10 @@ void OutputTree(Long64_t nmax)
 
   //-- output                                                                                                              
   mflw->Branch("irun",&iRun,"irun/I");
-  if( iVer[0] > 1) {
-    mflw->Branch("aoq",&aoq,"aoq/D");
-    mflw->Branch("z",&z,"z/D");
-    // mflw->Branch("aX",&aX,"aX/D");
-    // mflw->Branch("bY",&bY,"bY/D");
-  }
+  mflw->Branch("aoq",&aoq,"aoq/D");
+  mflw->Branch("z",&z,"z/D");
 
   nParticleArray = new TClonesArray("STParticle",100);
-
   mflw->Branch("STParticle",&nParticleArray);
 
   mflw->Branch("ntrack",ntrack,"ntrack[7]/I");
@@ -546,7 +555,7 @@ Bool_t DefineVersion()
 
   TString ver = sVer + ".";
   
-  for ( Int_t i = 0; i < 3; i++) {
+  for ( Int_t i = 0; i < 2; i++) {
     if( ver.First(".") < 0 ) break;
 
     Ssiz_t end = ver.First(".")  ;
@@ -556,12 +565,12 @@ Bool_t DefineVersion()
 
     iVer[i] = atoi(ver1);
 
-    if(i==2) bfound = kTRUE;
+    if(i==1) bfound = kTRUE;
 
   }
   
   if(!bfound)
-    cout << " missing version number : " << iVer[0] << "." << iVer[1] << "." << iVer[2] << endl;
+    cout << " missing version number : " << iVer[0] << "." << iVer[1]  << endl;
 
   return bfound;
 

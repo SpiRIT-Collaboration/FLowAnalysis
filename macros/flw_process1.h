@@ -180,7 +180,7 @@ std::vector<Int_t>gTgTrack;
 TString sRun;
 TString sVer;
 Int_t   iRun;
-Int_t   iVer[2];
+Int_t   iVer;
 
 Bool_t  BigRIPS;
 Bool_t  KyotoArry;
