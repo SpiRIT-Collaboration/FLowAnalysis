@@ -25,11 +25,81 @@ public:
 
   virtual ~STParticle(){};
 
+private:
+  Bool_t    bRotated = kFALSE;
+  Bool_t    bFlatten = kFALSE;
+
+  Int_t    ftrackID;
+
+  TVector3 ftrackatTarget;
+  Int_t    fPID;
+  Double_t fRapidity;
+  Double_t fpsudoRapidity;
+  Double_t fEtotal;
+  Int_t    fChar;
+  Double_t fMass;
+
+  Int_t    fpipid;
+  TVector3 fvertex;
+  Double_t fPIDProbability;
+
+  TVector3 forigP3;;         // Momemtum vector without any correction.
+  Double_t fP;               // Momentum/Q [MeV/c]
+  Double_t fdEdx;            // dEdx
+  Double_t ftheta;           // Polar angle without any correction     = forigP3.Theta()
+  Double_t fphi;             // Azimuthal angle without any correction = forigP3.Phi()
+
+  // for flow analysis 
+  TVector3 fRotatedP3;       // Momentum vector rotated with respect to the beam angle.
+  TVector2 fRotatedPt;       // Transverse momentum vector rotated with respect to the beam angle. 
+
+  Double_t frtheta;          // Polar angle after corrections of the beam angle and flattening
+  Double_t frphi;            // Azimuthal angle after corrections of the beam angle and flattening
+
+  TVector3 ffltnP3;          // Momentum vector after corrections of the beam angle and flattening
+  TVector2 ffltnPt;          // Transverse momentum vector after corrections of the beam angle and flattening
+  TVector2 fcorrPt;          // Transverse momentum vector would be equal to ffltnPt at the end.
+
+  Double_t frpphi;           // Individual Reaction plane orientaion (IRPO) for each particle
+  Double_t fdeltphi;         // Azimuthal opening angle with respect to IRPO
+  Double_t fwgt;             // Summing up weight
+
+  Int_t   fcorrBin[2];
+  
+  // --- mixed partiels
+  Int_t    fmxevt  = -1;
+  Int_t    fmxntrk = -1;
+  Int_t    fmxtrackid = -1;
+
+  //quality flags
+  UInt_t   fBeamonTargetf   = 1; //flag for beam tracked by BDC goes on the target
+  UInt_t   fVatTargetf      = 1; //flag for reconstructed vertex XY within the target
+  UInt_t   fVZatTargetf     = 1; //flag for reconstructed veretx Z comes from the target
+  UInt_t   fVBDCCorf        = 1; //flag for reconstructed vertex is correated with BDC at the target
+  UInt_t   fBDCCorf         = 1; //
+  UInt_t   fTargetXYf       = 1;
+  UInt_t   fgotoKatanaf     = 1;
+  UInt_t   fgotoKyotof      = 1;
+  UInt_t   frdEdxPointSizef = 1;  
+  UInt_t   fgoodtrackf      = 0;
+
+  UInt_t   fReactionPlanef  = 0;  
+
+  //STRecoTrack parameters
+  STRecoTrack *fRTrack; //!
+  Int_t     rVertexID;  
+  Int_t     rdEdxPointSize;
+  Int_t     rdEdxPointSize_thr = 1;
+  Int_t     rNDF;
+  Double_t  rDist;
+  TVector3  rpocaVertex;  
+
+
+private:
   virtual void Clear(Option_t *option = "");
 
   //private:
   void     SetProperty();
-  void     SetLinearPID();
 
   void     CheckTrackonTarget();
   void     CheckKATANAHit(){};
@@ -54,21 +124,17 @@ public:
 
   void     SetMass();
 
-
-
   void     SetRapidity();
   Double_t GetRapidity()                 {return fRapidity;}
 
   void     SetpsudoRapidity();
   Double_t GetpsudoRapidity()            {return fpsudoRapidity;}
 
-
   Double_t GetEtotal()                   {return fEtotal;}
 
   Double_t GetP()                        {return fP;}
   void     SetdEdx(Double_t value)       {fdEdx = value;}
   Double_t GetdEdx()                     {return fdEdx;}
-  Int_t    GetLinearPID()                {return flnPID;}
 
   void     SetMass(Double_t value)       {fMass = value;}
   Double_t GetMass()                     {return fMass;}
@@ -180,86 +246,7 @@ public:
   TVector3     GetVertex()                      { return fvertex;}
 
 
-private:
-  Bool_t    bRotated = kFALSE;
-  Bool_t    bFlatten = kFALSE;
-
-
-
-private:
-  Int_t    ftrackID;
-
-  TVector3 ftrackatTarget;
-
-  TVector3 forigP3;;
-  TVector3 fRotatedP3;
-  TVector2 fRotatedPt;
-  Double_t fRotatedP;
-
-  Double_t fP;
-  Double_t fdEdx;
-  Double_t ftheta;
-  Double_t frtheta;
-  Double_t fphi;
-  Double_t frphi;
-  Int_t    fPID;
-  Double_t fPIDProbability;
-
-
-
-  Int_t    flnPID;                 //!
-  Double_t flnPIDval;              //!
-  Double_t fRapidity;
-  Double_t fpsudoRapidity;
-  Double_t fEtotal;
-  Int_t    fChar;
-  Double_t fMass;
-
-  Int_t    fpipid;
-  TVector3 fvertex;
-
-  // flow parameters
-  TVector2 fcorrPt;
-
-  TVector3 ffltnP3; 
-  TVector2 ffltnPt; 
-
-  Double_t frpphi;
-  Double_t fdeltphi; 
-  Double_t fwgt;
-
-  Int_t   fcorrBin[2];
-
-  
-  // --- mixed partiels
-  Int_t    fmxevt  = -1;
-  Int_t    fmxntrk = -1;
-  Int_t    fmxtrackid = -1;
-
-
-  //flags
-  UInt_t   fBeamonTargetf   = 1; //flag for beam tracked by BDC goes on the target
-  UInt_t   fVatTargetf      = 1; //flag for reconstructed vertex XY within the target
-  UInt_t   fVZatTargetf     = 1; //flag for reconstructed veretx Z comes from the target
-  UInt_t   fVBDCCorf        = 1; //flag for reconstructed vertex is correated with BDC at the target
-  UInt_t   fBDCCorf         = 1; //
-  UInt_t   fTargetXYf       = 1;
-  UInt_t   fgotoKatanaf     = 1;
-  UInt_t   fgotoKyotof      = 1;
-  UInt_t   frdEdxPointSizef = 1;  
-  UInt_t   fgoodtrackf      = 0;
-
-  UInt_t   fReactionPlanef  = 0;  
-
-  //STRecoTrack parameters
-  STRecoTrack *fRTrack; //!
-  Int_t     rVertexID;  
-  Int_t     rdEdxPointSize;
-  Int_t     rdEdxPointSize_thr = 1;
-  Int_t     rNDF;
-  Double_t  rDist;
-  TVector3  rpocaVertex;  
-  ClassDef(STParticle, 6)
+  ClassDef(STParticle, 7)
 
 };
 

@@ -37,43 +37,13 @@ void drawFlw()
 
   m_end = ichain+1;
 
+  gROOT->ProcessLine(".! grep -i void drawFlw.C |grep //%%");
 }
 
 
-void NuSYM()
-{
-  gROOT->cd();
-  gROOT->Clear();
 
 
-
-  Int_t ic = 0;
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
-
-  auto hRPphi    = new TH1D("hRPphi","; R. P.#Phi",120,-3.2,3.2);
-  rChain[0] -> Draw("TVector2::Phi_mpi_pi(unitP_lang.Phi())>>hRPphi","ntrack[4]>2");
-  hRPphi->SetLineColor(4);
-
-
-  ic++;
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
-
-  auto hsubphi  = new TH2D("hsubphi","SubEvnt Corr",120,-3.2,3.2,120,-3.2,3.2);
-  rChain[0] -> Draw("TVector2::Phi_mpi_pi(unitP_1.Phi()-unitP_2.Phi()):TVector2::Phi_mpi_pi(unitP_lang.Phi())>>hsubphi",
-		    "mtrack_1>0&&mtrack_2>0","colz");
-
-
-  ic++;
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
-  auto hsubcorr0 = new TH1D("hsubcorr0","#Phi_A - #Phi_B", 120,-3.2,3.2);
-  rChain[0] -> Draw("TVector2::Phi_mpi_pi(unitP_1.Phi()-unitP_2.Phi())>>hsubcorr0","mtrack_1>0&&mtrack_2>0");
-  
-
-
-}
-
-
-void deltphi()
+void deltphi()   //%%  
 {
   const UInt_t nbin = 3;
 
@@ -136,7 +106,7 @@ void deltphi()
 
 }
 
-void phi()
+void phi()       //%%
 {
   gROOT->cd();
 
@@ -271,15 +241,12 @@ void phi()
     hname = Form("hprtphith%d",m);
     rChain[m]->Draw("fdeltphi:fRotatedP3.Theta()>>"+hname,gtrack*"fPID==2212","colz");
 
-
   }
-
-
 }
 
 
 
-void PtDistribution()
+void PtDistribution() //%
 {
   gROOT->Reset();
 
@@ -438,7 +405,7 @@ void PtDistribution()
 }
 
 
-void RP()
+void RP()        //%%
 {
   gROOT->Reset();
 
@@ -541,7 +508,7 @@ void RP()
 }
 
 
-void phi_mtk()
+void phi_mtk()   //%%
 {
   gROOT->Reset();
   
@@ -635,7 +602,7 @@ void phi_mtk()
 }
 
 
-void RPphi()
+void RPphi()     //%%
 {
   gROOT->cd();
   //  TCut myselect = "mtrack>25";
@@ -709,7 +676,7 @@ void RPphi()
 }
 
 //*************************
-void PID()
+void PID()       //%%
 {
   gROOT->cd();
 
@@ -782,7 +749,7 @@ void PID()
 }
 
 
-void CalibCheck()
+void CalibCheck()//%%
 {
   gROOT->cd();
 
@@ -807,16 +774,10 @@ void CalibCheck()
 
   cc[2] = new TCanvas("cc2","cc2",700,500);
   rChain[0]->Draw("fdEdx:irun>>histc2",momcut,"colz");
-
-  
-  
-  
-  
-
 }
 
 
-void acceptance()
+void acceptance()//%%
 {
   gROOT->Reset();
   
@@ -857,7 +818,8 @@ void acceptance()
   }
 }
 
-void dndy()
+
+void dndy()      //%%
 {
   gROOT->cd();
   UInt_t ic = -1;
@@ -1075,4 +1037,34 @@ void dndy()
 
   cout << " 108/132 : p " << (pnum[0]+dnum[0]+tnum[0])/(pnum[1]+dnum[1]+tnum[1]) << " n " << (dnum[0]+tnum[0]*2)/(dnum[1]+tnum[1]*2) << endl; 
 
+}
+
+void NuSYM()
+{
+  gROOT->cd();
+  gROOT->Clear();
+
+
+
+  Int_t ic = 0;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+
+  auto hRPphi    = new TH1D("hRPphi","; R. P.#Phi",120,-3.2,3.2);
+  rChain[0] -> Draw("TVector2::Phi_mpi_pi(unitP_lang.Phi())>>hRPphi","ntrack[4]>2");
+  hRPphi->SetLineColor(4);
+
+
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+
+  auto hsubphi  = new TH2D("hsubphi","SubEvnt Corr",120,-3.2,3.2,120,-3.2,3.2);
+  rChain[0] -> Draw("TVector2::Phi_mpi_pi(unitP_1.Phi()-unitP_2.Phi()):TVector2::Phi_mpi_pi(unitP_lang.Phi())>>hsubphi",
+		    "mtrack_1>0&&mtrack_2>0","colz");
+
+
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+  auto hsubcorr0 = new TH1D("hsubcorr0","#Phi_A - #Phi_B", 120,-3.2,3.2);
+  rChain[0] -> Draw("TVector2::Phi_mpi_pi(unitP_1.Phi()-unitP_2.Phi())>>hsubcorr0","mtrack_1>0&&mtrack_2>0");
+  
 }

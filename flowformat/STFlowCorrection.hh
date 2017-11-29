@@ -97,10 +97,11 @@ class STFlowCorrection : public TObject {
   Double_t GetBin_min(UInt_t idx=0)  {if(idx < 3) return binmin[idx]; else return -1.;}
   TString  GetBinParameter(UInt_t idx=0) {return binpara[idx];}
 
+  void   ShowParameters();
+
 private:
   void   SetFileName();
   void   Init();
-  void   ShowParameters();
   void   SetDirectory();
 
   ClassDef(STFlowCorrection,0);

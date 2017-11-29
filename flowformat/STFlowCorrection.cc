@@ -74,7 +74,7 @@ UInt_t STFlowCorrection::GetCorrectionFactor(UInt_t val)
 
   std::cout << "STFlowCorrection::GetCorrectionFactor : "<< std::endl;
 
-  TString header;
+  TString header = "->,";
   // if(irm  == 1) header = "1->,";
   // else          header = "0->,";
 
@@ -318,7 +318,7 @@ UInt_t STFlowCorrection::SaveCorrectionFactor(TString comm)
   fout << "nth  "  << "Bn<cos>        " << "rms        " <<"An<sin>        " << "rms" << std::endl;
 
   for(UInt_t k = 0; k < charm; k++){
-    fout << irm <<"->, " << std::setw(5) << k+1 << ", "
+    fout << "->, " << std::setw(5) << k+1 << ", "
    	 << std::scientific << std::setprecision(5) << std::right
    	 << std::setw(20) << Bn[k] << ", " << Bn_rms[k] << ", "
    	 << std::setw(20) << An[k] << ", " << An_rms[k]

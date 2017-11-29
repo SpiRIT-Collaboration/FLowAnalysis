@@ -29,7 +29,7 @@ void flw_process2(Long64_t nmax = -1)
       nTrack = (Long64_t)GetRandomNumTrack(); // get number of track 
     else {
       fTree->GetEntry(ievt);
-      if( snbm != 132 && snbm != 108) continue;
+      if( snbm != 132 && snbm != 108 && snbm != 124 ) continue;
 
       nTrack = aParticleArray->GetEntries();
     }

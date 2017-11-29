@@ -166,6 +166,7 @@ void flw_process1(Int_t nevt = -1)
     bmpid = GetBeamPID();
     
 
+
     //-------------------- User Analysis --------------------
 
     Int_t numTracksFromArray = trackArray -> GetEntries();
@@ -307,9 +308,15 @@ Int_t GetBeamPID(){
     if(g132Sn->IsInside(aoq,z) && z < 50.536)
       pid = 132;
   }
-  else if(g108Sn->IsInside(aoq,z)){
+
+  if(g108Sn){
     if(g108Sn->IsInside(aoq,z))
       pid = 108;
+  }
+
+  if(g124Sn){
+    if(g124Sn->IsInside(aoq,z))
+      pid = 124;
   }
 
   return pid;
@@ -322,18 +329,32 @@ void BeamPID()
     auto gcutFile = new TFile("data/gcut132Sn.ROOT");
     g132Sn=(TCutG*)gcutFile->Get("sigma20");
     gcutFile->Close();
+
+    if(g132Sn != NULL) std::cout << "gcut132Sn with sigma20 from data/gcut132Sn.ROOT" <<std::endl;
+    else std::cout << "data/gcut132Sn.ROOT was not found" << std::endl;
+
   }
 
   else if(SnA == 108){
     auto gcutFile = new TFile("data/gcut108Sn.ROOT");
     g108Sn=(TCutG*)gcutFile->Get("sigma20");
     gcutFile->Close();
+
+    if(g108Sn != NULL) std::cout << "gcut108Sn with sigma20 from data/gcut108Sn.ROOT" <<std::endl;
+    else std::cout << "data/gcut108Sn.ROOT was not found" << std::endl;
+
   }
-  // else if(SnA == 124){
-  //   auto gcutFile = new TFile("data/gcut124Sn.ROOT");
-  //   g124Sn=(TCutG*)gcutFile->Get("g124Sn");
-  //   gcutFile->Close();
-  // }    
+  else if(SnA == 124){
+    auto gcutFile = new TFile("data/gcut124Sn.ROOT");
+    g124Sn=(TCutG*)gcutFile->Get("sigma20");
+    gcutFile->Close();
+
+    if(g124Sn != NULL) std::cout << "gcut124Sn with sigma20 from data/gcut124Sn.ROOT" <<std::endl;
+    else std::cout << "data/gcut124Sn.ROOT was not found" << std::endl;
+
+    //    g124Sn->Print();
+
+  }    
 }
 
 
@@ -532,6 +553,10 @@ void SetBigRIPS()
   
   else if(SnA == 108) 
     beamDir  = "/cache/scr/spirit/DataAskedByMizuki/beam.Sn108/";
+
+  else if(SnA == 124)
+    beamDir  = "/cache/scr/spirit/DataAskedByMizuki/beam.Sn124/";
+
 
   auto beamFile = "beam_run"+sRun+".ridf.root";
 

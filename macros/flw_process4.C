@@ -74,7 +74,7 @@ void flw_process4(Long64_t nmax = -1)
 	    aPart1->SetReactionPlaneFlag(0);
 	    continue;
 	  }
-	  else if( aPart1->GetFlattenMomentum().Theta() < 0.8 ){
+	  else if( aPart1->GetFlattenMomentum().Theta() < 0.8 && aPart1->GetBestTrackFlag() > 0){
             aPart1->AddReactionPlaneFlag(1000);
             ntrack[5]++;
 	  }
@@ -354,7 +354,7 @@ UInt_t SetDatabaseFiles()
 
   //  std::vector<TString> vfname;
   if(sbRun != "0") {
-    TString fname = "cfrun"+sbRun;
+    TString fname = "run"+sbRun;
     if(bMix)
       fname += "_mf.v";
     else
@@ -420,6 +420,7 @@ UInt_t SetDatabaseFiles()
     
     pbinmin.push_back(make_pair(flowcorr->GetBin_min(0),flowcorr->GetBin_min(1)));
     cout << " $$$$$$$$$$$ ---->  nbin " << ihm  << " " << pbinmin.at(ihm).first << " : "<< pbinmin.at(ihm).second << endl;    
+    //    flowcorr->ShowParameters();
   }
 
   binpara   = flowcorr->GetBinParameter(1);
@@ -609,7 +610,7 @@ void AzmAngleRPTReactionPlane()
     //    if(icount == 1) break;
     //icount++;
 
-    if(aPart1->GetReactionPlaneFlag()>0){
+    if(aPart1->GetReactionPlaneFlag() > 1000){
       Double_t wt = aPart1->GetRPWeight();
       TVector2 pt = aPart1->GetCorrectedPt();
 
@@ -680,10 +681,9 @@ void FlatteningCorrection(STParticle *apart, Int_t ival)
     Double_t phi =  flowcorr->GetCorrection((apart->GetRotatedMomentum()).Phi());
     apart->Flattening( phi );
     
+
   }
-  else{
-    cout << " A correction file is not found. " << binParameter << " with " << ntrack[3] << endl;
-    //    exit(0);
-  }
+  else
+    std::cout << " A correction file is not found. " << binParameter << " with " << ntrack[3] << std::endl;
 
 }

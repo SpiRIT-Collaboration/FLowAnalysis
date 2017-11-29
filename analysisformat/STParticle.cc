@@ -25,7 +25,6 @@ STParticle::STParticle(const STParticle &cp)
   forigP3       = cp.forigP3;
   fRotatedP3    = cp.fRotatedP3;
   fRotatedPt    = cp.fRotatedPt;
-  fRotatedP     = cp.fRotatedP;
   fP            = cp.fP;
   fdEdx         = cp.fdEdx;
   ftheta        = cp.ftheta;
@@ -206,57 +205,6 @@ void STParticle::SetPID(Int_t value)
   SetRapidity();
 }
 
-void STParticle::SetLinearPID()
-{
-  //  for run2900
-  Double_t alpha = 2.3;
-  //
-
-  flnPIDval = log(alpha*fdEdx)+(alpha-1)*log(fP+0.5*fdEdx);
-
-  flnPID = 0;
-  if(fP > 100){
-    if(flnPIDval <= 12.){
-      if(fChar > 0)
-	flnPID = 211;
-      else
-	flnPID = -211;
-    }
-    else if(flnPIDval <= 14.3 || fP <= 430) { // proton
-      flnPID = 2212;
-      fMass  = 938.272;
-    }
-    else if(flnPIDval <=15.1) { // deuteron
-      flnPID = 10020;
-      fMass  = 1875.6128;
-    }
-    else if(flnPIDval <=15.4) { // trition
-      flnPID = 10030;
-      fMass  = 2808.920936;
-    }
-    else if(flnPIDval <=15.8) { // 3He
-      flnPID = 20030;
-      fMass  = 2808.391346;
-    }
-    else if(flnPIDval <=16.3)  { // 4He
-      flnPID = 20040;
-      fMass  = 3727.37909;
-    }
-    else {
-      flnPID = 30000;
-      fMass  = 0.;
-    }
-  }
-  else {
-    if(fChar > 0)
-      flnPID = 211;
-    else
-      flnPID = -211;
-  }
-
-  fPID = flnPID;
-
-}
 
 
 void STParticle::SetMass()
@@ -353,6 +301,7 @@ void  STParticle::RotateAlongBeamDirection(Double_t valuex, Double_t valuey)
 
 void STParticle::Flattening(Double_t value)
 {
+
   ffltnP3  = fRotatedP3;
 
   ffltnP3.SetPhi(value);
