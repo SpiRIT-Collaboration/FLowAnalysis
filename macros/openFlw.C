@@ -1,11 +1,11 @@
+#include "openFlw.h"
+
 TChain *LChain[4];
 static UInt_t id = 0;
  
 TString printHeader="";
-TString aRun[2];
-TString sDB[2];
-UInt_t  isys[4]={9, 9, 9, 9};
-
+TString aRun[4];
+TString sDB[4];
 
 UInt_t OpenChain(UInt_t m = 0);
 
@@ -21,21 +21,29 @@ void openFlw()
   
   sDB[1] = gSystem -> Getenv("DB1");
 
+  aRun[2] = gSystem -> Getenv("RUN2");
+  
+  sDB[2] = gSystem -> Getenv("DB2");
+
+  aRun[3] = gSystem -> Getenv("RUN3");
+  
+  sDB[3] = gSystem -> Getenv("DB3");
+  
+
+
   UInt_t ichain = 0;
 
-  if( aRun[0] != "" && sDB[0] != ""){ 
-    std::cout << " RUN0 -> " << aRun[0] << " : DB0 -> " << sDB[0] << std::endl;
+  for(UInt_t i = 0; i < 4; i++){
+    if( aRun[i] != "" && sDB[i] != ""){ 
+      std::cout << " RUN" << i << "-> " << aRun[i] << " : DB " << i << "-> " << sDB[i] << std::endl;
 
-    isys[ichain] = OpenChain(ichain);
-    if(isys[ichain] < 10) ichain++;
+      isys[ichain] = OpenChain(ichain);
+      if(isys[ichain] < 10) ichain++;
+    }
+    else
+      std::cout << " RUN0 -> " << aRun[0] << " : DB0 -> " << sDB[0] << std::endl;
   }
-  else
-    std::cout << " RUN0 -> " << aRun[0] << " : DB0 -> " << sDB[0] << std::endl;
 
-  if( aRun[1] != "" && sDB[1] != "") {
-    std::cout << " RUN1 -> " << aRun[1] << " : DB1 -> " << sDB[1] << std::endl;
-    isys[ichain] = OpenChain(ichain);
-  }
 }
 
 UInt_t GetSystem(UInt_t ival)
