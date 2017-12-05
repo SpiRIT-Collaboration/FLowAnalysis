@@ -1,4 +1,18 @@
 #! /bin/bash
+# TPC data
+export STTPCDIR=/cache/scr/spirit/DataAskedByMizuki/
+export ST132DIR=Sn132-All-LayerCut90-GC-DS-GiordanoCommentOut/
+export ST108DIR=Sn108-All-LayerCut90-GC-DS-GiordanoCommentOut/
+export ST124DIR=Sn124-All-LayerCut90-GC-DS-GiordanoCommentOut/
+export ST112DIR=""
+
+#KATANA data
+export STKATANADIR=/data/spdaq01/katana/root/katana/
+
+#Kyoto data
+export STKYOTODIR=/cache/scr/spirit/kaneko/rootfile/kyoto/
+#--------------
+
 #RUN=2900 VER=0 root -b -q flw_process1.C
 
 ## 132
