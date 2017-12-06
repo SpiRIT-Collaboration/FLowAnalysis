@@ -10,9 +10,6 @@ const Double_t ybeam_cm[] = {0.36599 ,  0.378516};
 const Double_t ybeam_lb[] = {0.749188,  0.744103};
 UInt_t sys[2]   = {0, 0};
 
-//TString sysName[2] = {"132Sn+124Sn","108Sn+112Sn"};
-TString sysName[2] = {"132Sn","108Sn"};
-
 
 const UInt_t nspec = 5;
 const UInt_t  nbin = 16;
@@ -45,20 +42,20 @@ UInt_t   partid[]   = {211, 211, 2212, 1000010020, 1000010030};
 UInt_t   icol[2]    = {4,2};
 TString  iopt[2]    = {"","same"};
   
-UInt_t ic = 0;
+UInt_t ic = -1;
 
 const Int_t nbinx = 30;
+TChain *rChain[4];
 
-TChain *rChain[2];
 UInt_t m_bgn = 0;
 UInt_t m_end = 1;
 
 // histogram
-TH1D* hptpm[2][nbin];
-TH1D* hptpp[2][nbin];
-TH1D* hptpr[2][nbin];
-TH1D* hptdt[2][nbin];
-TH1D* hpttr[2][nbin];
+TH1D* hptpm[4][nbin];
+TH1D* hptpp[4][nbin];
+TH1D* hptpr[4][nbin];
+TH1D* hptdt[4][nbin];
+TH1D* hpttr[4][nbin];
 
 TMultiGraph *mg;
 TMultiGraph *mgr;
@@ -94,23 +91,16 @@ void calcFlw()
 
   openFlw();
 
-  rChain[ichain] = (TChain*)gROOT->FindObject(Form("rChain%d",ichain));
-  if(rChain[ichain] != NULL) {    
-    sys[ichain] = GetSystem(ichain);
-    std::cout << " System" << ichain << " "  << sysName[sys[ichain]] << std::endl; 
-    ichain++;
-  }
-  
-
-  rChain[ichain] = (TChain*)gROOT->FindObject(Form("rChain%d",ichain));
-  if(rChain[ichain] == NULL) 
-    ichain = 0;
-  else{
-    sys[ichain] = GetSystem(ichain);
-    std::cout << " System" << ichain << " "  << sysName[sys[ichain]] << std::endl; 
+  for(UInt_t i = 0; i < 4; i++){
+    rChain[ichain] = (TChain*)gROOT->FindObject(Form("rChain%d",ichain));
+    if(rChain[ichain] != NULL) {    
+      sys[ichain] = GetSystem(ichain);
+      std::cout << " System" << ichain << " "  << sysName[sys[ichain]] << std::endl; 
+      ichain++;
+    }
   }
 
-  if(rChain[0] == NULL && rChain[1] == NULL)
+  if(rChain[0] == NULL)
     exit(0);
 
   m_end = ichain+1;
@@ -128,9 +118,9 @@ void dndy()                       //%% Executable : Make plots of dNdy for p, d,
 {
 
   //----- booking
-  TH1D* hrap[2][5];
-  TH1D* hnpart[2][5];
-  TH1D* hmtrack[2];
+  TH1D* hrap[4][5];
+  TH1D* hnpart[4][5];
+  TH1D* hmtrack[4];
 
   auto aLeg0 = new TLegend(0.7,0.7,0.9 ,0.9,"");
   auto aLeg1 = new TLegend(0.7,0.7,0.9 ,0.9,"");
@@ -233,88 +223,92 @@ void dndy()                       //%% Executable : Make plots of dNdy for p, d,
 
   //----- Drawing
   //----- canvas
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,800);
-  cc[ic]->Divide(3,2);
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1400,500);
+  cc[ic]->Divide(3,1);
+
+  const UInt_t nsys = m_end - 1;
+
+  Double_t hmax[nsys];
+
+  for(UInt_t ip = 2; ip < 5; ip++){
+    cc[ic]->cd(ip-1); 
+
+    for(UInt_t m = m_bgn; m < m_end; m++)
+      hmax[m] = hrap[m][ip]->GetMaximum();
+
+    Double_t gmax = TMath::MaxElement(nsys, hmax);
+    cout << "ip : " << ip  << " gmax " << gmax << endl;
+    
+    hrap[0][ip]->SetMaximum(gmax*1.1);
+
+    for(UInt_t m = m_bgn; m < m_end; m++) 
+      hrap[m][ip]->Draw(iopt[m]); 
+     
+
+    if(ip == 4)
+      aLeg0->Draw();
+
+  }
+
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
+  cc[ic]->Divide(2,1);
+
+ 
+  for(UInt_t ip = 0; ip < 2; ip++){
+    cc[ic]->cd(ip+1); 
+
+    for(UInt_t m = m_bgn; m < m_end; m++)
+      hmax[m] = hrap[m][ip]->GetMaximum();
+
+    Double_t gmax = TMath::MaxElement(nsys, hmax);
+    hrap[0][ip]->SetMaximum(gmax*1.1);
+    for(UInt_t m = m_bgn; m < m_end; m++) 
+      hrap[m][ip]->Draw(iopt[m]); 
+  
+
+    if(ip == 1)
+      aLeg1->Draw();
+  }
 
 
-   cc[ic]->cd(1); 
-   UInt_t io = 0;
-   if(m_end == 2){
-     hrap[1][2]->Draw(iopt[io]); io++; 
-     hrap[0][2]->Draw(iopt[io]); io++;
-   }
-   else
-     hrap[0][2]->Draw(); 
-
-   cc[ic]->cd(2); 
-   io = 0;
-   hrap[0][3]->Draw(iopt[io]); io++;
-   if(m_end == 2)
-     hrap[1][3]->Draw(iopt[io]); io++;
-
-   cc[ic]->cd(3); 
-   io = 0;
-   hrap[0][4]->Draw(iopt[io]); io++;
-   if(m_end == 2)
-   hrap[1][4]->Draw(iopt[io]); io++;
-     aLeg0->Draw();
-
-   cc[ic]->cd(4);
-   io = 0;
-   hrap[0][0]->Draw(iopt[io]); io++;
-   if(m_end == 2)
-     hrap[1][0]->Draw(iopt[io]); io++;
-
-   cc[ic]->cd(5);
-   io = 0;
-   if(m_end == 2){
-     hrap[1][1]->Draw(iopt[io]); io++;
-     hrap[0][1]->Draw(iopt[io]); io++;
-   }
-   else
-     hrap[0][1]->Draw(); 
-
-  //----cc1
+  // //----cc1
   ic++;
   cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,800);
   cc[ic]->Divide(3,2);
-   
-  cc[ic]->cd(1); 
-  hnpart[0][2]->Draw(iopt[0]);
-  if(m_end == 2)
-    hnpart[1][2]->Draw(iopt[1]);
+  
+  for(UInt_t ip = 2; ip < 5; ip++){
+    cc[ic]->cd(ip-1); 
 
-  cc[ic]->cd(2);
-  hnpart[0][3]->Draw(iopt[0]);
-  if(m_end == 2)
-    hnpart[1][3]->Draw(iopt[1]);
+    for(UInt_t m = m_bgn; m < m_end; m++)
+      hmax[m] = hnpart[m][ip]->GetMaximum();
 
-  cc[ic]->cd(3); 
-  if(m_end == 2){
-    hnpart[1][4]->Draw(iopt[0]);
-    hnpart[0][4]->Draw(iopt[1]);
+    Double_t gmax = TMath::MaxElement(nsys, hmax);
+    hnpart[0][ip]->SetMaximum(gmax*1.1);
+    for(UInt_t m = m_bgn; m < m_end; m++) 
+      hnpart[m][ip]->Draw(iopt[m]);
+
+    if(ip == 4)
+      aLeg1->Draw();
   }
-  else
-    hnpart[0][4]->Draw();
 
-  aLeg1->Draw();
+  io = 0;
+  for(UInt_t ip = 0; ip < 2; ip++){
+    cc[ic]->cd(ip+4); 
 
-  cc[ic]->cd(4);
-  cc[ic]->cd(4)->SetLogy();
-  hnpart[0][0]->Draw(iopt[0]);
-  if(m_end == 2)
-    hnpart[1][0]->Draw(iopt[1]);
+    for(UInt_t m = m_bgn; m < m_end; m++)
+      hmax[m] = hnpart[m][ip]->GetMaximum();
 
-  cc[ic]->cd(5);
-  cc[ic]->cd(5)->SetLogy();
-  hnpart[0][1]->Draw(iopt[0]);
-  if(m_end == 2)
-    hnpart[1][1]->Draw(iopt[1]);
+    Double_t gmax = TMath::MaxElement(nsys, hmax);
+    hnpart[0][ip]->SetMaximum(gmax*1.1);
+    for(UInt_t m = m_bgn; m < m_end; m++)
+      hnpart[m][ip]->Draw(iopt[m]);
+    
 
-  cc[ic]->cd(6);
-  hmtrack[0]->Draw();
-  if(m_end == 2)
-    hmtrack[1]->Draw(iopt[1]);
+    if(ip == 1)
+      aLeg1->Draw();
+  }
   
 }
 

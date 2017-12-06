@@ -360,20 +360,21 @@ void BeamPID()
 
 void SetDataDirectory()
 {
-  // upto 9 layer
-  //  rootDir = "/cache/scr/spirit/DataAskedByMizuki/Sn132-All-LayerCut90-GC-DS/";
+
   if(SnA == 132)
-    rootDir = "/cache/scr/spirit/DataAskedByMizuki/Sn132-All-LayerCut90-GC-DS-GiordanoCommentOut/";
+    rootDir = gSystem -> Getenv("ST132DIR");
   else if(SnA == 108)
-    rootDir = "/cache/scr/spirit/DataAskedByMizuki/Sn108-All-LayerCut90-GC-DS-GiordanoCommentOut/";
+    rootDir = gSystem -> Getenv("ST108DIR");
   else if(SnA == 124)
-    rootDir = "/cache/scr/spirit/DataAskedByMizuki/Sn124-All-LayerCut90-GC-DS-GiordanoCommentOut/";
+    rootDir = gSystem -> Getenv("ST124DIR");
+  else if(SnA == 112)
+    rootDir = gSystem -> Getenv("ST112DIR");
 
 }
 
 void SetKATANADirectory()
 {
-  ktnrootDir = "/data/spdaq01/katana/root/katana/";
+  ktnrootDir = gSystem -> Getenv("STKATANADIR");
 }
 
 
@@ -510,7 +511,7 @@ Bool_t SetKyotoArray()
 {
   kaChain = new TChain("kyotoM");
 
-  TString kytDir = "/cache/scr/spirit/kaneko/rootfile/kyoto/";
+  TString kytDir = gSystem -> Getenv("STKYOTODIR");
   TString kytFile = "run"+sRun+".kyotopos.root";
   if( !gSystem->FindFile(kytDir, kytFile)) 
     return kFALSE;

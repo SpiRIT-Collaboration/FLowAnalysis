@@ -1,10 +1,10 @@
 #! /bin/bash
 # TPC data
 export STTPCDIR=/cache/scr/spirit/DataAskedByMizuki/
-export ST132DIR=Sn132-All-LayerCut90-GC-DS-GiordanoCommentOut/
-export ST108DIR=Sn108-All-LayerCut90-GC-DS-GiordanoCommentOut/
-export ST124DIR=Sn124-All-LayerCut90-GC-DS-GiordanoCommentOut/
-export ST112DIR=""
+export ST132DIR=${STTPCDIR}Sn132-All-LayerCut90-GC-DS-GiordanoCommentOut/
+export ST108DIR=${STTPCDIR}Sn108-All-LayerCut90-GC-DS-GiordanoCommentOut/
+export ST124DIR=${STTPCDIR}Sn124-All-LayerCut90-GC-DS-GiordanoCommentOut/
+export ST112DIR=${STTPCDIR}
 
 #KATANA data
 export STKATANADIR=/data/spdaq01/katana/root/katana/
@@ -52,14 +52,9 @@ RUN124=(\
 
 ##--- for Process1 ------------------------------------
 RUNNUMBER1=(\
-"3061" "3062" "3065" "3066" "3068" "3069" "3071" "3074" "3075" "3076" "3077" \
-"3078" "3080" "3081" "3082" "3083" "3084" "3085" "3087" "3088" "3089" "3090" "3091" \
-"3092" "3093" "3094" "3095" "3097" "3098" "3102" "3103" "3138" "3139" "3140" "3141" \
-"3142" "3143" "3144" "3145" "3146" "3148" "3149" "3150" "3151" "3152" "3153" "3154" \
-"3155" "3156" "3157" "3158" "3159" "3165" "3166" "3167" "3168" "3169" "3170" "3171" \
-"3172" "3177" "3179" "3180" "3181" "3182" "3183" "3184" \
+"2959"
 )
-VERSION=0
+VERSION=1
 
 
 function process1(){
