@@ -1,11 +1,7 @@
 #include "openFlw.h"
 
-TChain *LChain[4];
 static UInt_t id = 0;
  
-TString printHeader="";
-TString aRun[4];
-TString sDB[4];
 
 UInt_t OpenChain(UInt_t m = 0);
 
@@ -13,35 +9,23 @@ void openFlw()
 {
   gROOT->Reset();
     
-  aRun[0] = gSystem -> Getenv("RUN0");
-  
-  sDB[0] = gSystem -> Getenv("DB0");
-
-  aRun[1] = gSystem -> Getenv("RUN1");
-  
-  sDB[1] = gSystem -> Getenv("DB1");
-
-  aRun[2] = gSystem -> Getenv("RUN2");
-  
-  sDB[2] = gSystem -> Getenv("DB2");
-
-  aRun[3] = gSystem -> Getenv("RUN3");
-  
-  sDB[3] = gSystem -> Getenv("DB3");
-  
+  for(UInt_t i = 0 ; i < nconfig; i++){
+    TString form = Form("RUN%d",i);
+    aRun[i] = gSystem -> Getenv(form);
+    form = Form("DB%d",i);
+    sDB[i] = gSystem -> Getenv(form);
+  }
 
 
   UInt_t ichain = 0;
 
-  for(UInt_t i = 0; i < 4; i++){
+  for(UInt_t i = 0; i < nconfig; i++){
     if( aRun[i] != "" && sDB[i] != ""){ 
       std::cout << " RUN" << i << "-> " << aRun[i] << " : DB " << i << "-> " << sDB[i] << std::endl;
 
       isys[ichain] = OpenChain(ichain);
       if(isys[ichain] < 10) ichain++;
     }
-    else
-      std::cout << " RUN0 -> " << aRun[0] << " : DB0 -> " << sDB[0] << std::endl;
   }
 
 }
@@ -129,12 +113,13 @@ UInt_t OpenChain(UInt_t m)
   // 3: 112Sn + 124Sn
   UInt_t system = 10;
   if(lrun.at(0) >= 2841 && lrun.at(0) <= 3039)
-    system = 0;
+    system = 0; // 132
   else if(lrun.at(0) >= 2261 && lrun.at(0) <= 2509)
-    system = 1;
+    system = 1; // 108
+  else if(lrun.at(0) >= 3059 && lrun.at(0) <= 3184)
+    system = 2; // 124
   else if(lrun.at(0) >= 2520 && lrun.at(0) <= 2653)
-    system = 2;
-
+    system = 3; // 112
 
   return system;
 }

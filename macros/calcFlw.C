@@ -8,7 +8,7 @@ TCanvas *cc[12];
 const Double_t ycm[]      = {0.383198,  0.365587}; 
 const Double_t ybeam_cm[] = {0.36599 ,  0.378516};
 const Double_t ybeam_lb[] = {0.749188,  0.744103};
-UInt_t sys[2]   = {0, 0};
+UInt_t sys[]              = {0, 0};
 
 
 const UInt_t nspec = 5;
@@ -36,11 +36,10 @@ Double_t pt_min   = 0;
 Double_t pt_max   = 1100;
 Double_t pt_dbin  = (pt_max - pt_min)/(Double_t)(pt_nbin-1); 
 
-
 TString  partname[] = {"pi-","pi+","proton","deuteron","triton"};
 UInt_t   partid[]   = {211, 211, 2212, 1000010020, 1000010030};
-UInt_t   icol[2]    = {4,2};
-TString  iopt[2]    = {"","same"};
+UInt_t   icol[]     = {4,2,3,6};
+TString  iopt[]     = {"","same","same","same"};
   
 UInt_t ic = -1;
 
@@ -57,8 +56,6 @@ TH1D* hptpr[4][nbin];
 TH1D* hptdt[4][nbin];
 TH1D* hpttr[4][nbin];
 
-TMultiGraph *mg;
-TMultiGraph *mgr;
 
 
 Int_t mtrack;
@@ -69,7 +66,7 @@ auto aArray = new TClonesArray("STParticle",100);
 Double_t rapid_max = 0.4;
 Double_t rapid_min = 0.2;
 UInt_t pxbooking();
-UInt_t DrawCenterLine();
+UInt_t DrawCenterLine(TMultiGraph *mg);
 // Double_t *vMean(vector<Double_t> &vec);
 // Double_t *vn(UInt_t hm, vector<Double_t> &vphi);
 
@@ -92,10 +89,10 @@ void calcFlw()
   openFlw();
 
   for(UInt_t i = 0; i < 4; i++){
-    rChain[ichain] = (TChain*)gROOT->FindObject(Form("rChain%d",ichain));
+    rChain[ichain] = (TChain*)gROOT->FindObject(Form("rChain%d",i));
     if(rChain[ichain] != NULL) {    
       sys[ichain] = GetSystem(ichain);
-      std::cout << " System" << ichain << " "  << sysName[sys[ichain]] << std::endl; 
+      std::cout << " System " << ichain << " "  << sys[ichain] << "  -> " << sysName[sys[ichain]] << std::endl; 
       ichain++;
     }
   }
@@ -103,14 +100,11 @@ void calcFlw()
   if(rChain[0] == NULL)
     exit(0);
 
-  m_end = ichain+1;
+  m_end = ichain;
 
   std::cout << " ichain " << ichain << " m_end " << m_end << std::endl;
   
   gROOT->ProcessLine(".! grep -i void calcFlw.C | grep '//%%'");
-
-  //  meanPx();
-  //  dndy();
 }
 
 
@@ -221,6 +215,7 @@ void dndy()                       //%% Executable : Make plots of dNdy for p, d,
     std::cout << " -------------------- " << std::endl;
   }
 
+
   //----- Drawing
   //----- canvas
   ic++;
@@ -229,8 +224,11 @@ void dndy()                       //%% Executable : Make plots of dNdy for p, d,
 
   const UInt_t nsys = m_end - 1;
 
+
   Double_t hmax[nsys];
 
+
+  // plot p, d, and t
   for(UInt_t ip = 2; ip < 5; ip++){
     cc[ic]->cd(ip-1); 
 
@@ -250,6 +248,7 @@ void dndy()                       //%% Executable : Make plots of dNdy for p, d,
       aLeg0->Draw();
 
   }
+
 
   ic++;
   cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
@@ -318,11 +317,19 @@ void meanPx()                     //%% Executable : Make  plots of <px> vs rapid
 {
   PxDistribution(1);
 
-  TGraphErrors  *gpr[2];
-  TGraphErrors  *gdt[2];
-  TGraphErrors  *gtr[2];
-  TGraphErrors  *gpm[2];
-  TGraphErrors  *gpp[2];
+  TGraphErrors  *gpr[4];
+  TGraphErrors  *gdt[4];
+  TGraphErrors  *gtr[4];
+  TGraphErrors  *gpm[4];
+  TGraphErrors  *gpp[4];
+
+  auto mgpdt = new TMultiGraph();
+  mgpdt->SetTitle("p,d and t; Rapidity_lab; <px>/A [MeV/c]");
+  auto aLeg0 = new TLegend(0.1,0.7,0.35,0.9,"");
+
+  auto mgpi  = new TMultiGraph();
+  mgpi->SetTitle("#pi^{+-}; Rapidity_lab; <px> [MeV/c]");
+  auto aLeg1 = new TLegend(0.1,0.7,0.35,0.9,"");
 
   for(Int_t m = m_bgn; m < m_end; m++){
    
@@ -392,108 +399,66 @@ void meanPx()                     //%% Executable : Make  plots of <px> vs rapid
     gpp[m] = new TGraphErrors(npp, rap, mptpp, rape, mptppe);
    
   
-    if(m == 0){
-      cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,800);
-      cc[ic]->Divide(3,2);
-    }
 
-    UInt_t id = 1;
-
-    cc[ic]->cd(id);id++;
     TString atitle = Form("gpr%d",m);
     gpr[m]->SetName(atitle);
     gpr[m]->SetLineColor(icol[m]);
-    gpr[m]->SetMarkerStyle(20+m);
+    gpr[m]->SetMarkerStyle(20);
     gpr[m]->SetMarkerColor(icol[m]);
     gpr[m]->SetTitle("Proton; y_lab; <Px> (MeV/c)");
-    gpr[m]->Draw(iopt[m]);
+    mgpdt->Add(gpr[m],"lp");
+    aLeg1->AddEntry(gpr[m],"proton   "+sysName[m],"lp");
 
-    cc[ic]->cd(id);id++;
     atitle = Form("gdt%d",m);
     gdt[m]->SetName(atitle);
     gdt[m]->SetLineColor(icol[m]);
-    gdt[m]->SetMarkerStyle(20+m);
+    gdt[m]->SetMarkerStyle(21);
     gdt[m]->SetMarkerColor(icol[m]);
     gdt[m]->SetTitle("Deuteron; y_lab; <Px> (MeV/c)");
-    gdt[m]->Draw(iopt[m]);
+    mgpdt->Add(gdt[m],"lp");
+    aLeg1->AddEntry(gdt[m],"deuteron "+sysName[m],"lp");
 
-    cc[ic]->cd(id);id++;
     atitle = Form("gtr%d",m);
     gtr[m]->SetName(atitle);
     gtr[m]->SetLineColor(icol[m]);
-    gtr[m]->SetMarkerStyle(20+m);
+    gtr[m]->SetMarkerStyle(22);
     gtr[m]->SetMarkerColor(icol[m]);
     gtr[m]->SetTitle("Triton; y_lab; <Px> (MeV/c)");
-    gtr[m]->Draw(iopt[m]);
+    mgpdt->Add(gtr[m],"lp");
+    aLeg1->AddEntry(gtr[m],"trition  "+sysName[m],"lp");
 
-    cc[ic]->cd(id);id++;
     atitle = Form("gpm%d",m);
     gpm[m]->SetName(atitle);
     gpm[m]->SetLineColor(icol[m]);
-    gpm[m]->SetMarkerStyle(20+m);
+    gpm[m]->SetMarkerStyle(23);
     gpm[m]->SetMarkerColor(icol[m]);
     gpm[m]->SetTitle("pi-; y_lab; <Px> (MeV/c)");
-    gpm[m]->Draw(iopt[m]);
+    mgpi->Add(gpm[m],"ip");
+    aLeg0->AddEntry(gpm[m],"#pi^{-}   "+sysName[m],"lp");
 
-    cc[ic]->cd(id);id++;
     atitle = Form("gpp%d",m);
     gpp[m]->SetName(atitle);
     gpp[m]->SetLineColor(icol[m]);
-    gpp[m]->SetMarkerStyle(20+m);
+    gpp[m]->SetMarkerStyle(33);
     gpp[m]->SetMarkerColor(icol[m]);
     gpp[m]->SetTitle("pi+; y_lab; <Px> (MeV/c)");
-    gpp[m]->Draw(iopt[m]);
+    mgpi->Add(gpp[m],"ip");
+    mgpi->Add(gpp[m],"ip");
+    aLeg0->AddEntry(gpp[m],"#pi^{+}   "+sysName[m],"lp");
   }
 
 
-  mg = new TMultiGraph();
-  mg->SetTitle("; Rapidity_lab; <px>/A [MeV/c]");
-  gpr[0]->SetLineColor(2);
-  gpr[0]->SetMarkerStyle(20);
-  gpr[0]->SetMarkerColor(2);
-  gdt[0]->SetLineColor(4);
-  gdt[0]->SetMarkerStyle(21);
-  gdt[0]->SetMarkerColor(4);
-  gtr[0]->SetLineColor(8);
-  gtr[0]->SetMarkerStyle(22);
-  gtr[0]->SetMarkerColor(8);
-  mg->Add(gpr[0],"lp");
-  mg->Add(gdt[0],"lp");
-  mg->Add(gtr[0],"lp");
-
-  if( m_end == 2 ) {
-    gpr[1]->SetLineColor(2);
-    gpr[1]->SetMarkerStyle(24);
-    gpr[1]->SetMarkerColor(2);
-    gpr[1]->SetLineStyle(3);
-    gdt[1]->SetLineColor(4);
-    gdt[1]->SetMarkerStyle(25);
-    gdt[1]->SetMarkerColor(4);
-    gdt[1]->SetLineStyle(3);
-    gtr[1]->SetLineColor(8);
-    gtr[1]->SetMarkerStyle(26);
-    gtr[1]->SetMarkerColor(8);
-    gtr[1]->SetLineStyle(3);
-    mg->Add(gpr[1],"lp");
-    mg->Add(gdt[1],"lp");
-    mg->Add(gtr[1],"lp");
-  }
-
-  auto aLeg = new TLegend(0.1,0.7,0.35,0.9,"");
-  aLeg->AddEntry(gpr[0],"proton   "+sysName[0],"lp");
-  aLeg->AddEntry(gdt[0],"deuteron "+sysName[0],"lp");
-  aLeg->AddEntry(gtr[0],"trition  "+sysName[0],"lp");
-
-  if( m_end == 2) {
-    aLeg->AddEntry(gpr[1],"proton   "+sysName[1],"lp");
-    aLeg->AddEntry(gdt[1],"deuteron "+sysName[1],"lp");
-    aLeg->AddEntry(gtr[1],"trition  "+sysName[1],"lp");
-  }
 
   ic++;
   cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
-  mg  ->Draw("a");
-  aLeg->Draw();
+  mgpdt -> Draw("a");
+  aLeg1->Draw();
+
+
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+  mgpi  ->Draw("a");
+  aLeg0->Draw();
 
 }
 
@@ -938,7 +903,7 @@ void plotv1v2(UInt_t selid=2)     //%% Executable :   v1 and v2 as a function of
   }
 }
 
-UInt_t DrawCenterLine()
+UInt_t DrawCenterLine(TMultiGraph *mg)
 {
   // Center Line
   auto xmin = mg->GetYaxis()->GetXmin();
@@ -1286,7 +1251,7 @@ void PtDependece(UInt_t hrm = 1)
     gr2->SetMarkerColor(8);
 
 
-    mg = new TMultiGraph();
+    auto mg = new TMultiGraph();
     TString aTitle = Form("; Pt[MeV/c]; v%d(a.u.)",hrm); 
     mg->SetTitle(aTitle);
     mg->SetName("mg");
@@ -1456,7 +1421,7 @@ void YDependece(UInt_t hrm=1)
     rv_gr0->SetLineStyle(3);
 
 
-    mg = new TMultiGraph();
+    auto mg = new TMultiGraph();
     TString aTitle = Form("; Ycm/Ycm_beam; v%d(a.u.)",hrm);
     mg->SetTitle(aTitle);
     mg->SetName("mg");
@@ -1483,7 +1448,7 @@ void YDependece(UInt_t hrm=1)
     mg  ->Draw("a");
     aLeg->Draw();
 
-    DrawCenterLine();
+    DrawCenterLine(mg);
 
     iisl = 2;
     auto gt0 = new TGraphErrors(nsl, &xval[0][iisl], &yratio[0][iisl], &xvale[0][iisl], &yratioe[0][iisl]);
@@ -1498,7 +1463,7 @@ void YDependece(UInt_t hrm=1)
     gt1->SetMarkerStyle(22);
     gt1->SetMarkerColor(8);
 
-    mgr = new TMultiGraph();
+    auto mgr = new TMultiGraph();
     aTitle = Form("; Ycm/Ycm_beam; v%d /v%d(proton)",hrm, hrm);
     mgr->SetTitle(aTitle);
     mgr->SetName("mgr");
