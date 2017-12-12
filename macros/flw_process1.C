@@ -199,10 +199,11 @@ void flw_process1(Int_t nevt = -1)
 	  if(ProjA > -1000 && ProjB > -1000)
 	    aParticle->RotateAlongBeamDirection(ProjA/1000., ProjB/1000.);
 
-
 	  //--- check origin of the track ---;
 	  aParticle->SetTrackAtTarget(vertex->GetPos()); 
-	  if( aParticle->GetNDF() > 30 && aParticle->GetDistanceAtVergtex() < 5) {
+	  if( aParticle->GetNDF() > 30 && aParticle->GetDistanceAtVergtex() < 5 &&
+	      aParticle->GetMomentumAtTarget().Mag() > 0) {
+
 	    aParticle->SetBestTrackFlag(1);
 	    ntrack[2]++;
 	  }
@@ -531,7 +532,7 @@ Bool_t SetKyotoMultiplicity()
 {
   kaChain = new TChain("tree");
 
-  TString kytDir = "/cache/scr/spirit/kaneko/rootfile/kyoto_re/mult/";
+  TString kytDir = gSystem -> Getenv("STKYMLTDIR");
   TString kytFile = "run"+sRun+".mult.root";
   if( !gSystem->FindFile(kytDir, kytFile) ) 
     return kFALSE;
@@ -550,14 +551,11 @@ void SetBigRIPS()
 
   TString beamDir;
   if(SnA == 132) 
-    beamDir  = "/cache/scr/spirit/DataAskedByMizuki/beam.Sn132_all/";
-  
+    beamDir = gSystem -> Getenv("STBEAM132");
   else if(SnA == 108) 
-    beamDir  = "/cache/scr/spirit/DataAskedByMizuki/beam.Sn108/";
-
+    beamDir = gSystem -> Getenv("STBEAM108");
   else if(SnA == 124)
-    beamDir  = "/cache/scr/spirit/DataAskedByMizuki/beam.Sn124/";
-
+    beamDir = gSystem -> Getenv("STBEAM124");
 
   auto beamFile = "beam_run"+sRun+".ridf.root";
 

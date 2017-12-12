@@ -112,14 +112,22 @@ UInt_t OpenChain(UInt_t m)
   // 2: 124Sn + 112Sn : 2520 - 2653
   // 3: 112Sn + 124Sn
   UInt_t system = 10;
-  if(lrun.at(0) >= 2841 && lrun.at(0) <= 3039)
+  if(lrun.at(0) >= 2841 && lrun.at(0) <= 3039){
     system = 0; // 132
-  else if(lrun.at(0) >= 2261 && lrun.at(0) <= 2509)
+    sysName[0] = "132Sn";
+  }    
+  else if(lrun.at(0) >= 2261 && lrun.at(0) <= 2509){
     system = 1; // 108
-  else if(lrun.at(0) >= 3059 && lrun.at(0) <= 3184)
+    sysName[1] = "108Sn";
+  }
+  else if(lrun.at(0) >= 3059 && lrun.at(0) <= 3184){
     system = 2; // 124
-  else if(lrun.at(0) >= 2520 && lrun.at(0) <= 2653)
+    sysName[2] = "124Sn";
+  }
+  else if(lrun.at(0) >= 2520 && lrun.at(0) <= 2653){
     system = 3; // 112
+    sysName[3] = "112Sn";
+  }
 
   return system;
 }

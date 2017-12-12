@@ -92,7 +92,6 @@ void flw_process3()
   rChain[ichain] = (TChain*)gROOT->FindObject(Form("rChain%d",ichain));
   if(rChain[ichain] == NULL ) exit(0);
 
-
   SetEnvironment();
 
   flatten_iphi_mtrkthetabin();
@@ -220,8 +219,8 @@ void flatten_iphi_mtrkthetabin()
 
 	// if(aPart1->GetReactionPlaneFlag() >= 11 && aPart1->GetReactionPlaneFlag() <= 13){
 	// if(aPart1->GetReactionPlaneFlag() >= 10 && aPart1->GetRotatedMomentum().Mag()<2500){
-	if(aPart1->GetRotatedMomentum().Mag() > 0){
-
+	// if(aPart1->GetRotatedMomentum().Mag() > 0){ // pion is included
+	if(aPart1->GetReactionPlaneFlag() > 1) {
 	  
 	  Double_t phi   = aPart1->GetRotatedMomentum().Phi();
 	  Double_t theta = aPart1->GetRotatedMomentum().Theta();

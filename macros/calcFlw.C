@@ -8,7 +8,7 @@ TCanvas *cc[12];
 const Double_t ycm[]      = {0.383198,  0.365587}; 
 const Double_t ybeam_cm[] = {0.36599 ,  0.378516};
 const Double_t ybeam_lb[] = {0.749188,  0.744103};
-UInt_t sys[]              = {0, 0};
+UInt_t sys[]              = {10, 10, 10, 10};
 
 
 const UInt_t nspec = 5;
@@ -127,7 +127,7 @@ void dndy()                       //%% Executable : Make plots of dNdy for p, d,
       TString hname = Form("hrap%d_%d",m,i);
       TString htitle= partname[i] + "; Rapidity; dN/dy";
       hrap[m][i] = new TH1D(hname, htitle, y_nbin, y_min[i], y_max[i]);
-      hrap[m][i] ->SetLineColor(icol[m]);
+      hrap[m][i] ->SetLineColor(icol[sys[m]]);
 
       hname  = Form("hnpart%d_%d",m,i);
       htitle = partname[i]+" ; Multiplicity";
@@ -136,10 +136,10 @@ void dndy()                       //%% Executable : Make plots of dNdy for p, d,
     }
 
     hmtrack[m] = new TH1D(Form("hmtrack%d",m),"Number of good tracks; Multiplicity",80, 0, 80);
-    hmtrack[m] -> SetLineColor(icol[m]);
+    hmtrack[m] -> SetLineColor(icol[sys[m]]);
     
-    aLeg0->AddEntry(hrap[m][4],sysName[m],"lp");
-    aLeg1->AddEntry(hnpart[m][4],sysName[m],"lp");
+    aLeg0->AddEntry(hrap[m][4],sysName[sys[m]],"lp");
+    aLeg1->AddEntry(hnpart[m][4],sysName[sys[m]],"lp");
   }
 
   //------------------------
@@ -402,49 +402,49 @@ void meanPx()                     //%% Executable : Make  plots of <px> vs rapid
 
     TString atitle = Form("gpr%d",m);
     gpr[m]->SetName(atitle);
-    gpr[m]->SetLineColor(icol[m]);
+    gpr[m]->SetLineColor(icol[sys[m]]);
     gpr[m]->SetMarkerStyle(20);
-    gpr[m]->SetMarkerColor(icol[m]);
+    gpr[m]->SetMarkerColor(icol[sys[m]]);
     gpr[m]->SetTitle("Proton; y_lab; <Px> (MeV/c)");
     mgpdt->Add(gpr[m],"lp");
-    aLeg1->AddEntry(gpr[m],"proton   "+sysName[m],"lp");
+    aLeg1->AddEntry(gpr[m],"proton   "+sysName[sys[m]],"lp");
 
     atitle = Form("gdt%d",m);
     gdt[m]->SetName(atitle);
-    gdt[m]->SetLineColor(icol[m]);
+    gdt[m]->SetLineColor(icol[sys[m]]);
     gdt[m]->SetMarkerStyle(21);
-    gdt[m]->SetMarkerColor(icol[m]);
+    gdt[m]->SetMarkerColor(icol[sys[m]]);
     gdt[m]->SetTitle("Deuteron; y_lab; <Px> (MeV/c)");
     mgpdt->Add(gdt[m],"lp");
-    aLeg1->AddEntry(gdt[m],"deuteron "+sysName[m],"lp");
+    aLeg1->AddEntry(gdt[m],"deuteron "+sysName[sys[m]],"lp");
 
     atitle = Form("gtr%d",m);
     gtr[m]->SetName(atitle);
-    gtr[m]->SetLineColor(icol[m]);
+    gtr[m]->SetLineColor(icol[sys[m]]);
     gtr[m]->SetMarkerStyle(22);
-    gtr[m]->SetMarkerColor(icol[m]);
+    gtr[m]->SetMarkerColor(icol[sys[m]]);
     gtr[m]->SetTitle("Triton; y_lab; <Px> (MeV/c)");
     mgpdt->Add(gtr[m],"lp");
-    aLeg1->AddEntry(gtr[m],"trition  "+sysName[m],"lp");
+    aLeg1->AddEntry(gtr[m],"trition  "+sysName[sys[m]],"lp");
 
     atitle = Form("gpm%d",m);
     gpm[m]->SetName(atitle);
-    gpm[m]->SetLineColor(icol[m]);
+    gpm[m]->SetLineColor(icol[sys[m]]);
     gpm[m]->SetMarkerStyle(23);
-    gpm[m]->SetMarkerColor(icol[m]);
+    gpm[m]->SetMarkerColor(icol[sys[m]]);
     gpm[m]->SetTitle("pi-; y_lab; <Px> (MeV/c)");
     mgpi->Add(gpm[m],"ip");
-    aLeg0->AddEntry(gpm[m],"#pi^{-}   "+sysName[m],"lp");
+    aLeg0->AddEntry(gpm[m],"#pi^{-}   "+sysName[sys[m]],"lp");
 
     atitle = Form("gpp%d",m);
     gpp[m]->SetName(atitle);
-    gpp[m]->SetLineColor(icol[m]);
+    gpp[m]->SetLineColor(icol[sys[m]]);
     gpp[m]->SetMarkerStyle(33);
-    gpp[m]->SetMarkerColor(icol[m]);
+    gpp[m]->SetMarkerColor(icol[sys[m]]);
     gpp[m]->SetTitle("pi+; y_lab; <Px> (MeV/c)");
     mgpi->Add(gpp[m],"ip");
     mgpi->Add(gpp[m],"ip");
-    aLeg0->AddEntry(gpp[m],"#pi^{+}   "+sysName[m],"lp");
+    aLeg0->AddEntry(gpp[m],"#pi^{+}   "+sysName[sys[m]],"lp");
   }
 
 
@@ -462,7 +462,7 @@ void meanPx()                     //%% Executable : Make  plots of <px> vs rapid
 
 }
 
-UInt_t pxbooking()
+UInt_t pxbooking()  // used by meanPx()
 {
   //----- booking
 
@@ -476,27 +476,27 @@ UInt_t pxbooking()
       TString hname = Form("hptpr%d%d",m,i);
       TString htitle= Form("fRapidity>=%f&&fRapidity<%f; Pt(MeV/c); dN/dPtdy",yL,yU);
       hptpr[m][i] = new TH1D(hname,"Proton :  "+htitle,pt_nbin, pt_prmin, pt_prmax);
-      hptpr[m][i] ->SetLineColor(icol[m]);
+      hptpr[m][i] ->SetLineColor(icol[sys[m]]);
 
       hname = Form("hptdt%d%d",m,i);
       htitle= Form("fRapidity>=%f&&fRapidity<%f; Pt(MeV/c); dN/dPtdy",yL,yU);
       hptdt[m][i] = new TH1D(hname,"Deuteron :"+htitle,pt_nbin, pt_dtmin, pt_dtmax);
-      hptdt[m][i] ->SetLineColor(icol[m]);
+      hptdt[m][i] ->SetLineColor(icol[sys[m]]);
 
       hname = Form("hpttr%d%d",m,i);
       htitle= Form("fRapidity>=%f&&fRapidity<%f; Pt(MeV/c); dN/dPtdy",yL,yU);
       hpttr[m][i] = new TH1D(hname,"Triton :  "+htitle,pt_nbin, pt_trmin, pt_trmax);
-      hpttr[m][i] ->SetLineColor(icol[m]);
+      hpttr[m][i] ->SetLineColor(icol[sys[m]]);
 
       hname = Form("hptpm%d%d",m,i);
       htitle= Form("fRapidity>=%f&&fRapidity<%f; Pt(MeV/c); dN/dPtdy",yL,yU);
       hptpm[m][i] = new TH1D(hname,"Pi- :     "+htitle,pt_nbin, pt_pimin, pt_pimax);
-      hptpm[m][i] ->SetLineColor(icol[m]);
+      hptpm[m][i] ->SetLineColor(icol[sys[m]]);
 
       hname = Form("hptpp%d%d",m,i);
       htitle= Form("fRapidity>=%f&&fRapidity<%f; Pt(MeV/c); dN/dPtdy",yL,yU);
       hptpp[m][i] = new TH1D(hname,"Pi+ :     "+htitle,pt_nbin, pt_pimin, pt_pimax);
-      hptpp[m][i] ->SetLineColor(icol[m]);
+      hptpp[m][i] ->SetLineColor(icol[sys[m]]);
 
     }
   }
@@ -505,7 +505,7 @@ UInt_t pxbooking()
 
 
 
-void PxDistribution(UInt_t nplot)
+void PxDistribution(UInt_t nplot)  // used by meanPx()
 {
   pt_prmin  =  -pt_prmax;
   pt_dtmin  =  -pt_dtmax;
@@ -516,8 +516,6 @@ void PxDistribution(UInt_t nplot)
   
   for(Int_t m = m_bgn; m < m_end; m++){
 
-    aArray->Clear();
-    mtrack = 0;
     
     rChain[m]->SetBranchAddress("STParticle",&aArray);
     rChain[m]->SetBranchAddress("mtrack" ,&mtrack);
@@ -528,6 +526,9 @@ void PxDistribution(UInt_t nplot)
 
 
     for(Int_t i = 0; i < nEntry; i++){
+      aArray->Clear();
+      mtrack = 0;
+
       rChain[m]->GetEntry(i);
 
       if(mtrack == 0) continue;
@@ -578,6 +579,7 @@ void PxDistribution(UInt_t nplot)
   
 }
  
+
 void hpt_plot()
 {
 
@@ -668,7 +670,7 @@ void hpt_plot()
   }
 }
 
-void plotv1v2(UInt_t selid=2)     //%% Executable :   v1 and v2 as a function of rapidity
+void plotv1v2(UInt_t selid=2)     //%% Executable : v1 and v2 as a function of rapidity
 {
   if(selid > 4 ) return;
 
@@ -1484,3 +1486,188 @@ void YDependece(UInt_t hrm=1)
   }
 }
 
+
+void GetRPResolution()            //%% Executable : Plot Phi and subevent, Phi_A and Phi_B correlation
+{
+
+
+  // Booking
+  TH1D *hrpphi[4];
+  TH1D *hdltphi[4];
+  TH2D *hsubphi[4];
+
+  for(UInt_t m = m_bgn; m < m_end; m++){
+
+    TString hname = Form("hrpphi%d",m);
+    hrpphi[m] = new TH1D(hname,sysName[sys[m]]+";#Phi ",60, -3.2, 3.2);
+    hrpphi[m] -> SetLineColor(icol[sys[m]]);
+
+    hname = Form("hdltphi%d",m);
+    hdltphi[m] = new TH1D(hname,sysName[sys[m]]+";#Phi_A - #Phi_B",60,-3.2,3.2);
+    hdltphi[m]-> SetLineColor(icol[sys[m]]);
+
+    hname = Form("hsubphi%d",m);
+    hsubphi[m] = new TH2D(hname,sysName[sys[m]]+";#Phi_A ; Phi_B",60,-3.2,3.2, 60,-3.2,3.2);
+
+  }
+    
+  // Retreview
+
+  for(Int_t m = m_bgn; m < m_end; m++){
+
+    Int_t    mtrack;
+    Int_t    mtrack_1;
+    Int_t    mtrack_2;
+
+    TVector2 *unitP_lang  = NULL;
+    TVector2 *unitP_1     = NULL;
+    TVector2 *unitP_2     = NULL;
+
+    TBranch  *bunitP_lang;
+    TBranch  *bunitP_1;
+    TBranch  *bunitP_2;
+    TBranch  *brpphi   = 0;
+    TBranch  *biphi    = 0;
+    TBranch  *bdeltphi = 0;
+ 
+    rChain[m]->SetBranchAddress("unitP_lang",&unitP_lang,&bunitP_lang);
+    rChain[m]->SetBranchAddress("unitP_1"   ,&unitP_1,&bunitP_1);
+    rChain[m]->SetBranchAddress("unitP_2"   ,&unitP_2,&bunitP_2);
+    rChain[m]->SetBranchAddress("mtrack"    ,&mtrack);
+    rChain[m]->SetBranchAddress("mtrack_1"  ,&mtrack_1);
+    rChain[m]->SetBranchAddress("mtrack_2"  ,&mtrack_2);
+
+    Int_t nEntry = rChain[m]->GetEntries();
+
+    for(Int_t i = 0; i < nEntry; i++){
+      rChain[m]->GetEntry(i);
+
+      hrpphi[m]  -> Fill(TVector2::Phi_mpi_pi(unitP_lang->Phi()));
+      hdltphi[m] -> Fill(TVector2::Phi_mpi_pi( unitP_1->Phi() - unitP_2->Phi() ) );
+      hsubphi[m] -> Fill(TVector2::Phi_mpi_pi(unitP_1->Phi()), TVector2::Phi_mpi_pi(unitP_2->Phi()) );
+     
+    }
+  }
+
+  // Draw
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,1000);
+  cc[ic]->Divide(3,m_end);
+  
+  UInt_t id = 1;
+  
+  for(Int_t m = m_bgn; m < m_end; m++){
+    cc[ic]->cd(id); id++;
+    hrpphi[m] -> Draw();
+
+    cc[ic]->cd(id); id++;
+    hdltphi[m]-> Draw();
+
+    cc[ic]->cd(id); id++;
+    hsubphi[m]-> Draw("colz");
+  }  
+
+}
+
+//________________________________//%%
+void FlatteningCheck()            //%% Executable : 
+{
+  //----- Parametres
+
+  //----- Booking
+  TH2D *hphitheta[4];
+  TH2D *hphimtrck[4];
+
+  for(Int_t m = m_bgn; m < m_end; m++){
+    TString hname = Form("hphitheta%d",m);
+    hphitheta[m] = new TH2D(hname, sysName[sys[m]]+"; #Theta ; #Phi",100,0,1.6, 100,-3.2, 3.2);
+
+    hname = Form("hphimtrck%d",m);
+    hphimtrck[m] = new TH2D(hname, sysName[sys[m]]+"; Number of Track ; #Phi",80,0,80, 100,-3.2, 3.2);
+
+  }
+
+
+  //----- Filling
+  for(Int_t m = m_bgn; m < m_end; m++){
+
+
+    rChain[m]->SetBranchAddress("STParticle",&aArray);
+    rChain[m]->SetBranchAddress("mtrack",&mtrack);
+
+    Int_t nEntry = rChain[m]->GetEntries();
+
+    for(Int_t i = 0; i < nEntry; i++){
+      aArray->Clear();
+
+      rChain[m]->GetEntry(i);
+
+      TIter next(aArray);
+      STParticle *aPart = NULL;
+
+      while( (aPart = (STParticle*)next()) ) {
+
+        auto pid   = aPart->GetPID();
+        auto charg = aPart->GetCharge();
+        auto rapid = aPart->GetRapidity();
+        auto vp    = aPart->GetFlattenMomentum();
+        auto dltphi= aPart->GetAzmAngle_wrt_RP();;
+	auto phi   = aPart->GetFlattenMomentum().Phi();
+	auto theta = aPart->GetFlattenMomentum().Theta();
+	auto flag  = aPart->GetReactionPlaneFlag();
+	
+	if(flag > 110 ){
+	  hphitheta[m]->Fill( theta, phi );
+	  hphimtrck[m]->Fill( mtrack, phi ); 
+	}
+      }
+    }
+  }
+
+
+  //----- Drawing 
+
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,1000);
+  cc[ic]->Divide(2,m_end);
+
+  UInt_t id = 1;
+
+  for(Int_t m = m_bgn; m < m_end; m++){
+    cc[ic]->cd(id); id++;
+    hphitheta[m]->Draw("colz");
+
+    cc[ic]->cd(id); id++;
+    hphimtrck[m]->Draw("colz");
+  }
+
+}
+
+
+//________________________________//%% Executable : 
+void Template()                   
+{
+  //----- Parametres
+
+  //----- Booking
+  for(Int_t m = m_bgn; m < m_end; m++){
+
+  }
+
+  //----- Filling
+  for(Int_t m = m_bgn; m < m_end; m++){
+    Int_t nEntry = rChain[m]->GetEntries();
+
+    for(Int_t i = 0; i < nEntry; i++){
+      rChain[m]->GetEntry(i);
+    }
+  }
+  //----- Drawing 
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,1000);
+  cc[ic]->Divide(3,m_end);
+
+  UInt_t id = 1;
+  for(Int_t m = m_bgn; m < m_end; m++){
+  }
+}

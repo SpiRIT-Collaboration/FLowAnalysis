@@ -132,7 +132,7 @@ Bool_t CheckPID(STParticle *apart)
     apart -> SetReactionPlaneFlag(1);
     bsel =  kTRUE;
   }  
-  else if(pid > 1000 && Charge > 0 && P < 2500){
+  else if(pid > 1000 && Charge > 0 && P < 2500 && P > 0){
     apart -> SetReactionPlaneFlag(10);
     bsel =   kTRUE;
   }
