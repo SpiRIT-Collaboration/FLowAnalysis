@@ -1,11 +1,7 @@
-TChain *LChain[4];
+#include "openFlw.h"
+
 static UInt_t id = 0;
  
-TString printHeader="";
-TString aRun[2];
-TString sDB[2];
-UInt_t  isys[4]={9, 9, 9, 9};
-
 
 UInt_t OpenChain(UInt_t m = 0);
 
@@ -13,29 +9,25 @@ void openFlw()
 {
   gROOT->Reset();
     
-  aRun[0] = gSystem -> Getenv("RUN0");
-  
-  sDB[0] = gSystem -> Getenv("DB0");
+  for(UInt_t i = 0 ; i < nconfig; i++){
+    TString form = Form("RUN%d",i);
+    aRun[i] = gSystem -> Getenv(form);
+    form = Form("DB%d",i);
+    sDB[i] = gSystem -> Getenv(form);
+  }
 
-  aRun[1] = gSystem -> Getenv("RUN1");
-  
-  sDB[1] = gSystem -> Getenv("DB1");
 
   UInt_t ichain = 0;
 
-  if( aRun[0] != "" && sDB[0] != ""){ 
-    std::cout << " RUN0 -> " << aRun[0] << " : DB0 -> " << sDB[0] << std::endl;
+  for(UInt_t i = 0; i < nconfig; i++){
+    if( aRun[i] != "" && sDB[i] != ""){ 
+      std::cout << " RUN" << i << "-> " << aRun[i] << " : DB " << i << "-> " << sDB[i] << std::endl;
 
-    isys[ichain] = OpenChain(ichain);
-    if(isys[ichain] < 10) ichain++;
+      isys[ichain] = OpenChain(ichain);
+      if(isys[ichain] < 10) ichain++;
+    }
   }
-  else
-    std::cout << " RUN0 -> " << aRun[0] << " : DB0 -> " << sDB[0] << std::endl;
 
-  if( aRun[1] != "" && sDB[1] != "") {
-    std::cout << " RUN1 -> " << aRun[1] << " : DB1 -> " << sDB[1] << std::endl;
-    isys[ichain] = OpenChain(ichain);
-  }
 }
 
 UInt_t GetSystem(UInt_t ival)
@@ -120,13 +112,22 @@ UInt_t OpenChain(UInt_t m)
   // 2: 124Sn + 112Sn : 2520 - 2653
   // 3: 112Sn + 124Sn
   UInt_t system = 10;
-  if(lrun.at(0) >= 2841 && lrun.at(0) <= 3039)
-    system = 0;
-  else if(lrun.at(0) >= 2261 && lrun.at(0) <= 2509)
-    system = 1;
-  else if(lrun.at(0) >= 2520 && lrun.at(0) <= 2653)
-    system = 2;
-
+  if(lrun.at(0) >= 2841 && lrun.at(0) <= 3039){
+    system = 0; // 132
+    sysName[0] = "132Sn";
+  }    
+  else if(lrun.at(0) >= 2261 && lrun.at(0) <= 2509){
+    system = 1; // 108
+    sysName[1] = "108Sn";
+  }
+  else if(lrun.at(0) >= 3059 && lrun.at(0) <= 3184){
+    system = 2; // 124
+    sysName[2] = "124Sn";
+  }
+  else if(lrun.at(0) >= 2520 && lrun.at(0) <= 2653){
+    system = 3; // 112
+    sysName[3] = "112Sn";
+  }
 
   return system;
 }
