@@ -68,7 +68,7 @@ void flw_process4(Long64_t nmax = -1)
 
 	FlatteningCorrection(aPart1,mtkBIN);
 	  
-	if( aPart1->GetReactionPlaneFlag() >=  10 ){  // reject pi+-
+	if( aPart1->GetReactionPlaneFlag() >  1 ){  // reject pi+-
 	    
 	  if( aPart1->GetRotatedMomentum().Mag() > 2500 || aPart1->GetMomentum().Mag() == 0) { // reject strange momentum
 	    aPart1->SetReactionPlaneFlag(0);
@@ -83,7 +83,6 @@ void flw_process4(Long64_t nmax = -1)
 	  ntrack[4]++;
 	
 	  unitP += aPart1->GetFlattenMomentum().Unit();
-
 	    
 	  unitP_lang += aPart1->GetRPWeight() * (aPart1->GetFlattenPt()).Unit();
 
@@ -675,11 +674,19 @@ void FlatteningCorrection(STParticle *apart, Int_t ival)
 
   
   Int_t iBIN = GetThetaCorrectionIndex(binParameter, mtkBIN);
-  
+
+  //  cout << "binpara " << binParameter << " mtkBIN " << mtkBIN << " ibin " << iBIN <<endl;
+
   if(iBIN >= 0){
     flowcorr = (STFlowCorrection*)aflowcorrArray->At(iBIN);
+
+    //    cout << flowcorr->GetBin_min(0) << " < " << flowcorr->GetBin_max(0) << " : " 
+    //	 << flowcorr->GetBin_min(1) << " < " << flowcorr->GetBin_max(1) << endl; 
+
+    //cout << " before " << apart->GetRotatedMomentum().Phi() << endl;
     Double_t phi =  flowcorr->GetCorrection((apart->GetRotatedMomentum()).Phi());
     apart->Flattening( phi );
+    //    cout << " after " << apart->GetFlattenMomentum().Phi() << endl;
     
 
   }
