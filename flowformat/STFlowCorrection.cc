@@ -189,9 +189,8 @@ Double_t STFlowCorrection::GetCorrection(Double_t val)
     cpphi += An[k]*cos((Double_t)(k+1) * val);
     cpphi += Bn[k]*sin((Double_t)(k+1) * val);
   } 
-  
-  return cpphi;
-  
+
+  return cpphi;  
 }
 
 Double_t  *STFlowCorrection::GetAverageCosin(Int_t ival, std::vector<Double_t> &val)
@@ -213,7 +212,6 @@ Double_t  *STFlowCorrection::GetAverageCosin(Int_t ival, std::vector<Double_t> &
   vcos[1]  =  TMath::RMS(ibgn, iend);
 
   return vcos;
-
 }
 
 UInt_t STFlowCorrection::FourierCorrection()

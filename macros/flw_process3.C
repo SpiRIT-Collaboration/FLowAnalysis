@@ -204,7 +204,7 @@ void flatten_iphi_mtrkthetabin()
 
       UInt_t j = mtrknbin;
       while(1){ 
-	if( mtrack >= mtrkbin[j] ){
+	if( ntrack[2] >= mtrkbin[j] ){
 	  imtrk = j;
 	  break;
 	}
@@ -219,8 +219,8 @@ void flatten_iphi_mtrkthetabin()
 
 	// if(aPart1->GetReactionPlaneFlag() >= 11 && aPart1->GetReactionPlaneFlag() <= 13){
 	// if(aPart1->GetReactionPlaneFlag() >= 10 && aPart1->GetRotatedMomentum().Mag()<2500){
-	// if(aPart1->GetRotatedMomentum().Mag() > 0){ // pion is included
-	if(aPart1->GetReactionPlaneFlag() > 1) {
+	// if(aPart1->GetRotatedMomentum().Mag() > 0){ 
+	if(aPart1->GetReactionPlaneFlag() > 1) { // pion is included
 	  
 	  Double_t phi   = aPart1->GetRotatedMomentum().Phi();
 	  Double_t theta = aPart1->GetRotatedMomentum().Theta();
@@ -280,7 +280,8 @@ void flatten_iphi_mtrkthetabin()
 	  haiphi[m]     ->Fill(aphi.at(k));	  
 	}
 	
-	TString comm = Form("cv%d.m%dn%d:flatten_iphi_mtrkthetabin; mtrack> %f && mtrack< %f theta> %f && theta< %f",iVer,j,i,mtrkbin[j],mtrkbin[j+1],thetabin[i],thetabin[i+1]);
+	TString comm = Form("cv%d.m%dn%d:flatten_iphi_mtrkthetabin; mtrack> %f && mtrack< %f theta> %f && theta< %f",
+			    iVer,j,i,mtrkbin[j],mtrkbin[j+1],thetabin[i],thetabin[i+1]);
 	cout << "save " << comm << endl;
 	flowcorr[j][i]-> SaveCorrectionFactor(comm);    
       }

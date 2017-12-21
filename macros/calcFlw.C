@@ -447,8 +447,6 @@ void meanPx()                     //%% Executable : Make  plots of <px> vs rapid
     aLeg0->AddEntry(gpp[m],"#pi^{+}   "+sysName[sys[m]],"lp");
   }
 
-
-
   ic++;
   cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
   mgpdt -> Draw("a");
@@ -459,7 +457,6 @@ void meanPx()                     //%% Executable : Make  plots of <px> vs rapid
   cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
   mgpi  ->Draw("a");
   aLeg0->Draw();
-
 }
 
 UInt_t pxbooking()  // used by meanPx()
@@ -1580,7 +1577,7 @@ void FlatteningCheck()            //%% Executable :
 
   for(Int_t m = m_bgn; m < m_end; m++){
     TString hname = Form("hphitheta%d",m);
-    hphitheta[m] = new TH2D(hname, sysName[sys[m]]+"; #Theta ; #Phi",100,0,1.6, 100,-3.2, 3.2);
+    hphitheta[m] = new TH2D(hname, sysName[sys[m]]+"; #Theta ; #Phi",100,0,0.8, 100,-3.2, 3.2);
 
     hname = Form("hphimtrck%d",m);
     hphimtrck[m] = new TH2D(hname, sysName[sys[m]]+"; Number of Track ; #Phi",80,0,80, 100,-3.2, 3.2);
@@ -1616,7 +1613,8 @@ void FlatteningCheck()            //%% Executable :
 	auto theta = aPart->GetFlattenMomentum().Theta();
 	auto flag  = aPart->GetReactionPlaneFlag();
 	
-	if(flag > 110 ){
+	//	if(flag > 110 ){
+	if(flag > 1 ){
 	  hphitheta[m]->Fill( theta, phi );
 	  hphimtrck[m]->Fill( mtrack, phi ); 
 	}
@@ -1628,7 +1626,7 @@ void FlatteningCheck()            //%% Executable :
   //----- Drawing 
 
   ic++;
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,1000);
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
   cc[ic]->Divide(2,m_end);
 
   UInt_t id = 1;
