@@ -68,28 +68,36 @@ void flw_process4(Long64_t nmax = -1)
 
 	FlatteningCorrection(aPart1,mtkBIN);
 	  
-	if( aPart1->GetReactionPlaneFlag() >  1 ){  // reject pi+-
+	// Particle selection
+	if ( aPart1->GetReactionPlaneFlag() >  1 ){  // reject pi+-
+
+	  if( aPart1->GetRotatedMomentum().Mag() > 2500 || 
+	      aPart1->GetMomentum().Mag() == 0          ||
+	      aPart1->GetBestTrackFlag()  == 0          )  // reject strange momentum
 	    
-	  if( aPart1->GetRotatedMomentum().Mag() > 2500 || aPart1->GetMomentum().Mag() == 0) { // reject strange momentum
 	    aPart1->SetReactionPlaneFlag(0);
-	    continue;
-	  }
-	  else if( aPart1->GetFlattenMomentum().Theta() < 0.8 && aPart1->GetBestTrackFlag() > 0){
-            aPart1->AddReactionPlaneFlag(1000);
-            ntrack[5]++;
-	  }
+	
+	  else if( aPart1->GetFlattenMomentum().Theta() > 0.8 )
+	    aPart1->AddReactionPlaneFlag(100);
+
+	  else
+	    aPart1->AddReactionPlaneFlag(1000);
+	}
+
+
+	if( aPart1->GetReactionPlaneFlag() > 1000){
+	  ntrack[5]++;
 
 	  mtrack++;
 	  ntrack[4]++;
 	
 	  unitP += aPart1->GetFlattenMomentum().Unit();
-	    
+	
 	  unitP_lang += aPart1->GetRPWeight() * (aPart1->GetFlattenPt()).Unit();
-
+	
 	  unitP_rot  += aPart1->GetRPWeight() * (aPart1->GetRotatedPt()).Unit();
 	}
       }
-
 
       SubEventAnalysis();
       
@@ -539,7 +547,7 @@ void SubEventAnalysis()
 
   while( (aPart1 = (STParticle*)next()) ) {
     
-    if(aPart1->GetReactionPlaneFlag() >= 110){
+    if(aPart1->GetReactionPlaneFlag() > 1000){
       Double_t wt = aPart1->GetRPWeight();
       TVector2 pt = aPart1->GetCorrectedPt();
       TVector2 ptr= aPart1->GetRotatedPt();
@@ -551,7 +559,7 @@ void SubEventAnalysis()
 
 	elem1.push_back( wt * pt.Unit() );
 
-	aPart1->AddReactionPlaneFlag(200);
+	aPart1->AddReactionPlaneFlag(3000);
 	mtrack_1++;
       }
       else if( mtrack_2 < ntrack[4]/2 ) {
@@ -560,7 +568,7 @@ void SubEventAnalysis()
 
 	elem2.push_back( wt * pt.Unit() );
 
-	aPart1->AddReactionPlaneFlag(100);
+	aPart1->AddReactionPlaneFlag(1000);
 	mtrack_2++;
       }
       else{
@@ -569,7 +577,7 @@ void SubEventAnalysis()
 
 	elem1.push_back( wt * pt.Unit() );
 
-	aPart1->AddReactionPlaneFlag(200);
+	aPart1->AddReactionPlaneFlag(3000);
 	mtrack_1++;
       }
 
@@ -601,15 +609,9 @@ void AzmAngleRPTReactionPlane()
   STParticle *aPart1 = NULL;
 
 
-  //  cout << " track " << mtrack << " / " << aParticleArray->GetEntries() <<  endl;
-
-  //  UInt_t icount = 0;
   while( (aPart1 = (STParticle*)next()) ) {
 
-    //    if(icount == 1) break;
-    //icount++;
-
-    if(aPart1->GetReactionPlaneFlag() > 1000){
+    if(aPart1->GetReactionPlaneFlag() > 0){
       Double_t wt = aPart1->GetRPWeight();
       TVector2 pt = aPart1->GetCorrectedPt();
 
@@ -624,7 +626,7 @@ void AzmAngleRPTReactionPlane()
       UInt_t itraex = 0;
       while( (restPart = (STParticle*)rest()) ) {
 
-	if( aPart1 != restPart && restPart->GetReactionPlaneFlag() >= 110 ) {
+	if( aPart1 != restPart && restPart->GetReactionPlaneFlag() > 1000 ) {
 
 	  Double_t wt_rp = restPart->GetRPWeight();
 	  TVector2 pt_rp = restPart->GetCorrectedPt();

@@ -128,7 +128,7 @@ void flatten_iphi_mtrkthetabin()
   const UInt_t mtrknbin=5;
   Double_t mtrkbin[mtrknbin+1];
   Double_t mtrk_min = 0;
-  Double_t mtrk_max = 30;
+  Double_t mtrk_max = 40;
   for(UInt_t n = 0; n < mtrknbin+2; n++)
     mtrkbin[n]   = mtrk_max/mtrknbin * n;
 
@@ -154,8 +154,8 @@ void flatten_iphi_mtrkthetabin()
     hbthetaiphi[m]= new TH2D(Form("hbthetaiphi%d",m), " before ; theta; #phi;  "           , 200,0.,1.6, 400,-3.2,3.2); 
     hathetaiphi[m]= new TH2D(Form("hathetaiphi%d",m), " after  ; theta; #phi;  "           , 200,0.,1.6, 400,-3.2,3.2); 
 
-    hbmtrkiphi[m] = new TH2D(Form("hbmtrkiphi%d",m)," before ; Number of tracks; #phi"     , 100,0,100,400,-3.2,3.2);
-    hamtrkiphi[m] = new TH2D(Form("hamtrkiphi%d",m)," after  ; Number of tracks; #phi"     , 100,0,100,400,-3.2,3.2);
+    hbmtrkiphi[m] = new TH2D(Form("hbmtrkiphi%d",m)," before ; Number of tracks; #phi"     , 40,0,40,400,-3.2,3.2);
+    hamtrkiphi[m] = new TH2D(Form("hamtrkiphi%d",m)," after  ; Number of tracks; #phi"     , 40,0,40,400,-3.2,3.2);
 
     aParticleArray = new TClonesArray("STParticle",100);
 
@@ -220,7 +220,8 @@ void flatten_iphi_mtrkthetabin()
 	// if(aPart1->GetReactionPlaneFlag() >= 11 && aPart1->GetReactionPlaneFlag() <= 13){
 	// if(aPart1->GetReactionPlaneFlag() >= 10 && aPart1->GetRotatedMomentum().Mag()<2500){
 	// if(aPart1->GetRotatedMomentum().Mag() > 0){ 
-	if(aPart1->GetReactionPlaneFlag() > 1) { // pion is included
+	// if(aPart1->GetReactionPlaneFlag() > 1) { // pion is excluded
+	if(aPart1->GetReactionPlaneFlag() > 1 && aPart1->GetBestTrackFlag() > 0 ){
 	  
 	  Double_t phi   = aPart1->GetRotatedMomentum().Phi();
 	  Double_t theta = aPart1->GetRotatedMomentum().Theta();
@@ -235,11 +236,11 @@ void flatten_iphi_mtrkthetabin()
 	    k--;
 	  }
 
-	  hbthetaiphi[m]->Fill(theta , phi);	  
-	  hbmtrkiphi[m] ->Fill(mtrack  , phi);	  
+	  hbthetaiphi[m]->Fill(theta      , phi);	  
+	  hbmtrkiphi[m] ->Fill(ntrack[2]  , phi);	  
 
 	  if(imtrk <= mtrknbin && itheta <= thetanbin) {
-	    flowcorr[imtrk][itheta]->Add(mtrack,phi,theta);
+	    flowcorr[imtrk][itheta]->Add(ntrack[2],phi,theta);
 
 	    aPart1->SetFlattenBinID(imtrk, itheta);
 
@@ -325,6 +326,16 @@ void flatten_iphi_mtrkthetabin()
     
       vector<Double_t>::iterator itr;
       vector<Int_t>::iterator   iitr;
+
+      cout << " dbase " << flowcorr[3][3]->GetFileName() << endl;
+      cout << " m " << flowcorr[3][3]->GetBin_min(0) << " ~ " << flowcorr[3][3]->GetBin_max(0) 
+	   << " t " << flowcorr[3][3]->GetBin_min(1) << " ~ " << flowcorr[3][3]->GetBin_max(1)
+	   << endl;
+
+      cout << " ------------" << endl;
+      cout << " m " << mtrkbin[2]  << " ~ " << mtrkbin[3]
+	   << " t " << thetabin[2] << " ~ " << thetabin[3]
+	   << endl;
 
       vector<Double_t> vec1 =  flowcorr[3][3]->GetOriginalPhi();
       for(itr=vec1.begin(); itr!=vec1.end(); itr++)      
