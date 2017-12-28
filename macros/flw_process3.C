@@ -220,8 +220,8 @@ void flatten_iphi_mtrkthetabin()
 	// if(aPart1->GetReactionPlaneFlag() >= 11 && aPart1->GetReactionPlaneFlag() <= 13){
 	// if(aPart1->GetReactionPlaneFlag() >= 10 && aPart1->GetRotatedMomentum().Mag()<2500){
 	// if(aPart1->GetRotatedMomentum().Mag() > 0){ 
-	if(aPart1->GetReactionPlaneFlag() > 1) { // pion is excluded
-	// if(aPart1->GetReactionPlaneFlag() > 1 && aPart1->GetBestTrackFlag() > 0 ){
+	// if(aPart1->GetReactionPlaneFlag() > 1) { // pion is excluded
+	if(aPart1->GetReactionPlaneFlag() > 1 && aPart1->GetBestTrackFlag() > 0 ){
 	  
 	  Double_t phi   = aPart1->GetRotatedMomentum().Phi();
 	  Double_t theta = aPart1->GetRotatedMomentum().Theta();

@@ -16,7 +16,7 @@ export RNTEST=2850,2843
 
 export DB3a=_rf.v2.0
 
-RUN0={$RNF124} DB0=$DB3a VER=3 root flw_process3.C
+RUN0={$RNF124} DB0=$DB3a VER=4 root flw_process3.C
 
 
 

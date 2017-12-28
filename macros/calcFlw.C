@@ -535,6 +535,9 @@ void PxDistribution(UInt_t nplot)  // used by meanPx()
 
       while( (aPart = (STParticle*)next()) ) {
 
+	if( aPart->GetReactionPlaneFlag() == 0)
+	  continue;
+
 	auto pid   = aPart->GetPID();
 	auto charg = aPart->GetCharge();
 	auto rapid = aPart->GetRapidity();
@@ -1580,8 +1583,7 @@ void FlatteningCheck()            //%% Executable :
     hphitheta[m] = new TH2D(hname, sysName[sys[m]]+"; #Theta ; #Phi",100,0,0.8, 100,-3.2, 3.2);
 
     hname = Form("hphimtrck%d",m);
-    hphimtrck[m] = new TH2D(hname, sysName[sys[m]]+"; Number of Track ; #Phi",80,0,80, 100,-3.2, 3.2);
-
+    hphimtrck[m] = new TH2D(hname, sysName[sys[m]]+"; Number of Track ; #Phi",35,0,35, 100,-3.2, 3.2);
   }
 
 
@@ -1604,17 +1606,18 @@ void FlatteningCheck()            //%% Executable :
 
       while( (aPart = (STParticle*)next()) ) {
 
-        auto pid   = aPart->GetPID();
-        auto charg = aPart->GetCharge();
-        auto rapid = aPart->GetRapidity();
-        auto vp    = aPart->GetFlattenMomentum();
-        auto dltphi= aPart->GetAzmAngle_wrt_RP();;
+        // auto pid   = aPart->GetPID();
+        // auto charg = aPart->GetCharge();
+        // auto rapid = aPart->GetRapidity();
+        // auto vp    = aPart->GetFlattenMomentum();
+        // auto dltphi= aPart->GetAzmAngle_wrt_RP();;
 	auto phi   = aPart->GetFlattenMomentum().Phi();
 	auto theta = aPart->GetFlattenMomentum().Theta();
 	auto flag  = aPart->GetReactionPlaneFlag();
-	
+	auto bflag = aPart->GetBestTrackFlag();
+
 	//	if(flag > 110 ){
-	if(flag > 1 ){
+	if(flag > 1 && bflag > 0){
 	  hphitheta[m]->Fill( theta, phi );
 	  hphimtrck[m]->Fill( mtrack, phi ); 
 	}
@@ -1639,6 +1642,34 @@ void FlatteningCheck()            //%% Executable :
     hphimtrck[m]->Draw("colz");
   }
 
+}
+
+//________________________________//%% Executable : 
+void Phi()                        //%% Executable : 
+{
+  //----- Parametres
+
+  //----- Booking
+  for(Int_t m = m_bgn; m < m_end; m++){
+
+  }
+
+  //----- Filling
+  for(Int_t m = m_bgn; m < m_end; m++){
+    Int_t nEntry = rChain[m]->GetEntries();
+
+    for(Int_t i = 0; i < nEntry; i++){
+      rChain[m]->GetEntry(i);
+    }
+  }
+  //----- Drawing 
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,1000);
+  cc[ic]->Divide(3,m_end);
+
+  UInt_t id = 1;
+  for(Int_t m = m_bgn; m < m_end; m++){
+  }
 }
 
 
@@ -1669,3 +1700,5 @@ void Template()
   for(Int_t m = m_bgn; m < m_end; m++){
   }
 }
+
+
