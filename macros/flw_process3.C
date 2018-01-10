@@ -203,8 +203,12 @@ void flatten_iphi_mtrkthetabin()
       UInt_t imtrk  = 0;
 
       UInt_t j = mtrknbin;
+
+      //     Int_t seltrack = ntrack[4];
+      Int_t seltrack = ntrack[5];
+
       while(1){ 
-	if( ntrack[4] >= mtrkbin[j] ){
+	if( seltrack >= mtrkbin[j] ){
 	  imtrk = j;
 	  break;
 	}
@@ -217,7 +221,8 @@ void flatten_iphi_mtrkthetabin()
       
       while( (aPart1 = (STParticle*)next()) ){
 
-	if( aPart1->GetReactionPlaneFlag() > 1 ){
+	//	if( aPart1->GetReactionPlaneFlag() == 10 ){
+	if( aPart1->GetReactionPlaneFlag() == 20 ){
 	  
 	  Double_t phi   = aPart1->GetRotatedMomentum().Phi();
 	  Double_t theta = aPart1->GetRotatedMomentum().Theta();
@@ -233,10 +238,10 @@ void flatten_iphi_mtrkthetabin()
 	  }
 
 	  hbthetaiphi[m]->Fill(theta      , phi);	  
-	  hbmtrkiphi[m] ->Fill(ntrack[4]  , phi);	  
+	  hbmtrkiphi[m] ->Fill(seltrack  , phi);	  
 
 	  if(imtrk <= mtrknbin && itheta <= thetanbin) {
-	    flowcorr[imtrk][itheta]->Add(ntrack[4],phi,theta);
+	    flowcorr[imtrk][itheta]->Add(seltrack, phi,theta);
 
 	    aPart1->SetFlattenBinID(imtrk, itheta);
 

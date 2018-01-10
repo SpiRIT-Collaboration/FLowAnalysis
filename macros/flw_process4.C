@@ -49,9 +49,11 @@ void flw_process4(Long64_t nmax = -1)
 
 
     Int_t mtkBIN = -1;
+    seltrack = ntrack[5];
+
     if(ntrack[2] > 0 ) {
      
-      mtkBIN = GetMultiplicityCorretionIndex(ntrack[4]);
+      mtkBIN = GetMultiplicityCorretionIndex(seltrack);
 
       Long64_t nLoop = 0;
 
@@ -63,7 +65,7 @@ void flw_process4(Long64_t nmax = -1)
 	FlatteningCorrection(aPart1,mtkBIN);
 	  
 	// Particle selection
-	if ( aPart1->GetReactionPlaneFlag() == 10 ){  // p/d/t/He
+	if ( aPart1->GetReactionPlaneFlag() == selReactionPlanef ){  // p/d/t/He
 
 	  unitP += aPart1->GetFlattenMomentum().Unit();
 	
@@ -73,10 +75,11 @@ void flw_process4(Long64_t nmax = -1)
 	}
       }
 
-      SubEventAnalysis();
-      
-      AzmAngleRPTReactionPlane();
-      
+      if(seltrack > 2) {
+	SubEventAnalysis();
+	AzmAngleRPTReactionPlane();
+      }
+
       mflw->Fill();
     }
   }
@@ -510,7 +513,7 @@ void SubEventAnalysis()
   STParticle *aPart1 = NULL;
 
   //  UInt_t np = aParticleArray->GetEntries();
-  UInt_t np = ntrack[4];
+  UInt_t np = seltrack;
   Float_t arr[np];
   rnd.RndmArray(np, arr);
   UInt_t isel = 0;
@@ -521,13 +524,13 @@ void SubEventAnalysis()
 
   while( (aPart1 = (STParticle*)next()) ) {
     
-    if(aPart1->GetReactionPlaneFlag() > 1){
+    if(aPart1->GetReactionPlaneFlag() == selReactionPlanef){
       Double_t wt = aPart1->GetRPWeight();
       TVector2 pt = aPart1->GetCorrectedPt();
       TVector2 ptr= aPart1->GetRotatedPt();
 
       
-      if( (UInt_t)(arr[isel]*np)%2 ==0 && mtrack_1 < ntrack[4]/2 ) {
+      if( (UInt_t)(arr[isel]*np)%2 ==0 && mtrack_1 < seltrack/2 ) {
 	unitP_1 += wt * pt.Unit();
 	unitP_1r+= wt * ptr.Unit();
 
@@ -536,7 +539,7 @@ void SubEventAnalysis()
 	aPart1->AddReactionPlaneFlag(100);
 	mtrack_1++;
       }
-      else if( mtrack_2 < ntrack[4]/2 ) {
+      else if( mtrack_2 < seltrack/2 ) {
 	unitP_2 += wt * pt.Unit();
 	unitP_2r+= wt * ptr.Unit();
 
@@ -557,7 +560,7 @@ void SubEventAnalysis()
 
       isel++;
       //cout << " _2 " << mtrack_2 << " / " << itra << endl;     
-      if( mtrack_1 + mtrack_2 > ntrack[4] ) break; 
+      if( mtrack_1 + mtrack_2 > seltrack ) break; 
 
     }
   }
@@ -585,7 +588,7 @@ void AzmAngleRPTReactionPlane()
 
   while( (aPart1 = (STParticle*)next()) ) {
 
-    if(aPart1->GetReactionPlaneFlag() > 1){
+    if(aPart1->GetReactionPlaneFlag() > 100){
       Double_t wt = aPart1->GetRPWeight();
       TVector2 pt = aPart1->GetCorrectedPt();
 

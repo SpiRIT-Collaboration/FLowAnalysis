@@ -14,7 +14,7 @@ export RNF124=3059,3061,3062,3065,3066,3068,3069,3071,3074,3075,3076,3077,3078,3
 
 export RNTEST=2850,2843
 
-export DB3a=_rf.v3.0
+export DB3a=_rf.v3.1
 
 RUN0={$RNF124} DB0=$DB3a VER=0 root flw_process3.C
 

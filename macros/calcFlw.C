@@ -1,6 +1,10 @@
 #include "FlowFunctions.h"
 #include "openFlw.C"
 
+Int_t  seltrack;
+UInt_t selReactionPlanef = 20;
+
+
 TCanvas *cc[12];
 
 //const Double_t ycm      = 0.388568; // 132Sn + 124Sn before Nov.15 201 //278MeV/u
@@ -1492,7 +1496,7 @@ void GetRPResolution()            //%% Executable : Plot Phi and subevent, Phi_A
 
   // Booking
   TH1D *hrpphi[4];
-  TH1D *hdltphi[4];
+  TH2D *hdltphi[4];
   TH2D *hsubphi[4];
 
   for(UInt_t m = m_bgn; m < m_end; m++){
@@ -1502,7 +1506,7 @@ void GetRPResolution()            //%% Executable : Plot Phi and subevent, Phi_A
     hrpphi[m] -> SetLineColor(icol[sys[m]]);
 
     hname = Form("hdltphi%d",m);
-    hdltphi[m] = new TH1D(hname,sysName[sys[m]]+";#Phi_A - #Phi_B",60,-3.2,3.2);
+    hdltphi[m] = new TH2D(hname,sysName[sys[m]]+";#Phi ; #Phi_A - #Phi_B",60,-3.2,3.2, 60,-3.2,3.2);
     hdltphi[m]-> SetLineColor(icol[sys[m]]);
 
     hname = Form("hsubphi%d",m);
@@ -1541,10 +1545,11 @@ void GetRPResolution()            //%% Executable : Plot Phi and subevent, Phi_A
     for(Int_t i = 0; i < nEntry; i++){
       rChain[m]->GetEntry(i);
 
-      hrpphi[m]  -> Fill(TVector2::Phi_mpi_pi(unitP_lang->Phi()));
-      hdltphi[m] -> Fill(TVector2::Phi_mpi_pi( unitP_1->Phi() - unitP_2->Phi() ) );
-      hsubphi[m] -> Fill(TVector2::Phi_mpi_pi(unitP_1->Phi()), TVector2::Phi_mpi_pi(unitP_2->Phi()) );
-     
+      if(mtrack_2>0){
+	hrpphi[m]  -> Fill(TVector2::Phi_mpi_pi(unitP_lang->Phi()));
+	hdltphi[m] -> Fill(TVector2::Phi_mpi_pi(unitP_lang->Phi()), TVector2::Phi_mpi_pi(unitP_1->Phi() - unitP_2->Phi()));
+	hsubphi[m] -> Fill(TVector2::Phi_mpi_pi(unitP_1->Phi()), TVector2::Phi_mpi_pi(unitP_2->Phi()) );
+      }
     }
   }
 
@@ -1560,7 +1565,7 @@ void GetRPResolution()            //%% Executable : Plot Phi and subevent, Phi_A
     hrpphi[m] -> Draw();
 
     cc[ic]->cd(id); id++;
-    hdltphi[m]-> Draw();
+    hdltphi[m]-> Draw("colz");
 
     cc[ic]->cd(id); id++;
     hsubphi[m]-> Draw("colz");
@@ -1614,12 +1619,11 @@ void FlatteningCheck()            //%% Executable :
 	auto phi   = aPart->GetFlattenMomentum().Phi();
 	auto theta = aPart->GetFlattenMomentum().Theta();
 	auto flag  = aPart->GetReactionPlaneFlag();
-	auto bflag = aPart->GetBestTrackFlag();
 
 	//	if(flag > 110 ){
-	if(flag > 1 && bflag > 0){
+	if(flag >= selReactionPlanef ){
 	  hphitheta[m]->Fill( theta, phi );
-	  hphimtrck[m]->Fill( ntrack[4], phi ); 
+	  hphimtrck[m]->Fill( ntrack[5], phi ); 
 	}
       }
     }

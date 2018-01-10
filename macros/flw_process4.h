@@ -5,6 +5,10 @@
 #include "TVector2.h"
 
 
+Int_t  seltrack;
+UInt_t selReactionPlanef = 20;
+
+
 // Reading tree
 TClonesArray *flowcorrArray    = NULL;
 Int_t         ntrack[7];

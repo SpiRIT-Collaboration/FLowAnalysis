@@ -82,9 +82,11 @@ void flw_process2(Long64_t nmax = -1)
 	    
 	  numGoodTrack++;
 
-	  if( aPart1->GetReactionPlaneFlag() == 10 )
+	  if( aPart1->GetReactionPlaneFlag() >= 10 )
 	    ntrack[4]++;
 
+	  if( aPart1->GetReactionPlaneFlag() == 20 )
+	    ntrack[5]++;
 	}
 
 	nLoop++;
@@ -153,10 +155,12 @@ void SetFlowFlag(STParticle *apart)
 	   apart->GetBestTrackFlag()     > 0 &&
 	   apart->GetMaxdEdxFlag()       > 0 &&
 	   apart->GetMaxMomentumFlag()   > 0
-	   //      apart->GetMaxThetaFlag()      > 0 &&
-	   //	   apart->GetNDFFlag()           > 0 && 
-	   )
+	   ) {
     apart->SetReactionPlaneFlag(10);
+
+    if(apart->GetNDFFlag())
+      apart->SetReactionPlaneFlag(20);
+  }
   else
     apart->SetReactionPlaneFlag(0);
 }
