@@ -47,50 +47,24 @@ void flw_process4(Long64_t nmax = -1)
     fTree->GetEntry(ievt);
     Long64_t  nGoodTrack = aParticleArray->GetEntries();
 
-    //    cout << ntrack[2] << endl;
-    //temp
-    ntrack[3] = mtrack;
-    mtrack = 0;
 
     Int_t mtkBIN = -1;
     if(ntrack[2] > 0 ) {
      
-      if(sbRun != "0")
-	mtkBIN = GetMultiplicityCorretionIndex(ntrack[2]);
+      mtkBIN = GetMultiplicityCorretionIndex(ntrack[4]);
 
       Long64_t nLoop = 0;
 
       TIter next(aParticleArray);
       STParticle *aPart1 = NULL;
-      while( (aPart1 = (STParticle*)next()) ) {
 
-	SetPtWeight(aPart1);
+      while( (aPart1 = (STParticle*)next()) ) {
 
 	FlatteningCorrection(aPart1,mtkBIN);
 	  
 	// Particle selection
-	if ( aPart1->GetReactionPlaneFlag() >  1 ){  // reject pi+-
+	if ( aPart1->GetReactionPlaneFlag() == 10 ){  // p/d/t/He
 
-	  if( aPart1->GetRotatedMomentum().Mag() > 2500 || 
-	      aPart1->GetMomentum().Mag() == 0          ||
-	      aPart1->GetBestTrackFlag()  == 0          )  // reject strange momentum
-	    
-	    aPart1->SetReactionPlaneFlag(0);
-	
-	  else if( aPart1->GetFlattenMomentum().Theta() > 0.8 )
-	    aPart1->AddReactionPlaneFlag(100);
-
-	  else
-	    aPart1->AddReactionPlaneFlag(1000);
-	}
-
-
-	if( aPart1->GetReactionPlaneFlag() > 1000){
-	  ntrack[5]++;
-
-	  mtrack++;
-	  ntrack[4]++;
-	
 	  unitP += aPart1->GetFlattenMomentum().Unit();
 	
 	  unitP_lang += aPart1->GetRPWeight() * (aPart1->GetFlattenPt()).Unit();
@@ -211,6 +185,7 @@ void Open()
 
   fTree->SetBranchAddress("STParticle",&aParticleArray);
   fTree->SetBranchAddress("ntrack",ntrack);
+  fTree->SetBranchAddress("mtrack",&mtrack);
 
   fTree->SetBranchAddress("aoq",&aoq);
   fTree->SetBranchAddress("z",&z);
@@ -230,7 +205,6 @@ void Initialize()
   unitP_1r= TVector2(0.,0.);
   unitP_2r= TVector2(0.,0.);
 
-  mtrack   = 0;
   mtrack_1 = 0;
   mtrack_2 = 0;
 	  
@@ -547,7 +521,7 @@ void SubEventAnalysis()
 
   while( (aPart1 = (STParticle*)next()) ) {
     
-    if(aPart1->GetReactionPlaneFlag() > 1000){
+    if(aPart1->GetReactionPlaneFlag() > 1){
       Double_t wt = aPart1->GetRPWeight();
       TVector2 pt = aPart1->GetCorrectedPt();
       TVector2 ptr= aPart1->GetRotatedPt();
@@ -559,7 +533,7 @@ void SubEventAnalysis()
 
 	elem1.push_back( wt * pt.Unit() );
 
-	aPart1->AddReactionPlaneFlag(3000);
+	aPart1->AddReactionPlaneFlag(100);
 	mtrack_1++;
       }
       else if( mtrack_2 < ntrack[4]/2 ) {
@@ -568,7 +542,7 @@ void SubEventAnalysis()
 
 	elem2.push_back( wt * pt.Unit() );
 
-	aPart1->AddReactionPlaneFlag(1000);
+	aPart1->AddReactionPlaneFlag(200);
 	mtrack_2++;
       }
       else{
@@ -577,7 +551,7 @@ void SubEventAnalysis()
 
 	elem1.push_back( wt * pt.Unit() );
 
-	aPart1->AddReactionPlaneFlag(3000);
+	aPart1->AddReactionPlaneFlag(100);
 	mtrack_1++;
       }
 
@@ -611,7 +585,7 @@ void AzmAngleRPTReactionPlane()
 
   while( (aPart1 = (STParticle*)next()) ) {
 
-    if(aPart1->GetReactionPlaneFlag() > 0){
+    if(aPart1->GetReactionPlaneFlag() > 1){
       Double_t wt = aPart1->GetRPWeight();
       TVector2 pt = aPart1->GetCorrectedPt();
 
@@ -626,7 +600,7 @@ void AzmAngleRPTReactionPlane()
       UInt_t itraex = 0;
       while( (restPart = (STParticle*)rest()) ) {
 
-	if( aPart1 != restPart && restPart->GetReactionPlaneFlag() > 1000 ) {
+	if( aPart1 != restPart && restPart->GetReactionPlaneFlag() > 100 ) {
 
 	  Double_t wt_rp = restPart->GetRPWeight();
 	  TVector2 pt_rp = restPart->GetCorrectedPt();

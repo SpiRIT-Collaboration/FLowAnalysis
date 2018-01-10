@@ -139,7 +139,7 @@ void      SetBeamOnTarget(TVector2 vt);
 void      SetBeamOnTarget();
 
 Bool_t    CheckBeamPosition();
-Bool_t    CheckVertex(TVector3 vec);
+Bool_t    CheckVertex(STParticle *aPart);
 Bool_t    CheckBDCvsVertexCorrelation(TVector2 vxy);
 Bool_t    CheckTrackonTarget(TVector3 trackatTarget);
 Bool_t    CheckBDCvsTrackCorrelation(TVector3 trackatTarget);

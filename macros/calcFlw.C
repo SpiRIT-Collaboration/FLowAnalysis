@@ -706,7 +706,6 @@ void plotv1v2(UInt_t selid=2)     //%% Executable : v1 and v2 as a function of r
     aArray->Clear();
     
     rChain[m]->SetBranchAddress("STParticle",&aArray);
-    rChain[m]->SetBranchAddress("ntrack",ntrack);
     rChain[m]->SetBranchAddress("mtrack" ,&mtrack);
 
     vector< vector<Double_t> > bphi(nbin);
@@ -1573,6 +1572,7 @@ void GetRPResolution()            //%% Executable : Plot Phi and subevent, Phi_A
 void FlatteningCheck()            //%% Executable : 
 {
   //----- Parametres
+  Int_t ntrack[7];
 
   //----- Booking
   TH2D *hphitheta[4];
@@ -1592,7 +1592,7 @@ void FlatteningCheck()            //%% Executable :
 
 
     rChain[m]->SetBranchAddress("STParticle",&aArray);
-    rChain[m]->SetBranchAddress("mtrack",&mtrack);
+    rChain[m]->SetBranchAddress("ntrack",ntrack);
 
     Int_t nEntry = rChain[m]->GetEntries();
 
@@ -1619,7 +1619,7 @@ void FlatteningCheck()            //%% Executable :
 	//	if(flag > 110 ){
 	if(flag > 1 && bflag > 0){
 	  hphitheta[m]->Fill( theta, phi );
-	  hphimtrck[m]->Fill( mtrack, phi ); 
+	  hphimtrck[m]->Fill( ntrack[4], phi ); 
 	}
       }
     }
@@ -1648,18 +1648,45 @@ void FlatteningCheck()            //%% Executable :
 void Phi()                        //%% Executable : 
 {
   //----- Parametres
+  Int_t    mtrack;
+  Int_t    mtrack_1;
+  Int_t    mtrack_2;
+
+  TVector2 *unitP_lang  = NULL;
+  TVector2 *unitP_1     = NULL;
+  TVector2 *unitP_2     = NULL;
+
+  TBranch  *bunitP_lang;
+  TBranch  *bunitP_1;
+  TBranch  *bunitP_2;
+  TBranch  *brpphi   = 0;
+  TBranch  *biphi    = 0;
+  TBranch  *bdeltphi = 0;
 
   //----- Booking
   for(Int_t m = m_bgn; m < m_end; m++){
+ 
 
   }
 
   //----- Filling
   for(Int_t m = m_bgn; m < m_end; m++){
+    rChain[m]->SetBranchAddress("unitP_lang",&unitP_lang,&bunitP_lang);
+    rChain[m]->SetBranchAddress("unitP_1"   ,&unitP_1,&bunitP_1);
+    rChain[m]->SetBranchAddress("unitP_2"   ,&unitP_2,&bunitP_2);
+    rChain[m]->SetBranchAddress("mtrack"    ,&mtrack);
+    rChain[m]->SetBranchAddress("mtrack_1"  ,&mtrack_1);
+    rChain[m]->SetBranchAddress("mtrack_2"  ,&mtrack_2);
+
     Int_t nEntry = rChain[m]->GetEntries();
 
     for(Int_t i = 0; i < nEntry; i++){
       rChain[m]->GetEntry(i);
+
+
+      
+
+
     }
   }
   //----- Drawing 

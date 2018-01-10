@@ -29,7 +29,9 @@ STParticle* GetMixedTrack(Long64_t *ival, Int_t *kval);
 
 void      ResetPID(STParticle *apart);
 void      SetPtWeight(STParticle *apart);
-Bool_t    CheckPID(STParticle *apart);
+void      SetFlowFlag(STParticle *apart);
+Bool_t    CheckParticle(STParticle *apart);
+
 
 void      LoadPIDFile();
 

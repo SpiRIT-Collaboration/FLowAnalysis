@@ -193,26 +193,49 @@ void flw_process1(Int_t nevt = -1)
 	STParticle *aParticle = new STParticle();
 	aParticle->SetRecoTrack(trackFromArray);
 
-	if( CheckVertex(vertex->GetPos()) )   {
+	//--- Rotate tracks along beam direction ---;
+	if(ProjA > -1000 && ProjB > -1000)
+	  aParticle->RotateAlongBeamDirection(ProjA/1000., ProjB/1000.);
 
-	  //--- Rotate tracks along beam direction ---;
-	  if(ProjA > -1000 && ProjB > -1000)
-	    aParticle->RotateAlongBeamDirection(ProjA/1000., ProjB/1000.);
 
-	  //--- check origin of the track ---;
-	  aParticle->SetTrackAtTarget(vertex->GetPos()); 
-	  if( aParticle->GetNDF() > 30 && aParticle->GetDistanceAtVergtex() < 5 &&
-	      aParticle->GetMomentumAtTarget().Mag() > 0) {
+	//--- check origin of the track ---;
+	aParticle->SetTrackAtTarget(vertex->GetPos()); 
 
-	    aParticle->SetBestTrackFlag(1);
-	    ntrack[2]++;
-	  }
+	if( aParticle->GetMomentumAtTarget().Mag() == 0)
+	  aParticle->SetMaxMomentumFlag(0);
 
-	  aParticle->SetTrackID(mtrack);      
-	  new(ptpcParticle[mtrack]) STParticle(*aParticle);      
-    
-	  mtrack++;
+	else if( CheckVertex(aParticle) )   {
+
+	  aParticle->SetBestTrackFlag(1);
+	  ntrack[2]++;
+
+
+	  //--- Set track quality flag ---;
+	  if( aParticle->GetDistanceAtVertex() >= 5 )
+	    aParticle->SetDistanceAtVertexFlag(0);
+
+	  if( aParticle->GetNDF() <= 30)
+	    aParticle->SetNDFFlag(0);
+	  
+	  if( aParticle->GetP() >= 2500 )
+	    aParticle->SetMaxMomentumFlag(0);
+	  
+	  if( aParticle->GetRotatedMomentum().Theta() >= 0.8 )
+	    aParticle->SetMaxThetaFlag(0);
+
+	  if( aParticle->GetdEdx() > 1000 )
+	    aParticle->SetMaxdEdxFlag(0);
+
 	}
+
+	if( aParticle->GetBestTrackFlag() )
+	  ntrack[3]++;
+
+
+	aParticle->SetTrackID(mtrack);      
+	new(ptpcParticle[mtrack]) STParticle(*aParticle);      
+	mtrack++;
+
       }
     
       //-------------------- end of track LOOP User Analysis --------------------
@@ -438,10 +461,19 @@ Bool_t CheckBeamPosition()
     return kFALSE;
 }
 
-Bool_t CheckVertex(TVector3 vec)
-{    if( (vec.Z() > vrt_Zmin     && vec.Z() < vrt_Zmax) &&
-	 (vec.X() > trktgt_right && vec.X() < trktgt_left) &&
-	 (vec.Y() > trktgt_btm   && vec.Y() < trktgt_top) )	 
+Bool_t CheckVertex(STParticle *aPart)
+{   
+  auto vec = aPart->GetTrackAtTarget(); 
+
+  if( vec.Z() < vrt_Zmin ||  vec.Z() > vrt_Zmax )
+    aPart->SetVertexZAtTargetFlag(0);
+
+
+  if( (vec.X() < trktgt_right || vec.X() > trktgt_left) ||
+      (vec.Y() < trktgt_btm   || vec.Y() > trktgt_top) )	 
+    aPart->SetVertexAtTargetFlag(0);
+    
+  if( aPart->GetVertexAtTargetFlag() * aPart->GetVertexZAtTargetFlag() )
     return kTRUE;
   else 
     return kFALSE;

@@ -29,7 +29,10 @@ void flw_process2(Long64_t nmax = -1)
       nTrack = (Long64_t)GetRandomNumTrack(); // get number of track 
     else {
       fTree->GetEntry(ievt);
-      if( snbm != 132 && snbm != 108 && snbm != 124 && snbm != 112 ) continue;
+
+      if( (snbm != 132 && snbm != 108 && snbm != 124 && snbm != 112) ||
+	  (ProjA < -1000 || ProjB < -1000) ) 
+	continue;
 
       nTrack = aParticleArray->GetEntries();
     }
@@ -57,12 +60,13 @@ void flw_process2(Long64_t nmax = -1)
 	else 
 	  aPart1 = GetRealTrack(nLoop);
 
-
 	// Good track and fragments are selected
-	if(  CheckPID(aPart1) ){
+	if(  CheckParticle(aPart1) ){
+	  
+	  SetFlowFlag(aPart1);
 
 	  SetPtWeight(aPart1);
-
+	    
 	  if( bMix ) {
 	    aPart1->SetMixedEventID(mixEvt);
 	    event.push_back(mixEvt);
@@ -73,10 +77,14 @@ void flw_process2(Long64_t nmax = -1)
 	  aPart1->SetMixedNtrack(ntrk);
 
 	  trackID.push_back(numGoodTrack);
-
+	    
 	  new(npar[numGoodTrack]) STParticle( *aPart1 );	  
-
+	    
 	  numGoodTrack++;
+
+	  if( aPart1->GetReactionPlaneFlag() == 10 )
+	    ntrack[4]++;
+
 	}
 
 	nLoop++;
@@ -113,32 +121,45 @@ void flw_process2(Long64_t nmax = -1)
 
 }
 
-Bool_t CheckPID(STParticle *apart)
+Bool_t CheckParticle(STParticle *apart)
 {
-  if( apart == NULL ) return kFALSE;
+  Bool_t bsel = kFALSE;
 
-  //  if( !apart->GetBestTrackFlag() ) return kFALSE;
+  if( apart == NULL ) return bsel;
+
+  if( !apart->GetBestTrackFlag() ) return bsel;
 
   ResetPID(apart);
 
   auto pid    =  apart -> GetPID();
-  auto prob   =  apart -> GetPIDProbability();
-  auto Charge =  apart -> GetCharge();
-  auto P      =  apart -> GetRotatedMomentum().Mag();
-
-  Bool_t bsel = kFALSE;
+  auto charge =  apart -> GetCharge();
   
-  if(pid == 211){
-    apart -> SetReactionPlaneFlag(1);
-    bsel =  kTRUE;
-  }  
-  else if(pid > 1000 && Charge > 0 && P < 2500 && P > 0){
-    apart -> SetReactionPlaneFlag(10);
-    bsel =   kTRUE;
-  }
-
+  if( pid == 211 ) 
+    bsel = kTRUE;
+  else if( pid > 2000 && charge > 0 ) 
+    bsel = kTRUE;
+  
   return bsel;
 } 
+
+void SetFlowFlag(STParticle *apart)
+{
+  auto pid    =  apart -> GetPID();
+
+  if( pid == 211 )
+    apart->SetReactionPlaneFlag(1);
+  
+  else if( pid > 2000 && 
+	   apart->GetBestTrackFlag()     > 0 &&
+	   apart->GetMaxdEdxFlag()       > 0 &&
+	   apart->GetMaxMomentumFlag()   > 0
+	   //      apart->GetMaxThetaFlag()      > 0 &&
+	   //	   apart->GetNDFFlag()           > 0 && 
+	   )
+    apart->SetReactionPlaneFlag(10);
+  else
+    apart->SetReactionPlaneFlag(0);
+}
 
 
 void SetEnvironment()
@@ -434,6 +455,9 @@ void OutputTree(Long64_t nmax)
   mflw->Branch("irun",&iRun,"irun/I");
   mflw->Branch("aoq",&aoq,"aoq/D");
   mflw->Branch("z",&z,"z/D");
+  mflw->Branch("snbm", &snbm, "snbm/I");
+  mflw->Branch("ProjA",&ProjA,"ProjA/D");
+  mflw->Branch("ProjB",&ProjB,"ProjB/D");
 
   nParticleArray = new TClonesArray("STParticle",100);
   mflw->Branch("STParticle",&nParticleArray);
@@ -470,8 +494,8 @@ Long64_t GetRandomNumTrack()
 STParticle *GetRealTrack(Long64_t ival)
 {
   STParticle *realPart = NULL;
-  realPart = (STParticle*)aParticleArray -> At(ival);
-
+  realPart = (STParticle*)aParticleArray -> At( ival );
+  
   //  cout << " real part " << realPart << endl;
   return realPart;
 }
@@ -498,9 +522,7 @@ STParticle *GetMixedTrack(Long64_t *ival, Int_t *kval)
 	if(kLoop > 1) cout << " Too much loops " << kLoop << " kval " << *kval << " mevt " << mevt << " / " << nEntry <<  endl;
       }
 
-      if( snbm != 132 && snbm != 108) continue;
-
-
+      if( snbm != 132 && snbm != 108 && snbm != 124 && snbm != 112) continue;
 
       if( std::abs(ntrack[2] - *kval) < ntr_diff ) {
 	//	cout << "ntrack[2] " << ntrack[2] << " kval " << *kval  << endl;

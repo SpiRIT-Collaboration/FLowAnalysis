@@ -72,18 +72,26 @@ private:
   Int_t    fmxtrackid = -1;
 
   //quality flags
-  UInt_t   fBeamonTargetf   = 1; //flag for beam tracked by BDC goes on the target
-  UInt_t   fVatTargetf      = 1; //flag for reconstructed vertex XY within the target
-  UInt_t   fVZatTargetf     = 1; //flag for reconstructed veretx Z comes from the target
-  UInt_t   fVBDCCorf        = 1; //flag for reconstructed vertex is correated with BDC at the target
-  UInt_t   fBDCCorf         = 1; //
-  UInt_t   fTargetXYf       = 1;
-  UInt_t   fgotoKatanaf     = 1;
-  UInt_t   fgotoKyotof      = 1;
-  UInt_t   frdEdxPointSizef = 1;  
-  UInt_t   fgoodtrackf      = 0;
+  UInt_t   fBeamonTargetf   ; //flag for beam tracked by BDC goes on the target
+  UInt_t   fVBDCCorf        ; //flag for reconstructed vertex is correated with BDC at the target
+  UInt_t   fBDCCorf         ; //
+  UInt_t   fTargetXYf       ;
+  UInt_t   fgotoKatanaf     ;
+  UInt_t   fgotoKyotof      ;
+  UInt_t   frdEdxPointSizef ;  
 
-  UInt_t   fReactionPlanef  = 0;  
+  UInt_t   fVatTargetf      ; //flag for reconstructed vertex XY within the target
+  UInt_t   fVZatTargetf     ; //flag for reconstructed veretx Z comes from the target
+  UInt_t   fdistanceatvertexf;
+  UInt_t   fNDFf            ;
+  UInt_t   fmaxmomentumf    ;
+  UInt_t   fmaxthetaf       ;
+  UInt_t   fmaxdedxf        ;
+
+  UInt_t   fgoodtrackf      ;
+  UInt_t   fReactionPlanef  ;  
+
+
 
   //STRecoTrack parameters
   STRecoTrack *fRTrack; //!
@@ -150,10 +158,10 @@ public:
   void  SetBeamonTargetFlag(Int_t value)        {fBeamonTargetf = value;}
   Int_t GetBeamonTargetFlag()                   {return fBeamonTargetf;}
 
-  void  SetVertexAtTargetFlag(Int_t value)      {fVatTargetf = value;}
+  void  SetVertexAtTargetFlag(Int_t value)      {fVatTargetf = value; fgoodtrackf*=value;}
   Int_t GetVertexAtTargetFlag()                 {return fVatTargetf;}
 
-  void  SetVertexZAtTargetFlag(Int_t value)      {fVZatTargetf = value;}
+  void  SetVertexZAtTargetFlag(Int_t value)      {fVZatTargetf = value; fgoodtrackf*=value;}
   Int_t GetVertexZAtTargetFlag()                 {return fVZatTargetf;}
 
   void  SetVertexBDCCorrelationFlag(Int_t value){fVBDCCorf   = value;}
@@ -168,10 +176,27 @@ public:
   void  SetgotoKATANAFlag(Int_t value)          {fgotoKatanaf   = value;}
   Int_t GetgotoKATANAFlag()                     {return fgotoKatanaf;}
 
-  void  SetgotoKYOTOFlag(Int_t value)          {fgotoKyotof   = value;}
-  Int_t GetgotoKYOTOFlag()                     {return fgotoKyotof;}
+  void  SetgotoKYOTOFlag(Int_t value)           {fgotoKyotof   = value;}
+  Int_t GetgotoKYOTOFlag()                      {return fgotoKyotof;}
 
-  void  SetBestTrackFlag(Int_t value)           {fgoodtrackf = value;}
+
+  void   SetDistanceAtVertexFlag(UInt_t value)  {fdistanceatvertexf = value; fgoodtrackf*=value;}
+  UInt_t GetDistanceAtVertexFlag()              {return fdistanceatvertexf;}
+
+  void   SetNDFFlag(UInt_t value)               {fNDFf = value; } //fgoodtrackf*=value;}
+  UInt_t GetNDFFlag()                           {return fNDFf;}
+
+  void   SetMaxMomentumFlag(UInt_t value)       {fmaxmomentumf = value;}
+  UInt_t GetMaxMomentumFlag()                   {return fmaxmomentumf; }
+
+  void   SetMaxThetaFlag(UInt_t value)          {fmaxthetaf = value;}
+  UInt_t GetMaxThetaFlag()                      {return fmaxthetaf;}
+
+  void   SetMaxdEdxFlag(UInt_t value)           {fmaxdedxf = value;}
+  UInt_t GetMaxdEdxFlag()                       {return fmaxdedxf;}
+
+
+  void  SetBestTrackFlag(Int_t value)           {fgoodtrackf  = value;}
   Int_t GetBestTrackFlag()                      {return fgoodtrackf;}
 
 
@@ -238,8 +263,8 @@ public:
 
   void         SetNDF(Int_t val)                  {rNDF = val;} 
   Int_t        GetNDF()                           {return rNDF;}
-  void         SetDistanceAtVergtex(Double_t val) {rDist = val;}
-  Double_t     GetDistanceAtVergtex()             {return rDist;}
+  void         SetDistanceAtVertex(Double_t val)  {rDist = val;}
+  Double_t     GetDistanceAtVertex()              {return rDist;}
 
 
   void         SetVertex(TVector3 value)        { fvertex = value;}

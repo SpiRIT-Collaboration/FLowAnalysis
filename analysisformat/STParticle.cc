@@ -19,6 +19,7 @@ STParticle::STParticle() : ftrackID(-1)
 
 STParticle::STParticle(const STParticle &cp)
 {
+
   ftrackID       = cp.ftrackID;;
   ftrackatTarget = cp.ftrackatTarget;
 
@@ -47,17 +48,25 @@ STParticle::STParticle(const STParticle &cp)
 
   //flags
   fBeamonTargetf   = cp.fBeamonTargetf;
-  fVatTargetf      = cp.fVatTargetf;
-  fVZatTargetf     = cp.fVZatTargetf;
   fVBDCCorf        = cp.fVBDCCorf;
   fBDCCorf         = cp.fBDCCorf;
   fTargetXYf       = cp.fTargetXYf;
   fgotoKatanaf     = cp.fgotoKatanaf;
   fgotoKyotof      = cp.fgotoKyotof;
   frdEdxPointSizef = cp.frdEdxPointSizef;
+
+  fVatTargetf      = cp.fVatTargetf;
+  fVZatTargetf     = cp.fVZatTargetf;
+  fdistanceatvertexf = cp.fdistanceatvertexf;
+  fNDFf            = cp.fNDFf;
+  fmaxmomentumf    = cp.fmaxmomentumf;
+  fmaxthetaf       = cp.fmaxthetaf;
+  fmaxdedxf        = cp.fmaxdedxf;
+  
   fgoodtrackf      = cp.fgoodtrackf;
   fReactionPlanef  = cp.fReactionPlanef;
 
+  
   //mixed event
   fmxevt           = cp.fmxevt;
   fmxntrk          = cp.fmxntrk;
@@ -122,6 +131,15 @@ void STParticle::Clear(Option_t *option)
   fpipid       = 0;
   fPID         = 0;
 
+  // Track quality flag
+  fgoodtrackf  = 0;
+  fVatTargetf  = 1;   
+  fVZatTargetf = 1;   
+  fdistanceatvertexf = 1;
+  fNDFf        = 1;    
+  fmaxmomentumf= 1;    
+  fmaxthetaf   = 1;
+  fmaxdedxf    = 1;
 
   // for flow
   ffltnP3 = TVector3(-9999,-9999,-9999);
@@ -136,6 +154,8 @@ void STParticle::Clear(Option_t *option)
   fmxntrk = -1;
 
   fcorrPt = ffltnPt;
+
+  fReactionPlanef = 0;
 }
 
 

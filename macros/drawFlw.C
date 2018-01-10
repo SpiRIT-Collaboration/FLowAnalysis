@@ -48,7 +48,7 @@ void deltphi()   //%%
   const UInt_t nbin = 3;
 
 
-  TH1D *hyphi[nbin][2];
+  TH1D *hyphi[nbin][4];
 
   Double_t ybin = (0.65 - 0.15)/(Double_t)nbin;
 

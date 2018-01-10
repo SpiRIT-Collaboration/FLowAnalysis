@@ -204,7 +204,7 @@ void flatten_iphi_mtrkthetabin()
 
       UInt_t j = mtrknbin;
       while(1){ 
-	if( ntrack[2] >= mtrkbin[j] ){
+	if( ntrack[4] >= mtrkbin[j] ){
 	  imtrk = j;
 	  break;
 	}
@@ -217,11 +217,7 @@ void flatten_iphi_mtrkthetabin()
       
       while( (aPart1 = (STParticle*)next()) ){
 
-	// if(aPart1->GetReactionPlaneFlag() >= 11 && aPart1->GetReactionPlaneFlag() <= 13){
-	// if(aPart1->GetReactionPlaneFlag() >= 10 && aPart1->GetRotatedMomentum().Mag()<2500){
-	// if(aPart1->GetRotatedMomentum().Mag() > 0){ 
-	// if(aPart1->GetReactionPlaneFlag() > 1) { // pion is excluded
-	if(aPart1->GetReactionPlaneFlag() > 1 && aPart1->GetBestTrackFlag() > 0 ){
+	if( aPart1->GetReactionPlaneFlag() > 1 ){
 	  
 	  Double_t phi   = aPart1->GetRotatedMomentum().Phi();
 	  Double_t theta = aPart1->GetRotatedMomentum().Theta();
@@ -237,10 +233,10 @@ void flatten_iphi_mtrkthetabin()
 	  }
 
 	  hbthetaiphi[m]->Fill(theta      , phi);	  
-	  hbmtrkiphi[m] ->Fill(ntrack[2]  , phi);	  
+	  hbmtrkiphi[m] ->Fill(ntrack[4]  , phi);	  
 
 	  if(imtrk <= mtrknbin && itheta <= thetanbin) {
-	    flowcorr[imtrk][itheta]->Add(ntrack[2],phi,theta);
+	    flowcorr[imtrk][itheta]->Add(ntrack[4],phi,theta);
 
 	    aPart1->SetFlattenBinID(imtrk, itheta);
 
