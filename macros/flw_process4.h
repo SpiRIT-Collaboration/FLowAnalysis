@@ -4,10 +4,11 @@
 #include "TVector3.h"
 #include "TVector2.h"
 
+//@@@@ 
+Int_t  seltrackID = 4;
+UInt_t selReactionPlanef = 10;
 
 Int_t  seltrack;
-UInt_t selReactionPlanef = 20;
-
 
 // Reading tree
 TClonesArray *flowcorrArray    = NULL;
@@ -17,6 +18,7 @@ Double_t      ProjA;
 Double_t      ProjB;
 Double_t      aoq;
 Double_t      z;
+Int_t         snbm;
 
 void      SetEnvironment();
 void      PrintProcess(Int_t ievt);

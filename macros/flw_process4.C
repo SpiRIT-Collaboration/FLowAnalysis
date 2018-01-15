@@ -49,7 +49,7 @@ void flw_process4(Long64_t nmax = -1)
 
 
     Int_t mtkBIN = -1;
-    seltrack = ntrack[5];
+    seltrack = ntrack[seltrackID];
 
     if(ntrack[2] > 0 ) {
      
@@ -192,7 +192,7 @@ void Open()
 
   fTree->SetBranchAddress("aoq",&aoq);
   fTree->SetBranchAddress("z",&z);
-
+  fTree->SetBranchAddress("snbm",&snbm);
 }
 
 void Initialize()
@@ -282,6 +282,7 @@ void OutputTree()
   mflw->Branch("irun",&iRun,"irun/I");
   mflw->Branch("aoq",&aoq,"aoq/D");
   mflw->Branch("z",&z,"z/D");
+  mflw->Branch("snbm",&snbm,"snbm/I");
 
   mflw->Branch("STParticle",&aParticleArray);
 

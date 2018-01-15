@@ -1,9 +1,9 @@
 #include "FlowFunctions.h"
 #include "openFlw.C"
 
+Int_t  seltrackID = 4;
+UInt_t selReactionPlanef = 10;
 Int_t  seltrack;
-UInt_t selReactionPlanef = 20;
-
 
 TCanvas *cc[12];
 
@@ -61,6 +61,10 @@ TH1D* hptdt[4][nbin];
 TH1D* hpttr[4][nbin];
 
 
+const UInt_t nphi = 30;
+std::vector< std::vector < std::vector< Double_t > > > labphi;
+std::vector< std::vector < std::vector< Double_t > > > subcos;
+
 
 Int_t mtrack;
 auto aArray = new TClonesArray("STParticle",100);
@@ -83,6 +87,8 @@ void PxDistribution(UInt_t nplot=0);
 void hpt_plot();
 void meanPx();
 void dndy();
+void CalculateResolution(UInt_t m, Double_t Phi, Double_t phi_sub);
+void SaveRPResolution(Int_t sn, UInt_t size, Double_t *x, Double_t *xe, Double_t *y, Double_t *ye);
 
 void calcFlw()
 {
@@ -929,115 +935,6 @@ UInt_t DrawCenterLine(TMultiGraph *mg)
 }
 
 
-void RPresolution()
-{
-
-  UInt_t   nbin = 10;
-  Double_t dbin = 6.4/(Double_t)nbin;
-
-  Int_t    mtrack;
-  Int_t    mtrack_1;
-  Int_t    mtrack_2;
-  Int_t ntrack[7];
-  Double_t aoq;
-  Double_t z;
-
-  TVector2 *unitP_lang  =NULL;
-  TVector2 *unitP_1=NULL;
-  TVector2 *unitP_2=NULL;
-
-  TBranch  *bunitP_lang;
-  TBranch  *bunitP_1;
-  TBranch  *bunitP_2;
-  TBranch *brpphi=0;
-  TBranch *biphi=0;
-  TBranch *bdeltphi=0;
-
-
-  for(Int_t m = m_bgn; m < m_end; m++){
-
-    rChain[m]->SetBranchAddress("ntrack",ntrack);
-    rChain[m]->SetBranchAddress("aoq",&aoq);
-    rChain[m]->SetBranchAddress("z",&z);
-
-    rChain[m]->SetBranchAddress("unitP_lang",&unitP_lang,&bunitP_lang);
-    rChain[m]->SetBranchAddress("unitP_1"   ,&unitP_1,&bunitP_1);
-    rChain[m]->SetBranchAddress("unitP_2"   ,&unitP_2,&bunitP_2);
-    rChain[m]->SetBranchAddress("mtrack"    ,&mtrack);
-    rChain[m]->SetBranchAddress("mtrack_1"  ,&mtrack_1);
-    rChain[m]->SetBranchAddress("mtrack_2"  ,&mtrack_2);
-
-
-
-    auto nevt = rChain[m]->GetEntries();
-
-
-    vector< Double_t > alldphi;
-    vector< vector<Double_t> > dphi(nbin);
-    vector< vector<Double_t> > xphi(nbin);
-    
-    for(auto i = 0; i < nevt; i++){
-      rChain[m]->GetEntry(i);
-
-      if(mtrack_1 < 1 || mtrack_2 < 1) continue;
-
-      alldphi.push_back( TVector2::Phi_mpi_pi( abs( unitP_1->Phi() - unitP_2->Phi() ) ) );
-
-      for(auto k = 0; k < nbin; k++){
-	if( unitP_lang->Phi() < dbin*(Double_t)(k+1) ){
-	  dphi[k].push_back( TVector2::Phi_mpi_pi( abs( unitP_1->Phi() - unitP_2->Phi() ) ) );
-	  xphi[k].push_back( unitP_lang->Phi()  );
-	  break;
-	}
-      }
-    }
-
-    Double_t *allcos = new Double_t[2];
-    allcos = vn(1, alldphi);
-    
-    cout << " Resolution " << allcos[0]/sqrt(2.) << " +- " << allcos[1] << endl;
-
-
-    Double_t xval[nbin];
-    Double_t xvale[nbin];
-    Double_t yval1[nbin];
-    Double_t yval1e[nbin];
-    Double_t yval2[nbin];
-    Double_t yval2e[nbin];
-
-    for(UInt_t j = 0; j < nbin; j++){
-      Double_t *getx = new Double_t[2];
-      Double_t *gety = new Double_t[2];
-
-      getx   = vMean(xphi[j]);
-      gety   = vn(1, dphi[j]);
-
-      xval[j]  = getx[0];
-      yval1[j] = gety[0]/sqrt(2.);
-
-      xvale[j]  = getx[1];
-      yval1e[j] = gety[1];
-
-    }
-
-
-    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
-    ic++;
-
-    auto *gv_v1 = new TGraphErrors(nbin, xval, yval1, xvale, yval1e);
-    gv_v1->SetName("gv_v1");
-
-
-    gv_v1->SetLineColor(4);
-    gv_v1->SetMarkerStyle(20);
-    gv_v1->SetMarkerColor(4);
-    gv_v1->SetTitle("Subevents correlation ; #Phi ; 1/sqrt(2)*< cos(#Delta#Phi) >");
-   
-    gv_v1->Draw("ALP");
-
-  }
-}
-
 
 
 void check(UInt_t selid=2)
@@ -1492,12 +1389,14 @@ void YDependece(UInt_t hrm=1)
 
 void GetRPResolution()            //%% Executable : Plot Phi and subevent, Phi_A and Phi_B correlation
 {
-
+  labphi.resize(4);
+  subcos.resize(4);
 
   // Booking
   TH1D *hrpphi[4];
   TH2D *hdltphi[4];
   TH2D *hsubphi[4];
+  TGraphErrors *gscos[4];
 
   for(UInt_t m = m_bgn; m < m_end; m++){
 
@@ -1517,7 +1416,13 @@ void GetRPResolution()            //%% Executable : Plot Phi and subevent, Phi_A
   // Retreview
 
   for(Int_t m = m_bgn; m < m_end; m++){
+    
+    Double_t dphi[nphi];
+    Double_t dphie[nphi];
+    Double_t scos[nphi];
+    Double_t scose[nphi];
 
+    Int_t    snbm;
     Int_t    mtrack;
     Int_t    mtrack_1;
     Int_t    mtrack_2;
@@ -1532,7 +1437,13 @@ void GetRPResolution()            //%% Executable : Plot Phi and subevent, Phi_A
     TBranch  *brpphi   = 0;
     TBranch  *biphi    = 0;
     TBranch  *bdeltphi = 0;
- 
+
+
+    labphi[m].resize(nphi);
+    subcos[m].resize(nphi);
+    cout << " iphi size " << labphi.size() << endl;
+
+    rChain[m]->SetBranchAddress("snbm",&snbm);
     rChain[m]->SetBranchAddress("unitP_lang",&unitP_lang,&bunitP_lang);
     rChain[m]->SetBranchAddress("unitP_1"   ,&unitP_1,&bunitP_1);
     rChain[m]->SetBranchAddress("unitP_2"   ,&unitP_2,&bunitP_2);
@@ -1542,6 +1453,7 @@ void GetRPResolution()            //%% Executable : Plot Phi and subevent, Phi_A
 
     Int_t nEntry = rChain[m]->GetEntries();
 
+  
     for(Int_t i = 0; i < nEntry; i++){
       rChain[m]->GetEntry(i);
 
@@ -1549,14 +1461,39 @@ void GetRPResolution()            //%% Executable : Plot Phi and subevent, Phi_A
 	hrpphi[m]  -> Fill(TVector2::Phi_mpi_pi(unitP_lang->Phi()));
 	hdltphi[m] -> Fill(TVector2::Phi_mpi_pi(unitP_lang->Phi()), TVector2::Phi_mpi_pi(unitP_1->Phi() - unitP_2->Phi()));
 	hsubphi[m] -> Fill(TVector2::Phi_mpi_pi(unitP_1->Phi()), TVector2::Phi_mpi_pi(unitP_2->Phi()) );
+
+	CalculateResolution(m, unitP_lang->Phi(), TVector2::Phi_mpi_pi(unitP_1->Phi() - unitP_2->Phi()) );
+
       }
     }
+
+
+    Double_t *getx = new Double_t[2];
+    Double_t *gety = new Double_t[2];
+
+    UInt_t j = 0;
+    for(UInt_t k = 0; k < nphi; k++){
+      getx  = vMean( labphi[m][k] );
+      gety  = vMean( subcos[m][k] );
+      if(getx[0] > -999) {
+	dphi[j] = getx[0];
+	dphie[j]= getx[1];
+	scos[j] = gety[0];
+	scose[j]= gety[1]/sqrt( subcos[m][k].size());
+	j++;
+      }
+    }
+    gscos[m] = new TGraphErrors(j, dphi, scos, dphie, scose);
+    gscos[m]->SetTitle(sysName[sys[m]]+";#Phi; <cos(#phi_A-#phi_B)>");
+
+    SaveRPResolution(snbm, nphi, dphi, dphie, scos, scose);
   }
+
 
   // Draw
   ic++;
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,1000);
-  cc[ic]->Divide(3,m_end);
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1500, 400*m_end);
+  cc[ic]->Divide(4,m_end);
   
   UInt_t id = 1;
   
@@ -1564,13 +1501,65 @@ void GetRPResolution()            //%% Executable : Plot Phi and subevent, Phi_A
     cc[ic]->cd(id); id++;
     hrpphi[m] -> Draw();
 
+
+    cc[ic]->cd(id); id++;
+    hsubphi[m]-> Draw("colz");
+
     cc[ic]->cd(id); id++;
     hdltphi[m]-> Draw("colz");
 
     cc[ic]->cd(id); id++;
-    hsubphi[m]-> Draw("colz");
+    gscos[m]->Draw();
   }  
 
+}
+
+void SaveRPResolution(Int_t sn, UInt_t size, Double_t *x, Double_t *xe, Double_t *y, Double_t *ye)
+{
+  std::fstream fout;
+
+  TString fName = Form("RP%dSn.data",sn);
+
+  gSystem->cd("db");
+
+  fout.open(fName, std::fstream::out);
+
+  for(UInt_t i = 0; i < size; i++)
+    fout << std::setw(4) << i 
+	 << std::setw(10) << x[i] << " +- " << std::setw(10) << xe[i]
+	 << std::setw(10) << y[i] << " +- " << std::setw(10) << ye[i] << std::endl;
+    
+  gSystem->cd("..");
+
+  fout.close();
+}
+
+
+void CalculateResolution(UInt_t m, Double_t Phi, Double_t phi_sub)
+{
+  Double_t minphi =  -1.*TMath::Pi();
+  Double_t dltphi =  -2.*minphi/nphi;
+
+  Phi = TVector2::Phi_mpi_pi( Phi );
+
+
+  Double_t iphi = 0;
+  for(UInt_t iphi = 0; iphi < (UInt_t)nphi; iphi++){
+    
+    if( Phi < minphi + dltphi*(iphi+1)) {
+      labphi[m][iphi].push_back(Phi);
+      subcos[m][iphi].push_back(cos(phi_sub) );
+      
+      //cout << " m " << m
+      //   << " iphi " << iphi << " " << Phi 
+      //   << endl;
+      
+      break;
+
+    
+    }
+  }
+  
 }
 
 //________________________________//%%

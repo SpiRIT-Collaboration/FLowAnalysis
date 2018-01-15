@@ -140,7 +140,6 @@ void flatten_iphi_mtrkthetabin()
   TH2D *hbmtrkiphi[2];
   TH2D *hamtrkiphi[2];
  
-
   UInt_t im = 0;
 
   for(UInt_t m = m_bgn; m < m_end; m++){
@@ -170,7 +169,6 @@ void flatten_iphi_mtrkthetabin()
 
     rChain[m]->SetBranchAddress("STParticle",&aParticleArray);
 
-
     // Flattening with a shifting method
     STFlowCorrection *flowcorr[mtrknbin+1][thetanbin+1];
 
@@ -189,7 +187,6 @@ void flatten_iphi_mtrkthetabin()
       }   
     }
     
-
     Int_t nevt = rChain[m]->GetEntries();
     cout << " Number of events " << nevt << endl;
 

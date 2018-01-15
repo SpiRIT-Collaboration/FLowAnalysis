@@ -14,7 +14,7 @@ Double_t *vMean(vector<Double_t> &vec)
     vc[1] = 0.;
   }
 
-  cout << " vc[0] " << vc[0] << endl; 
+  //  cout << " vc[0] " << vc[0] << endl; 
   return vc;
 }
 Double_t *vn(UInt_t hm, vector<Double_t> &vphi)
