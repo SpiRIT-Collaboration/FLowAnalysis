@@ -1,5 +1,4 @@
-#! /bin/bash                                                                                                       
-
+#! /bin/bash                 
 
 ## 132
 RUN132=(\
@@ -88,7 +87,7 @@ RUNNUMBER1=(\
 "3172" "3177" "3179" "3180" "3181" "3182" "3183" "3184" \
 )
 
-VERSION=3.1
+VERSION=3.2
 RE1MX2=1
 ## 0 REAL and MIXed
 ## 1 REAL only

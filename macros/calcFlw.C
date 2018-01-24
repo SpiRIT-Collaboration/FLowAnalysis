@@ -1486,7 +1486,7 @@ void GetRPResolution()            //%% Executable : Plot Phi and subevent, Phi_A
     gscos[m] = new TGraphErrors(j, dphi, scos, dphie, scose);
     gscos[m]->SetTitle(sysName[sys[m]]+";#Phi; <cos(#phi_A-#phi_B)>");
 
-    SaveRPResolution(snbm, nphi, dphi, dphie, scos, scose);
+    SaveRPResolution(m, nphi, dphi, dphie, scos, scose);
   }
 
 
@@ -1514,11 +1514,12 @@ void GetRPResolution()            //%% Executable : Plot Phi and subevent, Phi_A
 
 }
 
-void SaveRPResolution(Int_t sn, UInt_t size, Double_t *x, Double_t *xe, Double_t *y, Double_t *ye)
+void SaveRPResolution(Int_t m, UInt_t size, Double_t *x, Double_t *xe, Double_t *y, Double_t *ye)
 {
   std::fstream fout;
 
-  TString fName = Form("RP%dSn.data",sn);
+
+  TString fName = "RP" +  sysName[sys[m]] + ".data";
 
   gSystem->cd("db");
 
@@ -1692,7 +1693,62 @@ void Phi()                        //%% Executable :
   }
 }
 
+//________________________________//%% Executable : 
+void ReCentering()                //%% Executable : Recentering calibration
+{
+  TH1D *hQx[4];
+  TH1D *hQy[4];
+  TF1  *fg[4];
 
+
+  UInt_t ic = 0; UInt_t id = 1;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700, 500*m_end);
+  cc[ic]->Divide(2,m_end);
+
+  for(UInt_t m = m_bgn; m < m_end; m++){
+    fg[m]  = new TF1(Form("fg_%d",m),"gaus",-30,30);;
+
+
+    hQx[m] = new TH1D(Form("hQx%d",m),"; Qx",100,-30,30);
+    hQy[m] = new TH1D(Form("hQy%d",m),"; Qy",100,-30,30);
+
+    rChain[m]->Project(Form("hQx%d",m), "unitP_rot.X()");
+    rChain[m]->Project(Form("hQy%d",m), "unitP_rot.Y()");
+
+
+    TString fName = "ReCent" +  sysName[sys[m]] + ".data";
+    gSystem->cd("db");
+
+    std::fstream fout;  
+    fout.open(fName, std::fstream::out);
+    fout << " Axis  Constatnt       Mean      Signma " << sysName[sys[m]]  
+	 << endl;
+
+    cc[ic]->cd(id); id++;
+    hQx[m]->Fit(Form("fg_%d",m));
+
+    fout << " X: " 
+	 << setw(10)  << fg[m]->GetParameter(0) 
+	 << setw(15)  << fg[m]->GetParameter(1)
+	 << setw(10)  << fg[m]->GetParameter(2)
+	 << endl;
+
+    cc[ic]->cd(id); id++;
+    hQy[m]->Fit(Form("fg_%d",m));
+
+    fout << " Y: " 
+	 << setw(10)  << fg[m]->GetParameter(0) 
+	 << setw(15)  << fg[m]->GetParameter(1)
+	 << setw(10)  << fg[m]->GetParameter(2)
+	 << endl;
+
+    fout.close();   
+    gSystem->cd("..");
+
+  }
+}
+
+                  
 //________________________________//%% Executable : 
 void Template()                   
 {

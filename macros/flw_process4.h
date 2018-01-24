@@ -19,6 +19,8 @@ Double_t      ProjB;
 Double_t      aoq;
 Double_t      z;
 Int_t         snbm;
+TVector3      unitP_ave;
+TVector3      unitP_rot;
 
 void      SetEnvironment();
 void      PrintProcess(Int_t ievt);

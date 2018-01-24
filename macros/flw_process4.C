@@ -66,12 +66,10 @@ void flw_process4(Long64_t nmax = -1)
 	  
 	// Particle selection
 	if ( aPart1->GetReactionPlaneFlag() == selReactionPlanef ){  // p/d/t/He
-
 	  unitP += aPart1->GetFlattenMomentum().Unit();
 	
-	  unitP_lang += aPart1->GetRPWeight() * (aPart1->GetFlattenPt()).Unit();
-	
-	  unitP_rot  += aPart1->GetRPWeight() * (aPart1->GetRotatedPt()).Unit();
+	  unitP_lang += aPart1->GetRPWeight() * (aPart1->GetFlattenPt()).Unit();	
+	  //	  unitP_rot  += aPart1->GetRPWeight() * (aPart1->GetRotatedPt()).Unit();
 	}
       }
 
@@ -189,6 +187,9 @@ void Open()
   fTree->SetBranchAddress("STParticle",&aParticleArray);
   fTree->SetBranchAddress("ntrack",ntrack);
   fTree->SetBranchAddress("mtrack",&mtrack);
+  fTree->SetBranchAddress("unitP_ave",&unitP_ave);
+  fTree->SetBranchAddress("unitP_rot",&unitP_rot);
+
 
   fTree->SetBranchAddress("aoq",&aoq);
   fTree->SetBranchAddress("z",&z);

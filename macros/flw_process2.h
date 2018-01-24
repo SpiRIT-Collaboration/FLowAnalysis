@@ -48,10 +48,10 @@ TString sBinp;
 UInt_t  nBin; 
 TString binpara;
 Int_t   mxntrk;
-Int_t  maxProc;;
+Int_t   maxProc;
 
 //TChain *fChain;
-TTree  *fTree;
+TTree    *fTree;
 Long64_t nEntry;
 
 TRandom3 rnd;
@@ -75,19 +75,20 @@ vector<TString> vfname;
 UInt_t  binmapsize = 0;
 
 // Tree out
-Int_t   iRun;
+Int_t    iRun;
 Int_t    numGoodTrack;
 Int_t    mtrack;
 vector<Int_t>    event;
+TVector3 unitP_ave;
+TVector2 unitP_rot;
 
-Double_t         aX;
-Double_t         bY;
+//Double_t         aX;
+//Double_t         bY;
 
-TClonesArray     *p_rot = NULL;
-TClonesArray     *p_org = NULL;
+//TClonesArray     *p_rot = NULL;
+//TClonesArray     *p_org = NULL;
 
 // Tree out end
-
 
 TRandom2 pran;
 TH1I *histGT_r = NULL;

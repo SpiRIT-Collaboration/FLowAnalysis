@@ -9,4 +9,5 @@
 #pragma link C++ class STKatana+;
 #pragma link C++ class STTriggerBox+;
 #pragma link C++ class STKatanaSignal+;
+#pragma link C++ class STNeuLANDCluster+;
 #endif
