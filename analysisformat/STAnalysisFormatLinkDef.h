@@ -10,4 +10,5 @@
 #pragma link C++ class STTriggerBox+;
 #pragma link C++ class STKatanaSignal+;
 #pragma link C++ class STNeuLANDCluster+;
+#pragma link C++ class STNeuLANDHit+;
 #endif
