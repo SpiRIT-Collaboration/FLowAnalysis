@@ -24,8 +24,10 @@ export DBTEST=_f0.v2
 
 
 export DBP2=_rf.v3.2
-RUN0={$RNF108} DB0=$DBP2  root openFlw.C
+#RUN0={$RNF108} DB0=$DBP2  root openFlw.C
 
-
+export DBf3=_f0.v4
+export RN0=2900,2902,2903,2904,2905,2907
+RUN0={$RN0} DB0=$DBf3  root openFlw.C
 
 

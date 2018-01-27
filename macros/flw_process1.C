@@ -127,7 +127,7 @@ void flw_process1(Int_t nevt = -1)
   if(nEvtNL  != 0 && nEntry > nEvtNL)
     nEntry = nEvtNL;
 
-  nEntry = 100;
+  //  nEntry = 100;
   //--------------------output root--------------------
   OutputTree(nevt);
 
@@ -245,10 +245,10 @@ void flw_process1(Int_t nevt = -1)
 
 	  if( aParticle->GetNDF() <= 30)
 	    aParticle->SetNDFFlag(0);
-	  
+	    
 	  if( aParticle->GetP() >= 2500 )
 	    aParticle->SetMaxMomentumFlag(0);
-	  
+	    
 	  if( aParticle->GetRotatedMomentum().Theta() >= 0.8 )
 	    aParticle->SetMaxThetaFlag(0);
 
@@ -274,23 +274,40 @@ void flw_process1(Int_t nevt = -1)
     // ----- NeuLAND -----
     if(NeuLAND) {//NeuLAND        
 
-     Int_t numnlCluster = nlcluster->GetEntries();
-     // nlclt = numnlCluster;
+      Int_t numnlCluster = nlcluster->GetEntries();
+      nhitnl[0] = numnlCluster;
+      //      cout << " number of cluster "<< numnlCluster << endl;
+      TIter nlnext(nlcluster);
+      STNeuLANDCluster *nlFromCluster = NULL;
     
-     TIter nlnext(nlcluster);
-     STNeuLANDCluster *nlFromCluster = NULL;
-    
-     while( (nlFromCluster = (STNeuLANDCluster*)nlnext() ) ){
-    
-       nlFromCluster->SetLocalPos();
-       nlFromCluster->SetLocalPosLast();
+      while( (nlFromCluster = (STNeuLANDCluster*)nlnext() ) ){
+ 	if( nlFromCluster->GetVetoHitAll() == 0) 
+	  nhitnl[1]++;
+	if( nlFromCluster->GetVetoHitOne() == 0) 
+	  nhitnl[2]++;
+	if( nlFromCluster->GetVetoHitMid() == 0) 
+	  nhitnl[3]++;
+	if( nlFromCluster->GetVetoHitLoose() == 0) {
+	  nhitnl[4]++;
+	  
+	  nlFromCluster->SetMass("neutron");
+	  
+	}
 
-       	 cout << " nhit " <<  nlFromCluster->GetNHit() << endl;
-       	 cout << "fx " << nlFromCluster->GetGlobalX() 
-       	      << " y " << nlFromCluster->GetGlobalY() << endl;
+ 	if( nlFromCluster->GetVetoHitAll() == 1) 
+	  nhitnl[5]++;
+	if( nlFromCluster->GetVetoHitOne() == 1) 
+	  nhitnl[6]++;
+	if( nlFromCluster->GetVetoHitMid() == 1) 
+	  nhitnl[7]++;
+	if( nlFromCluster->GetVetoHitLoose() == 1) 
+	  nhitnl[8]++;
 
-       
-     }
+
+	
+
+
+      }
     }
     //// ---- endof NeuLad -----
 
@@ -314,7 +331,7 @@ void flw_process1(Int_t nevt = -1)
   }
 }
 
-  //##################################################//
+//##################################################//
 void OutputTree(Int_t nmax)
 {
   TString sdeb = ".s";
@@ -363,6 +380,7 @@ void OutputTree(Int_t nmax)
   }
 
   if(NeuLAND) {//NeuLAND
+    flw->Branch("nhitnl",nhitnl,"nhitnl[9]/I");
     flw->Branch("STNeuLANDHit",   &nlhit);
     flw->Branch("STNeuLANDCluster",&nlcluster);
   }
@@ -382,6 +400,7 @@ void Initialize(Int_t ievt)
   BeamonTarget->SetX(-999.);
   BeamonTarget->SetY(-999.);
 
+  for (Int_t m = 0; m < 9; m++) nhitnl[m] = 0;
 }
 
 
@@ -648,8 +667,8 @@ Bool_t SetNeuLANDRoot()
       
   nlChain-> Add(nlFile);
     
-  nlChain->SetBranchAddress("nlhit",&nlhit);
-  nlChain->SetBranchAddress("nlcluster",&nlcluster);
+  nlChain->SetBranchAddress("STNeuLANDHit",&nlhit);
+  nlChain->SetBranchAddress("STNeuLANDCluster",&nlcluster);
 
   std::cout << "Set NeuLAND " << nlFile << std::endl;
   return kTRUE;

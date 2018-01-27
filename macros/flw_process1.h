@@ -172,7 +172,7 @@ Int_t KatanaMult;
 Int_t trknKATANA;
 Int_t foundKATANA;
 TVector2 *BeamonTarget;
-
+Int_t nhitnl[9];
 
 std::vector<Double_t> phi;
 std::vector<Int_t> gTrack;
