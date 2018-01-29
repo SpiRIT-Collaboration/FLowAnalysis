@@ -1,3 +1,4 @@
+#include "openFlw.C"
 
 Int_t   iVer;
 TString sVer;
@@ -7,6 +8,15 @@ TCanvas *cc[6];
 const Int_t nbinx = 30;
 
 TChain *rChain[2];
+UInt_t sys[] = {10, 10, 10, 10};
+
+Double_t xconst[4];
+Double_t xmean[4];
+Double_t xsig[4];
+Double_t yconst[4];
+Double_t ymean[4];
+Double_t ysig[4];
+
 
 TH2D *h2_r;
 TH2D *h2_m;
@@ -82,19 +92,30 @@ void flatten_iphi_mtrkthetabin();
 void OutputTree(TChain *rCh);
 void flatten_Subevent();
 void SetEnvironment();
+void LoadReCenteringCorrection(UInt_t m);
 
 void flw_process3()
 {
   gROOT->Reset();
-
-  gROOT->Macro("openFlw.C");
-
-  rChain[ichain] = (TChain*)gROOT->FindObject(Form("rChain%d",ichain));
-  if(rChain[ichain] == NULL ) exit(0);
-
   SetEnvironment();
 
-  flatten_iphi_mtrkthetabin();
+  openFlw();
+
+  for(UInt_t i = 0; i < 4; i++){
+    rChain[ichain] = (TChain*)gROOT->FindObject(Form("rChain%d",ichain));
+    if(rChain[ichain] == NULL ) exit(0);
+
+    sys[ichain] = GetSystem(ichain);
+
+    LoadReCenteringCorrection( ichain );
+    
+    ichain++;
+  }
+
+  m_end = ichain;
+  
+  
+  //  flatten_iphi_mtrkthetabin();
 
 }
 
@@ -365,6 +386,61 @@ void flatten_iphi_mtrkthetabin()
     // delete fout;
   }
 }
+
+void LoadReCenteringCorrection(UInt_t m)
+{
+
+  TString sysname = sysName[sys[m]];
+  TString fName = "ReCent" + sysname + ".data";
+
+  gSystem->cd("db");
+  std::fstream fin;
+  fin.open(fName, std::fstream::in);
+  if(fin == NULL) {
+    std::cout << "A file " << fName << " was not found " << std::endl;
+    exit(0);
+  }
+  
+  TString sget;
+  //  fin >> sget;
+  
+  while(!fin.eof()){
+    fin >> sget;
+    
+    //    cout << " sget " << sget << endl;
+    
+    if(sget == "X:"){
+      fin >> sget;
+      xconst[m] = atof(sget);
+      
+      fin >> sget;
+      xmean[m]  = atof(sget);
+      
+      fin >> sget;
+      xsig[m]   = atof(sget);
+    }
+
+    if(sget == "Y:"){
+      fin >> sget;
+      yconst[m] = atof(sget);
+      
+      fin >> sget;
+      ymean[m]  = atof(sget);
+      
+      fin >> sget;
+      ysig[m]   = atof(sget);
+    }
+  }
+
+  fin.close();
+  gSystem->cd("..");
+
+
+
+  cout << " X: const " << xconst[m] << " Mean " << xmean[m] << " sigma " << xsig[m] << endl;
+  cout << " Y: const " << yconst[m] << " Mean " << ymean[m] << " sigma " << ysig[m] << endl;
+}
+
 
 void OutputTree(TChain *rCh)
 {

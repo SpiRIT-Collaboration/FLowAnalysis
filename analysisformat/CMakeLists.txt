@@ -28,6 +28,8 @@ set(SRCS
 STKatana.cc
 STParticle.cc
 STTriggerArray.cc
+STNeuLANDCluster.cc
+STNeuLANDHit.cc
 )
 
 CHANGE_FILE_EXTENSION(*.cc *.hh HEADERS "${SRCS}")

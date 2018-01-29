@@ -12,8 +12,8 @@ void Setup()
   sVer = gSystem -> Getenv("VER");
 
   if( sRun=="" || sVer=="" || !DefineVersion() ) {
-    cout << "Plase type " << endl;
-    cout << "$ RUN=#### VER=# root flw_process1.C" << endl;
+    std::cout << "Plase type " << std::endl;
+    std::cout << "$ RUN=#### VER=# root flw_process1.C" << std::endl;
     exit(0);
   }
 
@@ -29,9 +29,17 @@ void Setup()
   else if( iRun >= 2520 && iRun <= 2653)
     SnA = 112;
 
-  BigRIPS  = kTRUE;  //kFALSE;
-  KyotoArry= kFALSE; //kTRUE;
-  KATANA   = kFALSE; //kTRUE;
+  BigRIPS  = (Bool_t)atoi(gSystem->Getenv("BIGRIPS"));
+  KyotoArry= (Bool_t)atoi(gSystem->Getenv("KYOTOARRY"));
+  KATANA   = (Bool_t)atoi(gSystem->Getenv("KATANA"));
+  NeuLAND  = (Bool_t)atoi(gSystem->Getenv("NEULAND"));
+  
+  std::cout << "Included data sets -> " ; 
+  if(BigRIPS)   std::cout << " BigRIPS "     ;
+  if(KyotoArry) std::cout << " & KyotoArry " ;
+  if(KATANA)    std::cout << " & KATANA "    ;
+  if(NeuLAND)   std::cout << " & NeuLAND "   ;
+  std::cout << std::endl;
 }
 
 void flw_process1(Int_t nevt = -1)
@@ -52,7 +60,7 @@ void flw_process1(Int_t nevt = -1)
   SetTPC();
   Int_t nEvtTPC = 0;
   if(fChain) nEvtTPC = fChain -> GetEntries();
-  cout << "Number of events in TPC: " << nEvtTPC << endl;
+  std::cout << "Number of events in TPC: " << nEvtTPC << std::endl;
   if(nEvtTPC == 0) return;
   
   //----- BigRIPS data --------------------
@@ -64,18 +72,18 @@ void flw_process1(Int_t nevt = -1)
       Int_t nEventsBDC = bdcChain->GetEntries();
 
       if(nEvents != nEventsBDC) {
-	cout << "Inconsistent event number in bigRIS RIDF (quit)" << endl;
+	std::cout << "Inconsistent event number in bigRIS RIDF (quit)" << std::endl;
 	exit(0);
       }
     }
-    cout << "Number of events in RIDF: " << nEvents << endl;
+    std::cout << "Number of events in RIDF: " << nEvents << std::endl;
   }
   //----- KATANA Array --------------------  
   Long64_t nEvtKTN = 0;
   if(KATANA)   {
     SetKATANARoot_bt();
     nEvtKTN = kChain -> GetEntries();
-    cout << "Number of events in KATANA: " << nEvtKTN << endl;
+    std::cout << "Number of events in KATANA: " << nEvtKTN << std::endl;
   }
   //----- Kyoto Array ---------------------
   Long64_t nEvtKyt = 0;
@@ -89,7 +97,20 @@ void flw_process1(Int_t nevt = -1)
     }
 
     nEvtKyt = kaChain -> GetEntries();
-    cout << "Number of events in KyotoArray: " << nEvtKyt << endl;
+    std::cout << "Number of events in KyotoArray: " << nEvtKyt << std::endl;
+  }
+
+  //---- NeuLAND ---------------------------
+  Long64_t nEvtNL = 0;
+  if(NeuLAND) {
+    if(SetNeuLANDRoot()) {
+      nEvtNL = nlChain -> GetEntries();
+      std::cout << "Number of events in NeuLAND: "<< nEvtNL << std::endl;
+    }
+    else{
+      std::cout << "No NeuLAND data is found. " << std::endl;
+      NeuLAND=kFALSE;
+    }
   }
 
   //-------------------- event number check --------------------
@@ -103,6 +124,10 @@ void flw_process1(Int_t nevt = -1)
   if(nEvtKyt != 0 && nEntry > nEvtKyt)
     nEntry = nEvtKyt;
 
+  if(nEvtNL  != 0 && nEntry > nEvtNL)
+    nEntry = nEvtNL;
+
+  //  nEntry = 100;
   //--------------------output root--------------------
   OutputTree(nevt);
 
@@ -127,15 +152,14 @@ void flw_process1(Int_t nevt = -1)
     }
 
 
+    // --------------- TPC ---------------
+    fChain -> GetEntry(i);
+
     // --------------- RIDF --------------
     if(BigRIPS) {
       ribfChain->GetEntry(i);
       bdcChain ->GetEntry(i);
     }
-
-    // --------------- TPC ---------------
-    fChain -> GetEntry(i);
-
 
     // --------------- KATANA ------------
     if(KATANA && i < nEvtKTN) {
@@ -158,6 +182,9 @@ void flw_process1(Int_t nevt = -1)
       }
     }
     
+    // --------------- NeuLAND ---------- 
+    if(NeuLAND && i < nEvtNL)
+      nlChain -> GetEntry(i);
 
     // --- BDC offset --------------------
     SetBeamOnTarget();
@@ -168,7 +195,9 @@ void flw_process1(Int_t nevt = -1)
 
 
     //-------------------- User Analysis --------------------
+    //
 
+    //------- TPC ------
     Int_t numTracksFromArray = trackArray -> GetEntries();
     ntrack[0] = numTracksFromArray;
 
@@ -216,10 +245,10 @@ void flw_process1(Int_t nevt = -1)
 
 	  if( aParticle->GetNDF() <= 30)
 	    aParticle->SetNDFFlag(0);
-	  
+	    
 	  if( aParticle->GetP() >= 2500 )
 	    aParticle->SetMaxMomentumFlag(0);
-	  
+	    
 	  if( aParticle->GetRotatedMomentum().Theta() >= 0.8 )
 	    aParticle->SetMaxThetaFlag(0);
 
@@ -238,29 +267,71 @@ void flw_process1(Int_t nevt = -1)
 
       }
     
-      //-------------------- end of track LOOP User Analysis --------------------
     }
-    
     ntrack[1] = mtrack;
+    ////  ---- end of TPC  ----
+
+    // ----- NeuLAND -----
+    if(NeuLAND) {//NeuLAND        
+
+      Int_t numnlCluster = nlcluster->GetEntries();
+      nhitnl[0] = numnlCluster;
+      //      cout << " number of cluster "<< numnlCluster << endl;
+      TIter nlnext(nlcluster);
+      STNeuLANDCluster *nlFromCluster = NULL;
+    
+      while( (nlFromCluster = (STNeuLANDCluster*)nlnext() ) ){
+ 	if( nlFromCluster->GetVetoHitAll() == 0) 
+	  nhitnl[1]++;
+	if( nlFromCluster->GetVetoHitOne() == 0) 
+	  nhitnl[2]++;
+	if( nlFromCluster->GetVetoHitMid() == 0) 
+	  nhitnl[3]++;
+	if( nlFromCluster->GetVetoHitLoose() == 0) {
+	  nhitnl[4]++;
+	  
+	  nlFromCluster->SetMass("neutron");
+	  
+	}
+
+ 	if( nlFromCluster->GetVetoHitAll() == 1) 
+	  nhitnl[5]++;
+	if( nlFromCluster->GetVetoHitOne() == 1) 
+	  nhitnl[6]++;
+	if( nlFromCluster->GetVetoHitMid() == 1) 
+	  nhitnl[7]++;
+	if( nlFromCluster->GetVetoHitLoose() == 1) 
+	  nhitnl[8]++;
+
+
+	
+
+
+      }
+    }
+    //// ---- endof NeuLad -----
+
+
+    //-------------------- end of track LOOP User Analysis --------------------
     if(ntrack[1] > 0)
       flw->Fill();
   }
 
-  cout << " Writing " << endl;
+  std::cout << " Writing " << std::endl;
 
   flw->Write();
   
-  cout << " Output root file is : " << fout->GetName() << endl;
+  std::cout << " Output root file is : " << fout->GetName() << std::endl;
 
   if(gROOT->IsBatch()) {
     fout->Close();
     
-    cout << " is closed " << endl;
+    std::cout << " is closed " << std::endl;
     exit(0);
   }
 }
 
-  //##################################################//
+//##################################################//
 void OutputTree(Int_t nmax)
 {
   TString sdeb = ".s";
@@ -275,7 +346,7 @@ void OutputTree(Int_t nmax)
 
   tpcParticle = new TClonesArray("STParticle",150);
 
-  cout << "Output file is " << foutname << endl;
+  std::cout << "Output file is " << foutname << std::endl;
 
   //-- output
   flw->Branch("irun",&iRun,"irun/I");
@@ -308,6 +379,12 @@ void OutputTree(Int_t nmax)
     flw->Branch("max_veto",&max_veto,"max_veto/F");
   }
 
+  if(NeuLAND) {//NeuLAND
+    flw->Branch("nhitnl",nhitnl,"nhitnl[9]/I");
+    flw->Branch("STNeuLANDHit",   &nlhit);
+    flw->Branch("STNeuLANDCluster",&nlcluster);
+  }
+
 }
 
 void Initialize(Int_t ievt)
@@ -323,6 +400,7 @@ void Initialize(Int_t ievt)
   BeamonTarget->SetX(-999.);
   BeamonTarget->SetY(-999.);
 
+  for (Int_t m = 0; m < 9; m++) nhitnl[m] = 0;
 }
 
 
@@ -555,7 +633,7 @@ Bool_t SetKyotoArray()
   kaChain-> SetBranchAddress("hitch",&kyhitch,&bkyhitch);
   kaChain-> SetBranchAddress("hitxpos",&kyhitx,&bkyhitx);
   kaChain-> SetBranchAddress("hitzpos",&kyhitz,&bkyhitz);
-  cout << "Set Kyoto Array " << kytFile << endl;
+  std::cout << "Set Kyoto Array " << kytFile << std::endl;
 
   return kTRUE;
 }
@@ -572,8 +650,27 @@ Bool_t SetKyotoMultiplicity()
   kaChain-> Add(kytFile);
 
   kaChain-> SetBranchAddress("mult_ctcut",&kynHit);
-  cout << "Set Kyoto Multiplicity " << kytFile << endl;
+  std::cout << "Set Kyoto Multiplicity " << kytFile << std::endl;
   
+  return kTRUE;
+}
+
+Bool_t SetNeuLANDRoot()
+{
+  nlChain = new TChain("nl");
+  
+  TString nlDir  = gSystem -> Getenv("STNLDIR");
+  TString nlFile = "neuland_run"+sRun+".root";
+
+  if( !gSystem->FindFile(nlDir, nlFile) )
+    return kFALSE;
+      
+  nlChain-> Add(nlFile);
+    
+  nlChain->SetBranchAddress("STNeuLANDHit",&nlhit);
+  nlChain->SetBranchAddress("STNeuLANDCluster",&nlcluster);
+
+  std::cout << "Set NeuLAND " << nlFile << std::endl;
   return kTRUE;
 }
 
@@ -640,7 +737,7 @@ void SetTPC()
   while(kTRUE){
     
     TString recoFile = Form("run"+sRun+"_s%d.reco.v1.04.root",i);
-    cout << " recoFile " << rootDir+recoFile << endl;
+    std::cout << " recoFile " << rootDir+recoFile << std::endl;
     
     if(gSystem->FindFile(rootDir,recoFile)){
       fChain -> Add(recoFile);
@@ -661,7 +758,7 @@ Bool_t DefineVersion()
 
   Ssiz_t end = sVer.First(".");
 
-  cout << " end " << end << endl;
+  std::cout << " end " << end << std::endl;
   if( end == -1) {
 
     iVer = atoi(sVer);
@@ -686,7 +783,7 @@ Bool_t DefineVersion()
   
   
   if(!bfound)
-    cout << " missing version number v# " << endl;
+    std::cout << " missing version number v# " << std::endl;
 
   return bfound;
 

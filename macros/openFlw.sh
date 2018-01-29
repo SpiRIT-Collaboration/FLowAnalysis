@@ -18,13 +18,16 @@ export DB4108=_rf.v3.1.0_db2273.v3.1.cv0
 export DB4124=_rf.v3.1.0_db3059.v3.1.cv0
 
 export DBTEST=_f0.v2
-
 #RUN0={$RNF132} DB0=$DB4132 RUN1={$RNF108} DB1=$DB4108 RUN2={$RNF124} DB2=$DB4124 root openFlw.C
 
 #export RNF132=2841,2843,2844,2845,2846,2848,2849
-RUN0={$RNF108} DB0=$DB4108  root openFlw.C
 
 
+export DBP2=_rf.v3.2
+#RUN0={$RNF108} DB0=$DBP2  root openFlw.C
 
+export DBf3=_f0.v4
+export RN0=2900,2902,2903,2904,2905,2907
+RUN0={$RN0} DB0=$DBf3  root openFlw.C
 
 

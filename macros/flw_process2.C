@@ -82,11 +82,21 @@ void flw_process2(Long64_t nmax = -1)
 	    
 	  numGoodTrack++;
 
-	  if( aPart1->GetReactionPlaneFlag() >= 10 )
+	  if( aPart1->GetReactionPlaneFlag() >= 10 ){
 	    ntrack[4]++;
+	    
+	    unitP_ave += aPart1->GetRotatedMomentum().Unit(); 
+	    unitP_rot += aPart1->GetRPWeight() * (aPart1->GetRotatedPt()).Unit();
+
+	  }
 
 	  if( aPart1->GetReactionPlaneFlag() == 20 )
 	    ntrack[5]++;
+
+	  
+
+
+
 	}
 
 	nLoop++;
@@ -293,9 +303,9 @@ void Open()
   fTree->SetBranchAddress("ProjB",&ProjB);
   fTree->SetBranchAddress("snbm",&snbm);
 
-  p_rot = new TClonesArray("TVector3",150);
-
-  p_org  = new TClonesArray("TVector3",150);
+  fTree->SetBranchAddress("STNeuLANDCluster",&aNLCluster);
+  //  p_rot  = new TClonesArray("TVector3",150);
+  //  p_org  = new TClonesArray("TVector3",150);
   
 }
 
@@ -470,6 +480,12 @@ void OutputTree(Long64_t nmax)
   mflw->Branch("mtrack",&mtrack,"mtrack/I");
   mflw->Branch("event",&event);
   mflw->Branch("mxntrk",&mxntrk);
+  mflw->Branch("unitP_ave",&unitP_ave);
+  mflw->Branch("unitP_rot",&unitP_rot);
+
+  if(aNLCluster != NULL)
+    mflw->Branch("STNeuLANDCluster",&aNLCluster);
+      
 
   hgtc         = new TH1I("hgtc","number of good fragment",100,0,100);
 }

@@ -14,7 +14,6 @@
 //#include "KyotoRoot/STTriggerArray.hh"
 
 
-
 //setParameters                                                                                               
 Double_t tx_right= -14.7;
 Double_t tx_left =  19.4;
@@ -69,7 +68,7 @@ TChain *ribfChain;
 TChain *bdcChain;
 TChain *kChain;
 TChain *kaChain;
-
+TChain *nlChain;
   //ribf data
   //Declaration of leaves types                                                                                         
 Double_t         aoq;
@@ -96,12 +95,13 @@ Double_t         ProjA;
 Double_t         ProjB;
 
 
-
 TClonesArray *trackArray  = NULL;
 TClonesArray *vertexArray = NULL;
 STKatana     *katanaroot  = NULL;
 STTriggerBox *triggerbox  = NULL;
 TClonesArray *tpcParticle = NULL;
+TClonesArray *nlhit       = NULL;
+TClonesArray *nlcluster   = NULL;
 
 TBranch      *brtrackArray;
 TBranch      *brvertexArray;
@@ -150,6 +150,7 @@ void      SetKATANARoot_bt();
 Bool_t    SetKyotoArray();
 Bool_t    SetKyotoMultiplicity();
 void      SetBigRIPS();
+Bool_t    SetNeuLANDRoot();
 
 void      Initialize(Int_t ievt);
 void      OutputTree(Int_t nmax);
@@ -171,7 +172,7 @@ Int_t KatanaMult;
 Int_t trknKATANA;
 Int_t foundKATANA;
 TVector2 *BeamonTarget;
-
+Int_t nhitnl[9];
 
 std::vector<Double_t> phi;
 std::vector<Int_t> gTrack;
@@ -186,6 +187,6 @@ Bool_t  BigRIPS;
 Bool_t  KyotoArry;
 Bool_t  KATANA;
 Int_t   KyotoRoot;
-
+Bool_t  NeuLAND;
 
 #endif
