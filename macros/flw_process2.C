@@ -303,6 +303,7 @@ void Open()
   fTree->SetBranchAddress("ProjB",&ProjB);
   fTree->SetBranchAddress("snbm",&snbm);
 
+  fTree->SetBranchAddress("STNeuLANDCluster",&aNLCluster);
   //  p_rot  = new TClonesArray("TVector3",150);
   //  p_org  = new TClonesArray("TVector3",150);
   
@@ -482,6 +483,9 @@ void OutputTree(Long64_t nmax)
   mflw->Branch("unitP_ave",&unitP_ave);
   mflw->Branch("unitP_rot",&unitP_rot);
 
+  if(aNLCluster != NULL)
+    mflw->Branch("STNeuLANDCluster",&aNLCluster);
+      
 
   hgtc         = new TH1I("hgtc","number of good fragment",100,0,100);
 }

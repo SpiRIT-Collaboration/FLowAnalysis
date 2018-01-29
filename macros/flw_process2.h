@@ -69,6 +69,7 @@ vector<TVector2> pt;
 
 TClonesArray *aParticleArray = NULL;
 TClonesArray *nParticleArray = NULL;
+TClonesArray *aNLCluster     = NULL;
 
 vector<TString> vfname;
 

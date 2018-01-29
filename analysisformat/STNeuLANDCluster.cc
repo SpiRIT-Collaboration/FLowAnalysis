@@ -154,9 +154,11 @@ void STNeuLANDCluster::SetMomentum()
     
     ncP.SetMag(ncmass*ncbeta*ncgamma);
 
-    ncE = sqrt(ncmass*ncmass + ncP.Mag2());
+    ncE = ncmass * ncgamma;
+      //sqrt(ncmass*ncmass + ncP.Mag2())*c;
 
-    ncRapidity = 0.5 * log( (ncE + ncP.Pt())/(ncE - ncP.Pt()) );
+    Double_t p_para = ncP.Mag()*TMath::Cos(ncP.Theta());
+    ncRapidity = 0.5 * log( (ncE + p_para)/(ncE - p_para) );
   }
   else
     ncPID = 0;
