@@ -239,8 +239,11 @@ void flatten_iphi_mtrkthetabin()
       
       while( (aPart1 = (STParticle*)next()) ){
 
+
 	//	if( aPart1->GetReactionPlaneFlag() == 10 ){
 	if( aPart1->GetReactionPlaneFlag() == 20 ){
+
+	  ShiftingCorrection(aPart1);
 	  
 	  Double_t phi   = aPart1->GetRotatedMomentum().Phi();
 	  Double_t theta = aPart1->GetRotatedMomentum().Theta();
@@ -385,6 +388,14 @@ void flatten_iphi_mtrkthetabin()
     // delete cflw;
     // delete fout;
   }
+}
+
+
+void ShiftingCorrection(STParticle *apt)
+{
+  
+  //  TVector2::Phi_mpi_pi(atan(/));
+
 }
 
 void LoadReCenteringCorrection(UInt_t m)

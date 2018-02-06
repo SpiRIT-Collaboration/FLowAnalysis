@@ -1709,14 +1709,16 @@ void ReCentering()                //%% Executable : Recentering calibration
     fg[m]  = new TF1(Form("fg_%d",m),"gaus",-30,30);;
 
 
-    hQx[m] = new TH1D(Form("hQx%d",m),"; Qx",100,-30,30);
-    hQy[m] = new TH1D(Form("hQy%d",m),"; Qy",100,-30,30);
+    hQx[m] = new TH1D(Form("hQx%d",m),"; Qx",100,-10,10);
+    hQy[m] = new TH1D(Form("hQy%d",m),"; Qy",100,-10,10);
 
+    // rChain[m]->Project(Form("hQx%d",m), "unitP_ave.X()");
+    // rChain[m]->Project(Form("hQy%d",m), "unitP_ave.Y()");
     rChain[m]->Project(Form("hQx%d",m), "unitP_rot.X()");
     rChain[m]->Project(Form("hQy%d",m), "unitP_rot.Y()");
 
 
-    TString fName = "ReCent" +  sysName[sys[m]] + ".data";
+    TString fName = "rotReCent" +  sysName[sys[m]] + ".data";
     gSystem->cd("db");
 
     std::fstream fout;  

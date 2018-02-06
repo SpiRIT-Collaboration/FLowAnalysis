@@ -81,7 +81,7 @@ Int_t    numGoodTrack;
 Int_t    mtrack;
 vector<Int_t>    event;
 TVector3 unitP_ave;
-TVector2 unitP_rot;
+TVector3 unitP_rot;
 
 //Double_t         aX;
 //Double_t         bY;
