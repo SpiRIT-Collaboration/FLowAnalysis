@@ -19,7 +19,8 @@ STNeuLANDCluster::STNeuLANDCluster()
 
   c = 299.79245; //mm/ns
 
-  tof_offset = 37.5; //ns temp.
+  //  tof_offset = 37.5; //ns temp.
+  tof_offset = 0.; // after 1 Feb. 2018
 }
 
 

@@ -106,6 +106,8 @@ void flw_process1(Int_t nevt = -1)
     if(SetNeuLANDRoot()) {
       nEvtNL = nlChain -> GetEntries();
       std::cout << "Number of events in NeuLAND: "<< nEvtNL << std::endl;
+
+      LoadNeuLANDPID();
     }
     else{
       std::cout << "No NeuLAND data is found. " << std::endl;
@@ -283,30 +285,38 @@ void flw_process1(Int_t nevt = -1)
       while( (nlFromCluster = (STNeuLANDCluster*)nlnext() ) ){
  	if( nlFromCluster->GetVetoHitAll() == 0) 
 	  nhitnl[1]++;
-	if( nlFromCluster->GetVetoHitOne() == 0) 
-	  nhitnl[2]++;
-	if( nlFromCluster->GetVetoHitMid() == 0) 
-	  nhitnl[3]++;
-	if( nlFromCluster->GetVetoHitLoose() == 0) {
-	  nhitnl[4]++;
-	  
-	  nlFromCluster->SetMass("neutron");
-	  
-	}
-
- 	if( nlFromCluster->GetVetoHitAll() == 1) 
-	  nhitnl[5]++;
-	if( nlFromCluster->GetVetoHitOne() == 1) 
-	  nhitnl[6]++;
-	if( nlFromCluster->GetVetoHitMid() == 1) 
-	  nhitnl[7]++;
-	if( nlFromCluster->GetVetoHitLoose() == 1) 
-	  nhitnl[8]++;
-
-
+	else
+	  nhitnl[5]++;	  
 	
 
+	if( nlFromCluster->GetVetoHitOne() == 0) 
+	  nhitnl[2]++;
+	else
+	  nhitnl[6]++;
 
+	if( nlFromCluster->GetVetoHitMid() == 0) 
+	  nhitnl[3]++;
+	else
+	  nhitnl[7]++;
+	  
+	
+	auto nlPID = GetNeuLANDPID(nlFromCluster->GetEdep(), nlFromCluster->GetTOF(), nlFromCluster->GetVetoHitLoose());
+	if(nlPID > 0){
+	  nlFromCluster->SetMass(nlPID);
+
+	  if( nlPID == 2112) 
+	    nhitnl[4]++;
+	  else 
+	    nhitnl[8]++;
+	}
+	else{ // if NeuLAND PID is not found
+
+	  if( nlFromCluster->GetVetoHitLoose() == 0)
+	    nhitnl[4]++;
+	  else
+	    nhitnl[8]++;
+
+	}
       }
     }
     //// ---- endof NeuLad -----
@@ -459,6 +469,74 @@ void BeamPID()
   }    
 }
 
+Int_t GetNeuLANDPID(Double_t x, Double_t y, Int_t vhit)
+{
+  if( gcutNLNeutron == NULL ) return -1;
+
+  Int_t pid = 0;
+  if( gcutNLNeutron->IsInside(x,y) && vhit == 0)
+    pid = 2112;
+  else if( gcutNLProton->IsInside(x,y) )
+    pid = 2212;
+  else if( gcutNLDeuteron->IsInside(x,y) )
+    pid = 1000010020;
+  else if( gcutNLTrition->IsInside(x,y) )
+    pid = 1000010030;
+  else
+    pid = 2000000000;
+
+  return pid;
+}
+
+void LoadNeuLANDPID()
+{
+  TString gfname = "data/gcutNLNeutron.root";
+
+  TFile gcutFilen(gfname);
+  if(gcutFilen.IsOpen()) {
+    std::cout << gfname << " is loaded." << std::endl;
+    gcutNLNeutron  = (TCutG*)gcutFilen.Get("gcutNLNeutron");
+    gcutFilen.Close();
+  }
+  else
+    std::cout << gfname << " is not found." << std::endl;
+    
+  
+  
+  gfname = "data/gcutNLProton.root";
+  TFile gcutFilep(gfname);
+  if(gcutFilep.IsOpen()) {
+    std::cout << gfname << " is loaded." << std::endl;
+    gcutNLProton   = (TCutG*)gcutFilep.Get("gcutNLProton");
+    gcutFilep.Close();
+  }
+  else
+    std::cout << gfname << " is not found." << std::endl;
+
+
+  gfname = "data/gcutNLDeuteron.root";
+  TFile gcutFiled(gfname);
+  if(gcutFiled.IsOpen()) {
+    std::cout << gfname << " is loaded." << std::endl;
+    gcutNLDeuteron = (TCutG*)gcutFiled.Get("gcutNLDeuteron");
+    gcutFiled.Close();
+  }
+  else
+    std::cout << gfname << " is not found." << std::endl;
+
+
+
+  gfname = "data/gcutNLTriton.root";
+  TFile gcutFilet(gfname);
+  if(gcutFilet.IsOpen()) {
+    std::cout << gfname << " is loaded." << std::endl;
+    gcutNLTrition  = (TCutG*)gcutFilet.Get("gcutNLTriton");
+    gcutFilet.Close();
+  }
+  else
+    std::cout << gfname << " is not found." << std::endl;
+
+}
 
 void SetDataDirectory()
 {

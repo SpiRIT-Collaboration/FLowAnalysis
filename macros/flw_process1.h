@@ -157,6 +157,13 @@ void      OutputTree(Int_t nmax);
 Bool_t    DefineVersion();
 
 
+// NeuLAND graphical pid cut
+void      LoadNeuLANDPID();
+Int_t     GetNeuLANDPID(Double_t x, Double_t y, Int_t vhit);
+TCutG    *gcutNLNeutron;
+TCutG    *gcutNLProton;
+TCutG    *gcutNLDeuteron;
+TCutG    *gcutNLTrition;
 
 // ouput tree
 TString foutname;
