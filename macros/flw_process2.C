@@ -104,7 +104,7 @@ void flw_process2(Long64_t nmax = -1)
     }
 
     mtrack = trackID.size();
-    ntrack[3] = mtrack;
+    ntrack[6] = mtrack;
 
     //       cout << " mtrack " << mtrack << endl;
 
