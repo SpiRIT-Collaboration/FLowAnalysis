@@ -74,7 +74,7 @@ class STFlowCorrection : public TObject {
   void   FourierCorrection(std::vector<Double_t> &val);
   UInt_t FourierCorrection();
   UInt_t GetCorrectionFactor(UInt_t val=0);
-  UInt_t SaveCorrectionFactor(TString comm=":");
+  UInt_t SaveCorrectionFactor(TString comm1=":", TString comm2="");
   void   PrintContents();
   void   PrintRange();
 

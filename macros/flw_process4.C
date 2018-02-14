@@ -47,7 +47,6 @@ void flw_process4(Long64_t nmax = -1)
     fTree->GetEntry(ievt);
     Long64_t  nGoodTrack = aParticleArray->GetEntries();
 
-
     Int_t mtkBIN = -1;
     seltrack = ntrack[seltrackID];
 

@@ -133,11 +133,16 @@ UInt_t OpenChain(UInt_t m)
 }
 
 
-void SaveCanvas(TString fopt = "")
+void SaveCanvas(TString fopt = "", Int_t isel=-1)
 {
-  Int_t iCanvas = gROOT->GetListOfCanvases()->GetEntries();  
-  for(Int_t i = 0; i < iCanvas; i++)
-    gROOT->GetListOfCanvases()->At(i)->SaveAs(printHeader+fopt+Form("_%d",i)+".png");
+  if(isel > -1)
+    gROOT->GetListOfCanvases()->At(isel)->SaveAs(printHeader+fopt+Form("_%d",isel)+".png");
+
+  else {
+    Int_t iCanvas = gROOT->GetListOfCanvases()->GetEntries();  
+    for(Int_t i = 0; i < iCanvas; i++)
+      gROOT->GetListOfCanvases()->At(i)->SaveAs(printHeader+fopt+Form("_%d",i)+".png");
+  }
 }
 
 

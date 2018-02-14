@@ -288,20 +288,24 @@ void STFlowCorrection::SetDirectory()
   gSystem->cd("db");
 }
 
-UInt_t STFlowCorrection::SaveCorrectionFactor(TString comm)
-{
+UInt_t STFlowCorrection::SaveCorrectionFactor(TString comm1, TString comm2)
+{ 
   SetDirectory();
   
   std::fstream fout;
 
-  Ssiz_t ifnd = comm.First(":");
-  fname += comm(0,ifnd);
+  Ssiz_t ifnd = comm1.First(":");
+  fname += comm1(0,ifnd);
   fname += ".txt";
 
   fout.open(fname,std::fstream::out);
   fout << charm << std::endl;
 
-  fout << "comment : " << comm << std::endl;
+  fout << "comment : " << comm1 << std::endl;
+
+  if( comm2 != "")
+    fout << "ReCentering parameter : " << comm2 << std::endl;
+  
 
   TChainElement *ele = 0;
   UInt_t ith = 0;

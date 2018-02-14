@@ -1,5 +1,9 @@
+#include "openFlw.C"
+
 TCanvas *cc[12];
 TChain  *rChain[2];
+Int_t ic = -1;
+
 
 const Int_t nbinx = 30;
 Double_t dxbin = 1./(Double_t)nbinx; 
@@ -7,7 +11,6 @@ Double_t dxbin = 1./(Double_t)nbinx;
 STPID::PID selectPID = STPID::kNon; // kPion, kProton, kDeuteron, kTriton, k3He, k4He                                                     
 
 TString printName;
-TF1 *f1;
 
 UInt_t m_bgn = 0;
 UInt_t m_end = 1;
@@ -18,11 +21,13 @@ TCut proton  = "fPID==2212";
 TCut deuteron= "fPID==1000010020";
 TCut triton  = "fPID==1000010030";
 
+void LoadNLgCut();
+
 void drawFlw()
 {
   gROOT->Reset();
   
-  gROOT->Macro("openFlw.C");
+  openFlw();
 
   rChain[ichain] = (TChain*)gROOT->FindObject(Form("rChain%d",ichain));
   if(rChain[ichain] != NULL) ichain++;
@@ -1068,3 +1073,392 @@ void NuSYM()
   rChain[0] -> Draw("TVector2::Phi_mpi_pi(unitP_1.Phi()-unitP_2.Phi())>>hsubcorr0","mtrack_1>0&&mtrack_2>0");
   
 }
+
+
+                  
+//________________________________//%% Executable : 
+void NeuLAND_Comtamination()      //%% Executable : 
+{
+  LoadNLgCut();
+
+  TCut deltE = "ncedep<70&&ncedep>50";
+
+  auto rChain0 = rChain[0];
+
+  auto htof_all0 = new TH1D("htof_all0","TOF veto_all=0",150,0.,150.);  // pure neutron spectrum
+  auto htof_all1 = new TH1D("htof_all1","TOF veto_all=1",150,0.,150.);  // all charged particle + more neutron contami.
+  auto htof_bar0 = new TH1D("htof_bar0","TOF veto_bar=0",150,0.,150.);
+  auto htof_bar1 = new TH1D("htof_bar1","TOF veto_bar=1",150,0.,150.);
+  auto htof_mid0 = new TH1D("htof_mid0","TOF veto_mid=0",150,0.,150.);
+  auto htof_mid1 = new TH1D("htof_mid1","TOF veto_mid=1",150,0.,150.);
+  auto htof_loose0 = new TH1D("htof_loose0","TOF veto_loose=0",150,0.,150.);  // more neutron + more proton contami
+  auto htof_loose1 = new TH1D("htof_loose1","TOF veto_loose=1",150,0.,150.);  // 
+
+
+  auto htofE_all0   = new TH2D("htofE_all0" ,"TOF vs Edep veto_all==0",200,0.,500.,200,0.,150.);
+  auto htofE_all1   = new TH2D("htofE_all1" ,"TOF vs Edep veto_all==1",200,0.,500.,200,0.,150.);
+  auto htofE_all0p  = new TH2D("htofE_all0p","p TOF vs Edep veto_all==0",200,0.,500.,200,0.,150.);
+  auto htofE_all1p  = new TH2D("htofE_all1p","p TOF vs Edep veto_all==1",200,0.,500.,200,0.,150.);
+  auto htofE_all0d  = new TH2D("htofE_all0d","d TOF vs Edep veto_all==0",200,0.,500.,200,0.,150.);
+  auto htofE_all1d  = new TH2D("htofE_all1d","d TOF vs Edep veto_all==1",200,0.,500.,200,0.,150.);
+  auto htofE_all0t  = new TH2D("htofE_all0t","t TOF vs Edep veto_all==0",200,0.,500.,200,0.,150.);
+  auto htofE_all1t  = new TH2D("htofE_all1t","t TOF vs Edep veto_all==1",200,0.,500.,200,0.,150.);
+  auto htofE_all0tn = new TH2D("htofE_all0tn","t TOF vs Edep veto_all==0",200,0.,500.,200,0.,150.);
+  auto htofE_all1tn = new TH2D("htofE_all1tn","t TOF vs Edep veto_all==1",200,0.,500.,200,0.,150.);
+
+  auto htofE_bar1   = new TH2D("htofE_bar1","TOF vs Edep veto_bar==1",200,0.,500.,200,0.,150.);
+  auto htofE_bar0   = new TH2D("htofE_bar0","TOF vs Edep veto_bar==0",200,0.,500.,200,0.,150.);
+  auto htofE_bar0d  = new TH2D("htofE_bar0d","TOF vs Edep veto_bar==0",200,0.,500.,200,0.,150.);
+  auto htofE_bar0t  = new TH2D("htofE_bar0t","TOF vs Edep veto_bar==0",200,0.,500.,200,0.,150.);
+  auto htofE_mid1   = new TH2D("htofE_mid1","TOF vs Edep veto_mid==1",200,0.,500.,200,0.,150.);
+  auto htofE_mid0   = new TH2D("htofE_mid0 "," TOF vs Edep veto_mid==0",200,0.,500.,200,0.,150.);
+  auto htofE_mid0p  = new TH2D("htofE_mid0p","p TOF vs Edep veto_mid==0",200,0.,500.,200,0.,150.);
+  auto htofE_mid0d  = new TH2D("htofE_mid0d","d TOF vs Edep veto_mid==0",200,0.,500.,200,0.,150.);
+  auto htofE_mid0t  = new TH2D("htofE_mid0t","t TOF vs Edep veto_mid==0",200,0.,500.,200,0.,150.);
+
+  auto htofE_loose1 = new TH2D("htofE_loose1 ","TOF vs Edep veto_loose==1",200,0.,500.,200,0.,150.);
+  auto htofE_loose0 = new TH2D("htofE_loose0 ","TOF vs Edep veto_loose==0",200,0.,500.,200,0.,150.); 
+  auto htofE_loose0p= new TH2D("htofE_loose0p","TOF vs Edep p veto_loose==0",200,0.,500.,200,0.,150.);
+  auto htofE_loose0d= new TH2D("htofE_loose0d","TOF vs Edep d veto_loose==0",200,0.,500.,200,0.,150.);
+  auto htofE_loose0t= new TH2D("htofE_loose0t","TOF vs Edep t veto_loose==0",200,0.,500.,200,0.,150.);
+
+  auto htofE_alln   = new TH2D("htofE_alln","TOF vs Edep veto_all==0",400,0.,500.,400,0.,300.);
+  auto htofE_barn   = new TH2D("htofE_barn","TOF vs Edep veto_bar==0",400,0.,500.,400,0.,300.);
+  auto htofE_midn   = new TH2D("htofE_midn","TOF vs Edep veto_mid==0",400,0.,500.,400,0.,300.);
+  auto htofE_loosen = new TH2D("htofE_loosen","TOF vs Edep veto_loose==0",400,0.,500.,400,0.,300.);
+
+  auto htofE_loosep = new TH2D("htofEd_loosep","TOF vs Edep veto_loose==0 and prot",100,0.,500.,100,0.,150.);
+  auto htofE_loosed = new TH2D("htofEd_loosed","TOF vs Edep veto_loose==0 and deut",100,0.,500.,100,0.,150.);
+  auto htofE_looset = new TH2D("htofEd_looset","TOF vs Edep veto_loose==0 and trit",100,0.,500.,100,0.,150.);
+
+
+
+  rChain0->Project("htof_all1","nctof",deltE&&"ncveto_all==1");
+  rChain0->Project("htof_all0","nctof",deltE&&"ncveto_all==0");
+  rChain0->Project("htof_bar1","nctof",deltE&&"ncveto_bar==1");
+  rChain0->Project("htof_bar0","nctof",deltE&&"ncveto_bar==0");
+  rChain0->Project("htof_mid1","nctof",deltE&&"ncveto_mid==1");
+  rChain0->Project("htof_mid0","nctof",deltE&&"ncveto_mid==0");
+  rChain0->Project("htof_loose1","nctof",deltE&&"ncveto_loose==1");
+  rChain0->Project("htof_loose0","nctof",deltE&&"ncveto_loose==0");
+
+
+  rChain0->Project("htofE_all1"  ,"nctof:ncedep","ncveto_all==1");
+  rChain0->Project("htofE_all0"  ,"nctof:ncedep","ncveto_all==0");
+  rChain0->Project("htofE_all1p" ,"nctof:ncedep","gcutNLProton&&ncveto_all==1");
+  rChain0->Project("htofE_all0p" ,"nctof:ncedep","gcutNLProton&&ncveto_all==0");
+  rChain0->Project("htofE_all1d" ,"nctof:ncedep","gcutNLDeuteron&&ncveto_all==1");
+  rChain0->Project("htofE_all0d" ,"nctof:ncedep","gcutNLDeuteron&&ncveto_all==0");
+  rChain0->Project("htofE_all1t" ,"nctof:ncedep","gcutNLTriton&&ncveto_all==1");
+  rChain0->Project("htofE_all0t" ,"nctof:ncedep","gcutNLTriton&&ncveto_all==0");
+  rChain0->Project("htofE_all1tn","nctof:ncedep","!gcutNLNeutron&&gcutNLTriton&&ncveto_all==1");
+  rChain0->Project("htofE_all0tn","nctof:ncedep","!gcutNLNeutron&&gcutNLTriton&&ncveto_all==0");
+
+  rChain0->Project("htofE_bar1"  ,"nctof:ncedep","ncveto_bar==1");
+  rChain0->Project("htofE_bar0"  ,"nctof:ncedep","ncveto_bar==0");
+  rChain0->Project("htofE_mid1"  ,"nctof:ncedep","ncveto_mid==1");
+  rChain0->Project("htofE_mid0"  ,"nctof:ncedep","ncveto_mid==0");
+
+  rChain0->Project("htofE_bar0d"  ,"nctof:ncedep","!gcutNLNeutron&&gcutNLDeuteron&&ncveto_bar==0");
+  rChain0->Project("htofE_bar0t"  ,"nctof:ncedep","!gcutNLNeutron&&gcutNLTriton&&ncveto_bar==0");
+
+  rChain0->Project("htofE_mid0p" ,"nctof:ncedep","gcutNLProton&&ncveto_mid==0");
+  rChain0->Project("htofE_mid0d" ,"nctof:ncedep","!gcutNLNeutron&&gcutNLDeuteron&&ncveto_mid==0");
+  rChain0->Project("htofE_mid0t" ,"nctof:ncedep","!gcutNLNeutron&&gcutNLTriton&&ncveto_mid==0");
+
+  rChain0->Project("htofE_loose1" ,"nctof:ncedep","ncveto_loose==1");
+  rChain0->Project("htofE_loose0" ,"nctof:ncedep","ncveto_loose==0");
+  rChain0->Project("htofE_loose0p","nctof:ncedep","gcutNLProton&&ncveto_loose==0");
+  rChain0->Project("htofE_loose0d","nctof:ncedep","!gcutNLNeutron&&gcutNLDeuteron&&ncveto_loose==0");
+  rChain0->Project("htofE_loose0t","nctof:ncedep","!gcutNLNeutron&&gcutNLTriton&&ncveto_loose==0");
+
+  rChain0->Project("htofE_loosen","nctof:ncedep","gcutNLNeutron&&ncveto_loose==0");
+  rChain0->Project("htofE_alln"  ,"nctof:ncedep","gcutNLNeutron&&ncveto_all==0");
+  rChain0->Project("htofE_barn"  ,"nctof:ncedep","gcutNLNeutron&&ncveto_bar==0");
+  rChain0->Project("htofE_midn"  ,"nctof:ncedep","gcutNLNeutron&&ncveto_mid==0");
+
+  rChain0->Project("htofE_loosep","nctof:ncedep","gcutNLProton&&ncveto_loose==0");
+  rChain0->Project("htofE_loosed","nctof:ncedep","!gcutNLNeutron&&gcutNLDeuteron&&ncveto_loose==0");
+  rChain0->Project("htofE_looset","nctof:ncedep","!gcutNLNeutron&&gcutNLTriton&&ncveto_loose==0");
+
+
+  // Normalization factor
+  Double_t nall0   = htof_all0  ->Integral(45.,60.);
+  Double_t nall1   = htof_all1  ->Integral(45.,60.);
+  Double_t nmid0   = htof_mid0  ->Integral(45.,60.);
+  Double_t nmid1   = htof_mid1  ->Integral(45.,60.);
+  Double_t nbar0   = htof_bar0  ->Integral(45.,60.);
+  Double_t nbar1   = htof_bar1  ->Integral(45.,60.);
+  Double_t nloose0 = htof_loose0->Integral(45.,60.);
+  Double_t nloose1 = htof_loose1->Integral(45.,60.);
+  
+  // Charged particle spectrum after neutron subtraction
+  auto htof_purecharge = new TH1D((*htof_all1) - nall1/nall0*(*htof_all0));
+  htof_purecharge->SetName("htof_purecharge");
+
+  cout << " All normalization " << nall1/nall0 << endl;
+
+  // all
+  Double_t fct = 0.792;
+  TH2D *mtofE_all0 = new TH2D( fct * (*htofE_all0) );
+  TH2D *stofE_all1 = new TH2D( (*htofE_all1) - (*mtofE_all0) );
+  stofE_all1->SetName("stofE_all1");
+
+  TH2D *mtofE_all0p = new TH2D( fct * (*htofE_all0p) );
+  TH2D *stofE_all1p = new TH2D( (*htofE_all1p) - (*mtofE_all0p) );
+  stofE_all1p->SetName("stofE_all1p");
+
+  TH2D *mtofE_all0d = new TH2D( fct * (*htofE_all0d) );
+  TH2D *stofE_all1d = new TH2D( (*htofE_all1d) - (*mtofE_all0d) );
+  stofE_all1d->SetName("stofE_all1d");
+
+  TH2D *mtofE_all0t = new TH2D( fct * (*htofE_all0t) );
+  TH2D *stofE_all1t = new TH2D( (*htofE_all1t) - (*mtofE_all0t) );
+  TH2D *stofE_all0t = new TH2D( (*htofE_all0t) - (*mtofE_all0t) );
+  stofE_all1t->SetName("stofE_all1t");
+
+  cout << "ALL  Total number " << endl;
+  cout << "proton   " << stofE_all1p->GetEntries() << endl;
+  cout << "deuteron " << stofE_all1d->GetEntries() << endl;
+  cout << "triton   " << stofE_all1t->GetEntries() << endl;
+  
+  Double_t rpt = stofE_all1p->GetEntries() / stofE_all1t->GetEntries();
+  Double_t rdt = stofE_all1d->GetEntries() / stofE_all1t->GetEntries();
+  cout << " p/t " << rpt << endl;
+  cout << " d/t " << rdt << endl;
+
+  cout << " ---- ratio  ----" << endl;
+  cout << " all $ " << endl;
+  Double_t rtt = htofE_all0tn->GetEntries()/htofE_all1tn->GetEntries(); 
+  cout << " rato t_0/t_1(all) " << htofE_all0tn->GetEntries() << " / " << htofE_all1tn->GetEntries()  
+       << " = " <<  rtt << endl;
+  cout << " n = " << htofE_alln->GetEntries() << endl;
+  cout << " p/n = " << stofE_all1p->GetEntries()*rtt / htofE_alln->GetEntries() << endl;
+  
+  // mid
+  cout << " bar $" << endl;
+  rtt = htofE_bar0t->GetEntries()/htofE_all1tn->GetEntries();
+  cout << " rato t_0/t_1(all) " <<  rtt << endl;
+  cout << " P_cont = " << stofE_all1p->GetEntries()*rtt  << endl;
+  cout << " n = " << htofE_barn->GetEntries() << endl;
+  cout << " p/n = " << stofE_all1p->GetEntries()*rtt / htofE_barn->GetEntries() << endl;
+
+  // mid
+  cout << " mid $" << endl;
+  rtt = htofE_mid0t->GetEntries()/htofE_all1tn->GetEntries();
+  cout << " rato t_0/t_1(all) " <<  rtt << endl;
+  cout << " P_cont = " << stofE_all1p->GetEntries()*rtt  << endl;
+  cout << " n = " << htofE_midn->GetEntries() << endl;
+  cout << " p/n = " << stofE_all1p->GetEntries()*rtt / htofE_midn->GetEntries() << endl;
+
+  // loose
+  cout << " Loose $ " << endl;
+  rtt = htofE_loose0t->GetEntries()/htofE_all1tn->GetEntries();
+  cout << " rato t_0/t_1(all) " <<  rtt << endl;
+  cout << " P_cont = " << stofE_all1p->GetEntries()*rtt  << endl;
+  cout << " n = " << htofE_loosen->GetEntries() << endl;
+  cout << " p_cont/n = " << stofE_all1p->GetEntries()*rtt / htofE_loosen->GetEntries() << endl;
+
+
+
+  // 1d 
+  cout << " ------ 1D -------------- " << endl;
+  Double_t pcut[] = {67.7, 86.8};
+  Double_t dcut[] = {84.4 ,106.};
+  Double_t tcut[] = {101. ,119.};
+  Double_t pure_p = htof_purecharge->Integral(pcut[0], pcut[1]);
+  Double_t pure_d = htof_purecharge->Integral(dcut[0], dcut[1]);
+  Double_t pure_t = htof_purecharge->Integral(tcut[0], tcut[1]);
+
+  Double_t pure_pt = pure_p / pure_t;
+  Double_t pure_dt = pure_d / pure_t;
+
+
+  // Charged in loose cut
+  auto htof_loose01  = new TH1D( nloose1/nall0 * (*htof_all0) );
+  htof_loose01->SetName("htof_loose01");
+
+  auto htof_loosesub = new TH1D( (*htof_loose1) - nloose1/nall0*(*htof_all0));
+  htof_loosesub->SetName("htof_loosesub");
+
+  auto htof_all_loose = new TH1D( nloose0/nall0 * (*htof_all0));
+  htof_all_loose->SetName("htof_all_loose");
+  cout << " neut all0 / loose0 " << nall0/nloose0 << endl;
+
+  auto htof_all_loosesub = new TH1D( (*htof_loose0) - nloose0/nall0 * (*htof_all0) );
+  htof_all_loosesub->SetName("htof_all_loosesub");
+
+  
+
+  Double_t a_los_p = htof_all_loosesub->Integral(pcut[0], pcut[1]);
+  Double_t a_los_d = htof_all_loosesub->Integral(dcut[0], dcut[1]);
+  Double_t a_los_t = htof_all_loosesub->Integral(tcut[0], tcut[1]);
+
+  cout << " tof_all_loosesub scale :"  << nall0/nloose0  << endl;
+  cout << " Number of proton   : " << a_los_p << " / " << pure_p << " = " << a_los_p/pure_p << endl;
+  cout << " Number of deuteron : " << a_los_d << " / " << pure_d << " = " << a_los_d/pure_d << endl;
+  cout << " Number of triton   : " << a_los_t << " / " << pure_t << " = " << a_los_t/pure_t << endl;
+
+
+  cout << " Number of Neutron " << endl;
+  cout << " loose " << htofE_loosen->GetEntries() << endl;
+  cout << " all   " << htofE_alln->GetEntries() << endl;
+  cout << " bar   " << htofE_barn->GetEntries() << endl;
+  cout << " mid   " << htofE_midn->GetEntries() << endl;
+
+  cout << "p contami in n with loose " << a_los_p/htofE_loosen->GetEntries() *100. << " %" << endl;
+
+
+  // plot
+  if(kFALSE){
+    ic++;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+
+    htof_loose1 ->Draw();
+
+    htof_loose01->SetLineColor(2);
+    htof_loose01->SetFillStyle(3004);
+    htof_loose01->SetFillColor(2);
+    htof_loose01->Draw("same");
+
+    ic++;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+    htof_loosesub->Draw();
+  
+
+
+    ic++;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+    cc[ic]->SetLogy();
+
+    htof_all_loose->SetLineColor(2);
+    //htof_all_loose->SetFillStyle(3004);
+    htof_all_loose->SetFillColor(2);
+    htof_all_loose->Draw();
+    //  htof_all0->Draw("same");
+    htof_loose0->SetLineColor(4);
+    htof_loose0->Draw("same");
+    auto prgnl = new TLine(pcut[0],0, pcut[0], htof_all_loose->GetMaximum());
+    auto prgnr = new TLine(pcut[1],0, pcut[1], htof_all_loose->GetMaximum());
+    auto drgnl = new TLine(dcut[0],0, dcut[0], htof_all_loose->GetMaximum());
+    auto drgnr = new TLine(dcut[1],0, dcut[1], htof_all_loose->GetMaximum());
+    auto trgnl = new TLine(tcut[0],0, tcut[0], htof_all_loose->GetMaximum());
+    auto trgnr = new TLine(tcut[1],0, tcut[1], htof_all_loose->GetMaximum());
+  
+    prgnl->SetLineColor(8);
+    prgnl->Draw("AL");
+    prgnr->SetLineColor(8);
+    prgnr->Draw("AL");
+
+    drgnl->SetLineColor(8);
+    drgnl->Draw("AL");
+    drgnr->SetLineColor(8);
+    drgnr->Draw("AL");
+
+    trgnl->SetLineColor(8);
+    trgnl->Draw("AL");
+    trgnr->SetLineColor(8);
+    trgnr->Draw("AL");
+  
+    htof_purecharge->SetLineColor(8);
+    htof_purecharge->Draw("same");
+
+
+    ic++;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+    htof_all_loosesub->Draw();
+
+    prgnl->SetLineColor(8);
+    prgnl->SetY2(htof_all_loosesub->GetMaximum());
+    prgnl->Draw("AL");
+    prgnr->SetLineColor(8);
+    prgnr->SetY2(htof_all_loosesub->GetMaximum());
+    prgnr->Draw("AL");
+
+    drgnl->SetLineColor(8);
+    drgnl->SetY2(htof_all_loosesub->GetMaximum());
+    drgnl->Draw("AL");
+    drgnr->SetLineColor(8);
+    drgnr->SetY2(htof_all_loosesub->GetMaximum());
+    drgnr->Draw("AL");
+
+    trgnl->SetLineColor(8);
+    trgnl->SetY2(htof_all_loosesub->GetMaximum());
+    trgnl->Draw("AL");
+    trgnr->SetLineColor(8);
+    trgnr->SetY2(htof_all_loosesub->GetMaximum());
+    trgnr->Draw("AL");
+  }
+
+  if(kFALSE){
+    ic++;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+    cc[ic]->Divide(2,2);
+
+
+    UInt_t id = 1;
+    cc[ic]->cd(id); 
+    cc[ic]->GetPad(id)->SetLogz(); id++;
+
+    htofE_all0->Draw("colz");
+    cc[ic]->cd(id);
+    cc[ic]->GetPad(id)->SetLogz(); id++;
+    htofE_all1->Draw("colz");
+
+    cc[ic]->cd(id); 
+    cc[ic]->GetPad(id)->SetLogz(); id++;
+    htofE_loose0->Draw("colz");
+
+    cc[ic]->cd(id); 
+    cc[ic]->GetPad(id)->SetLogz();id++;
+    htofE_loose1->Draw("colz");
+  }
+
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+  htof_purecharge->Draw();
+
+  ic++; 
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+  cc[ic]->SetLogz();
+  stofE_all1->Draw("colz");
+
+  ic++; 
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+  cc[ic]->SetLogz();
+  stofE_all1p->Draw("colz");
+  ic++; 
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+  cc[ic]->SetLogz();
+  stofE_all1d->Draw("colz");
+  ic++; 
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+  cc[ic]->SetLogz();
+  stofE_all1t->Draw("colz");
+}
+
+void LoadNLgCut()
+{
+  TFile *_file0 = TFile::Open("data/gcutNLNeutron.root");
+  TCutG *gcutNLNeutron =(TCutG*)_file0->Get("gcutNLNeutron");
+  _file0->Close();
+  //  gcutNLNeutron->Print();
+
+  TFile *_file1 = TFile::Open("data/gcutNLProton.root");
+  TCutG *gcutNLProton =(TCutG*)_file1->Get("gcutNLProton");
+  _file1->Close();
+  //  gcutNLProton->Print();
+
+  TFile *_file2 = TFile::Open("data/gcutNLDeuteron.root");
+  TCutG *gcutNLDeuteron =(TCutG*)_file2->Get("gcutNLDeuteron");
+  _file2->Close();
+  //  gcutNLDeuteron->Print();
+
+  TFile *_file3 = TFile::Open("data/gcutNLTriton.root");
+  TCutG *gcutNLTriton =(TCutG*)_file3->Get("gcutNLTriton");
+  _file3->Close();
+  //  gcutNLTriton->Print();
+
+}
+
+//  LocalWords:  TH2D htofE

@@ -86,7 +86,7 @@ void flw_process2(Long64_t nmax = -1)
 	    ntrack[4]++;
 	    
 	    unitP_ave += aPart1->GetRotatedMomentum().Unit(); 
-	    unitP_rot += aPart1->GetRPWeight() * (aPart1->GetRotatedPt()).Unit();
+	    unitP_rot += aPart1->GetRPWeight() * aPart1->GetRotatedMomentum().Unit();
 
 	  }
 
@@ -104,7 +104,7 @@ void flw_process2(Long64_t nmax = -1)
     }
 
     mtrack = trackID.size();
-    ntrack[3] = mtrack;
+    ntrack[6] = mtrack;
 
     //       cout << " mtrack " << mtrack << endl;
 
@@ -324,6 +324,9 @@ void Initialize()
 
   aParticleArray->Clear();
   nParticleArray->Clear();
+
+  unitP_ave = TVector3(0.,0.,0.);
+  unitP_rot = TVector3(0.,0.,0.);
 
 
   TDatime dtime;
