@@ -12,6 +12,7 @@
 #include "TChain.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TVector3.h"
 
 class STFlowCorrection : public TObject {
 
@@ -36,6 +37,12 @@ class STFlowCorrection : public TObject {
   TChain    *ChEle = NULL;
   std::vector<Double_t> vphi;
   std::vector<Double_t> bphi;
+  Double_t   constX;
+  Double_t   meanX;
+  Double_t   sigX;
+  Double_t   constY;
+  Double_t   meanY;
+  Double_t   sigY;
 
 
   Double_t   binmax[2];
@@ -84,6 +91,7 @@ class STFlowCorrection : public TObject {
 
   void      GetCorrection(std::vector<Double_t> &val);
   Double_t  GetCorrection(Double_t val);
+  TVector3  GetCorrection(TVector3 val);
 
   Double_t *GetAverageCosin(Int_t ival, std::vector<Double_t> &val);
   

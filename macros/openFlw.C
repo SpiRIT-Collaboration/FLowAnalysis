@@ -62,11 +62,14 @@ UInt_t OpenChain(UInt_t m)
   
   TString treename = "cflw";
   
-  if(sDB[0](1,2) == "f0")       // output of flw_process1.C is run2844_f0.v0.root 
-    treename = "flw";
+  cout << "sDB[0] " << sDB[0] << " " << sDB[0](10,1) << endl;
 
-  else if(sDB[0](10,3) == "_db" ) // output of flw_process4.C  run2844_rf.v0.0.0_db2844.v0.0.cv0.root  
+
+  if(sDB[0]( sDB[0].First("c"), 2 ) == "cv") // output of flw_process4.C  run2844_rf.v0.0.0.root  
       treename = "cflw";
+  
+  else if(sDB[0](1,2) == "f0")       // output of flw_process1.C is run2844_f0.v0.root 
+    treename = "flw";
 
   else if(sDB[0](1,2) == "rf")  // output of flw_prosess2.C run2841_rf_v4.1.0.root
     treename = "rflw";

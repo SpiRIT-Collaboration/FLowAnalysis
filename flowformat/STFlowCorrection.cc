@@ -38,6 +38,14 @@ void STFlowCorrection::Init()
     binpara[i]= "";
   }
 
+  constX   = 0.;
+  meanX    = 0.;
+  sigX     = 0.;
+  constY   = 0.;
+  meanY    = 0.;
+  sigY     = 0.;
+
+
   if(ChEle != NULL)  SetFileName();  
 
   clear();
@@ -75,9 +83,6 @@ UInt_t STFlowCorrection::GetCorrectionFactor(UInt_t val)
   std::cout << "STFlowCorrection::GetCorrectionFactor : "<< std::endl;
 
   TString header = "->,";
-  // if(irm  == 1) header = "1->,";
-  // else          header = "0->,";
-
 
   std::fstream fin;
   fin.open(fname, std::fstream::in);
@@ -91,13 +96,37 @@ UInt_t STFlowCorrection::GetCorrectionFactor(UInt_t val)
   
   fin >> sget;
   harm = atoi(sget);
-  charm = harm;
+  charm = harm;  // number of harmonics
+
 
   Init();
 
   Int_t j = 0;
   while(!fin.eof()){
     fin >> sget;
+
+    if(sget == "X:"){
+      fin >> sget; constX = atof(sget);
+      fin >> sget; meanX  = atof(sget);
+      fin >> sget; sigX   = atof(sget);
+
+      fin >> sget;
+      fin >> sget; constY = atof(sget);
+      fin >> sget; meanY  = atof(sget);
+      fin >> sget; sigY   = atof(sget);
+
+      std::cout << " X: " 
+		<< constX << ", "
+		<< meanX  << ", "
+		<< sigX   << ", "
+		<< std::endl;
+      std::cout << " Y: " 
+		<< constY << ", "
+		<< meanY  << ", "
+		<< sigY   << ", "
+		<< std::endl;
+
+    }
     
     if(sget == "mtrack>"){
       fin >> sget;
@@ -167,6 +196,23 @@ void STFlowCorrection::ShowParameters()
   }
    
   std::cout << fname << " was loaded." << std::endl;
+}
+
+
+TVector3 STFlowCorrection::GetCorrection(TVector3 val)
+{
+  if(sigX == 0 && sigY == 0) return TVector3(0.,0.,0);
+
+  val.SetX( (val.X() - meanX)/sigX );
+  val.SetY( (val.Y() - meanY)/sigY );
+    
+  Double_t Psi = val.Phi();
+  Psi = GetCorrection(Psi);
+    
+  val.SetPhi(Psi);
+  
+  return val;
+
 }
 
 void STFlowCorrection::GetCorrection(std::vector<Double_t> &val)

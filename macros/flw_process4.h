@@ -5,7 +5,7 @@
 #include "TVector2.h"
 
 //@@@@ 
-Int_t  seltrackID = 4;
+Int_t  seltrackID = 5;
 UInt_t selReactionPlanef = 10;
 
 Int_t  seltrack;
@@ -19,8 +19,10 @@ Double_t      ProjB;
 Double_t      aoq;
 Double_t      z;
 Int_t         snbm;
-TVector3      unitP_ave;
-TVector3      unitP_rot;
+TVector3      *unitP_ave = NULL; 
+TVector3      *unitP_rot = NULL; 
+TBranch       *bunitP_ave;
+TBranch       *bunitP_rot;
 
 void      SetEnvironment();
 void      PrintProcess(Int_t ievt);
@@ -33,7 +35,7 @@ Bool_t    DefineVersion();
 void      RotateAsBeamAngle(STParticle *apart, TVector3 *p1, TVector2 *pt);
 void      SetPtWeight(STParticle *apart);
 void      FlatteningCorrection(STParticle *apart, Int_t ival);
-
+TVector3  Psi_FlatteningCorrection(Int_t ival, TVector3 Pvec);
 
 void      SubEventAnalysis();
 void      AzmAngleRPTReactionPlane();
@@ -56,15 +58,16 @@ Bool_t  BeamAngle;
 Int_t   iAsm;
 TString sbRun;
 TString sbVer;
+TString ssbVer;
 TString scVer;
 UInt_t  nBin; 
 TString binpara;
 
-Int_t  maxProc;;
+Int_t   maxProc;;
 
 //TChain *fChain;
-TString foutname;
-TTree  *fTree;
+TString  foutname;
+TTree    *fTree;
 Long64_t nEntry;
 
 TRandom3 rnd;
@@ -76,9 +79,10 @@ TCutG *gProton = NULL;
 
 vector<TVector2> pt;
 
-TClonesArray *aParticleArray = NULL;
-TClonesArray *aflowcorrArray = NULL;
-STFlowCorrection *flowcorr = NULL;
+TClonesArray     *aParticleArray = NULL;
+TClonesArray     *aflowcorrArray = NULL;
+TClonesArray     *aNLCluster     = NULL;
+STFlowCorrection *flowcorr       = NULL;
 
 vector<TString> vfname;
 vector< vector<Double_t> >  binmax[2];
@@ -99,13 +103,13 @@ Int_t    numGoodTrack;
 Int_t    mtrack;
 TVector3 unitP;
 TVector2 unitP_lang;
-TVector2 unitP_rot;
 TVector2 unitP_1;
 TVector2 unitP_2;
 TVector2 unitP_1r;
 TVector2 unitP_2r;
 UInt_t   mtrack_1;
 UInt_t   mtrack_2;
+TVector3 unitP_fc;
 
 Double_t bsPhi[2];
 Double_t bsPhi_1[2];

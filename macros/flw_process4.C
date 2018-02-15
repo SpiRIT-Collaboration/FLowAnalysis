@@ -51,7 +51,9 @@ void flw_process4(Long64_t nmax = -1)
     seltrack = ntrack[seltrackID];
 
     if(ntrack[2] > 0 ) {
-     
+
+      unitP_fc = Psi_FlatteningCorrection(seltrack, *unitP_rot);
+
       mtkBIN = GetMultiplicityCorretionIndex(seltrack);
 
       Long64_t nLoop = 0;
@@ -97,29 +99,25 @@ void SetEnvironment()
 
   sRun = gSystem -> Getenv("RUN");  // RUN number
   sVer = gSystem -> Getenv("VER");  // Version ID
-  sbRun= gSystem -> Getenv("BRUN"); // If BRUN=0, flattening is not done.
-  sbVer= gSystem -> Getenv("BVER"); // BRUN version
-  //scVer= gSystem -> Getenv("CVER"); // corrected version
-
+  sbVer= gSystem -> Getenv("FLC"); // BRUN version
   sMix = gSystem -> Getenv("MIX");
   
-  if(sRun =="" || sVer == "" ||sMix == "" || sbRun == "" || sbVer == ""|| !DefineVersion()) {
+  if(sRun =="" || sVer == "" ||sMix == "" || sbVer == ""|| !DefineVersion()) {
     cout << " Please type " << endl;
-    cout << "$ RUN=#### VER=#.#.# MIX=0(real) or 1(mix) BRUN=# BVER=#.#.cv# root flw_process4.C(Number of event) " << endl;
+    cout << "$ RUN=#### VER=#.#.# MIX=0(real) or 1(mix) FLC=run2900_rf.v4.0.Psicv0 root flw_process4.C(Number of event) " << endl;
     exit(0);
   }
-
-
 
   // Real or mixed event 
   if (sMix == "1") bMix = kTRUE;
   else bMix = kFALSE;
 
-
   // Set RUN number
   iRun = atoi(sRun);
 
-
+  // Correction version
+  Ssiz_t cv = sbVer.First("c");
+  ssbVer = sbVer( cv, 3);
 }
 
 void PrintProcess(Int_t ievt)
@@ -184,29 +182,30 @@ void Open()
   aParticleArray   = new TClonesArray("STParticle",150);
 
   fTree->SetBranchAddress("STParticle",&aParticleArray);
-  fTree->SetBranchAddress("ntrack",ntrack);
-  fTree->SetBranchAddress("mtrack",&mtrack);
-  fTree->SetBranchAddress("unitP_ave",&unitP_ave);
-  fTree->SetBranchAddress("unitP_rot",&unitP_rot);
+  fTree->SetBranchAddress("ntrack"    ,ntrack);
+  fTree->SetBranchAddress("mtrack"    ,&mtrack);
+  fTree->SetBranchAddress("unitP_ave" ,&unitP_ave, &bunitP_ave);
+  fTree->SetBranchAddress("unitP_rot" ,&unitP_rot, &bunitP_rot);
 
-
-  fTree->SetBranchAddress("aoq",&aoq);
-  fTree->SetBranchAddress("z",&z);
+  fTree->SetBranchAddress("aoq" ,&aoq);
+  fTree->SetBranchAddress("z"   ,&z);
   fTree->SetBranchAddress("snbm",&snbm);
+
+  fTree->SetBranchAddress("STNeuLANDCluster",&aNLCluster);
 }
 
 void Initialize()
 {
-
   trackID.clear();
 
-  unitP   = TVector3(0,0,0);
-  unitP_lang  = TVector2(0,0);
-  unitP_rot   = TVector2(0,0);
-  unitP_1 = TVector2(0.,0.);
-  unitP_2 = TVector2(0.,0.);
-  unitP_1r= TVector2(0.,0.);
-  unitP_2r= TVector2(0.,0.);
+  unitP       = TVector3(0.,0.,0.);
+
+  unitP_lang  = TVector2(0.,0.);
+  unitP_1     = TVector2(0.,0.);
+  unitP_2     = TVector2(0.,0.);
+  unitP_1r    = TVector2(0.,0.);
+  unitP_2r    = TVector2(0.,0.);
+  unitP_fc    = TVector3(0.,0.,0.);
 
   mtrack_1 = 0;
   mtrack_2 = 0;
@@ -252,7 +251,8 @@ void OutputTree()
 {
   //@@@
   foutname += Form(".%d",iVer[2]);
-  foutname += "_db"+sbRun+".v"+sbVer+".root";
+  foutname += "." + ssbVer + ".root";
+  //  foutname += "_db"+sbVer+".root";
   // Set like  -> run2843_rf.v0.0.0_db2843.v0.0.cv0.root
 
   TString fo = foutname;
@@ -299,11 +299,15 @@ void OutputTree()
   mflw->Branch("unitP_rot" ,&unitP_rot);
   mflw->Branch("unitP_1r"  ,&unitP_1r);
   mflw->Branch("unitP_2r"  ,&unitP_2r);
+  mflw->Branch("unitP_fc"  ,&unitP_fc);
 
   mflw->Branch("bsPhi"     ,bsPhi   ,"bsPhi[2]/D");
   mflw->Branch("bsPhi_1"   ,bsPhi_1 ,"bsPhi_1[2]/D");
   mflw->Branch("bsPhi_2"   ,bsPhi_2 ,"bsPhi_2[2]/D");
   mflw->Branch("bsPhi_ex"  ,bsPhi_ex,"bsPhi_ex[3]/D");
+
+  if(aNLCluster != NULL)
+    mflw->Branch("STNeuLANDCluster",&aNLCluster);
 
 }
 
@@ -337,48 +341,41 @@ Bool_t DefineVersion()
 UInt_t SetDatabaseFiles()
 {
 
-  //  std::vector<TString> vfname;
-  if(sbRun != "0") {
-    TString fname = "run"+sbRun;
-    if(bMix)
-      fname += "_mf.v";
-    else
-      fname += "_rf.v";
 
-    fname += sbVer + ".";
+  TString  fname = sbVer + ".";
 
-        cout << " fname " << fname  << endl;
+  cout << " fname " << fname  << endl;
 
-    UInt_t ihmsum = 0;
-    UInt_t imtk = 0;
+  UInt_t ihmsum = 0;
+  UInt_t imtk = 0;
+  while(1){
+
+    UInt_t ihm = 0;
+    UInt_t ihmm = 0;
     while(1){
 
-      UInt_t ihm = 0;
-      UInt_t ihmm = 0;
-      while(1){
-
-	TString ffname = fname +  Form("m%dn%d.txt",imtk,ihmm);
-		cout << ffname << endl;
+      TString ffname = fname +  Form("m%dn%d.txt",imtk,ihmm);
+      cout << ffname << endl;
 	
-	if( gSystem->FindFile("db",ffname) ){
-	  vfname.push_back(ffname);
-	  ihm++;  ihmm++;
-	}
-	else 
-	  break;
+      if( gSystem->FindFile("db",ffname) ){
+	vfname.push_back(ffname);
+	ihm++;  ihmm++;
       }
-
-      if(ihm > 0 ) {
-	mtkbin.push_back(ihm);
-	ihmsum += ihm;
-	///	cout << " ihm " << ihm  << " <- " << imtk << " sum " << ihmsum << endl;
-      }
-      else if(ihm == 0)
+      else 
 	break;
-
-      imtk++;
     }
+
+    if(ihm > 0 ) {
+      mtkbin.push_back(ihm);
+      ihmsum += ihm;
+      ///	cout << " ihm " << ihm  << " <- " << imtk << " sum " << ihmsum << endl;
+    }
+    else if(ihm == 0)
+      break;
+
+    imtk++;
   }
+
 
   
   nBin = (UInt_t)vfname.size();
@@ -673,4 +670,20 @@ void FlatteningCorrection(STParticle *apart, Int_t ival)
   else
     std::cout << " A correction file is not found. " << binParameter << " with " << ntrack[3] << std::endl;
 
+}
+
+TVector3 Psi_FlatteningCorrection(Int_t ival, TVector3 Pvec)
+{
+  Int_t    mtkBIN = GetMultiplicityCorretionIndex(ival);
+  Double_t Psi    = Pvec.Phi();
+  
+  Int_t iBIN = GetThetaCorrectionIndex(Pvec.Theta(), mtkBIN);
+
+  TVector3 Psi_cf = TVector3(0.,0.,0.);
+  if(iBIN >= 0){
+    flowcorr = (STFlowCorrection*)aflowcorrArray->At(iBIN);
+    Psi_cf = flowcorr->GetCorrection(Pvec);
+ } 
+
+  return Psi_cf;
 }
