@@ -652,19 +652,11 @@ void FlatteningCorrection(STParticle *apart, Int_t ival)
   
   Int_t iBIN = GetThetaCorrectionIndex(binParameter, mtkBIN);
 
-  //  cout << "binpara " << binParameter << " mtkBIN " << mtkBIN << " ibin " << iBIN <<endl;
-
   if(iBIN >= 0){
     flowcorr = (STFlowCorrection*)aflowcorrArray->At(iBIN);
 
-    //    cout << flowcorr->GetBin_min(0) << " < " << flowcorr->GetBin_max(0) << " : " 
-    //	 << flowcorr->GetBin_min(1) << " < " << flowcorr->GetBin_max(1) << endl; 
-
-    //cout << " before " << apart->GetRotatedMomentum().Phi() << endl;
     Double_t phi =  flowcorr->GetCorrection((apart->GetRotatedMomentum()).Phi());
     apart->Flattening( phi );
-    //    cout << " after " << apart->GetFlattenMomentum().Phi() << endl;
-    
 
   }
   else

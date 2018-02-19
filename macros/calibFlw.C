@@ -50,6 +50,8 @@ void calibFlw()
 {
   gROOT->Reset();
 
+  SetEnvironment();
+
   UInt_t ichain = 0;
 
   openFlw();
@@ -179,12 +181,21 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel = 0)//%% Executable :
 
   const UInt_t harm = 5;
   
-  const UInt_t thetanbin = 20;
+  const UInt_t thetanbin = 0;
   Double_t thetabin[thetanbin+1];
   Double_t theta_min = 0.;
   Double_t theta_max = 1.;
-  for(UInt_t n = 0; n < thetanbin+2; n++)
-    thetabin[n]    = theta_max/(Double_t)thetanbin * (Double_t)n;
+
+
+  for(UInt_t n = 0; n < thetanbin+2; n++){
+    
+    if(thetanbin != 0)
+      thetabin[n]    = theta_max/(Double_t)thetanbin * (Double_t)n;
+    else if(n == 0)
+      thetabin[n]    = 0.; 
+    else
+      thetabin[n]    = TMath::Pi()/2.;
+  }
 
   const UInt_t ntrknbin=10;
   Double_t ntrkbin[ntrknbin+1];
@@ -756,5 +767,7 @@ void SetEnvironment()
   }
 
   iVer = atoi(sVer);
+
+  cout << " VER " << iVer << endl;
 }
 

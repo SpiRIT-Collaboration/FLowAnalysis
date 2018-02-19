@@ -115,11 +115,11 @@ UInt_t STFlowCorrection::GetCorrectionFactor(UInt_t val)
       fin >> sget; meanY  = atof(sget);
       fin >> sget; sigY   = atof(sget);
 
+      std::cout << " ReCentering " ;
       std::cout << " X: " 
 		<< constX << ", "
 		<< meanX  << ", "
-		<< sigX   << ", "
-		<< std::endl;
+		<< sigX   << ", " ;
       std::cout << " Y: " 
 		<< constY << ", "
 		<< meanY  << ", "
@@ -137,6 +137,17 @@ UInt_t STFlowCorrection::GetCorrectionFactor(UInt_t val)
       fin >> sget;
       binmax[0] = atof(sget);
       binpara[0]= "mtrack";
+    }
+
+    if(sget == "ntrack>"){
+      fin >> sget;
+      binmin[0] = atof(sget);
+      binpara[0]= "ntrack";
+    }
+    else if(sget == "ntrack<"){
+      fin >> sget;
+      binmax[0] = atof(sget);
+      binpara[0]= "ntrack";
     }
 
     if(sget == "pz<"){
@@ -207,8 +218,9 @@ TVector3 STFlowCorrection::GetCorrection(TVector3 val)
   val.SetY( (val.Y() - meanY)/sigY );
     
   Double_t Psi = val.Phi();
+
   Psi = GetCorrection(Psi);
-    
+
   val.SetPhi(Psi);
   
   return val;
@@ -235,7 +247,6 @@ Double_t STFlowCorrection::GetCorrection(Double_t val)
     cpphi += An[k]*cos((Double_t)(k+1) * val);
     cpphi += Bn[k]*sin((Double_t)(k+1) * val);
   } 
-
   return cpphi;  
 }
 
