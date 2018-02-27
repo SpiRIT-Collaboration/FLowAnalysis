@@ -57,6 +57,11 @@ void STFlowCorrection::clear()
   bphi.clear();
   vtheta.clear();
   vmtrack.clear();
+
+  vvec.clear();
+  bvec.clear();
+  rcphi.clear();
+
 }
 
 void STFlowCorrection::SetFileName()
@@ -77,7 +82,24 @@ void STFlowCorrection::SetFileName(TString sval)
   std::cout << fname << " in defined. " << std::endl;
 }
 
-UInt_t STFlowCorrection::GetCorrectionFactor(UInt_t val)
+void STFlowCorrection::SetReCenteringParameter(TString cprm, Double_t *val)
+{
+  if( cprm == "X"){
+    constX = val[0];
+    meanX  = val[1];
+    sigX   = val[2];
+  }
+  else if( cprm == "Y"){
+    constY = val[0];
+    meanY  = val[1];
+    sigY   = val[2];
+  }
+  else
+    std::cout << "Failed:  SetReCenteringParameter(X or Y, " << std::endl;
+}
+
+
+UInt_t STFlowCorrection::LoadCorrectionFactor(UInt_t val)
 {
 
   std::cout << "STFlowCorrection::GetCorrectionFactor : "<< std::endl;
@@ -187,16 +209,22 @@ UInt_t STFlowCorrection::GetCorrectionFactor(UInt_t val)
     }
   }
 
-  //  if( val == 1 ) ShowParameters();
+  if( val == 1 ) ShowParameters();
 
   return 0;
 }
 
-void STFlowCorrection::ShowParameters()
-{  
+void STFlowCorrection::ShowBinInformation()
+{
   std::cout << binpara[0] << " > " << binmin[0] << " && < " << binmax[0] << std::endl; 
   if(binpara[1] != "")
     std::cout << binpara[1] << " > " << binmin[1] << " && < " << binmax[1] << std::endl; 
+
+}
+
+void STFlowCorrection::ShowParameters()
+{  
+  ShowBinInformation();
 
   for(UInt_t k = 0; k < charm; k++){ 
     std::cout << "->, " << std::setw(5) << indx[k] << ", "
@@ -210,37 +238,44 @@ void STFlowCorrection::ShowParameters()
 }
 
 
-TVector3 STFlowCorrection::GetCorrection(TVector3 val)
+TVector3 STFlowCorrection::ReCentering(TVector3 val)
 {
-  if(sigX == 0 && sigY == 0) return TVector3(0.,0.,0);
-
-  val.SetX( (val.X() - meanX)/sigX );
-  val.SetY( (val.Y() - meanY)/sigY );
-    
-  Double_t Psi = val.Phi();
-
-  Psi = GetCorrection(Psi);
-
-  val.SetPhi(Psi);
-  
-  return val;
-
+  return TVector3((val.X() - meanX)/sigX, (val.Y() - meanY)/sigY, val.Z());
 }
+
+TVector3 STFlowCorrection::ReCenteringFourierCorrection(TVector3 val) // ReCentering and Fourier correction for stored bvec
+{
+  TVector3 rc = ReCentering(val);
+  rc.SetPhi( GetCorrection(rc.Phi()) );
+
+  return rc;
+}
+
+UInt_t STFlowCorrection::ReCenteringFourierCorrection() // ReCentering and Fourier correction for stored bvec
+{
+  std::vector<TVector3>::iterator itr;
+  for(itr = bvec.begin(); itr != bvec.end(); itr++){    
+    if(sigX > 0 && sigY > 0){
+      TVector3 rc = ReCentering( *itr );
+      vvec.push_back(rc);
+      vphi.push_back(rc.Phi());
+      rcphi.push_back(rc.Phi());
+    }
+  }
+
+  return FourierCorrection();
+}
+
 
 void STFlowCorrection::GetCorrection(std::vector<Double_t> &val)
 {
-
-  for(Int_t i = 0; i < (Int_t)val.size(); i++)
-    val.at(i) = GetCorrection(val.at(i));
-
+  for(Int_t i = 0; i < (Int_t)val.size(); i++) {
+    val.at(i) = GetCorrection(val.at(i)) ;
+  }
 }
 
 Double_t STFlowCorrection::GetCorrection(Double_t val)
 {
-
-  if( vtheta.size() != bphi.size() )
-    bphi.push_back(val);
-
   Double_t cpphi = val;
 
   for(UInt_t k = 0; k < charm; k++){
@@ -250,39 +285,25 @@ Double_t STFlowCorrection::GetCorrection(Double_t val)
   return cpphi;  
 }
 
-Double_t  *STFlowCorrection::GetAverageCosin(Int_t ival, std::vector<Double_t> &val)
-{
-  std::vector<Double_t> fvCos;
-
-  fvCos.clear();
-
-  Double_t findx = (Double_t)ival;
-  for(Int_t i = 0; i < (Int_t)val.size(); i++)
-    fvCos.push_back(cos(findx * val.at(i)));
-  
-  std::vector<Double_t>::iterator ibgn = fvCos.begin();
-  std::vector<Double_t>::iterator iend = fvCos.end();
-
-  Double_t *vcos;
-  vcos = new Double_t[2];
-  vcos[0]  =  TMath::Mean(ibgn, iend);
-  vcos[1]  =  TMath::RMS(ibgn, iend);
-
-  return vcos;
-}
-
 UInt_t STFlowCorrection::FourierCorrection()
 {
-  bphi = vphi;
+  std::vector<TVector3>::iterator itr;
+
+  if(vphi.size() == 0){
+    for(itr = bvec.begin(); itr != bvec.end(); itr++)
+      vphi.push_back(itr->Phi());
+  }
+
   FourierCorrection(vphi);
   
-  return (UInt_t)bphi.size();
+  for(itr = bvec.begin(); itr != bvec.end(); itr++) 
+    itr->SetPhi(vphi.at( itr - bvec.begin() ) );
+  
+  return (UInt_t)vphi.size();
 }
 
 void STFlowCorrection::FourierCorrection(std::vector<Double_t> &val)
 {
-  bphi = val;
-
   std::cout << " harm = " << charm <<  "val.size " << val.size() << std::endl;
   std::vector<Double_t> fvCos;
   std::vector<Double_t> fvSin;
@@ -307,7 +328,6 @@ void STFlowCorrection::FourierCorrection(std::vector<Double_t> &val)
 
       Bn[ihm]     =  2./findx * TMath::Mean(ibgn, iend); 
       Bn_rms[ihm] =  2./findx * TMath::RMS(ibgn, iend); 
-
 
       ibgn = fvSin.begin();
       iend = fvSin.end();
@@ -335,9 +355,39 @@ void STFlowCorrection::FourierCorrection(std::vector<Double_t> &val)
     
   }
   
-  if(val.size()>0)
+  if(val.size()>0) 
     GetCorrection(val);
+
+}
+
+std::vector<Double_t> STFlowCorrection::GetTheta()
+{
+  std::vector<TVector3>::iterator itr;
+  for(itr = vvec.begin(); itr != vvec.end(); itr++)
+    vtheta.push_back(itr->Theta());
+						   
+  return vtheta;
+}
+
+Double_t  *STFlowCorrection::GetAverageCosin(Int_t ival, std::vector<Double_t> &val)
+{
+  std::vector<Double_t> fvCos;
+
+  fvCos.clear();
+
+  Double_t findx = (Double_t)ival;
+  for(Int_t i = 0; i < (Int_t)val.size(); i++)
+    fvCos.push_back(cos(findx * val.at(i)));
   
+  std::vector<Double_t>::iterator ibgn = fvCos.begin();
+  std::vector<Double_t>::iterator iend = fvCos.end();
+
+  Double_t *vcos;
+  vcos = new Double_t[2];
+  vcos[0]  =  TMath::Mean(ibgn, iend);
+  vcos[1]  =  TMath::RMS(ibgn, iend);
+
+  return vcos;
 }
 
 void STFlowCorrection::SetDirectory()

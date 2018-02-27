@@ -692,7 +692,6 @@ void plotv1v2(UInt_t selid=2)     //%% Executable : v1 and v2 as a function of r
   gStyle->SetGridColor(7);
   gStyle->SetGridStyle(1);
 
-
   Int_t pcharge = 1;
   if(selid == 0)  pcharge = -1;
 
@@ -760,8 +759,6 @@ void plotv1v2(UInt_t selid=2)     //%% Executable : v1 and v2 as a function of r
 
 	  
 	  if(aPart->GetIndividualRPAngle() > -9 ) {
-
-
 	  
 	    for(UInt_t k = 0; k < nbin; k++){
 
@@ -823,15 +820,13 @@ void plotv1v2(UInt_t selid=2)     //%% Executable : v1 and v2 as a function of r
     std::cout << " ---- Resutls ---------------------" << std::endl;
     for(UInt_t i = 0; i < nbin; i++)
       std::cout << setw(5) << i << " : " << setw(12)
-		<< xval[i] << " +-" <<  " v1 " << setw(12) << yval1[i] << " +- " << yval1e[i] << "  w  " << bphi[i].size() << std::endl;  
+		<< xval[i] << " +-" << xvale[i] 
+		<<  " v1 " << setw(12) << yval1[i] << " +- " << yval1e[i] << "  w  " << bphi[i].size() << std::endl;  
     std::cout << " ----------------------------------" << std::endl;
     for(UInt_t i = 0; i < nbin; i++)
       std::cout << setw(5) << i << " : " << setw(12)
-		<< xval[i] << " +-" <<  " v2 " << setw(12) << yval2[i] << " +- " << yval2e[i] << "  w  " << bphi[i].size() << std::endl;  
-
-    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
-    ic++;
-
+		<< xval[i] << " +-"  << xvale[i]
+		<<  " v2 " << setw(12) << yval2[i] << " +- " << yval2e[i] << "  w  " << bphi[i].size() << std::endl;  
 
     cout << " jncount " << jncount << " jnfirst " << jnfirst << endl;
 
@@ -857,7 +852,9 @@ void plotv1v2(UInt_t selid=2)     //%% Executable : v1 and v2 as a function of r
 
     }
 
-    //cc[ic]->cd(id); id++;
+    ic++;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+
     auto gv_v1 = new TGraphErrors(nsl, rap, v1, rape, v1e);
     gv_v1->SetName("gv_v1");
 
@@ -1086,8 +1083,7 @@ void PtDependece(UInt_t hrm = 1)
 
 	auto pid   = aPart->GetPID();
 	auto rapid = aPart-> GetRapidity();
-	rapid = (rapid - ycm[sys[m]])/ybeam_cm[sys[m]];
-
+      	rapid = (rapid - ycm[sys[m]])/ybeam_cm[sys[m]];
 
 	if(  aPart->GetBestTrackFlag() > 0 && (rapid < rapid_max && rapid > rapid_min) ){
 
@@ -1695,6 +1691,91 @@ void Phi()                        //%% Executable :
 
   UInt_t id = 1;
   for(Int_t m = m_bgn; m < m_end; m++){
+  }
+}
+
+
+//________________________________//%% Executable : 
+void PlotNeuLANDPsi()             //%%
+{
+  TH2D *hACCp[4];
+  TH2D *hnlACCp[4];
+  TH2D *hnlACCn[4];
+  TH1D *hfcrn[4][4];
+  TH1D *hfcrp[4][4];
+
+  TCut ncCut[4];
+  ncCut[0]="";
+  ncCut[1]="ncPID==2112";
+  ncCut[2]=ncCut[1]&&"ncRapidity<=0.4";
+  ncCut[3]=ncCut[1]&&"ncRapidity>0.4";
+
+  TCut pcCut[4];
+  pcCut[0]="";
+  pcCut[1]="ncPID==2212";
+  pcCut[2]=pcCut[1]&&"ncRapidity<=0.4";
+  pcCut[3]=pcCut[1]&&"ncRapidity>0.4";
+
+  //----- Booking            
+  TString hname;
+  for(Int_t m = m_bgn; m < m_end; m++){
+    hname = Form("hnlACCn%d",m);
+    hnlACCn[m] = new TH2D(hname, hname,  200, 0., 1., 200., 0., 500.);
+    hnlACCn[m]->SetMarkerColor(4);
+    rChain[m]->Project(hname,"ncP.Pt():ncRapidity","ncPID==2112");
+
+    hname = Form("hnlACCp%d",m);
+    hnlACCp[m] = new TH2D(hname, hname,  200, 0., 1., 200., 0., 500.);
+    hnlACCp[m]->SetMarkerColor(2);
+    rChain[m]->Project(hname,"ncP.Pt():ncRapidity","ncPID==2212");
+
+    hname = Form("hACCp%d",m);
+    hACCp[m] = new TH2D(hname, hname,  200, 0., 1., 200., 0., 500.);
+    hACCp[m]->SetMarkerColor(2);
+    rChain[m]->Project(hname,"fRotatedP3.Pt():fRapidity","fPID==2212&&fgoodtrackf==1");
+
+    for(UInt_t k = 0; k < 4; k++){
+      hname = Form("hfcrn%d%d",m,k);
+      hfcrn[m][k] = new TH1D(hname, hname+ncCut[k].GetTitle(), 200, -3.2, 3.2);
+      rChain[m]->Project(hname,"unitP_fc.Phi()",ncCut[k]);
+
+      hname = Form("hfcrp%d%d",m,k);
+      hfcrp[m][k] = new TH1D(hname, hname+pcCut[k].GetTitle(), 200, -3.2, 3.2);
+      rChain[m]->Project(hname,"unitP_fc.Phi()",pcCut[k]);
+    }
+
+
+    ic++; id = 1;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+    cc[ic]->Divide(2,2);
+
+    cc[ic]->cd(id); id++; 
+    hACCp[m]->Draw("colz");
+    hnlACCn[m]->Draw("same");
+    hnlACCp[m]->Draw("same");
+
+    id++;
+    cc[ic]->cd(id); id++;
+    hnlACCn[m]->Draw("colz");
+
+    cc[ic]->cd(id); id++;
+    hnlACCp[m]->Draw("colz");
+
+
+    ic++; id = 1;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
+    cc[ic]->Divide(4,2);
+
+    for(UInt_t k = 0; k < 4; k++){
+      cc[ic]->cd(id); id++;
+      hfcrn[m][k]->SetLineColor(4);
+      hfcrn[m][k]->Draw();
+    }
+    for(UInt_t k = 0; k < 4; k++){
+      cc[ic]->cd(id); id++;
+      hfcrp[m][k]->SetLineColor(2);
+      hfcrp[m][k]->Draw();
+    }
   }
 }
 

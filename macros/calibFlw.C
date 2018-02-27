@@ -1,7 +1,7 @@
 #include "FlowFunctions.h"
 #include "openFlw.C"
 
-Int_t  seltrackID = 4;
+Int_t  seltrackID = 5;
 UInt_t selReactionPlanef = 10;
 Int_t  seltrack;
 
@@ -45,7 +45,7 @@ void SetEnvironment();
 void ShiftingCorrection(STParticle *apar);
 void LoadReCenteringCorrection(UInt_t m);
 void SaveReCenteringData(UInt_t m);
-
+void Flatten_Psi_ntrackthetabin(UInt_t isel = 0);//%% Executable : 
 void calibFlw()
 {
   gROOT->Reset();
@@ -70,9 +70,12 @@ void calibFlw()
 
   m_end = ichain;
 
+
   std::cout << " ichain " << ichain << " m_end " << m_end << std::endl;
   
   gROOT->ProcessLine(".! grep -i void calibFlw.C | grep '//%%'");
+
+  Flatten_Psi_ntrackthetabin();
 }
 
 
@@ -173,31 +176,34 @@ void SaveReCenteringData(UInt_t m)
 
 
 //________________________________//%% Executable : 
-void Flatten_Psi_ntrackthetabin(UInt_t isel = 0)//%% Executable : 
+void Flatten_Psi_ntrackthetabin(UInt_t isel)
 {
   std::cout << "flatten_Psi_ntrackbin" << std::endl;
 
   std::cout << "From " << m_bgn << " to " << m_end << std::endl;
 
-  const UInt_t harm = 5;
-  
+  const UInt_t harm      = 5;
   const UInt_t thetanbin = 0;
+  const UInt_t ntrknbin  = 1;
+  
+  // bin setting for theta
   Double_t thetabin[thetanbin+1];
   Double_t theta_min = 0.;
-  Double_t theta_max = 1.;
+  Double_t theta_max = TMath::Pi()/2.;
+
 
 
   for(UInt_t n = 0; n < thetanbin+2; n++){
-    
-    if(thetanbin != 0)
+    if(thetanbin != 0) 
       thetabin[n]    = theta_max/(Double_t)thetanbin * (Double_t)n;
-    else if(n == 0)
-      thetabin[n]    = 0.; 
-    else
-      thetabin[n]    = TMath::Pi()/2.;
+
+    else {
+      if(n == 0)    thetabin[n]    = -1.;
+      else          thetabin[n]    = TMath::Pi()/2.;
+    }
   }
 
-  const UInt_t ntrknbin=10;
+  // bin setting for multiplicity
   Double_t ntrkbin[ntrknbin+1];
   Double_t ntrk_min = 0;
   Double_t ntrk_max = 40;
@@ -212,23 +218,37 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel = 0)//%% Executable :
   TH2D *hathetaiphi[2];
   TH2D *hbntrkiphi[2];
   TH2D *hantrkiphi[2];
+  TH2D *habiphi[2];
  
   UInt_t im = 0;
 
   for(UInt_t m = m_bgn; m < m_end; m++){
 
     ReCentering(isel);
+    Double_t rcX[3];
+    rcX[0] = constX;
+    rcX[1] = meanX;
+    rcX[2] = sigX;
+    Double_t rcY[3];
+    rcY[0] = constY;
+    rcY[1] = meanY;
+    rcY[2] = sigY;
+
+
 
     hbaiphi[m] = new TH2D(Form("hbaiphi%d",m),  " #Phi before and after; before #Phi [rad]; after #Phi [rad] ", 
 			  400,-3.5,3.5,400,-3.5,3.5);
     hniphi[m]  = new TH1D(Form("hniphi%d",m),   " #Phi no corr.; Azimuthal angle [rad]"  , 200,-3.2,3.2);
     hbiphi[m]  = new TH1D(Form("hbiphi%d",m),   " #Phi before  ; Azimuthal angle [rad]"  , 200,-3.2,3.2);
     haiphi[m]  = new TH1D(Form("haiphi%d",m),   " #Phi after   ; Azimuthal angle [rad]"  , 200,-3.2,3.2);
+
     hbthetaiphi[m]= new TH2D(Form("hbthetaiphi%d",m), " before ; theta; #phi;  "           , 200,0.,theta_max, 400,-3.2,3.2); 
     hathetaiphi[m]= new TH2D(Form("hathetaiphi%d",m), " after  ; theta; #phi;  "           , 200,0.,theta_max, 400,-3.2,3.2); 
 
     hbntrkiphi[m] = new TH2D(Form("hbntrkiphi%d",m)," before ; Number of tracks; #phi"     , 40,0,ntrk_max,400,-3.2,3.2);
     hantrkiphi[m] = new TH2D(Form("hantrkiphi%d",m)," after  ; Number of tracks; #phi"     , 40,0,ntrk_max,400,-3.2,3.2);
+    
+    habiphi[m] = new TH2D(Form("habiphi%d",m)," ;#Psi_rot; #Psi_fc",200,-3.2,3.2,200,-3.2,3.2);
 
     auto unitP_ave = new TVector3();
     auto unitP_rot = new TVector3();
@@ -245,13 +265,17 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel = 0)//%% Executable :
 
 	flowcorr[j][i] = new STFlowCorrection(rChain[m], harm, m); 
 
-	flowcorr[j][i]->SetBin_min(0, ntrkbin[j]);
-	flowcorr[j][i]->SetBin_min(1, thetabin[i]);
-	
 	if(j < ntrknbin+1 && i < thetanbin+1){
 	  flowcorr[j][i]->SetBin_max(0, ntrkbin[j+1]);
 	  flowcorr[j][i]->SetBin_max(1, thetabin[i+1]);
 	}
+
+	flowcorr[j][i]->SetBin_min(0, ntrkbin[j]);
+	flowcorr[j][i]->SetBin_min(1, thetabin[i]);
+
+	flowcorr[j][i]->SetReCenteringParameter("X",rcX);  
+	flowcorr[j][i]->SetReCenteringParameter("Y",rcY);  
+	
       }   
     }
     
@@ -259,9 +283,9 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel = 0)//%% Executable :
     cout << " Number of events " << nevt << endl;
 
     Int_t icout = 0;
+    std::vector<Double_t> ophi;
 
-    //    cout << " at " << thetabin[thetanbin-1] << " " << thetabin[thetanbin] << endl;
-    
+
     for(UInt_t i = 0; i < nevt; i++){
       rChain[m]->GetEntry(i);
 
@@ -269,8 +293,7 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel = 0)//%% Executable :
 
       UInt_t j = ntrknbin;
 
-      //     Int_t seltrack = ntrack[4];
-      Int_t seltrack = ntrack[5];
+      Int_t seltrack = ntrack[seltrackID];
 
       while(1){ 
 	if( seltrack >= ntrkbin[j] ){
@@ -280,24 +303,26 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel = 0)//%% Executable :
 	j--;
       }
 
+      // if(intrk == 1){
+      // 	cout << " ntrack " << seltrack
+      // 	     << " bin " << intrk
+      // 	     << " ntrkbin[" << j << "] " << ntrkbin[j]
+      // 	     << endl;
+      // }
+
       //------------------------
       UInt_t itheta = 0;
 
       TVector3 vec = *unitP_rot;
       if(isel == 1) vec = *unitP_ave;
+
       hniphi[m]->Fill(vec.Phi());
 
-      vec.SetX( (vec.X()-meanX)/sigX );
-      vec.SetY( (vec.Y()-meanY)/sigY );
+      // vec.SetX( (vec.X()-meanX)/sigX );
+      // vec.SetY( (vec.Y()-meanY)/sigY );
 
-      Double_t phi   = vec.Phi();
+
       Double_t theta = vec.Theta();
-
-      hbiphi[m]->Fill(phi);
-      hbthetaiphi[m]->Fill(theta     , phi);	  
-      hbntrkiphi[m] ->Fill(seltrack  , phi);	  
-
-
       UInt_t k = thetanbin;
       while(1){ 
 	if( theta >= thetabin[k] ){
@@ -307,10 +332,16 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel = 0)//%% Executable :
 	k--;
       }
 
-      if(intrk <= ntrknbin && itheta <= thetanbin) {
-	flowcorr[intrk][itheta]->Add(seltrack, phi,theta);
+      if(intrk==1)
+	ophi.push_back(vec.Phi());
 
+      if(intrk <= ntrknbin && itheta <= thetanbin) {
+	//	flowcorr[intrk][itheta]->Add(seltrack, phi,theta);
+
+	flowcorr[intrk][itheta]->Add(seltrack, vec);
+	
       }
+
       //-----------------------------
     }
 
@@ -319,26 +350,37 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel = 0)//%% Executable :
 
       for(UInt_t i = 0; i < thetanbin+1; i++) {   
 	
-	UInt_t nphi = flowcorr[j][i]->FourierCorrection();
-	std::cout << " At " << ntrkbin[j] << " : " << thetabin[i] << std::endl;
-
+	UInt_t nphi = flowcorr[j][i]->ReCenteringFourierCorrection();
+	std::cout << " At " << ntrkbin[j] << " : " << thetabin[i] << " nphi " << nphi <<  std::endl;
 
 	vector<Int_t>    mtk   = flowcorr[j][i]->GetMTrack();
 	vector<Double_t> aphi  = flowcorr[j][i]->GetCorrectedPhi();
 	vector<Double_t> atheta= flowcorr[j][i]->GetTheta();
-
+	vector<Double_t> bphi  = flowcorr[j][i]->GetOriginalPhi();
+	vector<Double_t> rcphi = flowcorr[j][i]->GetReCeneringPhi();
 
 	if( aphi.size() != atheta.size() ){
 	  std::cout << " size of pair doesn't match " << aphi.size() << " : " << atheta.size() << std::endl;
 	  continue;
 	}
 	
-	for(UInt_t k = 0; k < (UInt_t)mtk.size(); k++){	  
-	  hathetaiphi[m]->Fill(atheta.at(k), aphi.at(k));
-	  hantrkiphi[m] ->Fill(mtk.at(k)   , aphi.at(k));
-	  haiphi[m]     ->Fill(aphi.at(k));	  
+	cout << "after " << mtk.size()  << endl;
+	if(mtk.size() > 0){
+	  for(UInt_t k = 0; k < (UInt_t)mtk.size(); k++){	  
+	    hbiphi[m]     ->Fill(rcphi.at(k));
+	    hbthetaiphi[m]->Fill(atheta.at(k), rcphi.at(k));	  
+	    hbntrkiphi[m] ->Fill(seltrack    , rcphi.at(k));	  
+
+	    hathetaiphi[m]->Fill(atheta.at(k), aphi.at(k));
+	    hantrkiphi[m] ->Fill(mtk.at(k)   , aphi.at(k));
+	    haiphi[m]     ->Fill(aphi.at(k));	  
+	    
+	    if(j == 1)
+	      habiphi[m]    ->Fill(ophi.at(k), aphi.at(k));
+	  }
 	}
 	
+
 	TString comm1 = Form("Psicv%d.m%dn%d:flatten_Psi_ntrkthetabin; ntrack> %f && ntrack< %f theta> %f && theta< %f",
 			    iVer,j,i,ntrkbin[j],ntrkbin[j+1],thetabin[i],thetabin[i+1]);
 
@@ -347,6 +389,7 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel = 0)//%% Executable :
 	flowcorr[j][i]-> SaveCorrectionFactor(comm1, comm2);    
       }
     }
+
   
     im++;
     cc[im] = new TCanvas(Form("cc%d",im),Form("cc%d",im),700,500);
@@ -389,8 +432,12 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel = 0)//%% Executable :
 
     aLeg->Draw();
 
-    im++;
+    // im++;
+    // cc[im] = new TCanvas(Form("cc%d",im),Form("cc%d",im),700,500);
+    // habiphi[m]->Draw("colz");
 
+
+    im++;
     if(m == 0){
       cc[im] = new TCanvas(Form("cc%d",im),Form("cc%d",im),700,500);
       cc[im]->Divide(2,2);
@@ -415,7 +462,7 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel = 0)//%% Executable :
 	   << " t " << thetabin[0] << " ~ " << thetabin[1]
 	   << endl;
 
-      vector<Double_t> vec1 =  flowcorr[3][3]->GetOriginalPhi();
+      vector<Double_t> vec1 =  flowcorr[0][0]->GetOriginalPhi();
       for(itr=vec1.begin(); itr!=vec1.end(); itr++)      
 	hvphi->Fill(*itr);
       vec1.clear();
@@ -423,21 +470,31 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel = 0)//%% Executable :
       hvphi->Draw();
 
 
+      
       cc[im]->cd(iv); iv++;
-      vec1 =  flowcorr[3][3]->GetTheta();
+      vec1 =  flowcorr[0][0]->GetTheta();
       for(itr=vec1.begin(); itr!=vec1.end(); itr++)      
 	hvthet->Fill(*itr);
     
       hvthet->Draw();
     
       cc[im]->cd(iv); iv++;
-      vector<Int_t> vec2 =  flowcorr[3][3]->GetMTrack();
+      vector<Int_t> vec2 =  flowcorr[0][0]->GetMTrack();
       for(iitr = vec2.begin(); iitr != vec2.end(); iitr++)
 	hvmtk->Fill(*iitr);
 
       hvmtk->Draw();
 
     }
+
+    ///---- debug=----
+    std::vector<Double_t> bfv = flowcorr[0][0]->GetOriginalPhi();
+    std::vector<Double_t> crv = flowcorr[0][0]->GetCorrectedPhi();
+    
+    // for(UInt_t i = 0; i < (UInt_t)bfv.size(); i++) {
+    //   if( bfv.at(i) >= 2.49 && bfv.at(i) < 2.5) 
+    // 	cout << i << "th " << bfv.at(i) << " -> " << crv.at(i) << endl;
+    // }
   }
 }
 
@@ -642,53 +699,53 @@ void Flatten_iphi_ntrkthetabin()  //%% Executable :
     im++;
 
 
-    if(m == 0){
-      cc[im] = new TCanvas(Form("cc%d",im),Form("cc%d",im),700,500);
-      cc[im]->Divide(2,2);
+    // if(m == 0){
+    //   cc[im] = new TCanvas(Form("cc%d",im),Form("cc%d",im),700,500);
+    //   cc[im]->Divide(2,2);
     
-      iv = 1;
-      cc[im]->cd(iv); iv++;
+    //   iv = 1;
+    //   cc[im]->cd(iv); iv++;
     
-      auto hvphi  = new TH1D("hvphi"  ,"phi"   ,100,-3.2,3.2);
-      auto hvthet = new TH1D("hvtheta","theta" ,100,0.,1.4);
-      auto hvmtk  = new TH1I("hvmtk"  ,"mtrack", 60,0,60);
+    //   auto hvphi  = new TH1D("hvphi"  ,"phi"   ,100,-3.2,3.2);
+    //   auto hvthet = new TH1D("hvtheta","theta" ,100,0.,1.4);
+    //   auto hvmtk  = new TH1I("hvmtk"  ,"mtrack", 60,0,60);
     
-      vector<Double_t>::iterator itr;
-      vector<Int_t>::iterator   iitr;
+    //   vector<Double_t>::iterator itr;
+    //   vector<Int_t>::iterator   iitr;
 
-      cout << " dbase " << flowcorr[3][3]->GetFileName() << endl;
-      cout << " m " << flowcorr[3][3]->GetBin_min(0) << " ~ " << flowcorr[3][3]->GetBin_max(0) 
-	   << " t " << flowcorr[3][3]->GetBin_min(1) << " ~ " << flowcorr[3][3]->GetBin_max(1)
-	   << endl;
+    //   cout << " dbase " << flowcorr[3][3]->GetFileName() << endl;
+    //   cout << " m " << flowcorr[3][3]->GetBin_min(0) << " ~ " << flowcorr[3][3]->GetBin_max(0) 
+    // 	   << " t " << flowcorr[3][3]->GetBin_min(1) << " ~ " << flowcorr[3][3]->GetBin_max(1)
+    // 	   << endl;
 
-      cout << " ------------" << endl;
-      cout << " m " << ntrkbin[2]  << " ~ " << ntrkbin[3]
-	   << " t " << thetabin[2] << " ~ " << thetabin[3]
-	   << endl;
+    //   cout << " ------------" << endl;
+    //   cout << " m " << ntrkbin[2]  << " ~ " << ntrkbin[3]
+    // 	   << " t " << thetabin[2] << " ~ " << thetabin[3]
+    // 	   << endl;
 
-      vector<Double_t> vec1 =  flowcorr[3][3]->GetOriginalPhi();
-      for(itr=vec1.begin(); itr!=vec1.end(); itr++)      
-	hvphi->Fill(*itr);
-      vec1.clear();
+    //   vector<Double_t> vec1 =  flowcorr[3][3]->GetOriginalPhi();
+    //   for(itr=vec1.begin(); itr!=vec1.end(); itr++)      
+    // 	hvphi->Fill(*itr);
+    //   vec1.clear();
 
-      hvphi->Draw();
+    //   hvphi->Draw();
 
 
-      cc[im]->cd(iv); iv++;
-      vec1 =  flowcorr[3][3]->GetTheta();
-      for(itr=vec1.begin(); itr!=vec1.end(); itr++)      
-	hvthet->Fill(*itr);
+    //   cc[im]->cd(iv); iv++;
+    //   vec1 =  flowcorr[3][3]->GetTheta();
+    //   for(itr=vec1.begin(); itr!=vec1.end(); itr++)      
+    // 	hvthet->Fill(*itr);
     
-      hvthet->Draw();
+    //   hvthet->Draw();
     
-      cc[im]->cd(iv); iv++;
-      vector<Int_t> vec2 =  flowcorr[3][3]->GetMTrack();
-      for(iitr = vec2.begin(); iitr != vec2.end(); iitr++)
-	hvmtk->Fill(*iitr);
+    //   cc[im]->cd(iv); iv++;
+    //   vector<Int_t> vec2 =  flowcorr[3][3]->GetMTrack();
+    //   for(iitr = vec2.begin(); iitr != vec2.end(); iitr++)
+    // 	hvmtk->Fill(*iitr);
 
-      hvmtk->Draw();
+    //   hvmtk->Draw();
 
-    }
+    // }
     
     
     // fout->Close();

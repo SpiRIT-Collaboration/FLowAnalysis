@@ -35,8 +35,12 @@ class STFlowCorrection : public TObject {
   Double_t  *Bn_rms;
   TString    fname;
   TChain    *ChEle = NULL;
-  std::vector<Double_t> vphi;
-  std::vector<Double_t> bphi;
+  std::vector<Double_t> vphi;  //! corrected Phi
+  std::vector<Double_t> rcphi; //! ReCentering phi
+  std::vector<Double_t> bphi;  //! original phi
+  std::vector<TVector3> vvec;  //! corrected vector
+  std::vector<TVector3> bvec;  //! original vector
+
   Double_t   constX;
   Double_t   meanX;
   Double_t   sigX;
@@ -59,45 +63,50 @@ class STFlowCorrection : public TObject {
   void   SetRealOrMix(UInt_t ival){irm  = ival;}
 
 
-  void   Add(Double_t val) {vphi.push_back(val);}
-  void   Add(Double_t val1, Double_t val2) {vphi.push_back(val1); vtheta.push_back(val2);}
-  void   Add(Int_t ival, Double_t val1) {vmtrack.push_back(ival); vphi.push_back(val1);}
-  void   Add(Int_t ival, Double_t val1, Double_t val2) {
-    vmtrack.push_back(ival);
-    vphi.push_back(val1); 
-    vtheta.push_back(val2);  }
+  void   Add(Double_t val)                 {vphi.push_back(val);}
+  void   Add(Double_t val1, Double_t val2) {vphi.push_back(val1);    vtheta.push_back(val2);}
+  void   Add(Int_t ival,    Double_t val1) {vmtrack.push_back(ival); vphi.push_back(val1);}
+  void   Add(Int_t ival,    Double_t val1, Double_t val2) 
+  { vmtrack.push_back(ival);  vphi.push_back(val1);   vtheta.push_back(val2);  }
+  void   Add(Int_t ival, TVector3 vval) 
+  { vmtrack.push_back(ival);  bvec.push_back(vval);   bphi.push_back(vval.Phi()); }
 
   void   clear();
 
 
-  std::vector<Double_t> GetOriginalPhi() {return bphi;}             
-  std::vector<Double_t> GetCorrectedPhi(){return vphi;}             
-  std::vector<Double_t> GetTheta()       {return vtheta;}
+  std::vector<Double_t> GetOriginalPhi()  {return bphi;}             
+  std::vector<Double_t> GetCorrectedPhi() {return vphi;}             
+  std::vector<Double_t> GetReCeneringPhi(){return rcphi;}
+  std::vector<Double_t> GetTheta();       
   std::vector<Int_t>    GetMTrack()      {return vmtrack;}
   Double_t         GetMTrackMean(){return TMath::Mean(vmtrack.begin(), vmtrack.end());}
   Double_t         GetThetaMean() {return TMath::Mean(vtheta.begin(),  vtheta.end());}
   
 
-  void   FourierCorrection(std::vector<Double_t> &val);
-  UInt_t FourierCorrection();
-  UInt_t GetCorrectionFactor(UInt_t val=0);
-  UInt_t SaveCorrectionFactor(TString comm1=":", TString comm2="");
-  void   PrintContents();
-  void   PrintRange();
+  TVector3 ReCentering(TVector3 val);
+  UInt_t   ReCenteringFourierCorrection();
+  TVector3 ReCenteringFourierCorrection(TVector3 val);
+  UInt_t   FourierCorrection();
+  void     FourierCorrection(std::vector<Double_t> &val);
+  Double_t GetCorrection(Double_t val);
+  void     GetCorrection(std::vector<Double_t> &val);
+
+
+  UInt_t   LoadCorrectionFactor(UInt_t val=0);
+  UInt_t   SaveCorrectionFactor(TString comm1=":", TString comm2="");
+  void     PrintContents();
+  void     PrintRange();
 
   UInt_t   GetNumberOfParam() {return (UInt_t)vphi.size();};
   UInt_t   SetHarmonics()     {return harm;}
 
-
-  void      GetCorrection(std::vector<Double_t> &val);
-  Double_t  GetCorrection(Double_t val);
-  TVector3  GetCorrection(TVector3 val);
-
+  TVector3 GetReCentering(TVector3 vec);
   Double_t *GetAverageCosin(Int_t ival, std::vector<Double_t> &val);
+
   
-  Int_t   GetNHarmonics() {return harm;}
-  void    SetFileName(TString sval);
-  TString GetFileName()   {return fname;}
+  Int_t    GetNHarmonics() {return harm;}
+  void     SetFileName(TString sval);
+  TString  GetFileName()   {return fname;}
 
   void     SetBin_max(UInt_t idx=0, Double_t val=999.) {if( idx < 3) binmax[idx] = val;}
   void     SetBin_min(UInt_t idx=0, Double_t val=0.) {if( idx < 3) binmin[idx] = val;}
@@ -105,9 +114,13 @@ class STFlowCorrection : public TObject {
   Double_t GetBin_min(UInt_t idx=0)  {if(idx < 3) return binmin[idx]; else return -1.;}
   TString  GetBinParameter(UInt_t idx=0) {return binpara[idx];}
 
+  void     SetReCenteringParameter(TString cprm, Double_t val[]);
+
   void   ShowParameters();
+  void   ShowBinInformation();
 
 private:
+
   void   SetFileName();
   void   Init();
   void   SetDirectory();

@@ -19,6 +19,8 @@ export RNF124=3059,3061,3062,3065,3066,3068,3069,3071,3074,3075,3076,3077,3078,3
 
 
 export DB4132=_rf.v4.0.2.cv1
+export DB4132=_rf.v4.0.3.cv2
+export DB4132=_rf.v4.0.4.cv3
 export DB4108=_rf.v3.0.1_db2273.v3.0.cv0
 export DB4124=_rf.v3.0.1_db3059.v3.0.cv0
 

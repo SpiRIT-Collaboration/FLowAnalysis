@@ -36,14 +36,16 @@ void      RotateAsBeamAngle(STParticle *apart, TVector3 *p1, TVector2 *pt);
 void      SetPtWeight(STParticle *apart);
 void      FlatteningCorrection(STParticle *apart, Int_t ival);
 TVector3  Psi_FlatteningCorrection(Int_t ival, TVector3 Pvec);
+TVector3  Psi_ReCenteringCorrection(Int_t ival, TVector3 Pvec);
 
 void      SubEventAnalysis();
-void      AzmAngleRPTReactionPlane();
+void      AzmAngleWRTReactionPlane();
 
 void      LoadPIDFile();
 Int_t     GetPID(Double_t valx, Double_t valy);
 UInt_t    SetDatabaseFiles();
-Int_t     GetThetaCorretionIndex(Double_t fval, Int_t ival);
+Int_t     GetCorrectionIndex(UInt_t ival, Double_t fval);
+Int_t     GetThetaCorrectionIndex(Int_t ival, Double_t fval);
 Int_t     GetMultiplicityCorretionIndex(UInt_t ival);
 void      CheckPlot(UInt_t ival = 0);
 
@@ -110,6 +112,7 @@ TVector2 unitP_2r;
 UInt_t   mtrack_1;
 UInt_t   mtrack_2;
 TVector3 unitP_fc;
+TVector3 unitP_rc;
 
 Double_t bsPhi[2];
 Double_t bsPhi_1[2];
