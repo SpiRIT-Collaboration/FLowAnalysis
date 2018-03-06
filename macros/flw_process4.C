@@ -51,31 +51,16 @@ void flw_process4(Long64_t nmax = -1)
 
     if(ntrack[2] > 0 ) {
 
-      unitP_fc = Psi_FlatteningCorrection(seltrack, *unitP_rot);
-      unitP_rc = Psi_ReCenteringCorrection(seltrack, *unitP_rot);
+      //      unitP_fc = Psi_FlatteningCorrection(seltrack, *unitP_rot);
+      //      unitP_rc = Psi_ReCenteringCorrection(seltrack, *unitP_rot);
 
-      //////#####mtkBIN = GetMultiplicityCorretionIndex(seltrack);
+      unitP_fc = Psi_FlatteningCorrection( seltrack, TVector3(unitP2_rot->X(), unitP2_rot->Y(), 0.));
+      unitP_rc = Psi_ReCenteringCorrection(seltrack, TVector3(unitP2_rot->X(), unitP2_rot->Y(), 0.));
 
-      // TIter next(aParticleArray);
-      // STParticle *aPart1 = NULL;
-
-      // while( (aPart1 = (STParticle*)next()) ) {
-
-      // 	//////####FlatteningCorrection(aPart1,mtkBIN);
-	  
-      // 	// Particle selection
-      // 	if ( aPart1->GetReactionPlaneFlag() == selReactionPlanef ){  // p/d/t/He
-      // 	  unitP += aPart1->GetFlattenMomentum().Unit();
-	
-      // 	  unitP_lang += aPart1->GetRPWeight() * (aPart1->GetFlattenPt()).Unit();	
-      // 	  //	  unitP_rot  += aPart1->GetRPWeight() * (aPart1->GetRotatedPt()).Unit();
-      // 	}
-      // }
-
-      if(seltrack > 2) {
+      //      if(seltrack > 2) {
 	SubEventAnalysis();
 	AzmAngleWRTReactionPlane();
-      }
+	//      }
 
       mflw->Fill();
     }
@@ -182,8 +167,10 @@ void Open()
   fTree->SetBranchAddress("STParticle",&aParticleArray);
   fTree->SetBranchAddress("ntrack"    ,ntrack);
   fTree->SetBranchAddress("mtrack"    ,&mtrack);
-  fTree->SetBranchAddress("unitP_ave" ,&unitP_ave, &bunitP_ave);
-  fTree->SetBranchAddress("unitP_rot" ,&unitP_rot, &bunitP_rot);
+  fTree->SetBranchAddress("unitP_ave" ,&unitP_ave,  &bunitP_ave);
+  fTree->SetBranchAddress("unitP_rot" ,&unitP_rot,  &bunitP_rot);
+  fTree->SetBranchAddress("unitP2_ave",&unitP2_ave, &bunitP2_ave);
+  fTree->SetBranchAddress("unitP2_rot",&unitP2_rot, &bunitP2_rot);
 
   fTree->SetBranchAddress("aoq" ,&aoq);
   fTree->SetBranchAddress("z"   ,&z);
@@ -296,6 +283,7 @@ void OutputTree()
   mflw->Branch("unitP_2"   ,&unitP_2);
   mflw->Branch("unitP_lang",&unitP_lang);
   mflw->Branch("unitP_rot" ,&unitP_rot);
+  mflw->Branch("unitP2_rot",&unitP2_rot);
   mflw->Branch("unitP_1r"  ,&unitP_1r);
   mflw->Branch("unitP_2r"  ,&unitP_2r);
   mflw->Branch("unitP_fc"  ,&unitP_fc);
@@ -526,7 +514,7 @@ void SubEventAnalysis()
 
   while( (aPart1 = (STParticle*)next()) ) {
     
-    if(aPart1->GetReactionPlaneFlag() == selReactionPlanef){
+    if(aPart1->GetReactionPlaneFlag() >= selReactionPlanef){
       Double_t wt = aPart1->GetRPWeight();
       TVector2 pt = aPart1->GetCorrectedPt();
       TVector2 ptr= aPart1->GetRotatedPt();
@@ -587,12 +575,13 @@ void AzmAngleWRTReactionPlane()
   TIter next(aParticleArray);
   STParticle *aPart1 = NULL;
 
-
   while( (aPart1 = (STParticle*)next()) ) {
 
     if(aPart1->GetReactionPlaneFlag() > 100){
+
       Double_t wt = aPart1->GetRPWeight();
-      TVector2 pt = aPart1->GetCorrectedPt();
+      //      TVector2 pt = aPart1->GetCorrectedPt();
+      TVector2 pt = aPart1->GetRotatedPt();
 
       std::vector < TVector2 > exVec;
       TVector2 mExcRP(0.,0.);
@@ -608,15 +597,22 @@ void AzmAngleWRTReactionPlane()
 	if( aPart1 != restPart && restPart->GetReactionPlaneFlag() > 100 ) {
 
 	  Double_t wt_rp = restPart->GetRPWeight();
-	  TVector2 pt_rp = restPart->GetCorrectedPt();
+	  //	  TVector2 pt_rp = restPart->GetCorrectedPt();
+	  TVector2 pt_rp = restPart->GetRotatedPt();
 
 	  mExcRP += wt_rp * pt_rp.Unit();
 	  exVec.push_back( wt_rp * pt_rp.Unit() );
 
-
+	  
 	  itraex++;
 	}
       }
+
+      // ReCentering and Shifting correction
+      TVector3 rp_recv = TVector3(-999.,-999.,-999.);
+      if(itraex > 0)
+      rp_recv = Psi_FlatteningCorrection( seltrack , TVector3(mExcRP.X(), mExcRP.Y(), 0.));
+
 
       // bootstrap method
       // auto btsp  = new STBootStrap(500, &exVec);
@@ -628,11 +624,16 @@ void AzmAngleWRTReactionPlane()
       // aPart1->SetAzmAngle_wrt_RP  ( (Double_t)TVector2::Phi_mpi_pi( pt.Phi() - bsPhi_ex[0]));
       // aPart1->SetIndividualRPAngle( (Double_t)TVector2::Phi_mpi_pi( bsPhi_ex[0] ));
 
-      aPart1->SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( pt.Phi()-mExcRP.Phi()));
-      aPart1->SetIndividualRPAngle( (Double_t)TVector2::Phi_mpi_pi( mExcRP.Phi() ));
-      //      cout << " rest part " << itraex << " : " << itra << " @ "<< mExcRP.Phi() << " = " << aPart1->GetIndividualRPAngle()
-      //   << endl;          
+      // aPart1->SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( pt.Phi()-mExcRP.Phi()));
+      aPart1->SetIndividualRPAngle( (Double_t)TVector2::Phi_mpi_pi( rp_recv.Phi() ));
+
+      aPart1->SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( pt.Phi() - rp_recv.Phi()));
+      //aPart1->SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( unitP2_rot->Phi() ));
+      //      aPart1->SetIndividualRPAngle( (Double_t)TVector2::Phi_mpi_pi( rp_rec.Phi() ));
+
     }
+    else
+      aPart1->SetAzmAngle_wrt_RP(-10.);
   }
 }
 
@@ -689,6 +690,7 @@ TVector3 Psi_FlatteningCorrection(Int_t ival, TVector3 Pvec)
 
   return Psi_cf;
 }
+
 TVector3 Psi_ReCenteringCorrection(Int_t ival, TVector3 Pvec)
 {
   Int_t    iBIN = GetCorrectionIndex(ival, Pvec.Theta());

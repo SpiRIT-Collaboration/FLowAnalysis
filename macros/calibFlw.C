@@ -1,7 +1,7 @@
 #include "FlowFunctions.h"
 #include "openFlw.C"
 
-Int_t  seltrackID = 5;
+Int_t  seltrackID = 4;
 UInt_t selReactionPlanef = 10;
 Int_t  seltrack;
 
@@ -31,6 +31,8 @@ Int_t iVer;
 TString sVer;
 Int_t mtrack;
 
+TString unitpX;
+TString unitpY;
 TString fOutName ;
 Double_t constX= 0.;
 Double_t meanX = 0.;
@@ -75,14 +77,14 @@ void calibFlw()
   
   gROOT->ProcessLine(".! grep -i void calibFlw.C | grep '//%%'");
 
-  Flatten_Psi_ntrackthetabin();
+  Flatten_Psi_ntrackthetabin(2);
 }
 
 
 
 
 //________________________________//%% Executable : 
-void ReCentering(UInt_t isel = 0) //%% Executable : Recentering calibration
+void ReCentering(UInt_t isel = 2) //%% Executable : Recentering calibration
 {
   TH1D *hQx[4];
   TH1D *hQy[4];
@@ -102,18 +104,27 @@ void ReCentering(UInt_t isel = 0) //%% Executable : Recentering calibration
     hQx[m] = new TH1D(Form("hQx%d",m),"; Qx",100,-10,10);
     hQy[m] = new TH1D(Form("hQy%d",m),"; Qy",100,-10,10);
 
-
-    if(isel == 0){
-      rChain[m]->Project(Form("hQx%d",m), "unitP_rot.X()");
-      rChain[m]->Project(Form("hQy%d",m), "unitP_rot.Y()");
-      fOutName = "rotReCent" +  sysName[sys[m]] + ".data";
+    switch(isel){
+    case 0:
+      unitpX = "unitP_rot.X()";
+      unitpY = "unitP_rot.Y()";
+      break;
+    case 1:
+      unitpX = "unitP_ave.X()";
+      unitpY = "unitP_ave.Y()";
+      break;
+    case 2:
+      unitpX = "unitP2_rot.X()";
+      unitpY = "unitP2_rot.Y()";
+      break;
+    case 3:
+      unitpX = "unitP2_ave.X()";
+      unitpY = "unitP2_ave.Y()";
+      break;
     }
-    else {
-      rChain[m]->Project(Form("hQx%d",m), "unitP_ave.X()");
-      rChain[m]->Project(Form("hQy%d",m), "unitP_ave.Y()");
-      fOutName = "aveReCent" +  sysName[sys[m]] + ".data";
-    }
 
+    rChain[m]->Project(Form("hQx%d",m), unitpX);
+    rChain[m]->Project(Form("hQy%d",m), unitpY);
 
     cc[ic]->cd(id); id++;
     hQx[m]->Fit(Form("fgX_%d",m));
@@ -140,8 +151,10 @@ void SaveReCenteringData(UInt_t m)
   gSystem->cd("db");
 
   std::fstream fout;
+  fOutName = "ReCent" +  sysName[sys[m]] + ".data";
   fout.open(fOutName, std::fstream::out);
 
+  fout << "ReCentering for " << unitpX << " and " << unitpY << endl;
   fout << " Axis  Constatnt       Mean      Signma " << sysName[sys[m]]  
        << endl;
   cout << " X: " 
@@ -184,7 +197,7 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
 
   const UInt_t harm      = 5;
   const UInt_t thetanbin = 0;
-  const UInt_t ntrknbin  = 1;
+  const UInt_t ntrknbin  = 5;
   
   // bin setting for theta
   Double_t thetabin[thetanbin+1];
@@ -225,6 +238,7 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
   for(UInt_t m = m_bgn; m < m_end; m++){
 
     ReCentering(isel);
+
     Double_t rcX[3];
     rcX[0] = constX;
     rcX[1] = meanX;
@@ -250,12 +264,18 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
     
     habiphi[m] = new TH2D(Form("habiphi%d",m)," ;#Psi_rot; #Psi_fc",200,-3.2,3.2,200,-3.2,3.2);
 
-    auto unitP_ave = new TVector3();
-    auto unitP_rot = new TVector3();
+    auto unitP_ave  = new TVector3();
+    auto unitP_rot  = new TVector3();
+    auto unitP2_ave = new TVector2();
+    auto unitP2_rot = new TVector2();
 
     rChain[m]->SetBranchAddress("ntrack",ntrack);
     rChain[m]->SetBranchAddress("unitP_ave",&unitP_ave);
     rChain[m]->SetBranchAddress("unitP_rot",&unitP_rot);
+    if( isel >= 2) {
+      rChain[m]->SetBranchAddress("unitP2_ave",&unitP2_ave);
+      rChain[m]->SetBranchAddress("unitP2_rot",&unitP2_rot);
+    }
 
     // Flattening with a shifting method
     STFlowCorrection *flowcorr[ntrknbin+1][thetanbin+1];
@@ -315,6 +335,8 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
 
       TVector3 vec = *unitP_rot;
       if(isel == 1) vec = *unitP_ave;
+      else if(isel == 2) vec = TVector3(unitP2_rot->X(), unitP2_rot->Y(), 0.);
+      else if(isel == 3) vec = TVector3(unitP2_ave->X(), unitP2_ave->Y(), 0.);
 
       hniphi[m]->Fill(vec.Phi());
 
@@ -369,22 +391,21 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
 	  for(UInt_t k = 0; k < (UInt_t)mtk.size(); k++){	  
 	    hbiphi[m]     ->Fill(rcphi.at(k));
 	    hbthetaiphi[m]->Fill(atheta.at(k), rcphi.at(k));	  
-	    hbntrkiphi[m] ->Fill(seltrack    , rcphi.at(k));	  
+	    hbntrkiphi[m] ->Fill(mtk.at(k)   , rcphi.at(k));	  
 
 	    hathetaiphi[m]->Fill(atheta.at(k), aphi.at(k));
 	    hantrkiphi[m] ->Fill(mtk.at(k)   , aphi.at(k));
 	    haiphi[m]     ->Fill(aphi.at(k));	  
 	    
 	    if(j == 1)
-	      habiphi[m]    ->Fill(ophi.at(k), aphi.at(k));
+	      habiphi[m]  ->Fill(ophi.at(k), aphi.at(k));
 	  }
 	}
 	
-
 	TString comm1 = Form("Psicv%d.m%dn%d:flatten_Psi_ntrkthetabin; ntrack> %f && ntrack< %f theta> %f && theta< %f",
 			    iVer,j,i,ntrkbin[j],ntrkbin[j+1],thetabin[i],thetabin[i+1]);
 
-	TString comm2 = Form("X: %f, %f, %f Y: %f, %f, %f",constX,meanX,sigX,constY,meanY,sigY);
+	TString comm2 = Form("X: %f, %f, %f Y: %f, %f, %f :"+unitpX+" "+unitpY,constX,meanX,sigX,constY,meanY,sigY);
 	cout << "save " << comm1 << endl;
 	flowcorr[j][i]-> SaveCorrectionFactor(comm1, comm2);    
       }
@@ -419,10 +440,10 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
     hniphi[m]->SetLineColor(2);
     hniphi[m]->Draw("e");
 
-    hbiphi[m]->SetLineColor(4);
+    hbiphi[m]->SetLineColor(8);
     hbiphi[m]->Draw("samee");
 
-    haiphi[m]->SetLineColor(8);
+    haiphi[m]->SetLineColor(4);
     haiphi[m]->Draw("samee");
 
     auto aLeg = new TLegend(0.15,0.7,0.3,0.9,"");

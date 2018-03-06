@@ -5,7 +5,7 @@
 #include "TVector2.h"
 
 //@@@@ 
-Int_t  seltrackID = 5;
+Int_t  seltrackID = 4;
 UInt_t selReactionPlanef = 10;
 
 Int_t  seltrack;
@@ -23,6 +23,10 @@ TVector3      *unitP_ave = NULL;
 TVector3      *unitP_rot = NULL; 
 TBranch       *bunitP_ave;
 TBranch       *bunitP_rot;
+TVector2      *unitP2_ave = NULL; 
+TVector2      *unitP2_rot = NULL; 
+TBranch       *bunitP2_ave;
+TBranch       *bunitP2_rot;
 
 void      SetEnvironment();
 void      PrintProcess(Int_t ievt);

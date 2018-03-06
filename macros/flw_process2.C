@@ -85,20 +85,17 @@ void flw_process2(Long64_t nmax = -1)
 	  if( aPart1->GetReactionPlaneFlag() >= 10 ){
 	    ntrack[4]++;
 	    
-	    unitP_ave += aPart1->GetRotatedMomentum().Unit(); 
-	    unitP_rot += aPart1->GetRPWeight() * aPart1->GetRotatedMomentum().Unit();
+	    unitP_ave  += aPart1->GetRotatedMomentum().Unit(); 
+	    unitP_rot  += aPart1->GetRPWeight() * aPart1->GetRotatedMomentum().Unit();
+
+	    unitP2_ave += aPart1->GetRotatedPt().Unit(); 
+	    unitP2_rot += aPart1->GetRPWeight() * aPart1->GetRotatedPt().Unit();
 
 	  }
 
 	  if( aPart1->GetReactionPlaneFlag() == 20 )
 	    ntrack[5]++;
-
-	  
-
-
-
 	}
-
 	nLoop++;
       }
     }
@@ -325,8 +322,10 @@ void Initialize()
   aParticleArray->Clear();
   nParticleArray->Clear();
 
-  unitP_ave = TVector3(0.,0.,0.);
-  unitP_rot = TVector3(0.,0.,0.);
+  unitP_ave  = TVector3(0.,0.,0.);
+  unitP_rot  = TVector3(0.,0.,0.);
+  unitP2_ave = TVector2(0.,0.);
+  unitP2_rot = TVector2(0.,0.);
 
 
   TDatime dtime;
@@ -479,12 +478,14 @@ void OutputTree(Long64_t nmax)
   nParticleArray = new TClonesArray("STParticle",100);
   mflw->Branch("STParticle",&nParticleArray);
 
-  mflw->Branch("ntrack",ntrack,"ntrack[7]/I");
-  mflw->Branch("mtrack",&mtrack,"mtrack/I");
-  mflw->Branch("event",&event);
-  mflw->Branch("mxntrk",&mxntrk);
-  mflw->Branch("unitP_ave",&unitP_ave);
-  mflw->Branch("unitP_rot",&unitP_rot);
+  mflw->Branch("ntrack"    ,ntrack,"ntrack[7]/I");
+  mflw->Branch("mtrack"    ,&mtrack,"mtrack/I");
+  mflw->Branch("event"     ,&event);
+  mflw->Branch("mxntrk"    ,&mxntrk);
+  mflw->Branch("unitP_ave" ,&unitP_ave);
+  mflw->Branch("unitP_rot" ,&unitP_rot);
+  mflw->Branch("unitP2_ave",&unitP2_ave);
+  mflw->Branch("unitP2_rot",&unitP2_rot);
 
   if(aNLCluster != NULL)
     mflw->Branch("STNeuLANDCluster",&aNLCluster);

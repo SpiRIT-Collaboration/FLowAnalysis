@@ -82,12 +82,9 @@ Int_t    mtrack;
 vector<Int_t>    event;
 TVector3 unitP_ave;
 TVector3 unitP_rot;
+TVector2 unitP2_ave;
+TVector2 unitP2_rot;
 
-//Double_t         aX;
-//Double_t         bY;
-
-//TClonesArray     *p_rot = NULL;
-//TClonesArray     *p_org = NULL;
 
 // Tree out end
 
