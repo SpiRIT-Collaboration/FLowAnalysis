@@ -4,6 +4,9 @@
 #include "TVector3.h"
 #include "TVector2.h"
 
+Int_t  seltrackID = 4;
+UInt_t selReactionPlanef = 10;
+
 // Reading tree
 TClonesArray *flowcorrArray    = NULL;
 Int_t         ntrack[7];
@@ -32,7 +35,8 @@ void      SetPtWeight(STParticle *apart);
 void      SetFlowFlag(STParticle *apart);
 Bool_t    CheckParticle(STParticle *apart);
 
-
+void      SetSubEvent(TClonesArray &pararray, const UInt_t npart);
+UInt_t*   RanndomDivide2(UInt_t npart);
 void      LoadPIDFile();
 
 Int_t   iVer[2];
@@ -84,6 +88,10 @@ TVector3 unitP_ave;
 TVector3 unitP_rot;
 TVector2 unitP2_ave;
 TVector2 unitP2_rot;
+TVector2 unitP_1r;
+TVector2 unitP_2r;
+UInt_t   mtrack_1;
+UInt_t   mtrack_2;
 
 
 // Tree out end

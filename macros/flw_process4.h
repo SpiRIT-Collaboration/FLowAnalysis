@@ -27,6 +27,12 @@ TVector2      *unitP2_ave = NULL;
 TVector2      *unitP2_rot = NULL; 
 TBranch       *bunitP2_ave;
 TBranch       *bunitP2_rot;
+TVector2      *unitP_1r = NULL;
+TVector2      *unitP_2r = NULL;
+TBranch       *bunitP_1r;
+TBranch       *bunitP_2r;
+UInt_t         mtrack_1;
+UInt_t         mtrack_2;
 
 void      SetEnvironment();
 void      PrintProcess(Int_t ievt);
@@ -111,10 +117,6 @@ TVector3 unitP;
 TVector2 unitP_lang;
 TVector2 unitP_1;
 TVector2 unitP_2;
-TVector2 unitP_1r;
-TVector2 unitP_2r;
-UInt_t   mtrack_1;
-UInt_t   mtrack_2;
 TVector3 unitP_fc;
 TVector3 unitP_rc;
 

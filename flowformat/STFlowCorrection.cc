@@ -137,7 +137,7 @@ UInt_t STFlowCorrection::LoadCorrectionFactor(UInt_t val)
       fin >> sget; meanY  = atof(sget);
       fin >> sget; sigY   = atof(sget);
 
-      std::cout << " ReCentering " ;
+      std::cout << " ReCentering correction factors > " ;
       std::cout << " X: " 
 		<< constX << ", "
 		<< meanX  << ", "
@@ -161,7 +161,7 @@ UInt_t STFlowCorrection::LoadCorrectionFactor(UInt_t val)
       binpara[0]= "mtrack";
     }
 
-    if(sget == "ntrack>"){
+    if(sget == "ntrack>="){
       fin >> sget;
       binmin[0] = atof(sget);
       binpara[0]= "ntrack";
@@ -182,7 +182,7 @@ UInt_t STFlowCorrection::LoadCorrectionFactor(UInt_t val)
       binmax[1] = atof(sget);
       binpara[1] = "theta";
     }
-    else if(sget =="theta>"){
+    else if(sget =="theta>="){
       fin >> sget;
       binmin[1] = atof(sget);
       binpara[1] = "theta";
@@ -412,7 +412,10 @@ UInt_t STFlowCorrection::SaveCorrectionFactor(TString comm1, TString comm2)
 
   if( comm2 != "")
     fout << "ReCentering parameter : " << comm2 << std::endl;
-  
+
+  TString comm3 = Form("X: %f, %f, %f Y: %f, %f, %f :",constX,meanX,sigX,constY,meanY,sigY);
+  fout << comm3 << std::endl;
+
 
   TChainElement *ele = 0;
   UInt_t ith = 0;

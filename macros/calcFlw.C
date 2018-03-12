@@ -44,6 +44,7 @@ TString  partname[] = {"pi-","pi+","proton","deuteron","triton"};
 UInt_t   partid[]   = {211, 211, 2212, 1000010020, 1000010030};
 UInt_t   icol[]     = {7,5,2,4,3};
 TString  iopt[]     = {"","same","same","same","same"};
+UInt_t   imark[]    = {23, 33, 20, 21, 22};
   
 UInt_t ic = -1;
 
@@ -258,10 +259,8 @@ void dndy()                       //%% Executable : Make plots of dNdy for p, d,
     for(UInt_t m = m_bgn; m < m_end; m++) 
       hrap[m][ip]->Draw(iopt[m]); 
      
-
     if(ip == 4)
       aLeg0->Draw();
-
   }
 
 
@@ -418,7 +417,7 @@ void meanPx()                     //%% Executable : Make  plots of <px> vs rapid
     TString atitle = Form("gpr%d",m);
     gpr[m]->SetName(atitle);
     gpr[m]->SetLineColor(icol[sys[m]]);
-    gpr[m]->SetMarkerStyle(20);
+    gpr[m]->SetMarkerStyle(imark[sys[m]]);
     gpr[m]->SetMarkerColor(icol[sys[m]]);
     gpr[m]->SetTitle("Proton; y_lab; <Px> (MeV/c)");
     mgpdt->Add(gpr[m],"lp");
@@ -843,11 +842,15 @@ void comparev1v2(UInt_t m = 0)                 //%% Executable : compare v1 and 
 
       gv_v1[pn]->SetTitle(partname[pn]);
       gv_v1[pn]->SetLineColor(icol[pn]);
+      gv_v1[pn]->SetMarkerStyle(imark[pn]);
+      gv_v1[pn]->SetMarkerColor(icol[pn]);
       mg_v1->Add(gv_v1[pn]);
       aLeg_v1->AddEntry(gv_v1[pn], partname[pn],"lp");
 
       gv_v2[pn]->SetTitle(partname[pn]);
       gv_v2[pn]->SetLineColor(icol[pn]);
+      gv_v2[pn]->SetMarkerStyle(imark[pn]);
+      gv_v2[pn]->SetMarkerColor(icol[pn]);
       mg_v2->Add(gv_v2[pn]);
       aLeg_v2->AddEntry(gv_v2[pn],partname[pn],"lp");
     }
@@ -1895,7 +1898,7 @@ void Phi()                        //%% Executable :
 }
 
 //________________________________//%% Executable :                        
-void Psi()                        //%%
+void CorrectedPsi()                        //%%
 {
   auto hrt  = new TH1D("hrt" ,"Original; #Psi",60,-3.15,3.15);
   auto hrc  = new TH1D("hrc" ,"ReCentering; #Psi",60,-3.15,3.15);
@@ -1921,12 +1924,82 @@ void Psi()                        //%%
 
 
   auto aLeg = new TLegend(0.15,0.7,0.45,0.9,"");
-  aLeg->AddEntry(hrt,"No Collection ","lp");
+  aLeg->AddEntry(hrt ,"No Collection ","lp");
   aLeg->AddEntry(hrc ,"ReCentering","lp");
   aLeg->AddEntry(hfc ,"ReCentering & Shifting","lp");
 
   aLeg->Draw();
 }
+
+
+//________________________________//%% Executable : 
+void PlotSubEvent(Double_t ml, Double_t mu)               //%%
+{
+
+  Double_t mlt[] = {ml, mu};
+  //    Double_t mlt[2] = {0., 8.};
+  //Double_t mlt[2] = {8., 16.};
+  // Double_t mlt[2] = {16., 24.};
+  // Double_t mlt[2] = {24., 32.};
+  // Double_t mlt[2] = {32., 40.};
+  // Double_t mlt[2] = {40., 100.};
+
+  TCut mcrot = Form("ntrack[4]>%f&&ntrack[4]<%f",mlt[0],mlt[1]);
+  TCut mc1r  = Form("mtrack_1>%f&&mtrack_1<%f",mlt[0],mlt[1]);
+  TCut mc2r  = Form("mtrack_2>%f&&mtrack_2<%f",mlt[0],mlt[1]);
+
+  TString sname;
+  
+  sname = mcrot.GetTitle();
+  auto *hrotx = new TH1D("hrotx","All   "+sname+";Qx" ,100,-12.,12.);
+  auto *h1rx  = new TH1D("h1rx", "sub_1 "+sname+ ";Qx" ,100,-12.,12.);
+  auto *h2rx  = new TH1D("h2rx", "sub_2 "+sname+ ";Qx" ,100,-12.,12.);
+  auto *hroty = new TH1D("hroty","All   "+sname+";Qy",100,-12.,12.);
+  auto *h1ry  = new TH1D("h1ry", "sub_1 "+sname+ ";Qy" ,100,-12.,12.);
+  auto *h2ry  = new TH1D("h2ry", "sub_2 "+sname+ ";Qy" ,100,-12.,12.);
+ 
+
+  rChain[0]->Project("hrotx","unitP2_rot.X()",mcrot);
+  rChain[0]->Project("h1rx","unitP_1r.X()"   ,mc1r);
+  rChain[0]->Project("h2rx","unitP_2r.X()"   ,mc2r);
+					      
+  rChain[0]->Project("hroty","unitP2_rot.Y()",mcrot);
+  rChain[0]->Project("h1ry","unitP_1r.Y()"   ,mc1r);
+  rChain[0]->Project("h2ry","unitP_2r.Y()"   ,mc2r);
+
+
+  //----- Drawing                                                                                                                          
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+
+  hrotx->SetLineColor(2);
+  hrotx->SetNormFactor(1);
+  h1rx ->SetLineColor(4);
+  h1rx ->SetNormFactor(1);
+  h2rx ->SetLineColor(6);
+  h2rx ->SetNormFactor(1);
+
+
+  h1rx->Draw();
+  h2rx->Draw("same");
+  hrotx->Draw("same");
+
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+
+  hroty->SetLineColor(2);
+  hroty->SetNormFactor(1);
+  h1ry ->SetLineColor(4);
+  h1ry ->SetNormFactor(1);
+  h2ry ->SetLineColor(6);
+  h2ry ->SetNormFactor(1);
+
+
+  h1ry->Draw();
+  h2ry->Draw("same");
+  hroty->Draw("same");
+}
+
 
 //________________________________//%% Executable : 
 void PlotNeuLANDPsi()             //%%

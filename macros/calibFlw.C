@@ -72,7 +72,6 @@ void calibFlw()
 
   m_end = ichain;
 
-
   std::cout << " ichain " << ichain << " m_end " << m_end << std::endl;
   
   gROOT->ProcessLine(".! grep -i void calibFlw.C | grep '//%%'");
@@ -84,7 +83,7 @@ void calibFlw()
 
 
 //________________________________//%% Executable : 
-void ReCentering(UInt_t isel = 2) //%% Executable : Recentering calibration
+void ReCentering(UInt_t isel = 2, Int_t nmin=0, Int_t nmax=100) //%% Executable : Recentering calibration
 {
   TH1D *hQx[4];
   TH1D *hQy[4];
@@ -92,17 +91,21 @@ void ReCentering(UInt_t isel = 2) //%% Executable : Recentering calibration
   TF1  *fgY[2];
 
 
-  UInt_t ic = 0; UInt_t id = 1;
+  ic++; UInt_t id = 1;
   cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700, 500*m_end);
   cc[ic]->Divide(2,m_end);
 
   for(UInt_t m = m_bgn; m < m_end; m++){
-    fgX[m]  = new TF1(Form("fgX_%d",m),"gaus",-30,30);;
-    fgY[m]  = new TF1(Form("fgY_%d",m),"gaus",-30,30);;
+    fgX[m]  = new TF1(Form("fgX%d_%d",nmin,m),"gaus",-30,30);;
+    fgY[m]  = new TF1(Form("fgY%d_%d",nmin,m),"gaus",-30,30);;
 
+    hQx[m] = new TH1D(Form("hQx%d_%d",nmin,m),"; Qx",100,-30,30);
+    hQy[m] = new TH1D(Form("hQy%d_%d",nmin,m),"; Qy",100,-30,30);
 
-    hQx[m] = new TH1D(Form("hQx%d",m),"; Qx",100,-10,10);
-    hQy[m] = new TH1D(Form("hQy%d",m),"; Qy",100,-10,10);
+    TString htitle = Form("mult >= %d && mult < %d",nmin, nmax);
+    hQx[m]->SetTitle(htitle);
+    hQy[m]->SetTitle(htitle);
+
 
     switch(isel){
     case 0:
@@ -123,14 +126,17 @@ void ReCentering(UInt_t isel = 2) //%% Executable : Recentering calibration
       break;
     }
 
-    rChain[m]->Project(Form("hQx%d",m), unitpX);
-    rChain[m]->Project(Form("hQy%d",m), unitpY);
+    
+    TCut multcut = Form("ntrack[%d]>=%d && ntrack[%d]<%d",seltrackID,nmin,seltrackID,nmax);
+
+    rChain[m]->Project(Form("hQx%d_%d",nmin,m), unitpX, multcut);
+    rChain[m]->Project(Form("hQy%d_%d",nmin,m), unitpY, multcut);
 
     cc[ic]->cd(id); id++;
-    hQx[m]->Fit(Form("fgX_%d",m));
+    hQx[m]->Fit(Form("fgX%d_%d",nmin,m));
 
     cc[ic]->cd(id); id++;
-    hQy[m]->Fit(Form("fgY_%d",m));
+    hQy[m]->Fit(Form("fgY%d_%d",nmin,m));
 
     constX= fgX[m]->GetParameter(0);
     meanX = fgX[m]->GetParameter(1);
@@ -140,7 +146,7 @@ void ReCentering(UInt_t isel = 2) //%% Executable : Recentering calibration
     meanY = fgY[m]->GetParameter(1);
     sigY  = fgY[m]->GetParameter(2);
 
-    SaveReCenteringData(m);
+    //SaveReCenteringData(m);
 
   }
 
@@ -204,8 +210,6 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
   Double_t theta_min = 0.;
   Double_t theta_max = TMath::Pi()/2.;
 
-
-
   for(UInt_t n = 0; n < thetanbin+2; n++){
     if(thetanbin != 0) 
       thetabin[n]    = theta_max/(Double_t)thetanbin * (Double_t)n;
@@ -237,19 +241,6 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
 
   for(UInt_t m = m_bgn; m < m_end; m++){
 
-    ReCentering(isel);
-
-    Double_t rcX[3];
-    rcX[0] = constX;
-    rcX[1] = meanX;
-    rcX[2] = sigX;
-    Double_t rcY[3];
-    rcY[0] = constY;
-    rcY[1] = meanY;
-    rcY[2] = sigY;
-
-
-
     hbaiphi[m] = new TH2D(Form("hbaiphi%d",m),  " #Phi before and after; before #Phi [rad]; after #Phi [rad] ", 
 			  400,-3.5,3.5,400,-3.5,3.5);
     hniphi[m]  = new TH1D(Form("hniphi%d",m),   " #Phi no corr.; Azimuthal angle [rad]"  , 200,-3.2,3.2);
@@ -272,6 +263,7 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
     rChain[m]->SetBranchAddress("ntrack",ntrack);
     rChain[m]->SetBranchAddress("unitP_ave",&unitP_ave);
     rChain[m]->SetBranchAddress("unitP_rot",&unitP_rot);
+
     if( isel >= 2) {
       rChain[m]->SetBranchAddress("unitP2_ave",&unitP2_ave);
       rChain[m]->SetBranchAddress("unitP2_rot",&unitP2_rot);
@@ -286,12 +278,24 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
 	flowcorr[j][i] = new STFlowCorrection(rChain[m], harm, m); 
 
 	if(j < ntrknbin+1 && i < thetanbin+1){
+
+	  ReCentering(isel, ntrkbin[j], ntrkbin[j+1]);
+
 	  flowcorr[j][i]->SetBin_max(0, ntrkbin[j+1]);
 	  flowcorr[j][i]->SetBin_max(1, thetabin[i+1]);
 	}
-
 	flowcorr[j][i]->SetBin_min(0, ntrkbin[j]);
 	flowcorr[j][i]->SetBin_min(1, thetabin[i]);
+
+	
+	Double_t rcX[3];
+	rcX[0] = constX;
+	rcX[1] = meanX;
+	rcX[2] = sigX;
+	Double_t rcY[3];
+	rcY[0] = constY;
+	rcY[1] = meanY;
+	rcY[2] = sigY;
 
 	flowcorr[j][i]->SetReCenteringParameter("X",rcX);  
 	flowcorr[j][i]->SetReCenteringParameter("Y",rcY);  
@@ -402,10 +406,10 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
 	  }
 	}
 	
-	TString comm1 = Form("Psicv%d.m%dn%d:flatten_Psi_ntrkthetabin; ntrack> %f && ntrack< %f theta> %f && theta< %f",
+	TString comm1 = Form("Psicv%d.m%dn%d:flatten_Psi_ntrkthetabin; ntrack>= %f && ntrack< %f theta>= %f && theta< %f",
 			    iVer,j,i,ntrkbin[j],ntrkbin[j+1],thetabin[i],thetabin[i+1]);
 
-	TString comm2 = Form("X: %f, %f, %f Y: %f, %f, %f :"+unitpX+" "+unitpY,constX,meanX,sigX,constY,meanY,sigY);
+	TString comm2 = unitpX + " && " + unitpY;
 	cout << "save " << comm1 << endl;
 	flowcorr[j][i]-> SaveCorrectionFactor(comm1, comm2);    
       }
@@ -433,7 +437,6 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
     cc[im]->cd(1);
    
     im++;
-
     cc[im] = new TCanvas(Form("cc%d",im),Form("cc%d",im),700,500);
 
 

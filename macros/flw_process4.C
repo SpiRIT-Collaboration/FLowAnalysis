@@ -51,9 +51,6 @@ void flw_process4(Long64_t nmax = -1)
 
     if(ntrack[2] > 0 ) {
 
-      //      unitP_fc = Psi_FlatteningCorrection(seltrack, *unitP_rot);
-      //      unitP_rc = Psi_ReCenteringCorrection(seltrack, *unitP_rot);
-
       unitP_fc = Psi_FlatteningCorrection( seltrack, TVector3(unitP2_rot->X(), unitP2_rot->Y(), 0.));
       unitP_rc = Psi_ReCenteringCorrection(seltrack, TVector3(unitP2_rot->X(), unitP2_rot->Y(), 0.));
 
@@ -171,6 +168,10 @@ void Open()
   fTree->SetBranchAddress("unitP_rot" ,&unitP_rot,  &bunitP_rot);
   fTree->SetBranchAddress("unitP2_ave",&unitP2_ave, &bunitP2_ave);
   fTree->SetBranchAddress("unitP2_rot",&unitP2_rot, &bunitP2_rot);
+  fTree->SetBranchAddress("mtrack_1"  ,&mtrack_1);
+  fTree->SetBranchAddress("mtrack_2"  ,&mtrack_2);
+  fTree->SetBranchAddress("unitP_1r"  ,&unitP_1r  , &bunitP_1r);
+  fTree->SetBranchAddress("unitP_2r"  ,&unitP_2r  , &bunitP_2r);
 
   fTree->SetBranchAddress("aoq" ,&aoq);
   fTree->SetBranchAddress("z"   ,&z);
@@ -188,8 +189,6 @@ void Initialize()
   unitP_lang  = TVector2(0.,0.);
   unitP_1     = TVector2(0.,0.);
   unitP_2     = TVector2(0.,0.);
-  unitP_1r    = TVector2(0.,0.);
-  unitP_2r    = TVector2(0.,0.);
   unitP_fc    = TVector3(0.,0.,0.);
   unitP_rc    = TVector3(0.,0.,0.);
 
@@ -498,65 +497,18 @@ void CheckPlot(UInt_t ival)
 
 void SubEventAnalysis()
 {
-  //subevent analysis
-  TIter next(aParticleArray);
-  STParticle *aPart1 = NULL;
-
-  //  UInt_t np = aParticleArray->GetEntries();
-  UInt_t np = seltrack;
-  Float_t arr[np];
-  rnd.RndmArray(np, arr);
-  UInt_t isel = 0;
-
-
-  std::vector< TVector2 > elem1;
-  std::vector< TVector2 > elem2;
-
-  while( (aPart1 = (STParticle*)next()) ) {
+  if(mtrack_1 > 0 && mtrack_2 > 0){
     
-    if(aPart1->GetReactionPlaneFlag() >= selReactionPlanef){
-      Double_t wt = aPart1->GetRPWeight();
-      TVector2 pt = aPart1->GetCorrectedPt();
-      TVector2 ptr= aPart1->GetRotatedPt();
+    TVector3 uvec;
+    uvec = Psi_FlatteningCorrection( mtrack_1, TVector3(unitP_1r->X(), unitP_1r->Y(), 0.));
+    unitP_1.SetX(uvec.X()); unitP_1.SetY(uvec.Y());
 
-      
-      if( (UInt_t)(arr[isel]*np)%2 ==0 && mtrack_1 < seltrack/2 ) {
-	unitP_1 += wt * pt.Unit();
-	unitP_1r+= wt * ptr.Unit();
-
-	elem1.push_back( wt * pt.Unit() );
-
-	aPart1->AddReactionPlaneFlag(100);
-	mtrack_1++;
-      }
-      else if( mtrack_2 < seltrack/2 ) {
-	unitP_2 += wt * pt.Unit();
-	unitP_2r+= wt * ptr.Unit();
-
-	elem2.push_back( wt * pt.Unit() );
-
-	aPart1->AddReactionPlaneFlag(200);
-	mtrack_2++;
-      }
-      else{
-	unitP_1 += wt * pt.Unit();
-	unitP_1r+= wt * ptr.Unit();
-
-	elem1.push_back( wt * pt.Unit() );
-
-	aPart1->AddReactionPlaneFlag(100);
-	mtrack_1++;
-      }
-
-      isel++;
-      //cout << " _2 " << mtrack_2 << " / " << itra << endl;     
-      if( mtrack_1 + mtrack_2 > seltrack ) break; 
-
-    }
+    uvec = Psi_FlatteningCorrection( mtrack_2, TVector3(unitP_2r->X(), unitP_2r->Y(), 0.));
+    unitP_2.SetX(uvec.X()); unitP_2.SetY(uvec.Y());
   }
 
 
-  UInt_t nboot = 500;
+  //UInt_t nboot = 500;
   // auto btsp1 = new STBootStrap(nboot, &elem1); 
   // bsPhi_1[0] = btsp1->GetMean(2);
   // bsPhi_1[1] = btsp1->GetStdDev(2);
@@ -580,7 +532,6 @@ void AzmAngleWRTReactionPlane()
     if(aPart1->GetReactionPlaneFlag() > 100){
 
       Double_t wt = aPart1->GetRPWeight();
-      //      TVector2 pt = aPart1->GetCorrectedPt();
       TVector2 pt = aPart1->GetRotatedPt();
 
       std::vector < TVector2 > exVec;
@@ -597,7 +548,6 @@ void AzmAngleWRTReactionPlane()
 	if( aPart1 != restPart && restPart->GetReactionPlaneFlag() > 100 ) {
 
 	  Double_t wt_rp = restPart->GetRPWeight();
-	  //	  TVector2 pt_rp = restPart->GetCorrectedPt();
 	  TVector2 pt_rp = restPart->GetRotatedPt();
 
 	  mExcRP += wt_rp * pt_rp.Unit();
