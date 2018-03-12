@@ -12,9 +12,7 @@ void flw_process4(Long64_t nmax = -1)
 {
   SetEnvironment();
 
-  // Set number of bins divinding rapidity.
-  if(sbRun != "0")
-    nBin = SetDatabaseFiles();
+  nBin = SetDatabaseFiles();
 
   if(nBin == 0) {
     std::cout << " Correction database was not found. " << std::endl;
@@ -23,8 +21,9 @@ void flw_process4(Long64_t nmax = -1)
 
   // Print Run configuration 
   cout << " ---------- CONFIGURATION ----------  " << endl;
-  cout << "RUN = "      << sRun << " Assemble v" << sAsm 
-       << " with ver "  << sVer  << " mix = " << sMix 
+  cout << "RUN = "      << sRun   << " with ver "  << sVer  
+       << "Flow correction ver "  << sbVer  << nBin << " databases " 
+       << " mix = " << sMix 
        << endl;
 
 
@@ -51,31 +50,14 @@ void flw_process4(Long64_t nmax = -1)
     seltrack = ntrack[seltrackID];
 
     if(ntrack[2] > 0 ) {
-     
-      mtkBIN = GetMultiplicityCorretionIndex(seltrack);
 
-      Long64_t nLoop = 0;
+      unitP_fc = Psi_FlatteningCorrection( seltrack, TVector3(unitP2_rot->X(), unitP2_rot->Y(), 0.));
+      unitP_rc = Psi_ReCenteringCorrection(seltrack, TVector3(unitP2_rot->X(), unitP2_rot->Y(), 0.));
 
-      TIter next(aParticleArray);
-      STParticle *aPart1 = NULL;
-
-      while( (aPart1 = (STParticle*)next()) ) {
-
-	FlatteningCorrection(aPart1,mtkBIN);
-	  
-	// Particle selection
-	if ( aPart1->GetReactionPlaneFlag() == selReactionPlanef ){  // p/d/t/He
-	  unitP += aPart1->GetFlattenMomentum().Unit();
-	
-	  unitP_lang += aPart1->GetRPWeight() * (aPart1->GetFlattenPt()).Unit();	
-	  //	  unitP_rot  += aPart1->GetRPWeight() * (aPart1->GetRotatedPt()).Unit();
-	}
-      }
-
-      if(seltrack > 2) {
+      //      if(seltrack > 2) {
 	SubEventAnalysis();
-	AzmAngleRPTReactionPlane();
-      }
+	AzmAngleWRTReactionPlane();
+	//      }
 
       mflw->Fill();
     }
@@ -97,29 +79,25 @@ void SetEnvironment()
 
   sRun = gSystem -> Getenv("RUN");  // RUN number
   sVer = gSystem -> Getenv("VER");  // Version ID
-  sbRun= gSystem -> Getenv("BRUN"); // If BRUN=0, flattening is not done.
-  sbVer= gSystem -> Getenv("BVER"); // BRUN version
-  //scVer= gSystem -> Getenv("CVER"); // corrected version
-
+  sbVer= gSystem -> Getenv("FLC"); // BRUN version
   sMix = gSystem -> Getenv("MIX");
   
-  if(sRun =="" || sVer == "" ||sMix == "" || sbRun == "" || sbVer == ""|| !DefineVersion()) {
+  if(sRun =="" || sVer == "" ||sMix == "" || sbVer == ""|| !DefineVersion()) {
     cout << " Please type " << endl;
-    cout << "$ RUN=#### VER=#.#.# MIX=0(real) or 1(mix) BRUN=# BVER=#.#.cv# root flw_process4.C(Number of event) " << endl;
+    cout << "$ RUN=#### VER=#.#.# MIX=0(real) or 1(mix) FLC=run2900_rf.v4.0.Psicv0 root flw_process4.C(Number of event) " << endl;
     exit(0);
   }
-
-
 
   // Real or mixed event 
   if (sMix == "1") bMix = kTRUE;
   else bMix = kFALSE;
 
-
   // Set RUN number
   iRun = atoi(sRun);
 
-
+  // Correction version
+  Ssiz_t cv = sbVer.First("c");
+  ssbVer = sbVer( cv, 3);
 }
 
 void PrintProcess(Int_t ievt)
@@ -184,29 +162,35 @@ void Open()
   aParticleArray   = new TClonesArray("STParticle",150);
 
   fTree->SetBranchAddress("STParticle",&aParticleArray);
-  fTree->SetBranchAddress("ntrack",ntrack);
-  fTree->SetBranchAddress("mtrack",&mtrack);
-  fTree->SetBranchAddress("unitP_ave",&unitP_ave);
-  fTree->SetBranchAddress("unitP_rot",&unitP_rot);
+  fTree->SetBranchAddress("ntrack"    ,ntrack);
+  fTree->SetBranchAddress("mtrack"    ,&mtrack);
+  fTree->SetBranchAddress("unitP_ave" ,&unitP_ave,  &bunitP_ave);
+  fTree->SetBranchAddress("unitP_rot" ,&unitP_rot,  &bunitP_rot);
+  fTree->SetBranchAddress("unitP2_ave",&unitP2_ave, &bunitP2_ave);
+  fTree->SetBranchAddress("unitP2_rot",&unitP2_rot, &bunitP2_rot);
+  fTree->SetBranchAddress("mtrack_1"  ,&mtrack_1);
+  fTree->SetBranchAddress("mtrack_2"  ,&mtrack_2);
+  fTree->SetBranchAddress("unitP_1r"  ,&unitP_1r  , &bunitP_1r);
+  fTree->SetBranchAddress("unitP_2r"  ,&unitP_2r  , &bunitP_2r);
 
-
-  fTree->SetBranchAddress("aoq",&aoq);
-  fTree->SetBranchAddress("z",&z);
+  fTree->SetBranchAddress("aoq" ,&aoq);
+  fTree->SetBranchAddress("z"   ,&z);
   fTree->SetBranchAddress("snbm",&snbm);
+
+  fTree->SetBranchAddress("STNeuLANDCluster",&aNLCluster);
 }
 
 void Initialize()
 {
-
   trackID.clear();
 
-  unitP   = TVector3(0,0,0);
-  unitP_lang  = TVector2(0,0);
-  unitP_rot   = TVector2(0,0);
-  unitP_1 = TVector2(0.,0.);
-  unitP_2 = TVector2(0.,0.);
-  unitP_1r= TVector2(0.,0.);
-  unitP_2r= TVector2(0.,0.);
+  unitP       = TVector3(0.,0.,0.);
+
+  unitP_lang  = TVector2(0.,0.);
+  unitP_1     = TVector2(0.,0.);
+  unitP_2     = TVector2(0.,0.);
+  unitP_fc    = TVector3(0.,0.,0.);
+  unitP_rc    = TVector3(0.,0.,0.);
 
   mtrack_1 = 0;
   mtrack_2 = 0;
@@ -252,7 +236,8 @@ void OutputTree()
 {
   //@@@
   foutname += Form(".%d",iVer[2]);
-  foutname += "_db"+sbRun+".v"+sbVer+".root";
+  foutname += "." + ssbVer + ".root";
+  //  foutname += "_db"+sbVer+".root";
   // Set like  -> run2843_rf.v0.0.0_db2843.v0.0.cv0.root
 
   TString fo = foutname;
@@ -297,13 +282,19 @@ void OutputTree()
   mflw->Branch("unitP_2"   ,&unitP_2);
   mflw->Branch("unitP_lang",&unitP_lang);
   mflw->Branch("unitP_rot" ,&unitP_rot);
+  mflw->Branch("unitP2_rot",&unitP2_rot);
   mflw->Branch("unitP_1r"  ,&unitP_1r);
   mflw->Branch("unitP_2r"  ,&unitP_2r);
+  mflw->Branch("unitP_fc"  ,&unitP_fc);
+  mflw->Branch("unitP_rc"  ,&unitP_rc);
 
   mflw->Branch("bsPhi"     ,bsPhi   ,"bsPhi[2]/D");
   mflw->Branch("bsPhi_1"   ,bsPhi_1 ,"bsPhi_1[2]/D");
   mflw->Branch("bsPhi_2"   ,bsPhi_2 ,"bsPhi_2[2]/D");
   mflw->Branch("bsPhi_ex"  ,bsPhi_ex,"bsPhi_ex[3]/D");
+
+  if(aNLCluster != NULL)
+    mflw->Branch("STNeuLANDCluster",&aNLCluster);
 
 }
 
@@ -336,48 +327,36 @@ Bool_t DefineVersion()
 
 UInt_t SetDatabaseFiles()
 {
+  TString  fname = sbVer + ".";
 
-  //  std::vector<TString> vfname;
-  if(sbRun != "0") {
-    TString fname = "run"+sbRun;
-    if(bMix)
-      fname += "_mf.v";
-    else
-      fname += "_rf.v";
+  cout << " fname " << fname  << endl;
 
-    fname += sbVer + ".";
+  UInt_t ihmsum = 0;
+  UInt_t imtk = 0;
+  while(1){
 
-        cout << " fname " << fname  << endl;
-
-    UInt_t ihmsum = 0;
-    UInt_t imtk = 0;
+    UInt_t ihm = 0;
+    UInt_t ihmm = 0;
     while(1){
 
-      UInt_t ihm = 0;
-      UInt_t ihmm = 0;
-      while(1){
-
-	TString ffname = fname +  Form("m%dn%d.txt",imtk,ihmm);
-		cout << ffname << endl;
-	
-	if( gSystem->FindFile("db",ffname) ){
-	  vfname.push_back(ffname);
-	  ihm++;  ihmm++;
-	}
-	else 
-	  break;
+      TString ffname = fname +  Form("m%dn%d.txt",imtk,ihmm);
+      if( gSystem->FindFile("db",ffname) ){
+	vfname.push_back(ffname);
+	ihm++;  ihmm++;
+	std::cout << " Databse " << ffname << " is loaded. " << std::endl;
       }
-
-      if(ihm > 0 ) {
-	mtkbin.push_back(ihm);
-	ihmsum += ihm;
-	///	cout << " ihm " << ihm  << " <- " << imtk << " sum " << ihmsum << endl;
-      }
-      else if(ihm == 0)
+      else 
 	break;
-
-      imtk++;
     }
+
+    if(ihm > 0 ) {
+      mtkbin.push_back(ihm);
+      ihmsum += ihm;
+    }
+    else if(ihm == 0)
+      break;
+
+    imtk++;
   }
 
   
@@ -401,11 +380,11 @@ UInt_t SetDatabaseFiles()
     flowcorr->SetRealOrMix(1);
     flowcorr->SetRealOrMix((UInt_t)bMix);
     flowcorr->SetFileName(vfname.at(ihm));
-    flowcorr->GetCorrectionFactor();
+    flowcorr->LoadCorrectionFactor();
     
     pbinmin.push_back(make_pair(flowcorr->GetBin_min(0),flowcorr->GetBin_min(1)));
     cout << " $$$$$$$$$$$ ---->  nbin " << ihm  << " " << pbinmin.at(ihm).first << " : "<< pbinmin.at(ihm).second << endl;    
-    //    flowcorr->ShowParameters();
+    //    flowcorr->ShowBinInformation();
   }
 
   binpara   = flowcorr->GetBinParameter(1);
@@ -427,26 +406,16 @@ void SetPtWeight(STParticle *apart)
 
 }
 
-
-Int_t GetMultiplicityCorretionIndex(UInt_t ival)
+Int_t GetCorrectionIndex(UInt_t ival, Double_t fval)
 {
-  std::vector< std::pair<Double_t, Double_t> >::iterator itr;
+  Int_t index = GetMultiplicityCorretionIndex(ival);
 
-  UInt_t ink = mtkbin.size()-1;
+  index =  GetThetaCorrectionIndex(index, fval);
 
-  for(itr = pbinmin.end()-1; itr != pbinmin.begin(); itr-= mtkbin.at(ink), ink--){
-    
-    //    cout << "mult " << itr->first<< " : " << itr->second << " -- " << mtkbin.at(ink) << " at " << itr - pbinmin.begin()<< endl;
-
-    if(ival >= itr->first) {
-      return itr - pbinmin.begin();
-    }
-  }
-
-  return -1;
+  return index;
 }
 
-Int_t GetThetaCorrectionIndex(Double_t fval, Int_t ival)
+Int_t GetThetaCorrectionIndex(Int_t ival, Double_t fval)
 {
 
   std::vector< std::pair<Double_t, Double_t> >::iterator itr;
@@ -456,6 +425,25 @@ Int_t GetThetaCorrectionIndex(Double_t fval, Int_t ival)
   for(itr = pbinmin.begin()+ival; itr != pbinmin.begin()-1; itr--){
     
     if( fval >= itr->second) {      
+      return itr - pbinmin.begin();
+    }
+  }
+
+  return -1;
+}
+Int_t GetMultiplicityCorretionIndex(UInt_t ival)
+{
+  std::vector< std::pair<Double_t, Double_t> >::iterator itr;
+
+  UInt_t ink = mtkbin.size()-1;
+
+  for(itr = pbinmin.end()-1; itr != pbinmin.begin()-1; itr-= mtkbin.at(ink), ink--){
+    
+    //        cout << "mult " << itr->first<< " : " << itr->second << " -- " << mtkbin.at(ink) << " at " << itr - pbinmin.begin()<< endl;
+
+    if(ival >= itr->first) {
+      //            cout << " ntrack  " << ival << " : " << itr - pbinmin.begin() << endl;
+
       return itr - pbinmin.begin();
     }
   }
@@ -509,65 +497,18 @@ void CheckPlot(UInt_t ival)
 
 void SubEventAnalysis()
 {
-  //subevent analysis
-  TIter next(aParticleArray);
-  STParticle *aPart1 = NULL;
-
-  //  UInt_t np = aParticleArray->GetEntries();
-  UInt_t np = seltrack;
-  Float_t arr[np];
-  rnd.RndmArray(np, arr);
-  UInt_t isel = 0;
-
-
-  std::vector< TVector2 > elem1;
-  std::vector< TVector2 > elem2;
-
-  while( (aPart1 = (STParticle*)next()) ) {
+  if(mtrack_1 > 0 && mtrack_2 > 0){
     
-    if(aPart1->GetReactionPlaneFlag() == selReactionPlanef){
-      Double_t wt = aPart1->GetRPWeight();
-      TVector2 pt = aPart1->GetCorrectedPt();
-      TVector2 ptr= aPart1->GetRotatedPt();
+    TVector3 uvec;
+    uvec = Psi_FlatteningCorrection( mtrack_1, TVector3(unitP_1r->X(), unitP_1r->Y(), 0.));
+    unitP_1.SetX(uvec.X()); unitP_1.SetY(uvec.Y());
 
-      
-      if( (UInt_t)(arr[isel]*np)%2 ==0 && mtrack_1 < seltrack/2 ) {
-	unitP_1 += wt * pt.Unit();
-	unitP_1r+= wt * ptr.Unit();
-
-	elem1.push_back( wt * pt.Unit() );
-
-	aPart1->AddReactionPlaneFlag(100);
-	mtrack_1++;
-      }
-      else if( mtrack_2 < seltrack/2 ) {
-	unitP_2 += wt * pt.Unit();
-	unitP_2r+= wt * ptr.Unit();
-
-	elem2.push_back( wt * pt.Unit() );
-
-	aPart1->AddReactionPlaneFlag(200);
-	mtrack_2++;
-      }
-      else{
-	unitP_1 += wt * pt.Unit();
-	unitP_1r+= wt * ptr.Unit();
-
-	elem1.push_back( wt * pt.Unit() );
-
-	aPart1->AddReactionPlaneFlag(100);
-	mtrack_1++;
-      }
-
-      isel++;
-      //cout << " _2 " << mtrack_2 << " / " << itra << endl;     
-      if( mtrack_1 + mtrack_2 > seltrack ) break; 
-
-    }
+    uvec = Psi_FlatteningCorrection( mtrack_2, TVector3(unitP_2r->X(), unitP_2r->Y(), 0.));
+    unitP_2.SetX(uvec.X()); unitP_2.SetY(uvec.Y());
   }
 
 
-  UInt_t nboot = 500;
+  //UInt_t nboot = 500;
   // auto btsp1 = new STBootStrap(nboot, &elem1); 
   // bsPhi_1[0] = btsp1->GetMean(2);
   // bsPhi_1[1] = btsp1->GetStdDev(2);
@@ -578,7 +519,7 @@ void SubEventAnalysis()
   
 }
 
-void AzmAngleRPTReactionPlane()
+void AzmAngleWRTReactionPlane()
 {
 
   Int_t itra = 0;
@@ -586,12 +527,12 @@ void AzmAngleRPTReactionPlane()
   TIter next(aParticleArray);
   STParticle *aPart1 = NULL;
 
-
   while( (aPart1 = (STParticle*)next()) ) {
 
     if(aPart1->GetReactionPlaneFlag() > 100){
+
       Double_t wt = aPart1->GetRPWeight();
-      TVector2 pt = aPart1->GetCorrectedPt();
+      TVector2 pt = aPart1->GetRotatedPt();
 
       std::vector < TVector2 > exVec;
       TVector2 mExcRP(0.,0.);
@@ -607,15 +548,21 @@ void AzmAngleRPTReactionPlane()
 	if( aPart1 != restPart && restPart->GetReactionPlaneFlag() > 100 ) {
 
 	  Double_t wt_rp = restPart->GetRPWeight();
-	  TVector2 pt_rp = restPart->GetCorrectedPt();
+	  TVector2 pt_rp = restPart->GetRotatedPt();
 
 	  mExcRP += wt_rp * pt_rp.Unit();
 	  exVec.push_back( wt_rp * pt_rp.Unit() );
 
-
+	  
 	  itraex++;
 	}
       }
+
+      // ReCentering and Shifting correction
+      TVector3 rp_recv = TVector3(-999.,-999.,-999.);
+      if(itraex > 0)
+      rp_recv = Psi_FlatteningCorrection( seltrack , TVector3(mExcRP.X(), mExcRP.Y(), 0.));
+
 
       // bootstrap method
       // auto btsp  = new STBootStrap(500, &exVec);
@@ -627,11 +574,16 @@ void AzmAngleRPTReactionPlane()
       // aPart1->SetAzmAngle_wrt_RP  ( (Double_t)TVector2::Phi_mpi_pi( pt.Phi() - bsPhi_ex[0]));
       // aPart1->SetIndividualRPAngle( (Double_t)TVector2::Phi_mpi_pi( bsPhi_ex[0] ));
 
-      aPart1->SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( pt.Phi()-mExcRP.Phi()));
-      aPart1->SetIndividualRPAngle( (Double_t)TVector2::Phi_mpi_pi( mExcRP.Phi() ));
-      //      cout << " rest part " << itraex << " : " << itra << " @ "<< mExcRP.Phi() << " = " << aPart1->GetIndividualRPAngle()
-      //   << endl;          
+      // aPart1->SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( pt.Phi()-mExcRP.Phi()));
+      aPart1->SetIndividualRPAngle( (Double_t)TVector2::Phi_mpi_pi( rp_recv.Phi() ));
+
+      aPart1->SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( pt.Phi() - rp_recv.Phi()));
+      //aPart1->SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( unitP2_rot->Phi() ));
+      //      aPart1->SetIndividualRPAngle( (Double_t)TVector2::Phi_mpi_pi( rp_rec.Phi() ));
+
     }
+    else
+      aPart1->SetAzmAngle_wrt_RP(-10.);
   }
 }
 
@@ -653,24 +605,52 @@ void FlatteningCorrection(STParticle *apart, Int_t ival)
   }
 
   
-  Int_t iBIN = GetThetaCorrectionIndex(binParameter, mtkBIN);
-
-  //  cout << "binpara " << binParameter << " mtkBIN " << mtkBIN << " ibin " << iBIN <<endl;
+  Int_t iBIN = GetThetaCorrectionIndex(mtkBIN, binParameter);
 
   if(iBIN >= 0){
     flowcorr = (STFlowCorrection*)aflowcorrArray->At(iBIN);
 
-    //    cout << flowcorr->GetBin_min(0) << " < " << flowcorr->GetBin_max(0) << " : " 
-    //	 << flowcorr->GetBin_min(1) << " < " << flowcorr->GetBin_max(1) << endl; 
-
-    //cout << " before " << apart->GetRotatedMomentum().Phi() << endl;
     Double_t phi =  flowcorr->GetCorrection((apart->GetRotatedMomentum()).Phi());
     apart->Flattening( phi );
-    //    cout << " after " << apart->GetFlattenMomentum().Phi() << endl;
-    
 
   }
   else
-    std::cout << " A correction file is not found. " << binParameter << " with " << ntrack[3] << std::endl;
+    std::cout << " A correction file is not found. " << binParameter << " with " << ival << std::endl;
 
+}
+
+TVector3 Psi_FlatteningCorrection(Int_t ival, TVector3 Pvec)
+{
+  Int_t    iBIN = GetCorrectionIndex(ival, Pvec.Theta());
+
+  TVector3 Psi_cf;
+  if(iBIN >= 0){
+    flowcorr = (STFlowCorrection*)aflowcorrArray->At(iBIN);
+    Psi_cf = flowcorr->ReCenteringFourierCorrection(Pvec);
+    //    Psi_cf.SetPhi(flowcorr->GetCorrection(Pvec.Phi()));
+
+    // if( Pvec.Phi() >= 2.49 && Pvec.Phi() < 2.5 ){
+    //   flowcorr->ShowBinInformation();
+    //   cout << "---##---> ntrack " << ival
+    // 	   << " iBIN " << iBIN << " Phi " << Pvec.Phi() << " -> " << Psi_cf.Phi() 
+    // 	   << " X : Y : Z " << Pvec.X() << " " << Pvec.Y() << " " << Pvec.Z() 
+    // 	   << endl;
+    // } 
+  }
+
+  return Psi_cf;
+}
+
+TVector3 Psi_ReCenteringCorrection(Int_t ival, TVector3 Pvec)
+{
+  Int_t    iBIN = GetCorrectionIndex(ival, Pvec.Theta());
+
+  TVector3 Psi_cf;
+  if(iBIN >= 0) {
+    flowcorr = (STFlowCorrection*)aflowcorrArray->At(iBIN);
+    
+    Psi_cf = flowcorr->ReCentering(Pvec);
+  }
+
+  return Psi_cf;
 }

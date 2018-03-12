@@ -145,7 +145,8 @@ void STParticle::Clear(Option_t *option)
   ffltnP3 = TVector3(-9999,-9999,-9999);
   ffltnPt = TVector2(-9999,-9999);
 
-  frpphi = -10.;
+  frpphi   = -10.;
+  fdeltphi = -10.;
   fwgt   = 0.;
   fcorrBin[0] = -1;  
   fcorrBin[1] = -1;

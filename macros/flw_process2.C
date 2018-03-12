@@ -11,6 +11,9 @@ void flw_process2(Long64_t nmax = -1)
 {
   SetEnvironment();
 
+  TDatime dtime;
+  rnd.SetSeed(dtime.GetSecond());
+
   // I/O
   Open();
 
@@ -82,39 +85,35 @@ void flw_process2(Long64_t nmax = -1)
 	    
 	  numGoodTrack++;
 
-	  if( aPart1->GetReactionPlaneFlag() >= 10 ){
+	  if( aPart1->GetReactionPlaneFlag() >= selReactionPlanef ){
 	    ntrack[4]++;
 	    
-	    unitP_ave += aPart1->GetRotatedMomentum().Unit(); 
-	    unitP_rot += aPart1->GetRPWeight() * aPart1->GetRotatedMomentum().Unit();
+	    unitP_ave  += aPart1->GetRotatedMomentum().Unit(); 
+	    unitP_rot  += aPart1->GetRPWeight() * aPart1->GetRotatedMomentum().Unit();
 
+	    unitP2_ave += aPart1->GetRotatedPt().Unit(); 
+	    unitP2_rot += aPart1->GetRPWeight() * aPart1->GetRotatedPt().Unit();
 	  }
 
 	  if( aPart1->GetReactionPlaneFlag() == 20 )
 	    ntrack[5]++;
-
-	  
-
-
-
 	}
-
 	nLoop++;
       }
     }
+    
+    SetSubEvent(npar, ntrack[4]);
 
-    mtrack = trackID.size();
-    ntrack[6] = mtrack;
+    ntrack[6] = trackID.size();
 
     //       cout << " mtrack " << mtrack << endl;
 
-    if(mtrack > 0) {
+    if(ntrack[6] > 0) {
       mflw->Fill();
       hgtc->Fill(mtrack);
 
     }
   }
-
 
   if(!bMix && mhfile != NULL) {
     mhfile->cd();
@@ -131,6 +130,81 @@ void flw_process2(Long64_t nmax = -1)
     exit(0);
   }
 
+}
+
+void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
+{
+
+  UInt_t *rndArray = new UInt_t[npart];
+  
+  rndArray = RanndomDivide2(npart);
+
+  TIter next(&pararray);
+  STParticle *aPart1 = NULL;
+
+  mtrack_1 = 0;
+  mtrack_2 = 0;
+
+  UInt_t itrack = 0;
+  while( (aPart1 = (STParticle*)next()) ){
+
+    if(aPart1->GetReactionPlaneFlag() >= selReactionPlanef){
+      Double_t wt = aPart1->GetRPWeight();
+      TVector2 ptr= aPart1->GetRotatedPt();
+
+
+      if( rndArray[itrack] == 0 ) {
+
+	unitP_1r+= wt * ptr.Unit();
+	aPart1->AddReactionPlaneFlag(100);
+        mtrack_1++;
+      }
+      else  {
+        unitP_2r+= wt * ptr.Unit();
+	aPart1->AddReactionPlaneFlag(200);
+        mtrack_2++;
+      }
+
+      itrack++;
+      if( itrack > npart ) break;
+
+    }
+  }
+}
+
+UInt_t *RanndomDivide2(UInt_t npart)
+{
+  if(npart%2 == 1) npart++;
+
+  const UInt_t npart2 = npart; 
+  UInt_t  *rndarray = new UInt_t[npart2];
+
+  UInt_t c1 = 0;
+  UInt_t c2 = 0;
+  UInt_t count = 0;
+  while( count < npart2 ){
+    
+    Float_t rrd = rnd.Rndm() ;
+    //    cout << rrd << "  ";
+
+    if( rrd < 0.5 ) {
+      if( c1 < npart2/2 ) {
+	rndarray[count] = 0;
+	c1++;
+	count++;
+      }
+    }
+    else if( rrd >= 0.5 ) {
+      if( c2 < npart2/2 ) {
+	rndarray[count] = 1;
+	c2++;
+	count++;
+      }
+    }
+  }
+
+
+  return rndarray;
 }
 
 Bool_t CheckParticle(STParticle *apart)
@@ -325,12 +399,14 @@ void Initialize()
   aParticleArray->Clear();
   nParticleArray->Clear();
 
-  unitP_ave = TVector3(0.,0.,0.);
-  unitP_rot = TVector3(0.,0.,0.);
+  unitP_ave  = TVector3(0.,0.,0.);
+  unitP_rot  = TVector3(0.,0.,0.);
+  unitP2_ave = TVector2(0.,0.);
+  unitP2_rot = TVector2(0.,0.);
+  unitP_1r   = TVector2(0.,0.);
+  unitP_2r   = TVector2(0.,0.);
 
 
-  TDatime dtime;
-  rnd.SetSeed(dtime.Get());
 }
 
 
@@ -479,12 +555,21 @@ void OutputTree(Long64_t nmax)
   nParticleArray = new TClonesArray("STParticle",100);
   mflw->Branch("STParticle",&nParticleArray);
 
-  mflw->Branch("ntrack",ntrack,"ntrack[7]/I");
-  mflw->Branch("mtrack",&mtrack,"mtrack/I");
-  mflw->Branch("event",&event);
-  mflw->Branch("mxntrk",&mxntrk);
-  mflw->Branch("unitP_ave",&unitP_ave);
-  mflw->Branch("unitP_rot",&unitP_rot);
+  mflw->Branch("ntrack"    ,ntrack,"ntrack[7]/I");
+  mflw->Branch("mtrack"    ,&mtrack,"mtrack/I");
+  mflw->Branch("event"     ,&event);
+  mflw->Branch("mxntrk"    ,&mxntrk);
+  mflw->Branch("unitP_ave" ,&unitP_ave);
+  mflw->Branch("unitP_rot" ,&unitP_rot);
+  mflw->Branch("unitP2_ave",&unitP2_ave);
+  mflw->Branch("unitP2_rot",&unitP2_rot);
+
+  mflw->Branch("unitP_1r",&unitP_1r);
+  mflw->Branch("unitP_2r",&unitP_2r);
+  mflw->Branch("mtrack_1",&mtrack_1);
+  mflw->Branch("mtrack_2",&mtrack_2);
+  
+
 
   if(aNLCluster != NULL)
     mflw->Branch("STNeuLANDCluster",&aNLCluster);
@@ -583,11 +668,16 @@ STParticle *GetMixedTrack(Long64_t *ival, Int_t *kval)
 
 void SetPtWeight(STParticle *apart)
 {
+  Double_t y_cm = 0.38;
+
+  if( snbm == 132 )
+    y_cm = 0.383198;
+  else if( snbm == 108 )
+    y_cm = 0.3655;
 
   Double_t rpd   = apart->GetRapidity();
 
-
-  if( rpd <  0.75455/2. ) 
+  if( rpd <  y_cm ) 
     apart->SetRPWeight(-1);
   else
     apart->SetRPWeight(1);

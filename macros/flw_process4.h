@@ -19,8 +19,20 @@ Double_t      ProjB;
 Double_t      aoq;
 Double_t      z;
 Int_t         snbm;
-TVector3      unitP_ave;
-TVector3      unitP_rot;
+TVector3      *unitP_ave = NULL; 
+TVector3      *unitP_rot = NULL; 
+TBranch       *bunitP_ave;
+TBranch       *bunitP_rot;
+TVector2      *unitP2_ave = NULL; 
+TVector2      *unitP2_rot = NULL; 
+TBranch       *bunitP2_ave;
+TBranch       *bunitP2_rot;
+TVector2      *unitP_1r = NULL;
+TVector2      *unitP_2r = NULL;
+TBranch       *bunitP_1r;
+TBranch       *bunitP_2r;
+UInt_t         mtrack_1;
+UInt_t         mtrack_2;
 
 void      SetEnvironment();
 void      PrintProcess(Int_t ievt);
@@ -33,15 +45,17 @@ Bool_t    DefineVersion();
 void      RotateAsBeamAngle(STParticle *apart, TVector3 *p1, TVector2 *pt);
 void      SetPtWeight(STParticle *apart);
 void      FlatteningCorrection(STParticle *apart, Int_t ival);
-
+TVector3  Psi_FlatteningCorrection(Int_t ival, TVector3 Pvec);
+TVector3  Psi_ReCenteringCorrection(Int_t ival, TVector3 Pvec);
 
 void      SubEventAnalysis();
-void      AzmAngleRPTReactionPlane();
+void      AzmAngleWRTReactionPlane();
 
 void      LoadPIDFile();
 Int_t     GetPID(Double_t valx, Double_t valy);
 UInt_t    SetDatabaseFiles();
-Int_t     GetThetaCorretionIndex(Double_t fval, Int_t ival);
+Int_t     GetCorrectionIndex(UInt_t ival, Double_t fval);
+Int_t     GetThetaCorrectionIndex(Int_t ival, Double_t fval);
 Int_t     GetMultiplicityCorretionIndex(UInt_t ival);
 void      CheckPlot(UInt_t ival = 0);
 
@@ -56,15 +70,16 @@ Bool_t  BeamAngle;
 Int_t   iAsm;
 TString sbRun;
 TString sbVer;
+TString ssbVer;
 TString scVer;
 UInt_t  nBin; 
 TString binpara;
 
-Int_t  maxProc;;
+Int_t   maxProc;;
 
 //TChain *fChain;
-TString foutname;
-TTree  *fTree;
+TString  foutname;
+TTree    *fTree;
 Long64_t nEntry;
 
 TRandom3 rnd;
@@ -76,9 +91,10 @@ TCutG *gProton = NULL;
 
 vector<TVector2> pt;
 
-TClonesArray *aParticleArray = NULL;
-TClonesArray *aflowcorrArray = NULL;
-STFlowCorrection *flowcorr = NULL;
+TClonesArray     *aParticleArray = NULL;
+TClonesArray     *aflowcorrArray = NULL;
+TClonesArray     *aNLCluster     = NULL;
+STFlowCorrection *flowcorr       = NULL;
 
 vector<TString> vfname;
 vector< vector<Double_t> >  binmax[2];
@@ -99,13 +115,10 @@ Int_t    numGoodTrack;
 Int_t    mtrack;
 TVector3 unitP;
 TVector2 unitP_lang;
-TVector2 unitP_rot;
 TVector2 unitP_1;
 TVector2 unitP_2;
-TVector2 unitP_1r;
-TVector2 unitP_2r;
-UInt_t   mtrack_1;
-UInt_t   mtrack_2;
+TVector3 unitP_fc;
+TVector3 unitP_rc;
 
 Double_t bsPhi[2];
 Double_t bsPhi_1[2];
