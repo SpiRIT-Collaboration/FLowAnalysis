@@ -33,6 +33,7 @@ Int_t mtrack;
 
 TString unitpX;
 TString unitpY;
+TString fhead;
 TString fOutName ;
 Double_t constX= 0.;
 Double_t meanX = 0.;
@@ -42,7 +43,7 @@ Double_t meanY = 0.;
 Double_t sigY  = 1.;
 
 // pt dependence
-
+void SetPsiCorrectionFileHeader(UInt_t isel);
 void SetEnvironment();
 void ShiftingCorrection(STParticle *apar);
 void LoadReCenteringCorrection(UInt_t m);
@@ -76,11 +77,9 @@ void calibFlw()
   
   gROOT->ProcessLine(".! grep -i void calibFlw.C | grep '//%%'");
 
+  //  Flatten_Psi_ntrackthetabin(4);
   Flatten_Psi_ntrackthetabin(2);
 }
-
-
-
 
 //________________________________//%% Executable : 
 void ReCentering(UInt_t isel = 2, Int_t nmin=0, Int_t nmax=100) //%% Executable : Recentering calibration
@@ -96,6 +95,7 @@ void ReCentering(UInt_t isel = 2, Int_t nmin=0, Int_t nmax=100) //%% Executable 
   cc[ic]->Divide(2,m_end);
 
   for(UInt_t m = m_bgn; m < m_end; m++){
+
     fgX[m]  = new TF1(Form("fgX%d_%d",nmin,m),"gaus",-30,30);;
     fgY[m]  = new TF1(Form("fgY%d_%d",nmin,m),"gaus",-30,30);;
 
@@ -106,28 +106,16 @@ void ReCentering(UInt_t isel = 2, Int_t nmin=0, Int_t nmax=100) //%% Executable 
     hQx[m]->SetTitle(htitle);
     hQy[m]->SetTitle(htitle);
 
-
-    switch(isel){
-    case 0:
-      unitpX = "unitP_rot.X()";
-      unitpY = "unitP_rot.Y()";
-      break;
-    case 1:
-      unitpX = "unitP_ave.X()";
-      unitpY = "unitP_ave.Y()";
-      break;
-    case 2:
-      unitpX = "unitP2_rot.X()";
-      unitpY = "unitP2_rot.Y()";
-      break;
-    case 3:
-      unitpX = "unitP2_ave.X()";
-      unitpY = "unitP2_ave.Y()";
-      break;
-    }
+    SetPsiCorrectionFileHeader(isel);
 
     
-    TCut multcut = Form("ntrack[%d]>=%d && ntrack[%d]<%d",seltrackID,nmin,seltrackID,nmax);
+    TString cutdef;
+    if(isel <= 3)
+      cutdef = Form("ntrack[%d]>=%d && ntrack[%d]<%d",seltrackID,nmin,seltrackID,nmax);
+    else
+      cutdef = Form("mtrack_1>=%d   && mtrack_1<%d",nmin,nmax);
+
+    TCut multcut = TCut(cutdef);
 
     rChain[m]->Project(Form("hQx%d_%d",nmin,m), unitpX, multcut);
     rChain[m]->Project(Form("hQy%d_%d",nmin,m), unitpY, multcut);
@@ -193,6 +181,43 @@ void SaveReCenteringData(UInt_t m)
 
 }
 
+void SetPsiCorrectionFileHeader(UInt_t isel)
+{
+  fhead = "Psi";
+  switch(isel){
+  case 0:
+    unitpX = "unitP_rot.X()";
+    unitpY = "unitP_rot.Y()";
+    fhead += "rt";
+    break;
+  case 1:
+    unitpX = "unitP_ave.X()";
+    unitpY = "unitP_ave.Y()";
+    fhead += "av";
+    break;
+  case 2:
+    unitpX = "unitP2_rot.X()";
+    unitpY = "unitP2_rot.Y()";
+    fhead += "2rt";
+    break;
+  case 3:
+    unitpX = "unitP2_ave.X()";
+    unitpY = "unitP2_ave.Y()";
+    fhead += "2av";
+    break;
+  case 4:
+    unitpX = "unitP_1r.X()";
+    unitpY = "unitP_1r.Y()";
+    fhead += "s1r";
+    break;
+  case 5:
+    unitpX = "unitP_2r.X()";
+    unitpY = "unitP_2r.Y()";
+    fhead += "s2r";
+    break;
+  }
+}
+
 
 //________________________________//%% Executable : 
 void Flatten_Psi_ntrackthetabin(UInt_t isel)
@@ -223,9 +248,9 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
   // bin setting for multiplicity
   Double_t ntrkbin[ntrknbin+1];
   Double_t ntrk_min = 0;
-  Double_t ntrk_max = 40;
+  Double_t ntrk_max[] = {40, 40, 40, 40, 22, 22};
   for(UInt_t n = 0; n < ntrknbin+2; n++)
-    ntrkbin[n]   = ntrk_max/ntrknbin * n;
+    ntrkbin[n]   = ntrk_max[isel]/ntrknbin * n;
 
   TH2D *hbaiphi[2];
   TH1D *hniphi[2];
@@ -239,6 +264,7 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
  
   UInt_t im = 0;
 
+
   for(UInt_t m = m_bgn; m < m_end; m++){
 
     hbaiphi[m] = new TH2D(Form("hbaiphi%d",m),  " #Phi before and after; before #Phi [rad]; after #Phi [rad] ", 
@@ -250,8 +276,10 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
     hbthetaiphi[m]= new TH2D(Form("hbthetaiphi%d",m), " before ; theta; #phi;  "           , 200,0.,theta_max, 400,-3.2,3.2); 
     hathetaiphi[m]= new TH2D(Form("hathetaiphi%d",m), " after  ; theta; #phi;  "           , 200,0.,theta_max, 400,-3.2,3.2); 
 
-    hbntrkiphi[m] = new TH2D(Form("hbntrkiphi%d",m)," before ; Number of tracks; #phi"     , 40,0,ntrk_max,400,-3.2,3.2);
-    hantrkiphi[m] = new TH2D(Form("hantrkiphi%d",m)," after  ; Number of tracks; #phi"     , 40,0,ntrk_max,400,-3.2,3.2);
+    hbntrkiphi[m] = new TH2D(Form("hbntrkiphi%d",m)," before ; Number of tracks; #phi"     , 
+			     ntrk_max[isel],0,ntrk_max[isel],400,-3.2,3.2);
+    hantrkiphi[m] = new TH2D(Form("hantrkiphi%d",m)," after  ; Number of tracks; #phi"     , 
+			     ntrk_max[isel],0,ntrk_max[isel],400,-3.2,3.2);
     
     habiphi[m] = new TH2D(Form("habiphi%d",m)," ;#Psi_rot; #Psi_fc",200,-3.2,3.2,200,-3.2,3.2);
 
@@ -259,6 +287,11 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
     auto unitP_rot  = new TVector3();
     auto unitP2_ave = new TVector2();
     auto unitP2_rot = new TVector2();
+    auto unitP_1r   = new TVector2();
+    auto unitP_2r   = new TVector2();
+    UInt_t mtrack_1;
+    UInt_t mtrack_2;
+
 
     rChain[m]->SetBranchAddress("ntrack",ntrack);
     rChain[m]->SetBranchAddress("unitP_ave",&unitP_ave);
@@ -267,6 +300,10 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
     if( isel >= 2) {
       rChain[m]->SetBranchAddress("unitP2_ave",&unitP2_ave);
       rChain[m]->SetBranchAddress("unitP2_rot",&unitP2_rot);
+      rChain[m]->SetBranchAddress("unitP_1r"  ,&unitP_1r);
+      rChain[m]->SetBranchAddress("unitP_2r"  ,&unitP_2r);
+      rChain[m]->SetBranchAddress("mtrack_1"  ,&mtrack_1);
+      rChain[m]->SetBranchAddress("mtrack_2"  ,&mtrack_2);
     }
 
     // Flattening with a shifting method
@@ -317,7 +354,10 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
 
       UInt_t j = ntrknbin;
 
-      Int_t seltrack = ntrack[seltrackID];
+      Int_t seltrack;
+      if( isel < 4 )        seltrack = ntrack[seltrackID];
+      else if( isel == 4 )  seltrack = mtrack_1;
+      else if( isel == 5 )  seltrack = mtrack_2;
 
       while(1){ 
 	if( seltrack >= ntrkbin[j] ){
@@ -341,6 +381,8 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
       if(isel == 1) vec = *unitP_ave;
       else if(isel == 2) vec = TVector3(unitP2_rot->X(), unitP2_rot->Y(), 0.);
       else if(isel == 3) vec = TVector3(unitP2_ave->X(), unitP2_ave->Y(), 0.);
+      else if(isel == 4) vec = TVector3(unitP_1r->X(),   unitP_1r->Y(),   0.); 
+      else if(isel == 5) vec = TVector3(unitP_2r->X(),   unitP_2r->Y(),   0.); 
 
       hniphi[m]->Fill(vec.Phi());
 
@@ -405,12 +447,15 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
 	      habiphi[m]  ->Fill(ophi.at(k), aphi.at(k));
 	  }
 	}
-	
-	TString comm1 = Form("Psicv%d.m%dn%d:flatten_Psi_ntrkthetabin; ntrack>= %f && ntrack< %f theta>= %f && theta< %f",
+
+	TString comm1 = Form(fhead+"cv%d.m%dn%d:flatten_Psi_ntrkthetabin; ntrack>= %f && ntrack< %f theta>= %f && theta< %f",
 			    iVer,j,i,ntrkbin[j],ntrkbin[j+1],thetabin[i],thetabin[i+1]);
 
 	TString comm2 = unitpX + " && " + unitpY;
 	cout << "save " << comm1 << endl;
+
+	
+
 	flowcorr[j][i]-> SaveCorrectionFactor(comm1, comm2);    
       }
     }

@@ -70,10 +70,11 @@ RUNNUMBER1=(\
 "2983" "2984" "2985" "2986" "2988" "2989" "2990" "2991" "2992" "2993" "2997" "2999" \
 "3000" "3002" "3003" "3007" "3039" \
 )
-#RUN=2841 VER=4.2.1 MIX=0 FLC=run2841_rf.v4.2.Psicv0 root flw_process4.C
+#RUN=2841 VER=4.2.1 MIX=0 FLC=run2841_rf.v4.2.Psicv0 FLCS=run2841_rf.v4.5.Psis1rcv0 root flw_process4.C
 
-VERSION=4.4.0
-FLC=run2841_rf.v4.3.Psicv0
+VERSION=4.5.0
+FLC=run2841_rf.v4.5.Psi2rtcv0
+FLCS=run2841_rf.v4.5.Psis1rcv0 
 
 echo $RUNNUMBER1
 
@@ -88,8 +89,8 @@ function process4() {
 	do
             RUN=${RUNNUMBER1[I]}
 	    LOG=log/prooc4_${RUN}_v${VERSION}.log
-	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} root flw_process4.C  '>&' $LOG 
-	    RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} root -b -q flw_process4.C >& $LOG &
+	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} FLCS=${FLCS} root flw_process4.C  '>&' $LOG 
+	    RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} FLCS=${FLCS} root -b -q flw_process4.C >& $LOG &
             let I++
 	    if [ $I -ge ${#RUNNUMBER1[@]} ]; then
 		break;
@@ -97,8 +98,8 @@ function process4() {
 	    
             RUN=${RUNNUMBER1[I]}
 	    LOG=log/prooc4_${RUN}_v${VERSION}.log
-	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} root flw_process4.C  '>&' $LOG 
-	    RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} root -b -q flw_process4.C >& $LOG &
+	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} FLCS=${FLCS} root flw_process4.C  '>&' $LOG 
+	    RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} FLCS=${FLCS} root -b -q flw_process4.C >& $LOG &
             let I++
 	    if [ $I -ge ${#RUNNUMBER1[@]} ]; then
 		break;
@@ -106,8 +107,8 @@ function process4() {
 	    
             RUN=${RUNNUMBER1[I]}
 	    LOG=log/prooc4_${RUN}_v${VERSION}.log
-	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} root flw_process4.C  '>&' $LOG 
-	    RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} root -b -q flw_process4.C >& $LOG 
+	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} FLCS=${FLCS} root flw_process4.C  '>&' $LOG 
+	    RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} FLCS=${FLCS} root -b -q flw_process4.C >& $LOG 
             let I++
 	done
     fi
@@ -120,8 +121,8 @@ function process4() {
 	do
 	    RUN=${RUNNUMBER1[I]}
 	    LOG=log/prooc4_${RUN}_v${VERSION}.log
-	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} root flw_process4.C  '>&' $LOG 
-	    RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} root -b -q flw_process4.C >& $LOG &
+	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} FLCS=${FLCS} root flw_process4.C  '>&' $LOG 
+	    RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} FLCS=${FLCS} root -b -q flw_process4.C >& $LOG &
 	    let I++
 	    if [ $I -ge ${#RUNNUMBER1[@]} ]; then
 		break;
@@ -129,8 +130,8 @@ function process4() {
 
 	    RUN=${RUNNUMBER1[I]}
 	    LOG=log/prooc4_${RUN}_v${VERSION}.log
-	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} root flw_process4.C  '>&' $LOG 
-	    RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} root -b -q flw_process4.C >& $LOG &
+	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} FLCS=${FLCS} root flw_process4.C  '>&' $LOG 
+	    RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} FLCS=${FLCS} root -b -q flw_process4.C >& $LOG &
 	    let I++
 	    if [ $I -ge ${#RUNNUMBER1[@]} ]; then
 		break;
@@ -138,8 +139,8 @@ function process4() {
 	    
 	    RUN=${RUNNUMBER1[I]}
 	    LOG=log/prooc4_${RUN}_v${VERSION}.log
-	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} root flw_process4.C  '>&' $LOG 
-	    RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} root -b -q flw_process4.C >& $LOG 
+	    echo RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} FLCS=${FLCS} root flw_process4.C  '>&' $LOG 
+	    RUN=${RUN} VER=${VERSION} MIX=${MIX} FLC=${FLC} FLCS=${FLCS} root -b -q flw_process4.C >& $LOG 
 	    let I++
 	done
     fi

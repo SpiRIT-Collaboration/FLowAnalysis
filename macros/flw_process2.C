@@ -101,9 +101,15 @@ void flw_process2(Long64_t nmax = -1)
 	nLoop++;
       }
     }
-    
-    SetSubEvent(npar, ntrack[4]);
 
+    if(ntrack[4] > 0) 
+      SetSubEvent(npar, ntrack[4]);
+    else {
+      unitP_ave.SetX(-999.);  unitP_ave.SetY(-999.);
+      unitP_rot.SetX(-999.);  unitP_rot.SetY(-999.);
+      unitP2_ave.SetX(-999.); unitP2_ave.SetY(-999.);
+      unitP2_rot.SetX(-999.); unitP2_rot.SetY(-999.);
+    }
     ntrack[6] = trackID.size();
 
     //       cout << " mtrack " << mtrack << endl;

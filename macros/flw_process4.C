@@ -51,13 +51,11 @@ void flw_process4(Long64_t nmax = -1)
 
     if(ntrack[2] > 0 ) {
 
-      unitP_fc = Psi_FlatteningCorrection( seltrack, TVector3(unitP2_rot->X(), unitP2_rot->Y(), 0.));
-      unitP_rc = Psi_ReCenteringCorrection(seltrack, TVector3(unitP2_rot->X(), unitP2_rot->Y(), 0.));
+      unitP_fc = Psi_FlatteningCorrection( 0, seltrack, TVector3(unitP2_rot->X(), unitP2_rot->Y(), 0.));
+      unitP_rc = Psi_ReCenteringCorrection(0, seltrack, TVector3(unitP2_rot->X(), unitP2_rot->Y(), 0.));
 
-      //      if(seltrack > 2) {
-	SubEventAnalysis();
-	AzmAngleWRTReactionPlane();
-	//      }
+      SubEventAnalysis();
+      AzmAngleWRTReactionPlane();
 
       mflw->Fill();
     }
@@ -81,6 +79,7 @@ void SetEnvironment()
   sVer = gSystem -> Getenv("VER");  // Version ID
   sbVer= gSystem -> Getenv("FLC"); // BRUN version
   sMix = gSystem -> Getenv("MIX");
+  ssVer= gSystem -> Getenv("FLCS"); // BRUN version
   
   if(sRun =="" || sVer == "" ||sMix == "" || sbVer == ""|| !DefineVersion()) {
     cout << " Please type " << endl;
@@ -327,67 +326,78 @@ Bool_t DefineVersion()
 
 UInt_t SetDatabaseFiles()
 {
-  TString  fname = sbVer + ".";
 
-  cout << " fname " << fname  << endl;
+  TString  fname[2];
+  fname[0] = sbVer + ".";
+  
+  UInt_t ncount = 1;
+  if(ssVer != "") {
+    fname[1] = ssVer + ".";
+    ncount = 2;
+  }
 
-  UInt_t ihmsum = 0;
-  UInt_t imtk = 0;
-  while(1){
 
-    UInt_t ihm = 0;
-    UInt_t ihmm = 0;
+  for(UInt_t i = 0; i < ncount; i++){
+    cout << " Database name is " << fname[i]  << endl;
+
+    UInt_t ihmsum = 0;
+    UInt_t imtk = 0;
     while(1){
-
-      TString ffname = fname +  Form("m%dn%d.txt",imtk,ihmm);
-      if( gSystem->FindFile("db",ffname) ){
-	vfname.push_back(ffname);
-	ihm++;  ihmm++;
-	std::cout << " Databse " << ffname << " is loaded. " << std::endl;
+      
+      UInt_t ihm = 0;
+      UInt_t ihmm = 0;
+      while(1){
+	
+	TString ffname = fname[i] +  Form("m%dn%d.txt",imtk,ihmm);
+	if( gSystem->FindFile("db",ffname) ){
+	  vfname[i].push_back(ffname);
+	  ihm++;  ihmm++;
+	  std::cout << " Databse " << ffname << " is loaded. " << std::endl;
+	}
+	else 
+	  break;
       }
-      else 
+      
+      if(ihm > 0 ) {
+	mtkbin[i].push_back(ihm);
+	ihmsum += ihm;
+      }
+      else if(ihm == 0)
 	break;
+      
+      imtk++;
     }
-
-    if(ihm > 0 ) {
-      mtkbin.push_back(ihm);
-      ihmsum += ihm;
-    }
-    else if(ihm == 0)
-      break;
-
-    imtk++;
-  }
-
-  
-  nBin = (UInt_t)vfname.size();
-  if(nBin == 0) return nBin;
-  
-  aflowcorrArray = new TClonesArray("STFlowCorrection",300);  
-  TClonesArray &arr = *aflowcorrArray;
-
-  cout << " nBin " << nBin << endl;
-
-  std::vector<TString>::iterator itb;
-  pbinmin.clear();
-  UInt_t ihm = 0;
- 
-  for(itb = vfname.begin(); itb != vfname.end(); itb++, ihm++){
-
-    new(arr[ihm]) STFlowCorrection();
-
-    flowcorr = (STFlowCorrection*)arr.At(ihm);
-    flowcorr->SetRealOrMix(1);
-    flowcorr->SetRealOrMix((UInt_t)bMix);
-    flowcorr->SetFileName(vfname.at(ihm));
-    flowcorr->LoadCorrectionFactor();
     
-    pbinmin.push_back(make_pair(flowcorr->GetBin_min(0),flowcorr->GetBin_min(1)));
-    cout << " $$$$$$$$$$$ ---->  nbin " << ihm  << " " << pbinmin.at(ihm).first << " : "<< pbinmin.at(ihm).second << endl;    
-    //    flowcorr->ShowBinInformation();
-  }
+  
+    nBin = (UInt_t)vfname[i].size();
+    if(nBin == 0) return nBin;
 
-  binpara   = flowcorr->GetBinParameter(1);
+    aflowcorrArray[i] = new TClonesArray("STFlowCorrection",30);    
+    TClonesArray &arr = *aflowcorrArray[i];
+
+    cout << " nBin " << nBin << endl;
+
+    std::vector<TString>::iterator itb;
+    pbinmin[i].clear();
+    UInt_t ihm = 0;
+    
+    for(itb = vfname[i].begin(); itb != vfname[i].end(); itb++, ihm++){
+      
+      new(arr[ihm]) STFlowCorrection();
+
+      flowcorr = (STFlowCorrection*)arr.At(ihm);
+      flowcorr->SetRealOrMix(1);
+      flowcorr->SetRealOrMix((UInt_t)bMix);
+      flowcorr->SetFileName(vfname[i].at(ihm));
+      flowcorr->LoadCorrectionFactor();
+      
+      pbinmin[i].push_back(make_pair(flowcorr->GetBin_min(0),flowcorr->GetBin_min(1)));
+      cout << " $$$$$$$$$$$ ---->  nbin " << ihm  << " " << pbinmin[i].at(ihm).first << " : "<< pbinmin[i].at(ihm).second << endl;    
+      //    flowcorr->ShowBinInformation();
+    }
+
+    binpara   = flowcorr->GetBinParameter(1);
+  }
 
   return nBin;    
 }
@@ -406,45 +416,47 @@ void SetPtWeight(STParticle *apart)
 
 }
 
-Int_t GetCorrectionIndex(UInt_t ival, Double_t fval)
+Int_t GetCorrectionIndex(UInt_t isel, UInt_t ival, Double_t fval)
 {
-  Int_t index = GetMultiplicityCorretionIndex(ival);
+  Int_t index = GetMultiplicityCorretionIndex(isel, ival);
 
-  index =  GetThetaCorrectionIndex(index, fval);
+  index =  GetThetaCorrectionIndex(isel, index, fval);
 
   return index;
 }
 
-Int_t GetThetaCorrectionIndex(Int_t ival, Double_t fval)
+Int_t GetThetaCorrectionIndex(UInt_t isel, Int_t ival, Double_t fval)
 {
 
   std::vector< std::pair<Double_t, Double_t> >::iterator itr;
-  // itr =  pbinmin.begin();
-  // itr += ival;
   
-  for(itr = pbinmin.begin()+ival; itr != pbinmin.begin()-1; itr--){
+  for(itr = pbinmin[isel].begin()+ival; itr != pbinmin[isel].begin()-1; itr--){
     
     if( fval >= itr->second) {      
-      return itr - pbinmin.begin();
+      return itr - pbinmin[isel].begin();
     }
   }
 
   return -1;
 }
-Int_t GetMultiplicityCorretionIndex(UInt_t ival)
+Int_t GetMultiplicityCorretionIndex(UInt_t isel, UInt_t ival)
 {
   std::vector< std::pair<Double_t, Double_t> >::iterator itr;
 
-  UInt_t ink = mtkbin.size()-1;
 
-  for(itr = pbinmin.end()-1; itr != pbinmin.begin()-1; itr-= mtkbin.at(ink), ink--){
+  UInt_t ink = mtkbin[isel].size()-1;
+
+  for(itr = pbinmin[isel].end()-1; itr != pbinmin[isel].begin()-1; itr-= mtkbin[isel].at(ink), ink--){
     
-    //        cout << "mult " << itr->first<< " : " << itr->second << " -- " << mtkbin.at(ink) << " at " << itr - pbinmin.begin()<< endl;
+    if(isel == 9)
+      cout << "mult " << itr->first<< " : " << itr->second << " -- " << mtkbin[isel].at(ink) << " at " << itr - pbinmin[isel].begin()<< endl;
 
     if(ival >= itr->first) {
-      //            cout << " ntrack  " << ival << " : " << itr - pbinmin.begin() << endl;
 
-      return itr - pbinmin.begin();
+      if(isel == 9)
+      cout << " ntrack  " << ival << " : " << itr - pbinmin[isel].begin() << endl;
+
+      return itr - pbinmin[isel].begin();
     }
   }
 
@@ -453,13 +465,13 @@ Int_t GetMultiplicityCorretionIndex(UInt_t ival)
 
 void CheckPlot(UInt_t ival)
 {
-  if(aflowcorrArray == NULL) return;
+  if(aflowcorrArray[0] == NULL) return;
 
   auto cplot = new TCanvas();
   cplot->Divide(2,2);
 
   std::cout << "Checking histgram " << ival << std::endl;
-  flowcorr = (STFlowCorrection*)aflowcorrArray->At(ival);
+  flowcorr = (STFlowCorrection*)aflowcorrArray[0]->At(ival);
 
   flowcorr->PrintRange();
 
@@ -500,13 +512,13 @@ void SubEventAnalysis()
   if(mtrack_1 > 0 && mtrack_2 > 0){
     
     TVector3 uvec;
-    uvec = Psi_FlatteningCorrection( mtrack_1, TVector3(unitP_1r->X(), unitP_1r->Y(), 0.));
+    uvec = Psi_FlatteningCorrection(1, mtrack_1, TVector3(unitP_1r->X(), unitP_1r->Y(), 0.));
     unitP_1.SetX(uvec.X()); unitP_1.SetY(uvec.Y());
 
-    uvec = Psi_FlatteningCorrection( mtrack_2, TVector3(unitP_2r->X(), unitP_2r->Y(), 0.));
+    uvec = Psi_FlatteningCorrection(1, mtrack_2, TVector3(unitP_2r->X(), unitP_2r->Y(), 0.));
     unitP_2.SetX(uvec.X()); unitP_2.SetY(uvec.Y());
-  }
 
+  }
 
   //UInt_t nboot = 500;
   // auto btsp1 = new STBootStrap(nboot, &elem1); 
@@ -561,7 +573,7 @@ void AzmAngleWRTReactionPlane()
       // ReCentering and Shifting correction
       TVector3 rp_recv = TVector3(-999.,-999.,-999.);
       if(itraex > 0)
-      rp_recv = Psi_FlatteningCorrection( seltrack , TVector3(mExcRP.X(), mExcRP.Y(), 0.));
+	rp_recv = Psi_FlatteningCorrection(0, seltrack , TVector3(mExcRP.X(), mExcRP.Y(), 0.));
 
 
       // bootstrap method
@@ -588,7 +600,7 @@ void AzmAngleWRTReactionPlane()
 }
 
 
-void FlatteningCorrection(STParticle *apart, Int_t ival)
+void FlatteningCorrection(UInt_t isel, STParticle *apart, Int_t ival)
 {
   
   Int_t    mtkBIN = ival;
@@ -605,10 +617,10 @@ void FlatteningCorrection(STParticle *apart, Int_t ival)
   }
 
   
-  Int_t iBIN = GetThetaCorrectionIndex(mtkBIN, binParameter);
+  Int_t iBIN = GetThetaCorrectionIndex(isel, mtkBIN, binParameter);
 
   if(iBIN >= 0){
-    flowcorr = (STFlowCorrection*)aflowcorrArray->At(iBIN);
+    flowcorr = (STFlowCorrection*)aflowcorrArray[0]->At(iBIN);
 
     Double_t phi =  flowcorr->GetCorrection((apart->GetRotatedMomentum()).Phi());
     apart->Flattening( phi );
@@ -619,35 +631,36 @@ void FlatteningCorrection(STParticle *apart, Int_t ival)
 
 }
 
-TVector3 Psi_FlatteningCorrection(Int_t ival, TVector3 Pvec)
+TVector3 Psi_FlatteningCorrection(UInt_t isel, Int_t ival, TVector3 Pvec)
 {
-  Int_t    iBIN = GetCorrectionIndex(ival, Pvec.Theta());
+  Int_t    iBIN = GetCorrectionIndex(isel, ival, Pvec.Theta());
+
 
   TVector3 Psi_cf;
   if(iBIN >= 0){
-    flowcorr = (STFlowCorrection*)aflowcorrArray->At(iBIN);
+    flowcorr = (STFlowCorrection*)aflowcorrArray[isel]->At(iBIN);
     Psi_cf = flowcorr->ReCenteringFourierCorrection(Pvec);
     //    Psi_cf.SetPhi(flowcorr->GetCorrection(Pvec.Phi()));
 
-    // if( Pvec.Phi() >= 2.49 && Pvec.Phi() < 2.5 ){
-    //   flowcorr->ShowBinInformation();
-    //   cout << "---##---> ntrack " << ival
-    // 	   << " iBIN " << iBIN << " Phi " << Pvec.Phi() << " -> " << Psi_cf.Phi() 
-    // 	   << " X : Y : Z " << Pvec.X() << " " << Pvec.Y() << " " << Pvec.Z() 
-    // 	   << endl;
-    // } 
+    if( isel == 9 && ival == 1 )  {
+       flowcorr->ShowBinInformation();
+      cout << "---##---> ntrack " << ival
+	   << " iBIN " << iBIN << " Phi " << Pvec.Phi() << " -> " << Psi_cf.Phi() 
+     	   << " X : Y : Z " << Pvec.X() << " " << Pvec.Y() << " " << Pvec.Z() 
+     	   << endl;
+    } 
   }
 
   return Psi_cf;
 }
 
-TVector3 Psi_ReCenteringCorrection(Int_t ival, TVector3 Pvec)
+TVector3 Psi_ReCenteringCorrection(UInt_t isel, Int_t ival, TVector3 Pvec)
 {
-  Int_t    iBIN = GetCorrectionIndex(ival, Pvec.Theta());
+  Int_t    iBIN = GetCorrectionIndex(isel, ival, Pvec.Theta());
 
   TVector3 Psi_cf;
-  if(iBIN >= 0) {
-    flowcorr = (STFlowCorrection*)aflowcorrArray->At(iBIN);
+  if(iBIN >= 0 && aflowcorrArray[isel] != NULL) {
+    flowcorr = (STFlowCorrection*)aflowcorrArray[isel]->At(iBIN);
     
     Psi_cf = flowcorr->ReCentering(Pvec);
   }

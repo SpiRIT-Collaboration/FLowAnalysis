@@ -11,7 +11,6 @@ UInt_t selReactionPlanef = 10;
 Int_t  seltrack;
 
 // Reading tree
-TClonesArray *flowcorrArray    = NULL;
 Int_t         ntrack[7];
 Int_t         kymult;
 Double_t      ProjA;
@@ -44,9 +43,9 @@ Bool_t    DefineVersion();
 
 void      RotateAsBeamAngle(STParticle *apart, TVector3 *p1, TVector2 *pt);
 void      SetPtWeight(STParticle *apart);
-void      FlatteningCorrection(STParticle *apart, Int_t ival);
-TVector3  Psi_FlatteningCorrection(Int_t ival, TVector3 Pvec);
-TVector3  Psi_ReCenteringCorrection(Int_t ival, TVector3 Pvec);
+void      FlatteningCorrection(UInt_t isel, STParticle *apart, Int_t ival);
+TVector3  Psi_FlatteningCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
+TVector3  Psi_ReCenteringCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
 
 void      SubEventAnalysis();
 void      AzmAngleWRTReactionPlane();
@@ -54,9 +53,9 @@ void      AzmAngleWRTReactionPlane();
 void      LoadPIDFile();
 Int_t     GetPID(Double_t valx, Double_t valy);
 UInt_t    SetDatabaseFiles();
-Int_t     GetCorrectionIndex(UInt_t ival, Double_t fval);
-Int_t     GetThetaCorrectionIndex(Int_t ival, Double_t fval);
-Int_t     GetMultiplicityCorretionIndex(UInt_t ival);
+Int_t     GetCorrectionIndex(UInt_t isel, UInt_t ival, Double_t fval);
+Int_t     GetThetaCorrectionIndex(UInt_t isel, Int_t ival, Double_t fval);
+Int_t     GetMultiplicityCorretionIndex(UInt_t isel, UInt_t ival);
 void      CheckPlot(UInt_t ival = 0);
 
 Int_t   iVer[3];
@@ -70,6 +69,7 @@ Bool_t  BeamAngle;
 Int_t   iAsm;
 TString sbRun;
 TString sbVer;
+TString ssVer;
 TString ssbVer;
 TString scVer;
 UInt_t  nBin; 
@@ -92,20 +92,17 @@ TCutG *gProton = NULL;
 vector<TVector2> pt;
 
 TClonesArray     *aParticleArray = NULL;
-TClonesArray     *aflowcorrArray = NULL;
 TClonesArray     *aNLCluster     = NULL;
 STFlowCorrection *flowcorr       = NULL;
+TClonesArray     *aflowcorrArray[2];
 
-vector<TString> vfname;
+vector<TString> vfname[2];
 vector< vector<Double_t> >  binmax[2];
 vector< vector<Double_t> >  binmin[2];
 
-vector< pair<Double_t, Double_t> > pbinmin;
-vector< pair<UInt_t  , Double_t> > binmatrix;
-vector< pair<UInt_t  , Double_t> >::iterator itbinmatrix;
-vector <vector< pair<UInt_t, Double_t> >::iterator > ppbinmin;
+vector< pair<Double_t, Double_t> > pbinmin[2];
 
-vector<UInt_t> mtkbin;
+vector<UInt_t> mtkbin[2];
 
 UInt_t  binmapsize = 0;
 
