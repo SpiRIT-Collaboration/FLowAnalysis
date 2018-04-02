@@ -72,7 +72,7 @@ RUNNUMBER1=(\
 )
 #RUN=2841 VER=4.2.1 MIX=0 FLC=run2841_rf.v4.2.Psicv0 FLCS=run2841_rf.v4.5.Psis1rcv0 root flw_process4.C
 
-VERSION=4.5.0
+VERSION=4.6.0
 FLC=run2841_rf.v4.5.Psi2rtcv0
 FLCS=run2841_rf.v4.5.Psis1rcv0 
 

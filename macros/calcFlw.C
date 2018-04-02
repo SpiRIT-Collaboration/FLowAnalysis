@@ -410,7 +410,6 @@ void meanPx()                     //%% Executable : Make  plots of <px> vs rapid
     gpp[m] = new TGraphErrors(npp, rap, mptpp, rape, mptppe);
    
   
-
     TString atitle = Form("gpr%d",m);
     gpr[m]->SetName(atitle);
     gpr[m]->SetLineColor(icol[sys[m]]);
@@ -683,6 +682,23 @@ void hpt_plot()
 }
 
 
+void JPS()
+{
+  UInt_t m = 0;
+
+  auto hphir0 = new TH1D("hphir0","fRapidity<0.1; #Delta#phi; dN/d#phi",100,-180.,180);
+  rChain[m]->Project("hphi0","fdeltphi","fRapidity<0.1");
+
+  auto hphir1 = new TH1D("hphir1","Rapidity(0.36 ~ 0.46); #Delta#phi; dN/d#phi",100,-180.,180);
+  rChain[m]->Project("hphi1","fdeltphi","fRapidity>0.36&&fRapidity<0.46");
+
+  auto hphir2 = new TH1D("hphir2","fRapidity>0.7; #Delta#phi; dN/d#phi",100,-180.,180);
+  rChain[m]->Project("hphi2","fdeltphi","fRapidity>0.7");
+
+
+
+}
+
 void comparev1v2(UInt_t m = 0)                 //%% Executable : compare v1 and v2 among p/d/t
 {
   TH1D *hphi[5][nbin][4];
@@ -701,7 +717,7 @@ void comparev1v2(UInt_t m = 0)                 //%% Executable : compare v1 and 
 	hphi[pn][xbin][m]     = new TH1D(hname,partname[pn],60,-3.15,3.15);
 
 	hname = Form("h2phi%d%d_%d",pn,xbin,m);
-	h2phi[pn][xbin][m] = new TH1D(hname,partname[pn]   ,nphi,-3.15,3.15);
+	h2phi[pn][xbin][m]    = new TH1D(hname,partname[pn]   ,nphi,-3.15,3.15);
 	
 	hname = Form("hcos1phi%d%d_%d",pn,xbin,m);
 	hcos1phi[pn][xbin][m] = new TH1D(hname,partname[pn],nphi,-1.,1.);
@@ -984,9 +1000,13 @@ void Plotv1v2(UInt_t selid=2)     //%% Executable : v1 and v2 as a function of r
 
       while( (aPart = (STParticle*)next()) ) {
 
+	auto rpf = aPart->GetReactionPlaneFlag();
 	auto pid = aPart->GetPID();
 
 	if(pid == partid[selid] && aPart->GetCharge() == pcharge ){
+
+
+	  if( pid > 2000 && (rpf == 110 || rpf == 210 ) ) continue;
 
 	  auto rapid = aPart-> GetRapidity();
 
@@ -2012,6 +2032,7 @@ void PlotNeuLANDPsi()             //%%
   TH2D *hnlACCn[4];
   TH1D *hfcrn[4][4];
   TH1D *hfcrp[4][4];
+  TH1D *hfcrnd[4][4];
 
   TCut ncCut[4];
   ncCut[0]="";
@@ -2048,40 +2069,67 @@ void PlotNeuLANDPsi()             //%%
       hfcrn[m][k] = new TH1D(hname, hname+ncCut[k].GetTitle(), 60, -3.15, 3.15);
       rChain[m]->Project(hname,"unitP_fc.Phi()",ncCut[k]);
 
+      hname = Form("hfcrnd%d%d",m,k);
+      hfcrnd[m][k] = new TH1D(hname, hname+ncCut[k].GetTitle(), 60, -180., 180.);
+      rChain[m]->Project(hname,"unitP_fc.Phi()*180./TMath::Pi()",ncCut[k]);
+
       hname = Form("hfcrp%d%d",m,k);
       hfcrp[m][k] = new TH1D(hname, hname+pcCut[k].GetTitle(), 60, -3.15, 3.15);
       rChain[m]->Project(hname,"unitP_fc.Phi()",pcCut[k]);
     }
 
+    if(kFALSE){
+      ic++; id = 1;
+      cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+
+      hACCp[m]->Draw("colz");
+      hnlACCn[m]->Draw("same");
+
+      auto PRLabel = new TLatex(0.7,50,"TPC proton");
+      auto NLLabel = new TLatex(0.2,100,"Neutron");
+      NLLabel->SetTextColor(0);
+      PRLabel->SetTextColor(0);
+      NLLabel->Draw();
+      PRLabel->Draw();
+
+
+      ic++; id = 1;
+      cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
+      cc[ic]->Divide(4,2);
+
+      for(UInt_t k = 0; k < 4; k++){
+	cc[ic]->cd(id); id++;
+	hfcrn[m][k]->SetLineColor(4);
+	hfcrn[m][k]->Draw("e");
+      }
+      for(UInt_t k = 0; k < 4; k++){
+	cc[ic]->cd(id); id++;
+	hfcrp[m][k]->SetLineColor(2);
+	hfcrp[m][k]->Draw("e");
+      }
+    }
 
     ic++; id = 1;
     cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+    hfcrnd[m][2]->SetLineColor(2);
+    hfcrnd[m][2]->SetMarkerColor(2);
+    hfcrnd[m][2]->SetNormFactor(60);
+    hfcrnd[m][2]->SetMarkerStyle(20);
+    hfcrnd[m][2]->SetTitle(";#Psi;1/NdN/d#Psi");
+    hfcrnd[m][2]->Draw("e");
+    hfcrnd[m][0]->SetLineColor(8);
+    hfcrnd[m][0]->SetNormFactor(60);
+    hfcrnd[m][0]->SetMarkerColor(8);
+    hfcrnd[m][0]->SetMarkerStyle(20);;
+    hfcrnd[m][0]->Draw("samee");
 
-    hACCp[m]->Draw("colz");
-    hnlACCn[m]->Draw("same");
 
-    auto PRLabel = new TLatex(0.7,50,"TPC proton");
-    auto NLLabel = new TLatex(0.2,100,"Neutron");
-    NLLabel->SetTextColor(0);
-    PRLabel->SetTextColor(0);
-    NLLabel->Draw();
-    PRLabel->Draw();
+    auto aLeg = new TLegend(0.65,0.7,0.9,0.9,"");
+    aLeg->AddEntry(hfcrnd[m][2] ,"No bias","lp");
+    aLeg->AddEntry(hfcrnd[m][0] ,"Neutron hit","lp");
 
+    aLeg->Draw();
 
-    ic++; id = 1;
-    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
-    cc[ic]->Divide(4,2);
-
-    for(UInt_t k = 0; k < 4; k++){
-      cc[ic]->cd(id); id++;
-      hfcrn[m][k]->SetLineColor(4);
-      hfcrn[m][k]->Draw("e");
-    }
-    for(UInt_t k = 0; k < 4; k++){
-      cc[ic]->cd(id); id++;
-      hfcrp[m][k]->SetLineColor(2);
-      hfcrp[m][k]->Draw("e");
-    }
   }
 }
 

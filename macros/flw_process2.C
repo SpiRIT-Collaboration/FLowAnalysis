@@ -9,10 +9,15 @@
 //----------------------------------------------------------------------
 void flw_process2(Long64_t nmax = -1)
 {
+  //  nmax = 30;
   SetEnvironment();
 
   TDatime dtime;
   rnd.SetSeed(dtime.GetSecond());
+
+  Int_t itime = dtime.Get();
+  gRandom = new TRandom3(0);
+  gRandom->SetSeed(itime);
 
   // I/O
   Open();
@@ -28,8 +33,11 @@ void flw_process2(Long64_t nmax = -1)
     Initialize();
     
     Long64_t nTrack = 0;
-    if(bMix)
+    if(bMix) {
       nTrack = (Long64_t)GetRandomNumTrack(); // get number of track 
+
+      // std::cout << " Number of tracks in mixed event is " << nTrack << std::endl;
+    }
     else {
       fTree->GetEntry(ievt);
 
@@ -85,9 +93,10 @@ void flw_process2(Long64_t nmax = -1)
 	    
 	  numGoodTrack++;
 
+	  //	  cout << "flag " << aPart1->GetReactionPlaneFlag() << " >= " << selReactionPlanef ;;
 	  if( aPart1->GetReactionPlaneFlag() >= selReactionPlanef ){
-	    ntrack[4]++;
-	    
+	    mtrack++;
+
 	    unitP_ave  += aPart1->GetRotatedMomentum().Unit(); 
 	    unitP_rot  += aPart1->GetRPWeight() * aPart1->GetRotatedMomentum().Unit();
 
@@ -100,8 +109,12 @@ void flw_process2(Long64_t nmax = -1)
 	}
 	nLoop++;
       }
+
+      if(bMix)
+	ntrack[4] = mtrack;
     }
 
+    
     if(ntrack[4] > 0) 
       SetSubEvent(npar, ntrack[4]);
     else {
@@ -112,13 +125,14 @@ void flw_process2(Long64_t nmax = -1)
     }
     ntrack[6] = trackID.size();
 
-    //       cout << " mtrack " << mtrack << endl;
-
-    if(ntrack[6] > 0) {
+    if(ntrack[2] > 0) {
       mflw->Fill();
-      hgtc->Fill(mtrack);
 
+      if(!bMix)
+	hgtc->Fill(ntrack[2]);
     }
+    else if(bMix)
+      ntrack[2] = trackID.size();
   }
 
   if(!bMix && mhfile != NULL) {
@@ -544,7 +558,7 @@ void OutputTree(Long64_t nmax)
 
 
   if( bMix ) 
-    mflw = new TTree("mflw","FLOW analysis track mixiing");    
+    mflw = new TTree("mflw","FLOW analysis track mixing");    
   else
     mflw = new TTree("rflw","FLOW analysis");
 
@@ -562,7 +576,6 @@ void OutputTree(Long64_t nmax)
   mflw->Branch("STParticle",&nParticleArray);
 
   mflw->Branch("ntrack"    ,ntrack,"ntrack[7]/I");
-  mflw->Branch("mtrack"    ,&mtrack,"mtrack/I");
   mflw->Branch("event"     ,&event);
   mflw->Branch("mxntrk"    ,&mxntrk);
   mflw->Branch("unitP_ave" ,&unitP_ave);
@@ -586,13 +599,7 @@ void OutputTree(Long64_t nmax)
 
 Long64_t GetRandomNumTrack()
 {
-
-  TDatime dtime;
-
-  Int_t itime = dtime.Get();
-
-  // gRandom = new TRandom3(0);
-  // gRandom->SetSeed(itime);
+  // histGT_r is filled with ntrack[2]
 
   if(!histGT_r){
     cout << " no histgram was found for randowm number " << endl;
@@ -639,7 +646,7 @@ STParticle *GetMixedTrack(Long64_t *ival, Int_t *kval)
       if( snbm != 132 && snbm != 108 && snbm != 124 && snbm != 112) continue;
 
       if( std::abs(ntrack[2] - *kval) < ntr_diff ) {
-	//	cout << "ntrack[2] " << ntrack[2] << " kval " << *kval  << endl;
+	//	cout << "ntrack[2] " << ntrack[2] << " kval " << *kval  << " - " << mevt << endl;
 	break;
       }
     }
