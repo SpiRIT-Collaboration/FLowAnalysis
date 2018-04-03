@@ -110,8 +110,8 @@ void flw_process2(Long64_t nmax = -1)
 	nLoop++;
       }
 
-      if(bMix)
-	ntrack[4] = mtrack;
+
+      ntrack[4] = mtrack;
     }
 
     

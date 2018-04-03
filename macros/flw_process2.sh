@@ -91,7 +91,7 @@ RUNNUMBER1=(\
 )
 
 VERSION=4.7
-RE1MX2=0
+RE1MX2=1
 ## 0 REAL and MIXed
 ## 1 REAL only
 ## 2 MIXed only

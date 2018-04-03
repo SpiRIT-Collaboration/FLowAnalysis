@@ -10,6 +10,7 @@
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TClonesArray.h"
+#include "../analysisformat/STKatana.hh"
 //#include "KatanaRoot/KatanaRoot_Load.h"
 //#include "KyotoRoot/STTriggerArray.hh"
 

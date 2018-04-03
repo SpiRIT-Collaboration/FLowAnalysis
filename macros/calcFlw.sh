@@ -20,7 +20,8 @@ export RNF124=3059,3061,3062,3065,3066,3068,3069,3071,3074,3075,3076,3077,3078,3
 export DB4132=_rf.v4.0.5.cv3
 export DB4132=_rf.v4.5
 export DB4132=_rf.v4.6.0.cv0
-RUN0={$RNF132} DB0=$DB4132 root calcFlw.C
+export DB4132=_rf.v4.7
+#RUN0={$RNF132} DB0=$DB4132 root calcFlw.C
 
-export DBm132=_mf.v4.6
-3RUN0={$RNm132} DB0=$DBm132 root calcFlw.C
+export DBm132=_mf.v4.7
+RUN0={$RNF132} DB0=$DB4132 root calcFlw.C
