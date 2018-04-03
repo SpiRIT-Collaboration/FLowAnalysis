@@ -125,14 +125,14 @@ void flw_process2(Long64_t nmax = -1)
     }
     ntrack[6] = trackID.size();
 
-    if(ntrack[2] > 0) {
+    if(ntrack[3] > 0) {
       mflw->Fill();
 
       if(!bMix)
-	hgtc->Fill(ntrack[2]);
+	hgtc->Fill(ntrack[3]);
     }
     else if(bMix)
-      ntrack[2] = trackID.size();
+      ntrack[3] = trackID.size();
   }
 
   if(!bMix && mhfile != NULL) {
@@ -599,7 +599,7 @@ void OutputTree(Long64_t nmax)
 
 Long64_t GetRandomNumTrack()
 {
-  // histGT_r is filled with ntrack[2]
+  // histGT_r is filled with ntrack[3]
 
   if(!histGT_r){
     cout << " no histgram was found for randowm number " << endl;
@@ -645,8 +645,8 @@ STParticle *GetMixedTrack(Long64_t *ival, Int_t *kval)
 
       if( snbm != 132 && snbm != 108 && snbm != 124 && snbm != 112) continue;
 
-      if( std::abs(ntrack[2] - *kval) < ntr_diff ) {
-	//	cout << "ntrack[2] " << ntrack[2] << " kval " << *kval  << " - " << mevt << endl;
+      if( std::abs(ntrack[3] - *kval) < ntr_diff ) {
+	//	cout << "ntrack[3] " << ntrack[3] << " kval " << *kval  << " - " << mevt << endl;
 	break;
       }
     }
@@ -663,7 +663,7 @@ STParticle *GetMixedTrack(Long64_t *ival, Int_t *kval)
 	mixPart->SetMixedNtrack(nmixTrack);
 	mixPart->SetMixTrackID(imixTrack);
 
-	*kval = ntrack[2];
+	*kval = ntrack[3];
 
 	*ival = mevt;
 	return mixPart;
