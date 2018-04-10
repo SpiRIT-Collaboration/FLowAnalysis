@@ -77,8 +77,8 @@ void calibFlw()
   
   gROOT->ProcessLine(".! grep -i void calibFlw.C | grep '//%%'");
 
-  //  Flatten_Psi_ntrackthetabin(4);
-  Flatten_Psi_ntrackthetabin(2);
+  Flatten_Psi_ntrackthetabin(4);
+  //  Flatten_Psi_ntrackthetabin(2);
 }
 
 //________________________________//%% Executable : 

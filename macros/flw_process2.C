@@ -172,7 +172,6 @@ void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
       Double_t wt = aPart1->GetRPWeight();
       TVector2 ptr= aPart1->GetRotatedPt();
 
-
       if( rndArray[itrack] == 0 ) {
 
 	unitP_1r+= wt * ptr.Unit();
