@@ -1,9 +1,6 @@
 #include "FlowFunctions.h"
 #include "openFlw.C"
 
-auto  htest = new TH1D("htest","all #Phi "  , 50,  -3.2, 3.2);
-
-
 Int_t  seltrackID = 4;
 UInt_t selReactionPlanef = 10;
 Int_t  seltrack;
@@ -180,17 +177,8 @@ void GetRPResolution(UInt_t m)             //%% Executable : Plot Phi and subeve
   auto hdltphi = new TH2D(hname,sysName[sys[m]]+";#Phi ; #Phi_A - #Phi_B",nphi,phi_min, phi_max, nphi,phi_min, phi_max);
   hdltphi -> SetLineColor(icol[sys[m]]);
 
-  hname = Form("hcosdlt%d",m);
-  auto hcosdlt = new TH2D(hname,sysName[sys[m]]+";#Phi ; cos(#Phi_A - #Phi_B)"  ,nphi,phi_min, phi_max, 100,-1.,1.);
-  hdltphi -> SetLineColor(icol[sys[m]]);
-
-  hname = Form("hcos2dlt%d",m);
-  auto hcos2dlt = new TH2D(hname,sysName[sys[m]]+";#Phi ; cos2(#Phi_A - #Phi_B)",nphi,phi_min, phi_max, 100,-1.,1.);
-  hdltphi -> SetLineColor(icol[sys[m]]);
-  
   hname = Form("hsubphi%d",m);
   auto hsubphi = new TH2D(hname,sysName[sys[m]]+";#Phi_A ; #Phi_B",nphi, phi_min, phi_max, nphi,phi_min, phi_max);
-
 
     
   // Retreview
@@ -213,38 +201,12 @@ void GetRPResolution(UInt_t m)             //%% Executable : Plot Phi and subeve
     if(mtrack_1 > 0 && mtrack_2 > 0){
       hrpphi  -> Fill(TVector2::Phi_mpi_pi(unitP_fc->Phi()));
       hdltphi -> Fill(TVector2::Phi_mpi_pi(unitP_fc->Phi()), TVector2::Phi_mpi_pi(unitP_1->Phi() - unitP_2->Phi()));
-      hcosdlt -> Fill(TVector2::Phi_mpi_pi(unitP_fc->Phi()), cos(unitP_1->Phi() - unitP_2->Phi()));
-      hcos2dlt-> Fill(TVector2::Phi_mpi_pi(unitP_fc->Phi()), cos(2.*(unitP_1->Phi() - unitP_2->Phi())));
       hsubphi -> Fill(TVector2::Phi_mpi_pi(unitP_1->Phi()),  TVector2::Phi_mpi_pi(unitP_2->Phi()) );
 
       StoreSubEeventRP(unitP_fc->Phi(), TVector2::Phi_mpi_pi(unitP_1->Phi() - unitP_2->Phi()));
-      htest->Fill(unitP_fc->Phi());
-
     }
   }    
   
-
-  hcosdlt ->FitSlicesY();
-  hcos2dlt->FitSlicesY();
-
-  hname = Form("hcosdlt%d_1",m);
-  TH1D* hcosdlt_1  = (TH1D*)gDirectory->Get(hname);
-  hname = Form("hcos2dlt%d_1",m);
-  TH1D* hcos2dlt_1 = (TH1D*)gDirectory->Get(hname);
-
-
-  ic++;
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
-  htest->Draw();
-  
-
-  ic++;
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
-  cc[ic]->Divide(1,2);
-  cc[ic]->cd(1);
-  if(hcosdlt_1  != NULL) hcosdlt_1->Draw();
-  cc[ic]->cd(2);
-  if(hcos2dlt_1 != NULL) hcos2dlt_1->Draw();
 
 
 
@@ -282,20 +244,11 @@ void StoreSubEeventRP(Double_t Phi, Double_t phi_sub)
 
   Phi     = TVector2::Phi_mpi_pi( Phi );
 
-  allsubcos1.push_back(cos(phi_sub));
-  allsubcos2.push_back(cos(2.*phi_sub));
-
-
   for(UInt_t iphi = 0; iphi < (UInt_t)nphi; iphi++){
     
     if( Phi < minphi + dltphi*(iphi+1)) {
       labphi[iphi] .push_back(Phi);
       subdphi[iphi].push_back(phi_sub);
-
-
-      subcos1[iphi].push_back(cos(1.*phi_sub) );
-      subcos2[iphi].push_back(cos(2.*phi_sub) );
-
       break;
     }
   }
@@ -304,6 +257,8 @@ void StoreSubEeventRP(Double_t Phi, Double_t phi_sub)
 
 void SaveRPResolution(UInt_t m)
 {
+  Bool_t bPlot = kFALSE;
+
   Double_t phi_min = -3.2;
   Double_t phi_max =  3.2;
 
@@ -312,28 +267,21 @@ void SaveRPResolution(UInt_t m)
   itplxe= new Double_t[nphi];
   itpl1 = new Double_t[nphi];
   itpl1e= new Double_t[nphi];
-  itpl2 = new Double_t[nphi];
-  itpl2e= new Double_t[nphi];
   Double_t *getx = new Double_t[2];
   
   TH1D *hphi1[nphi];
-  TH1D *hphi2[nphi];
 
   auto hsubphia1 = new TH1D("hsubphia1","all dphi1 "  , 100, phi_min,    phi_max);
-  auto hsubphia2 = new TH1D("hsubphia2","all dphi2 "  , 100, phi_min,    phi_max);
   auto hsubphi1  = new TH1D("hsubphi1" ,"sub dphi1 "  , 100, phi_min,    phi_max);
-  auto hsubphi2  = new TH1D("hsubphi2" ,"sub dphi2 "  , 100, phi_min,    phi_max);
   
   auto *fcos1 = new TF1("fcos1","[0]+[1]*cos(x)",   -3.,3.);
-  auto *fcos2 = new TF1("fcos2","[0]+[1]*cos(2.*x)",-3.,3.);
 
 
-  ic++; 
-  cc[ic]   = new TCanvas("subphi1", "subphi1"  ,2000, 2000);
-  cc[ic]->Divide(3,nphi/3);
-
-  cc[ic+1] = new TCanvas("subphi2", "subphi2"  ,2000, 2000);
-  cc[ic+1]->Divide(3,nphi/3);
+  if(bPlot){
+    ic++; 
+    cc[ic]   = new TCanvas("subphi1", "subphi1"  ,2000, 2000);
+    cc[ic]->Divide(3,nphi/3);
+  }
 
   for(UInt_t jn = 0; jn < nphi; jn++){
     cout << " jn " << jn << " :size " << subdphi[jn].size() << endl;
@@ -343,23 +291,24 @@ void SaveRPResolution(UInt_t m)
     itplxe[jn] = getx[1];
 
     hsubphi1->Reset();
-    hsubphi2->Reset();
     for(UInt_t ii = 0; ii < (UInt_t)subdphi[jn].size(); ii++){
       
       hsubphia1->Fill(    subdphi[jn].at(ii) );
-      hsubphia2->Fill( 2.*subdphi[jn].at(ii) );
       hsubphi1 ->Fill(    subdphi[jn].at(ii) );
-      hsubphi2 ->Fill( 2.*subdphi[jn].at(ii) );
     }
 
     // fit cos(delta phi)
-    TString hname = Form((TString)hsubphi1->GetName()+"_%d",jn);
-    hphi1[jn] = (TH1D*)hsubphi1->Clone();
-    hphi1[jn]->SetName(hname);
-    cout << " entries " << hphi1[jn]->GetEntries() << endl;
+    if(bPlot){
+      TString hname = Form((TString)hsubphi1->GetName()+"_%d",jn);
+      hphi1[jn] = (TH1D*)hsubphi1->Clone();
+      hphi1[jn]->SetName(hname);
+      cout << " entries " << hphi1[jn]->GetEntries() << endl;
+      cc[ic]->cd(jn+1);
+      hphi1[jn]->Fit("fcos1","","",-3.,3.);
+    }
+    else
+      hsubphi1->Fit("fcos1","Q0","",-3.,3.);
 
-    cc[ic]->cd(jn+1);
-    hphi1[jn]->Fit("fcos1","","",-3.,3.);
 
     Double_t p0   = fcos1->GetParameter(0);
     Double_t p1   = fcos1->GetParameter(1);
@@ -371,35 +320,10 @@ void SaveRPResolution(UInt_t m)
     itpl1[jn]  = v1c;
     itpl1e[jn] = v1ce;
 
-    // fit cos(2*delta phi)
-    hname = Form((TString)hsubphi2->GetName()+"_%d",jn);
-    hphi2[jn] = (TH1D*)hsubphi2->Clone();
-    hphi2[jn]->SetName(hname);
-    
-    cc[ic+1]->cd(jn+1);
-    //    hphi2[jn]->Draw();
-    hphi2[jn]->Fit("fcos2","","",-3.,3.); //"Q0"
-    p0   = fcos2->GetParameter(0);
-    p1   = fcos2->GetParameter(1);
-    p0e  = fcos2->GetParError(0);
-    p1e  = fcos2->GetParError(1);
-    Double_t v2c  = 0.5*p1/p0;
-    Double_t v2ce = 0.5*sqrt( pow(v1c,2)*( pow(p1e/p1,2) + pow(p0e/p0,2) )) ;
-
-    itpl2[jn]  = v2c;
-    itpl2e[jn] = v2ce;
 
     std::cout << setw(5) << jn 
 	      <<  " lab phi " << setw(10) << itplx[jn] 
 	      <<  " sub 1 " << setw(12) << v1c  << " +- " << setw(10) << v1ce
-	      <<  " sub 2 " << setw(12) << v2c  << " +- " << setw(10) << v2ce
-	      << std::endl;
-    
-    getx = vMean(subcos1[jn]);
-    std::cout << "                        "
-	      << " sub 1 " << setw(12) << getx[0] << " +- " << setw(10) << getx[1];
-    getx = vMean(subcos2[jn]);
-    std::cout << " sub 2 " << setw(12) << getx[0] << " +- " << setw(10) << getx[1]
 	      << std::endl;
     std::cout << " ====================-====================" << std::endl;
   }
@@ -408,22 +332,14 @@ void SaveRPResolution(UInt_t m)
   ic++;
   cc[ic]   = new TCanvas(Form("cc%d",ic)  ,Form("cc%d",ic));
   hsubphia1->Fit("fcos1","","",-3.,3.);
-  p0   = fcos1->GetParameter(0);
-  p1   = fcos1->GetParameter(1);
-  p0e  = fcos1->GetParError(0);
-  p1e  = fcos1->GetParError(1);
+
+  Double_t p0   = fcos1->GetParameter(0);
+  Double_t p1   = fcos1->GetParameter(1);
+  Double_t p0e  = fcos1->GetParError(0);
+  Double_t p1e  = fcos1->GetParError(1);
   atpl1  = 0.5*p1/p0;
   atpl1e = 0.5*sqrt( pow(atpl1,2)*( pow(p1e/p1,2) + pow(p0e/p0,2) )) ;
 
-  ic++;
-  cc[ic]   = new TCanvas(Form("cc%d",ic)  ,Form("cc%d",ic));
-  hsubphia2->Fit("fcos2","","",-3.,3.);
-  p0   = fcos1->GetParameter(0);
-  p1   = fcos1->GetParameter(1);
-  p0e  = fcos1->GetParError(0);
-  p1e  = fcos1->GetParError(1);
-  atpl2  = 0.5*p1/p0;
-  atpl2e = 0.5*sqrt( pow(atpl2,2)*( pow(p1e/p1,2) + pow(p0e/p0,2) )) ;
 
   TString fName = "RP" +  sysName[sys[m]] + sDB[m] + ".data";
   gSystem->cd("db");
@@ -431,13 +347,11 @@ void SaveRPResolution(UInt_t m)
   std::fstream fout;
   fout.open(fName, std::fstream::out);
 
-  fout << "     ,    PHI     +- PHI_error ,    v1      +-   v1_error,    v2       +-   v1_error" << std::endl; 
+  fout << "     ,    PHI     +- PHI_error ,    v1      +-   v1_error "  << std::endl; 
 
   fout << ">      ALL                     " 
        << std::setw(12) << atpl1 << " +- " 
        << std::setw(10) << atpl1e
-       << std::setw(12) << atpl2 << " +- " 
-       << std::setw(10) << atpl2e
        << std::endl;
   fout << "##---- " << std::endl;
 
@@ -446,7 +360,6 @@ void SaveRPResolution(UInt_t m)
 	 << std::setw(5) << i 
 	 << std::setw(12) << itplx[i] << " +- " << std::setw(10) << itplxe[i]
 	 << std::setw(12) << itpl1[i] << " +- " << std::setw(10) << itpl1e[i] 
-	 << std::setw(12) << itpl2[i] << " +- " << std::setw(10) << itpl2e[i] 
 	 << std::endl;
   
   gSystem->cd("..");
