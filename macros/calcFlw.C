@@ -174,8 +174,7 @@ void calcFlw() //--------- main ----------//
   gROOT->ProcessLine(".! grep -i void calcFlw.C | grep '//%%'");
 }
 
-
-void GetRPResolutionwChi(UInt_t m)        //%% Executable : 
+void GetRPResolutionwChi(UInt_t m)            //%% Executable : 
 {
   auto hphi0_180  = new TH1D("hphi0_180" ,"#Phi from  0 to 180; #Phi",100,0.,3.2);
   auto hphi90_180 = new TH1D("hphi90_180","#Phi from 90 to 180; #Phi",100,0.,3.2);
@@ -229,7 +228,7 @@ void GetRPResolutionwChi(UInt_t m)        //%% Executable :
 }
 
 
-void GetRPResolution(UInt_t m)             //%% Executable : Plot Phi and subevent, Phi_A and Phi_B correlation
+void GetRPResolution(UInt_t m)                //%% Executable : Plot Phi and subevent, Phi_A and Phi_B correlation
 {
 
   // Booking
@@ -583,8 +582,47 @@ Double_t GetRPInterpolator(UInt_t m, Double_t x)
   return value;
 }
 
+void PlotAcceptance(UInt_t m = 0, UInt_t selid = 2)         //
+{
+  auto haccp    = new TH2D("haccp"   , partname[selid]+"; Rapidity ; Pt [MeV/c]",100,0.,1.5,100,  0.,800.);
 
-void Plotv1v2(UInt_t selid=2)     //%% Executable : v1  as a function of rapidity
+  Int_t pcharge = 1;
+  if(selid == 0)  pcharge = -1;
+
+  Int_t RPflag = 0;
+  if(selid >= 2) RPflag = 10;
+
+  Int_t nevt = SetBranch(m);
+  for(Int_t i = 0; i < nevt; i++){
+    rChain[m]->GetEntry(i);
+
+    TIter next(aArray);
+    STParticle *aPart = NULL;
+  
+    while( (aPart = (STParticle*)next()) ) {
+
+      auto rpf = aPart->GetReactionPlaneFlag();
+      auto pid = aPart->GetPID();
+
+      if(pid == partid[selid] && aPart->GetCharge() == pcharge ){
+
+	if( pid > 2000 && (rpf == 110 || rpf == 210 ) ) continue;
+
+	auto rapid = aPart-> GetRapidity();
+	auto pt    = aPart-> GetRotatedMomentum().Pt();
+
+	haccp -> Fill(rapid, pt);
+      }
+    }
+  }
+
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+  haccp->Draw("colz");
+}
+
+
+void Plotv1v2(UInt_t selid=2)                 //%% Executable : v1  as a function of rapidity
 {
   if(selid > 4 ) return;
 
@@ -610,17 +648,6 @@ void Plotv1v2(UInt_t selid=2)     //%% Executable : v1  as a function of rapidit
   auto hcos2   = new TH2D("hcos2"  ,";cos(2*#Delta(#phi-#Phi)); Rapidity" , 100, -1. , 1. , nbin, 0., 0.8);
 
   for(Int_t m = m_bgn; m < m_end; m++){
-
-
-    auto ymin = y_min[0];
-
-    std::vector< std::vector<Double_t> > bphi(nbin);
-    std::vector< std::vector<Double_t> > rpdbin(nbin);
-
-    for(UInt_t k = 0; k < nbin; k++){
-      bphi[k].clear();
-      rpdbin[k].clear();
-    }
 
     Int_t nevt = SetBranch(m);
     cout << " Number of events " << nevt << endl;
@@ -659,7 +686,7 @@ void Plotv1v2(UInt_t selid=2)     //%% Executable : v1  as a function of rapidit
 	  }
 	}
       } //while( (aPart = (STParticle*)next()) ) {
-    }  
+    }
 
     TH1D *hydphi1[nbin];
     TH1D *hydphi2[nbin];
@@ -708,7 +735,7 @@ void Plotv1v2(UInt_t selid=2)     //%% Executable : v1  as a function of rapidit
       hydphi1[jn]->GetXaxis()->SetRange(2, 99);
 
       if(hydphi1[jn]->GetEntries()>0 && rpd <= 1.){
-	hydphi1[jn]->Fit("fcos1","","",-3.,3.);
+	hydphi1[jn]->Fit("fcos1","Q0","",-3.,3.);
 	Double_t p0   = fcos1->GetParameter(0);
 	Double_t p1   = fcos1->GetParameter(1);
 	Double_t p0e  = fcos1->GetParError(0);
@@ -737,7 +764,7 @@ void Plotv1v2(UInt_t selid=2)     //%% Executable : v1  as a function of rapidit
       hydphi2[jn]->GetXaxis()->SetRange(2, 99);
     
       if(hydphi2[jn]->GetEntries() > 0 && rpd <= 1.){
-	hydphi2[jn]->Fit("fcos1","","",-3.,3.);
+	hydphi2[jn]->Fit("fcos1","Q0","",-3.,3.);
 	Double_t p0   = fcos1->GetParameter(0);
 	Double_t p1   = fcos1->GetParameter(1);
 	Double_t p0e  = fcos1->GetParError(0);
@@ -830,8 +857,7 @@ void Plotv1v2(UInt_t selid=2)     //%% Executable : v1  as a function of rapidit
   gSystem->cd("..");
 }
 
-//void -------------------------------------------------------------------------------//
-void dndy()                       //%% Executable : Make plots of dNdy for p, d, t, pi+-
+void dndy()                                   //%% Executable : Make plots of dNdy for p, d, t, pi+-
 {
 
   //----- booking
@@ -1027,8 +1053,7 @@ void dndy()                       //%% Executable : Make plots of dNdy for p, d,
 }
 
 
-//________________________________//%%
-void meanPx()                     //%% Executable : Make  plots of <px> vs rapidity 
+void meanPx()                                 //%% Executable : Make  plots of <px> vs rapidity 
 {
   PxDistribution(1);
 
@@ -1400,26 +1425,45 @@ void JPS()
 }
 
 
-
-void PtDependece(UInt_t hrm = 1)
+void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 {
 
-  cout << " PtDependence v"<<hrm << endl;
+  Int_t pcharge = 1;
+  if(selid == 0)  pcharge = -1;
 
-  UInt_t   selid[3] = {2,3,4};
+  Int_t RPflag = 0;
+  if(selid >= 2) RPflag = 10;
+
+  cout << " Particle " << partname[selid] << endl;
+  
+  const UInt_t rbin = 3;
+  Double_t rrange[3] = {0.27, 0.54, 1.}; 
+  TString rangeLabel[3];
+  rangeLabel[0] = Form(" Rapidity < %f "    ,rrange[0]);
+  rangeLabel[1] = Form("%f <= Rapidity < %f",rrange[0],rrange[1]);
+  rangeLabel[2] = Form("%f <= Rapidity "    ,rrange[1]);
+
+
+  TH2D *hPtphi1[rbin];
+  TH2D *hPtphi2[rbin];
+  TH2D *hypt[rbin+1];
+
+  UInt_t nbin1 = 16;
+  UInt_t nbin2 = 10;
+
+
+  TString sname;
+  for(UInt_t kn = 0; kn < rbin; kn++){ 
+    hPtphi1[kn] = new TH2D((TString)Form("hPtphi1_%d",kn),";#Delta(#phi-#Phi)  ; Pt [MeV/c]"    , 50, -3.2, 3.2, nbin1, 0., 800);
+    hPtphi2[kn] = new TH2D((TString)Form("hPtphi2_%d",kn),";2 x #Delta(#phi-#Phi)  ; Pt [MeV/c]", 50, -3.2, 3.2, nbin2, 0., 800);
+
+    TString sname = rangeLabel[kn]+"; Rapidity; Pt [MeV/c]";
+    hypt[kn]    = new TH2D((TString)Form("hypt_%d",kn), sname  , 200,0.,1.2, 200,0.,800);
+  }
+
+  hypt[3]    = new TH2D("hypt_3","; Rapidity; Pt [MeV/c]"  , 200,0.,1.2, 200,0.,800);
 
   for(Int_t m = m_bgn; m < m_end; m++){
-
-    vector< vector< vector<Double_t> > > bphi;
-    vector< vector< vector<Double_t> > > ptbin;
-    bphi.resize(3);
-    ptbin.resize(3);
-
-    for(UInt_t im = 0; im < 3; im++){
-      bphi[im] .resize(pt_nbin);
-      ptbin[im].resize(pt_nbin);
-    }
-
 
     Int_t nevt = SetBranch(m);
     cout << " Number of events " << nevt << endl;
@@ -1427,111 +1471,162 @@ void PtDependece(UInt_t hrm = 1)
     for(Int_t i = 0; i < nevt; i++){
       rChain[m]->GetEntry(i);
 
+      if(ntrack[2] == 0) continue;
+
       TIter next(aArray);
       STParticle *aPart = NULL;
 
       while( (aPart = (STParticle*)next()) ) {
 
+	auto rpf   = aPart->GetReactionPlaneFlag();
 	auto pid   = aPart->GetPID();
-	auto rapid = aPart-> GetRapidity();
-      	rapid = (rapid - ycm[sys[m]])/ybeam_cm[sys[m]];
 
-	if(  aPart->GetBestTrackFlag() > 0 && (rapid < rapid_max && rapid > rapid_min) ){
 
-	  auto pt = aPart->GetRotatedMomentum().Pt();
+	if( pid == partid[selid] && aPart->GetCharge() == pcharge && aPart->GetIndividualRPAngle() > -9){
 
-	  UInt_t k = 0; 
-	  while( k < pt_nbin ){
-	    if( pt < pt_min + pt_dbin*(Double_t)(k+1) )
-	      break;
-	    
-	    k++;
-	  }
+	  if( pid > 2000 && (rpf == 110 || rpf == 210 ) ) continue;
 
-	  //	  cout << " K " << k << " " << pt << endl;
+	  auto pt    = aPart->GetRotatedMomentum().Pt();
+	  auto rapid = aPart->GetRapidity();
+	  auto dphi  = aPart->GetAzmAngle_wrt_RP();
 
-	  if(k < pt_nbin){
-	    for(UInt_t j = 0; j < 3; j++){
-	      if( pid == partid[selid[j]] ){
-		bphi[j][k].push_back(aPart->GetAzmAngle_wrt_RP());
-		ptbin[j][k].push_back(pt);
-		
-	      }
-	    }
-	  }
+	  UInt_t irapid = 0;
+	  if(rapid >= rrange[0] && rapid < rrange[1]) 
+	    irapid = 1;
+	  else if(rapid >= rrange[1]) 
+	    irapid = 2; 
+	  
+	  hPtphi1[irapid]->Fill(                        dphi, pt);
+	  hPtphi2[irapid]->Fill(TVector2::Phi_mpi_pi(2.*dphi), pt);
+
+	  hypt[irapid]->Fill(rapid, pt);
+	  hypt[3]->Fill(rapid, pt);
 	}
       }
     }
+  
 
-    Double_t xval [3][pt_nbin];
-    Double_t xvale[3][pt_nbin];
-    Double_t yval [3][pt_nbin];
-    Double_t yvale[3][pt_nbin];
-
-    for(UInt_t j = 0; j < 3; j++) {
-      for(UInt_t jn = 0; jn < pt_nbin; jn++) {
-
-	auto getx = vMean(ptbin[j][jn]);
-	auto gety = vn(hrm, bphi[j][jn]);
-
-	xval [j][jn] = getx[0];
-	xvale[j][jn] = getx[1];
-
-	yval [j][jn] = gety[0];
-	yvale[j][jn] = gety[1];
-
-      }
-    }
+    TString fName = "PT" + sysName[sys[m]] + "_" + partname[selid]+".root";
+    gSystem->cd("data");
+    auto GraphSave = new TFile(fName,"recreate");
     
+    TGraphErrors *gPt_v1[rbin];
+    TGraphErrors *gPt_v2[rbin];
 
-    const UInt_t nsl = 11;
-    UInt_t iisl = 0;
-    auto gr0 = new TGraphErrors(nsl, &xval[0][iisl], &yval[0][iisl], &xvale[0][iisl], &yvale[0][iisl]);
-    gr0->SetName("gr0");
-    gr0->SetLineColor(2);
-    gr0->SetMarkerStyle(20);
-    gr0->SetMarkerColor(2);
+    for(UInt_t kn = 0; kn < rbin ; kn++){
 
-    auto gr1 = new TGraphErrors(nsl, &xval[1][iisl], &yval[1][iisl], &xvale[1][iisl], &yvale[1][iisl]);
-    gr1->SetName("gr1");
-    gr1->SetLineColor(4);
-    gr1->SetMarkerStyle(21);
-    gr1->SetMarkerColor(4);
+      gPt_v1[kn] = new TGraphErrors();
+      gPt_v1[kn]->SetName((TString)Form("gPt_v1%d",kn));
+      TString sname = partname[selid]+"; Pt [MeV/c]; v1";
+      gPt_v1[kn]->SetTitle(sname);
 
-    auto gr2 = new TGraphErrors(nsl, &xval[2][iisl], &yval[2][iisl], &xvale[2][iisl], &yvale[2][iisl]);
-    gr2->SetName("gr2");
-    gr2->SetLineColor(8);
-    gr2->SetMarkerStyle(22);
-    gr2->SetMarkerColor(8);
+      gPt_v2[kn] = new TGraphErrors();
+      gPt_v2[kn]->SetName((TString)Form("gPt_v2%d",kn));
+      sname = partname[selid]+"; Pt [MeV/c]; v2";
+      gPt_v2[kn]->SetTitle(sname);
+    }
+
+    ic++; id = 1; UInt_t idd = 1;
+    cc[ic]   = new TCanvas("dphi1","dphi1",2000,1200);
+    cc[ic]->Divide(nbin1, 3);
+
+    cc[ic+1] = new TCanvas("dphi2","dphi2",1400,1200);
+    cc[ic+1]->Divide(nbin2, 3);
+
+    std::cout << " ---- Resutls ---------------------" << std::endl;
+
+    TH1D *hyPtphi1[rbin][nbin1];
+    TH1D *hyPtphi2[rbin][nbin2];
+
+    for(UInt_t kn = 0; kn < rbin; kn++){
+
+      for(UInt_t jn = 0; jn < nbin1; jn++){
+
+	Double_t ptc = hPtphi1[0]->GetYaxis()->GetBinCenter(jn+1);
+	Double_t ptce= hPtphi1[0]->GetYaxis()->GetBinWidth(jn)/sqrt(12.);
+
+	cc[ic]->cd(id); id++;
+	hyPtphi1[kn][jn] = (TH1D*)hPtphi1[kn]->ProjectionX( (TString)Form("hPtphi1_%d-%d",kn,jn+1),jn+1, jn+1,"eo" );
+	hyPtphi1[kn][jn]->GetXaxis()->SetRange(2,49);
+
+	if( hyPtphi1[kn][jn]->GetEntries() > 0 ){
+	  hyPtphi1[kn][jn]->Fit("fcos1","","",-3.,3.);
+	  Double_t p0   = fcos1->GetParameter(0);
+	  Double_t p1   = fcos1->GetParameter(1);
+	  Double_t p0e  = fcos1->GetParError(0);
+	  Double_t p1e  = fcos1->GetParError(1);
+	  Double_t v1c  = 0.5*p1/p0;
+	  Double_t v1ce = 0.5*sqrt( pow(v1c,2)*( pow(p1e/p1,2) + pow(p0e/p0,2) )) ;
+	  Double_t v1   = v1c/mcos1[m];
+	  Double_t v1e  = sqrt( pow(v1,2)*( pow(v1ce/v1c,2) + pow(mcos1e[m]/mcos1[m],2) ) );
+
+	  gPt_v1[kn]->SetPoint(jn, ptc, v1);
+	  gPt_v1[kn]->SetPointError(jn, ptce, v1e);
+	}
+      }
 
 
-    auto mg = new TMultiGraph();
-    TString aTitle = Form("; Pt[MeV/c]; v%d(a.u.)",hrm); 
-    mg->SetTitle(aTitle);
-    mg->SetName("mg");
-    mg->Add(gr0,"lp");
-    mg->Add(gr1,"lp");
-    mg->Add(gr2,"lp");
+      for(UInt_t jn = 0; jn < nbin2; jn++){
+	Double_t ptc = hPtphi2[0]->GetYaxis()->GetBinCenter(jn+1);
+	Double_t ptce= hPtphi2[0]->GetYaxis()->GetBinWidth(jn)/sqrt(12.);
 
-    // Legend                                                                                                                               
+	cc[ic+1]->cd(idd); idd++;
+	hyPtphi2[kn][jn] = (TH1D*)hPtphi2[kn]->ProjectionX( (TString)Form("hPtphi2_%d-%d",kn,jn+1),jn+1, jn+1,"eo" );
+	hyPtphi2[kn][jn]->GetXaxis()->SetRange(2,49);
 
-    TString sconf = Form("%4.2f < y < %4.2f",rapid_min,rapid_max);
-    auto aLeg = new TLegend(0.1,0.7,0.35,0.9,sconf);
-    aLeg->AddEntry(gr0,partname[selid[0]],"lp");
-    aLeg->AddEntry(gr1,partname[selid[1]],"lp");
-    aLeg->AddEntry(gr2,partname[selid[2]],"lp");
+	if( hyPtphi2[kn][jn]->GetEntries() > 0 ){
+	  hyPtphi2[kn][jn]->Fit("fcos1","","",-3.,3.);
+	  Double_t p0   = fcos1->GetParameter(0);
+	  Double_t p1   = fcos1->GetParameter(1);
+	  Double_t p0e  = fcos1->GetParError(0);
+	  Double_t p1e  = fcos1->GetParError(1);
+	  Double_t v2c  = 0.5*p1/p0;
+	  Double_t v2ce = 0.5*sqrt( pow(v2c,2)*( pow(p1e/p1,2) + pow(p0e/p0,2) )) ;
+	  Double_t v2   = v2c/mcos1[m];
+	  Double_t v2e  = sqrt( pow(v2,2)*( pow(v2ce/v2c,2) + pow(mcos1e[m]/mcos1[m],2) ) );
 
+	  gPt_v2[kn]->SetPoint(jn, ptc, v2);
+	  gPt_v2[kn]->SetPointError(jn, ptce, v2e);
+	} 
+      }
+      
+      gPt_v1[kn]->Write();
+      gPt_v2[kn]->Write();
+    }
 
-    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
-    //    gr0->Draw();
+    //plotting
+    ic++; id = 1;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
+    cc[ic]->Divide(3,1);
+    for(UInt_t kn = 0; kn < rbin; kn++){
+      cc[ic]->cd(id); id++;
+      gPt_v1[kn]->Draw("ALP");
+    }
 
-    mg  ->Draw("a");
-    aLeg->Draw();
+    ic++; id = 1;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
+    cc[ic]->Divide(3,1);
+    for(UInt_t kn = 0; kn < rbin; kn++){
+      cc[ic]->cd(id); id++;
+      gPt_v2[kn]->Draw("ALP");
+    }
 
-    ic++;
+    ic++; id = 1;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,400);
+    cc[ic]->Divide(3,1);
+    for(UInt_t kn = 0; kn < rbin; kn++){
+      cc[ic]->cd(id); id++;
+      hypt[kn]->Draw("colz");
+    }
+
+    ic++; id = 1;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
+    hypt[3]->Draw("colz");
+
   }
+  
+  gSystem->cd("..");
 }
-
 
 void YDependece(UInt_t hrm=1)
 {
@@ -1734,8 +1829,7 @@ void YDependece(UInt_t hrm=1)
 
 
 
-//________________________________//%%
-void FlatteningCheck()            //%% Executable : 
+void FlatteningCheck()                        //%% Executable : 
 {
   //----- Parametres
   Int_t ntrack[7];
@@ -1769,11 +1863,11 @@ void FlatteningCheck()            //%% Executable :
 
       while( (aPart = (STParticle*)next()) ) {
 
-        // auto pid   = aPart->GetPID();
-        // auto charg = aPart->GetCharge();
-        // auto rapid = aPart->GetRapidity();
-        // auto vp    = aPart->GetFlattenMomentum();
-        // auto dltphi= aPart->GetAzmAngle_wrt_RP();;
+	// auto pid   = aPart->GetPID();
+	// auto charg = aPart->GetCharge();
+	// auto rapid = aPart->GetRapidity();
+	// auto vp    = aPart->GetFlattenMomentum();
+	// auto dltphi= aPart->GetAzmAngle_wrt_RP();;
 	auto phi   = aPart->GetFlattenMomentum().Phi();
 	auto theta = aPart->GetFlattenMomentum().Theta();
 	auto flag  = aPart->GetReactionPlaneFlag();
@@ -1806,8 +1900,7 @@ void FlatteningCheck()            //%% Executable :
 
 }
 
-//________________________________//%% Executable : 
-void Phi()                        //%% Executable : 
+void Phi()                                    //%% Executable : 
 {
   //----- Parametres
 
@@ -1845,8 +1938,7 @@ void Phi()                        //%% Executable :
   }
 }
 
-//________________________________//%% Executable :                        
-void CorrectedPsi()                        //%%
+void CorrectedPsi()                           //%%
 {
   auto hrt  = new TH1D("hrt" ,"Original; #Psi",60,-3.15,3.15);
   auto hrc  = new TH1D("hrc" ,"ReCentering; #Psi",60,-3.15,3.15);
@@ -1880,8 +1972,7 @@ void CorrectedPsi()                        //%%
 }
 
 
-//________________________________//%% Executable : 
-void PlotSubEvent(Double_t ml, Double_t mu)               //%%
+void PlotSubEvent(Double_t ml, Double_t mu)   //%%
 {
 
   Double_t mlt[] = {ml, mu};
@@ -1947,8 +2038,8 @@ void PlotSubEvent(Double_t ml, Double_t mu)               //%%
 }
 
 
-//________________________________//%% Executable : 
-void PlotNeuLANDPsi()             //%%
+
+void PlotNeuLANDPsi()                         //%%
 {
   TH2D *hACCp[4];
   TH2D *hnlACCp[4];
@@ -2057,7 +2148,7 @@ void PlotNeuLANDPsi()             //%%
 }
 
 
-//________________________________//%% Executable : 
+//--------------------------------------------//%% Executable : 
 void Template()                   
 {
   //----- Parametres
@@ -2109,8 +2200,7 @@ UInt_t SetBranch(UInt_t m)
   rChain[m]->SetBranchAddress("unitP_1"   ,&unitP_1,&bunitP_1);
   rChain[m]->SetBranchAddress("unitP_2"   ,&unitP_2,&bunitP_2);
   rChain[m]->SetBranchAddress("mtrack"    ,&mtrack);
-  rChain[m]->SetBranchAddress("mtrack_1"  ,&mtrack_1);
-  rChain[m]->SetBranchAddress("mtrack_2"  ,&mtrack_2);
+  rChain[m]->SetBranchAddress("mtrack_1"  ,&mtrack_1);    rChain[m]->SetBranchAddress("mtrack_2"  ,&mtrack_2);
   rChain[m]->SetBranchAddress("unitP_lang",&unitP_lang,&bunitP_lang);
 
   return rChain[m]->GetEntries();

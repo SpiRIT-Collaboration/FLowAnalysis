@@ -128,23 +128,23 @@ function process1(){
             break;
         fi
 
-#	RUN=${RUNNUMBER1[I]} 
-#	LOG=log/prc1_${RUN}_v${VERSION}.log
-#        echo RUN=${RUN} VER=$VERSION root -b -q flw_process1.C '>&' $LOG
-#	RUN=${RUN} VER=$VERSION root -b -q flw_process1.C >& $LOG &
-#	let I++
-#	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
-#            break;
-#        fi
-#
-#	RUN=${RUNNUMBER1[I]} 
-#	LOG=log/prc1_${RUN}_v${VERSION}.log
-#        echo RUN=${RUN} VER=$VERSION root -b -q flw_process1.C '>&' $LOG
-#	RUN=${RUN} VER=$VERSION root -b -q flw_process1.C >& $LOG &
-#	let I++
-#	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
-#            break;
-#        fi
+	RUN=${RUNNUMBER1[I]} 
+	LOG=log/prc1_${RUN}_v${VERSION}.log
+        echo RUN=${RUN} VER=$VERSION root -b -q flw_process1.C '>&' $LOG
+	RUN=${RUN} VER=$VERSION root -b -q flw_process1.C >& $LOG &
+	let I++
+	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
+            break;
+        fi
+
+	RUN=${RUNNUMBER1[I]} 
+	LOG=log/prc1_${RUN}_v${VERSION}.log
+        echo RUN=${RUN} VER=$VERSION root -b -q flw_process1.C '>&' $LOG
+	RUN=${RUN} VER=$VERSION root -b -q flw_process1.C >& $LOG &
+	let I++
+	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
+            break;
+        fi
 
 	RUN=${RUNNUMBER1[I]} 
 	LOG=log/prc1_${RUN}_v${VERSION}.log
