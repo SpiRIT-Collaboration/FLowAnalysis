@@ -431,6 +431,11 @@ Int_t GetBeamPID(){
       pid = 124;
   }
 
+  if(g112Sn){
+    if(g112Sn->IsInside(aoq,z))
+      pid = 112;
+  }
+
   return pid;
 }
 
@@ -463,9 +468,14 @@ void BeamPID()
 
     if(g124Sn != NULL) std::cout << "gcut124Sn with sigma20 from data/gcut124Sn.ROOT" <<std::endl;
     else std::cout << "data/gcut124Sn.ROOT was not found" << std::endl;
-
-    //    g124Sn->Print();
-
+  }
+  else if(SnA == 112){
+    auto gcutFile = new TFile("data/gcut112Sn.ROOT");
+    g112Sn=(TCutG*)gcutFile->Get("sigma20");
+    gcutFile->Close();
+    
+    if(g112Sn != NULL) std::cout << "gcut112Sn with sigma20 from data/gcut112Sn.ROOT" <<std::endl;
+    else std::cout << "data/gcut112Sn.ROOT was not found" << std::endl;
   }    
 }
 
@@ -763,6 +773,8 @@ void SetBigRIPS()
     beamDir = gSystem -> Getenv("STBEAM108");
   else if(SnA == 124)
     beamDir = gSystem -> Getenv("STBEAM124");
+  else if(SnA == 112)
+    beamDir = gSystem -> Getenv("STBEAM112");
 
   auto beamFile = "beam_run"+sRun+".ridf.root";
 

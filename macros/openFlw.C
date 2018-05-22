@@ -14,6 +14,8 @@ void openFlw()
     aRun[i] = gSystem -> Getenv(form);
     form = Form("DB%d",i);
     sDB[i] = gSystem -> Getenv(form);
+    if( i > 0 && sDB[i] == "")
+      sDB[i] = sDB[0];
   }
 
 
@@ -40,7 +42,7 @@ UInt_t GetSystem(UInt_t ival)
 
 UInt_t OpenChain(UInt_t m)
 {
-  if( m > 2) exit(0);
+  if( m > 4) exit(0);
   
   Int_t nrun = (aRun[m].Length()-1)/5;
   cout << aRun[m] << "-> nrun " << nrun << endl;;
@@ -80,7 +82,7 @@ UInt_t OpenChain(UInt_t m)
 
   TString fform = sDB[m] + ".root";
  
-  LChain[m] = new TChain(treename);
+  rChain[m] = new TChain(treename);
 
   for(Int_t i = 0; i < (Int_t)lrun.size(); i++){
     TString rootdir = "data/"; 
@@ -89,22 +91,24 @@ UInt_t OpenChain(UInt_t m)
     cout << fname << endl;
 
     if(gSystem->FindFile(rootdir,fname))
-      LChain[m]->Add(fname);
+      rChain[m]->Add(fname);
     else
       std::cout << " File is not found " << fname << std::endl;
   }
   
 
-  if(LChain[m]->GetListOfFiles()->GetEntries() == 0){
+  if(rChain[m]->GetListOfFiles()->GetEntries() == 0){
     std::cout << " No files are loaded. " << endl;    
     exit(0);
   }
 
 
-  if( LChain[m]!=NULL ){
+  if( rChain[m]!=NULL ){
     std::cout << "Runs are linked to rChain"<< m  << std::endl;
-    LChain[m]->SetName(Form("rChain%d",m));
-    std::cout << " Entries :" << LChain[m]->GetEntries() << std::endl;
+    rChain[m]->SetName(Form("rChain%d",m));
+    std::cout << " Entries :" << rChain[m]->GetEntries() << std::endl;
+
+    m_end = m+1;
   }
 
 

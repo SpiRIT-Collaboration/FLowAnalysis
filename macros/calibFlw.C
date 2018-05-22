@@ -77,8 +77,8 @@ void calibFlw()
   
   gROOT->ProcessLine(".! grep -i void calibFlw.C | grep '//%%'");
 
+  Flatten_Psi_ntrackthetabin(2);
   Flatten_Psi_ntrackthetabin(4);
-  //  Flatten_Psi_ntrackthetabin(2);
 }
 
 //________________________________//%% Executable : 
@@ -121,10 +121,10 @@ void ReCentering(UInt_t isel = 2, Int_t nmin=0, Int_t nmax=100) //%% Executable 
     rChain[m]->Project(Form("hQy%d_%d",nmin,m), unitpY, multcut);
 
     cc[ic]->cd(id); id++;
-    hQx[m]->Fit(Form("fgX%d_%d",nmin,m));
+    hQx[m]->Fit(Form("fgX%d_%d",nmin,m),"Q0");
 
     cc[ic]->cd(id); id++;
-    hQy[m]->Fit(Form("fgY%d_%d",nmin,m));
+    hQy[m]->Fit(Form("fgY%d_%d",nmin,m),"Q0");
 
     constX= fgX[m]->GetParameter(0);
     meanX = fgX[m]->GetParameter(1);
@@ -449,7 +449,7 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
 	}
 
 	TString comm1 = Form(fhead+"cv%d.m%dn%d:flatten_Psi_ntrkthetabin; ntrack>= %f && ntrack< %f theta>= %f && theta< %f",
-			    iVer,j,i,ntrkbin[j],ntrkbin[j+1],thetabin[i],thetabin[i+1]);
+			     iVer,j,i,ntrkbin[j],ntrkbin[j+1],thetabin[i],thetabin[i+1]);
 
 	TString comm2 = unitpX + " && " + unitpY;
 	cout << "save " << comm1 << endl;
@@ -460,24 +460,24 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
       }
     }
 
-  
-    im++;
-    cc[im] = new TCanvas(Form("cc%d",im),Form("cc%d",im),700,500);
-    cc[im]->Divide(2,2);
+    if(kFALSE){  
+      im++;
+      cc[im] = new TCanvas(Form("cc%d",im),Form("cc%d",im),700,500);
+      cc[im]->Divide(2,2);
     
-    UInt_t iv = 1;
-    cc[im]->cd(iv); iv++;
-    if(hbthetaiphi[m])  hbthetaiphi[m]->Draw("colz");
+      UInt_t iv = 1;
+      cc[im]->cd(iv); iv++;
+      if(hbthetaiphi[m])  hbthetaiphi[m]->Draw("colz");
     
-    cc[im]->cd(iv); iv++;
-    if(hbntrkiphi[m])   hbntrkiphi[m]->Draw("colz");
+      cc[im]->cd(iv); iv++;
+      if(hbntrkiphi[m])   hbntrkiphi[m]->Draw("colz");
 
-    cc[im]->cd(iv); iv++;
-    if(hathetaiphi[m])  hathetaiphi[m]->Draw("colz");
+      cc[im]->cd(iv); iv++;
+      if(hathetaiphi[m])  hathetaiphi[m]->Draw("colz");
 
-    cc[im]->cd(iv); iv++;
-    if(hantrkiphi[m])   hantrkiphi[m]->Draw("colz");
-    
+      cc[im]->cd(iv); iv++;
+      if(hantrkiphi[m])   hantrkiphi[m]->Draw("colz");
+    }
     
     cc[im]->cd(1);
    
