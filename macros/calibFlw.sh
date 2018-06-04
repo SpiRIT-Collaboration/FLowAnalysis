@@ -10,11 +10,11 @@ export RNm132=2841,2843,2844,2845,2846,2848,2849,2850,2851 #,2852,2855,2856,2857
 
 source openRun.sh
 
-export DBP2=_rf.v5.0
+export DBP2=_rf.v5.1
 
-RUN0={$RNF132} DB0=$DBP2 VER=0 root  calibFlw.C 
+RUN0={$RN108} DB0=$DBP2 VER=0 root  calibFlw.C 
 
 
-#RUN0={$RNF132t} DB0=$DBP2 VER=3 root -b -q calibFlw.C > logz
+#RUN0={$RN132t} DB0=$DBP2 VER=3 root -b -q calibFlw.C > logz
 
 

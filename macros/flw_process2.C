@@ -259,10 +259,10 @@ void SetFlowFlag(STParticle *apart)
 	   apart->GetMaxdEdxFlag()       > 0 &&
 	   apart->GetMaxMomentumFlag()   > 0
 	   ) {
-    apart->SetReactionPlaneFlag(10);
+    apart->SetReactionPlaneFlag(1000);
 
     if(apart->GetNDFFlag())
-      apart->SetReactionPlaneFlag(20);
+      apart->SetReactionPlaneFlag(2000);
   }
   else
     apart->SetReactionPlaneFlag(0);

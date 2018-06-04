@@ -42,14 +42,17 @@ private:
 
 public:
   Int_t GetNHit ()  {return ncnhit;}
+  UInt_t GetPID()   {return ncPID;}
+
   Double_t GetEdep(){return ncedep;}
   Double_t GetTOF() {return nctof;}
 
   Double_t GetBeta() {return ncbeta;}
   Double_t GetGamma(){return ncgamma;}
-  Double_t GetMom(){return ncP.Mag(); }
-  TVector3 GetP()  {return ncP;}
-
+  Double_t GetMom()  {return ncP.Mag(); }
+  TVector3 GetP()    {return ncP;}
+  Double_t GetEnergy()   {return ncE; }
+  Double_t GetRapidity() {return ncRapidity; }
 
   Double_t GetLocalX(){return nclocalx;}
   Double_t GetLocalY(){return nclocaly;}
@@ -76,6 +79,7 @@ public:
   Int_t GetVetoHitMid(){return ncveto_mid;}
   Int_t GetVetoHitLoose(){return ncveto_loose;}
 
+  
   // on the assumption of neutron
 
  private:

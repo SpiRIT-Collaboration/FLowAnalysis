@@ -541,7 +541,7 @@ void AzmAngleWRTReactionPlane()
 
   while( (aPart1 = (STParticle*)next()) ) {
 
-    if(aPart1->GetReactionPlaneFlag() > 100){
+    //    if( aPart1->GetReactionPlaneFlag() > 1000 || aPart1->GetPID() == 211){
 
       Double_t wt = aPart1->GetRPWeight();
       TVector2 pt = aPart1->GetRotatedPt();
@@ -557,7 +557,7 @@ void AzmAngleWRTReactionPlane()
       UInt_t itraex = 0;
       while( (restPart = (STParticle*)rest()) ) {
 
-	if( aPart1 != restPart && restPart->GetReactionPlaneFlag() > 100 ) {
+	if( aPart1 != restPart && restPart->GetReactionPlaneFlag() > 1000 ) {
 
 	  Double_t wt_rp = restPart->GetRPWeight();
 	  TVector2 pt_rp = restPart->GetRotatedPt();
@@ -593,9 +593,9 @@ void AzmAngleWRTReactionPlane()
       //aPart1->SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( unitP2_rot->Phi() ));
       //      aPart1->SetIndividualRPAngle( (Double_t)TVector2::Phi_mpi_pi( rp_rec.Phi() ));
 
-    }
-    else
-      aPart1->SetAzmAngle_wrt_RP(-10.);
+      //}
+      // else
+      // aPart1->SetAzmAngle_wrt_RP(-10.);
   }
 }
 

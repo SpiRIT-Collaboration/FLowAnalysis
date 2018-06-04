@@ -1,24 +1,30 @@
 TCanvas *cc0;
 TCanvas *cc1;
 
+const UInt_t nsys = 4;
+const UInt_t nprt = 5;
+ 
 // --> configuration
-Double_t y_cm[4]= {0.382453,  0.364873, 0.390302, 0.354066};
-Double_t y_bc[4]= {0.360199,  0.377779, 0.354065, 0.390301};
-Double_t y_bl[4]= {0.742652,  0.742652, 0.744367, 0.744367};
+Double_t y_cm[nsys]= {0.382453,  0.364873, 0.390302, 0.354066};
+Double_t y_bc[nsys]= {0.360199,  0.377779, 0.354065, 0.390301};
+Double_t y_bl[nsys]= {0.742652,  0.742652, 0.744367, 0.744367};
 
-TString fsys[4] = {"132Sn+124Sn","108Sn+112Sn","124Sn+112Sn","112Sn+124Sn"};
-TString rsys[4] = {"132",        "108",        "124",        "112"};
-TString fpid[3] = {"proton","deuteron","triton"};  
-UInt_t  imrk[4] = {20, 21, 22, 23};
-Size_t  imsz[4] = {1, 1, 1.3, 1.3};
-Color_t icol[3][4]= { {kRed,          kBlue,  kOrange-3,   kGreen+1}, 
-		      {kBlue+2,   kOrange+7,  kGreen-3,     kPink+9},
-		      {kGreen-3,    kPink+7,  kCyan-1,    kYellow-2} };
+TString fsys[nsys] = {"132Sn+124Sn","108Sn+112Sn","124Sn+112Sn","112Sn+124Sn"};
+TString rsys[nsys] = {"132",        "108",        "124",        "112"};
+TString fpid[nprt] = {"proton","deuteron","triton","pi-","pi+"};  
+UInt_t  imrk[nsys] = {20, 21, 22, 23};
+Size_t  imsz[nsys] = {1, 1, 1.3, 1.3};
+Color_t icol[nprt][nsys]= { {kRed,          kBlue,  kOrange-3,   kGreen+1}, 
+			    {kBlue+2,   kOrange+7,  kGreen-3,     kPink+9},
+			    {kGreen-3,    kPink+7,  kCyan-1,    kYellow-2}, 
+			    {kRed-2,      kBlue-2,  kOrange-2,   kGreen-1},
+			    {kBlue-3,   kOrange+5,  kGreen+3,     kPink-9} };
 
 
-Double_t ycmoff[3][4] = {{0.,0.,0.,0}, {0.,0.,0.,0},{0.,0.,0.,0}};
+Double_t ycmoff[nprt][nsys] = {{0.,0.,0.,0}, {0.,0.,0.,0},{0.,0.,0.,0},
+			    {0.,0.,0.,0}, {0.,0.,0.,0}};
 
-//Double_t ycmoff[3][4] = { {-0.0810542, -0.0686041, -0.0942895, -0.0773481},
+//Double_t ycmoff[3][nsys] = { {-0.0810542, -0.0686041, -0.0942895, -0.0773481},
 //			  {0.0930758,  0.108757,   0.0723492,  0.0813742},
 //			  {0.,0.,0.,0}};
 
@@ -35,15 +41,15 @@ void PlotRapidityDependence()
 {
 
   // --> Plotting selection                                                                                                                           
-  Bool_t bsys[4]  = { 0, 1, 0, 0};  //{"132","108","124","112"};
-  Bool_t bpid[3]  = { 1, 1, 1};     //{"proton","deuteron","triton"};
+  Bool_t bsys[nsys]  = { 0, 1, 0, 0};  //{"132","108","124","112"};
+  Bool_t bpid[nprt]  = { 1, 1, 1, 1, 1};     //{"proton","deuteron","triton","pi-","pi+"};
 
   Bool_t bCM = kTRUE; // cm frame
   //------------------------------
 
-  TString fname[4][3];
-  for(UInt_t is = 0; is < 4; is++){
-    for(UInt_t ip = 0; ip < 3; ip++){
+  TString fname[nsys][nprt];
+  for(UInt_t is = 0; is < nsys; is++){
+    for(UInt_t ip = 0; ip < nprt; ip++){
       fname[is][ip] = "data/VN"+rsys[is]+"Sn_"+fpid[ip]+".root";
     }
   }
@@ -60,11 +66,11 @@ void PlotRapidityDependence()
 
   UInt_t igr = 0;
 
-  for(UInt_t is = 0; is < 4; is++){
+  for(UInt_t is = 0; is < nsys; is++){
 
     if( !bsys[is] ) continue;
 
-    for(UInt_t ip = 0; ip < 3; ip++){
+    for(UInt_t ip = 0; ip < nprt; ip++){
 
       if( !bpid[ip] ) continue;
 

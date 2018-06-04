@@ -2,7 +2,7 @@
 #include "openFlw.C"
 
 Int_t  seltrackID = 4;
-UInt_t selReactionPlanef = 10;
+UInt_t selReactionPlanef = 1000;
 Int_t  seltrack;
 
 TCanvas *cc[12];
@@ -20,10 +20,6 @@ Double_t ysig[4];
 const UInt_t  nbin = 16;
   
 UInt_t ic = -1;
-TChain *rChain[4];
-
-UInt_t m_bgn = 0;
-UInt_t m_end = 1;
 Int_t ntrack[7];
 auto aArray = new TClonesArray("STParticle",100);
 
@@ -568,7 +564,7 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
 }
 
 //________________________________//%% Executable : 
-void Flatten_iphi_ntrkthetabin()  //%% Executable : 
+void Flatten_iphi_ntrkthetabin()  //%% Not used  : 
 {
   std::cout << "flatten_iphi_thetamtkbin" << std::endl;
 
@@ -670,8 +666,6 @@ void Flatten_iphi_ntrkthetabin()  //%% Executable :
       
       while( (aPart1 = (STParticle*)next()) ){
 
-
-	//	if( aPart1->GetReactionPlaneFlag() == 10 ){
 	if( aPart1->GetReactionPlaneFlag() == 20 ){
 
 	  ShiftingCorrection(aPart1);
