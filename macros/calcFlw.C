@@ -2169,6 +2169,9 @@ void PlotNeuLANDPsi()                         //%%
 //--------------------------------------------//%% Executable : 
 void PlotNeuLANDv1v2()                        //%% Executable : 
 {
+  std::cout << " Executing : PlotNeuLANDv1v2 " << std::endl;
+
+
   //----- Parametres                                                                                                                       
 
   UInt_t nybin  = 5;
@@ -2203,16 +2206,21 @@ void PlotNeuLANDv1v2()                        //%% Executable :
    	auto pid      = aNLClust->GetPID();
    	auto rapidity = aNLClust->GetRapidity();
    	auto phi      = aNLClust->GetGlobalPos().Phi(); 
+	auto veto_all = aNLClust->GetVetoHitAll();
+	auto veto_bar = aNLClust->GetVetoHitOne();
+	auto veto_mid = aNLClust->GetVetoHitMid();
+
 
    	auto dphi     = TVector2::Phi_mpi_pi(unitP_fc->Phi() - phi);
   	
-   	if( pid == 2112 ){
+	//   	if( pid == 2112 && veto_all == 0){ // neutron
+   	if( pid == 2112 ){ // neutron
   	  
    	  hdphin1->Fill(                          dphi , rapidity );
    	  hdphin2->Fill( TVector2::Phi_mpi_pi(2.* dphi), rapidity );
 
    	}
-   	else if( pid == 2212){
+   	else if( pid == 2212){  // proton
 
    	  hdphip1->Fill(                          dphi , rapidity );
    	  hdphip2->Fill( TVector2::Phi_mpi_pi(2.* dphi), rapidity );
@@ -2221,18 +2229,11 @@ void PlotNeuLANDv1v2()                        //%% Executable :
       }
     }
   
-
-    TH1D *hydphin1[nybin];
-    TH1D *hydphin2[nybin];
-    TH1D *hydphip1[nybin];
-    TH1D *hydphip2[nybin];
-
+    // **
+    // Output file for graphs
     TString fName = "NL" + sysName[isys[m]] + ".root";
     gSystem->cd("data");
     auto GraphSave = new TFile(fName,"recreate");
-
-    // **
-    // Sliced along with rapidity
 
     // neutron
     auto gvn_v1 = new TGraphErrors();
@@ -2252,6 +2253,8 @@ void PlotNeuLANDv1v2()                        //%% Executable :
 
 
 
+    // **
+    // Calculate resutls
     std::cout << " ---- Resutls ---------------------" << std::endl;
     std::cout << " < cos phi > " << mcos1[isys[m]] << std::endl;
 
@@ -2262,6 +2265,12 @@ void PlotNeuLANDv1v2()                        //%% Executable :
     cc[ic+1] = new TCanvas("dphin2","dphi2",800,1000);
     cc[ic+1]->Divide(2, nybin);
 
+    // **
+    // Sliced along with rapidity
+    TH1D *hydphin1[nybin];
+    TH1D *hydphin2[nybin];
+    TH1D *hydphip1[nybin];
+    TH1D *hydphip2[nybin];
 
     // v1 : neutron
     UInt_t npnt = 0;
@@ -2302,7 +2311,6 @@ void PlotNeuLANDv1v2()                        //%% Executable :
     }
 
     //v2 : neutron
-
     npnt = 0;
     for(UInt_t jn = 0; jn < nybin; jn++){
 
@@ -2460,6 +2468,14 @@ void PlotNeuLANDv1v2()                        //%% Executable :
     cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     mv2->Draw("apl");
     aLeg2->Draw();
+
+    gvn_v1->Write();
+    gvn_v2->Write();
+    gvp_v1->Write();
+    gvp_v2->Write();
+
+    //    GraphSave->Close();    
+
   }
 
   gSystem->cd("..");
