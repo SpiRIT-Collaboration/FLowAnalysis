@@ -44,7 +44,7 @@ void PlotNLRapidityDependence()
 {
 
   // --> Plotting selection                                                                                                                           
-  Bool_t bsys[nsys]  = { 1, 1, 0, 0};  //{"132","108","124","112"};
+  Bool_t bsys[nsys]  = { 1, 1, 1, 1};  //{"132","108","124","112"};
   Bool_t bpid[nprt]  = { 1, 0};     //{"neutron", "proton"}
 
   Bool_t bCM = kTRUE; // cm frame
@@ -172,7 +172,7 @@ void PlotNLRapidityDependence()
   
 
   cc1 = new TCanvas("cc1","v2");
-  mv2->SetMaximum(0.1);
+  mv2->SetMaximum(0.5);
   mv2->Draw("ALP");
   auto aLineX2 = new TLine(mv2->GetXaxis()->GetXmin(), 0., mv2->GetXaxis()->GetXmax(), 0.);
   auto aLineY2 = new TLine(0., mv2->GetYaxis()->GetXmin(), 0., mv2->GetYaxis()->GetXmax());

@@ -33,6 +33,8 @@ void flw_process2(Long64_t nmax = -1)
     Initialize();
     
     Long64_t nTrack = 0;
+
+    //if 
     if(bMix) {
       nTrack = (Long64_t)GetRandomNumTrack(); // get number of track 
 

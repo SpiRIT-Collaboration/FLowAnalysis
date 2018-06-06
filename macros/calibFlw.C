@@ -882,7 +882,7 @@ void SetEnvironment()
   sVer = gSystem -> Getenv("VER");  // Version ID                                                                                                       
   if( sVer == "") {
     cout << " Please type " << endl;
-    cout << "$ RUN0={####} DB0=#.# VER=# root flw_process3.C " << endl;
+    cout << "$ RUN0={$RNF###} DB0=\"_rf.v#.#\" VER=# root calibFlw.C " << endl;
     exit(0);
   }
 

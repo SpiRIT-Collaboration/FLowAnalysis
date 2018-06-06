@@ -12,6 +12,7 @@ void openFlw()
   for(UInt_t i = 0 ; i < nconfig; i++){
     TString form = Form("RUN%d",i);
     aRun[i] = gSystem -> Getenv(form);
+
     form = Form("DB%d",i);
     sDB[i] = gSystem -> Getenv(form);
     if( i > 0 && sDB[i] == "")
@@ -44,7 +45,9 @@ UInt_t OpenChain(UInt_t m)
 {
   if( m > 4) exit(0);
   
-  Int_t nrun = (aRun[m].Length()-1)/5;
+  cout << "aRUN.length " << aRun[m].Length() << endl;
+
+  Int_t nrun = (aRun[m].Length())/5;
   cout << aRun[m] << "-> nrun " << nrun << endl;;
 
   printHeader = "FlwRUN"+aRun[0](1,4)+ Form("m%d",nrun) + sDB[0]; 
@@ -62,11 +65,11 @@ UInt_t OpenChain(UInt_t m)
     cout << " lrun = " << lrun.at(i) << endl;
 
   
-  TString treename = "cflw";
-  
+
   cout << "sDB[0] " << sDB[0] << " " << sDB[0](10,1) << endl;
 
-
+  // set tree
+  TString treename = "cflw";  
   if(sDB[0]( sDB[0].First("c"), 2 ) == "cv") // output of flw_process4.C  run2844_rf.v0.0.0.root  
       treename = "cflw";
   
@@ -80,8 +83,10 @@ UInt_t OpenChain(UInt_t m)
     treename = "mflw";
 
 
+  // loading file
   TString fform = sDB[m] + ".root";
  
+  UInt_t ifnd = 0;
   rChain[m] = new TChain(treename);
 
   for(Int_t i = 0; i < (Int_t)lrun.size(); i++){
@@ -90,9 +95,11 @@ UInt_t OpenChain(UInt_t m)
     TString fname = Form("run%d",lrun.at(i))+fform;
     cout << fname << endl;
 
-    if(gSystem->FindFile(rootdir,fname))
+    if(gSystem->FindFile(rootdir,fname)) {
       rChain[m]->Add(fname);
-    else
+      ifnd++;
+    }
+    else 
       std::cout << " File is not found " << fname << std::endl;
   }
   
@@ -104,7 +111,11 @@ UInt_t OpenChain(UInt_t m)
 
 
   if( rChain[m]!=NULL ){
-    std::cout << "Runs are linked to rChain"<< m  << std::endl;
+    std::cout << "Runs are linked to rChain"<< m  
+	      << " " << rChain[m]->GetListOfFiles()->GetEntries() << " / " << nrun
+	      << std::endl;
+    
+
     rChain[m]->SetName(Form("rChain%d",m));
     std::cout << " Entries :" << rChain[m]->GetEntries() << std::endl;
 
