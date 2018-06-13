@@ -1,3 +1,4 @@
+void PlotNLProperty()
 {
   Double_t vpt1[50];
   Double_t vpt2[50];
@@ -44,4 +45,5 @@
   mgr->Add(gt2,"");
 
   mgr->Draw("al");
+
 }

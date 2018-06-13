@@ -45,6 +45,16 @@ Double_t pt_dbin  = (pt_max - pt_min)/(Double_t)(pt_nbin-1);
 TString  partname[] = {"pi-","pi+","proton","deuteron","triton"};
 UInt_t   partid[]   = {211, 211, 2212, 1000010020, 1000010030};
 UInt_t   icol[]     = { 2, 58, 78, 68, 53, 96, 156, 52, 100, 226, 229, 108};
+
+const UInt_t nsys = 4;
+const UInt_t nprt = 5;
+Color_t icol2[nprt][nsys]= { {kRed,          kBlue,  kOrange-3,   kGreen+1}, 
+			    {kBlue+2,   kOrange+7,  kGreen-3,     kPink+9},
+			    {kGreen-3,    kPink+7,  kCyan-1,    kYellow-2}, 
+			    {kRed-2,      kBlue-2,  kOrange-2,   kGreen-1},
+			    {kBlue-3,   kOrange+5,  kGreen+3,     kPink-9} };
+
+
 TString  iopt[]     = {"","same","same","same","same"};
 UInt_t   imark[]    = {20, 21, 22, 23};
   
@@ -154,9 +164,12 @@ void     GetRPResolution( UInt_t m=0);
 Double_t GetRPInterpolator(UInt_t m=0, Double_t x=0);
 UInt_t   SetBranch(UInt_t m);
 void GetRPResolutionwChi(UInt_t m=0);
-void PlotNeuLANDv1v2();
+void PlotNeuLANDv1v2(UInt_t iout=0);
+void PlotNeuLANDProperty(UInt_t iout=0);
 
-void calcFlw() //--------- main ----------//
+
+//--------- main ----------//
+void calcFlw() 
 {
   gROOT->Reset();
   openFlw();
@@ -174,7 +187,7 @@ void calcFlw() //--------- main ----------//
   
   gROOT->ProcessLine(".! grep -i void calcFlw.C | grep '//%%'");
 
-  PlotNeuLANDv1v2();
+  //  PlotNeuLANDProperty(1);
 }
 
 void GetRPResolutionwChi(UInt_t m)            //%% Executable : 
@@ -884,12 +897,12 @@ void dndy()                                   //%% Executable : Make plots of dN
       TString hname = Form("hrap%d_%d",m,i);
       TString htitle= partname[i] + "; Rapidity; dN/dy";
       hrap[m][i] = new TH1D(hname, htitle, y_nbin, y_min[i], y_max[i]);
-      hrap[m][i] ->SetLineColor(icol[isys[m]]);
+      hrap[m][i] ->SetLineColor(icol2[i][isys[m]]);
 
       hname  = Form("hnpart%d_%d",m,i);
       htitle = partname[i]+" ; Multiplicity";
       hnpart[m][i] = new TH1D(hname, htitle, 25,0,25);
-      hnpart[m][i]->SetLineColor(icol[m]);
+      hnpart[m][i]->SetLineColor(icol2[i][m]);
     }
 
     hmtrack[m] = new TH1D(Form("hmtrack%d",m),"Number of good tracks; Multiplicity",80, 0, 80);
@@ -2167,10 +2180,89 @@ void PlotNeuLANDPsi()                         //%%
 
 
 //--------------------------------------------//%% Executable : 
-void PlotNeuLANDv1v2()                        //%% Executable : 
+void PlotNeuLANDProperty(UInt_t iout)           //%% Executable : 
 {
-  std::cout << " Executing : PlotNeuLANDv1v2 " << std::endl;
+  std::cout << " Executing : PlotNeuLANDProperty(" << iout << ")" << std::endl;
 
+  //----- Parametres                                                                                                                       
+  UInt_t nybin  = 100;
+  TFile* hout;
+  UInt_t total_neut = 0;
+ 
+  //----- Canvas
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+
+  //----- Booking
+  TH1D* hmult = new TH1D("hmult0",";Multiplicity ", 15,0.,15.);
+  TH2D* haccp = new TH2D("haccp0","; Rapidyt ; Pt [MeV/c]",nybin, 0., 0.5, 100,   0., 350);
+
+
+  //----- Event loop
+  for(Int_t m = m_bgn; m < m_end; m++){
+
+    total_neut = 0;
+
+  //----- Output file
+    if( iout == 1 ) {
+      TString fName = "NLdbProp" + sysName[isys[m]] + ".root";
+      gSystem->cd("data");
+      hout = new TFile(fName,"recreate");
+    }
+    
+    hmult->Reset();
+    haccp->Reset();
+
+    Int_t nevt = SetBranch(m);
+    cout << " Number of events " << nevt << endl;
+
+
+    for(Int_t i = 0; i < nevt; i++){
+      rChain[m]->GetEntry(i);
+
+      UInt_t nneut = 0;
+      TIter next(aNLClusterArray);
+      STNeuLANDCluster* aNLClust = NULL;
+
+      while( (aNLClust = (STNeuLANDCluster*)next()) ){
+
+        auto pid      = aNLClust->GetPID();
+        auto rapidity = aNLClust->GetRapidity();
+        auto pt      = aNLClust->GetP().Pt();
+        auto veto_all = aNLClust->GetVetoHitAll();
+        auto veto_bar = aNLClust->GetVetoHitOne();
+	
+	if( pid == 2112 ){
+
+	  haccp->Fill(rapidity, pt);
+	  nneut++;
+	  total_neut++;
+	}
+      }
+      
+      hmult->Fill(nneut);
+    }
+  
+    
+    //    hmult->Draw();
+
+    if(iout == 1){
+      hmult->Write();
+      haccp->Write();
+
+      hout->Close();
+      gSystem->cd("..");
+    }
+
+    std::cout << " Number of neutron " << total_neut << " / " << hmult->GetEntries() << " = " << Float_t(total_neut/hmult->GetEntries())
+	      << " : " << nevt << std::endl;
+  }
+}
+
+//--------------------------------------------//%% Executable : 
+void PlotNeuLANDv1v2(UInt_t iout)             //%% Executable : 
+{
+  std::cout << " Executing : PlotNeuLANDv1v2(" << iout << ")" << std::endl;
 
   //----- Parametres                                                                                                                       
 
@@ -2200,7 +2292,7 @@ void PlotNeuLANDv1v2()                        //%% Executable :
 
       TIter next(aNLClusterArray);
       STNeuLANDCluster* aNLClust = NULL;
-     
+    
       while( (aNLClust = (STNeuLANDCluster*)next()) ){
   	
    	auto pid      = aNLClust->GetPID();
@@ -2228,12 +2320,15 @@ void PlotNeuLANDv1v2()                        //%% Executable :
    	}
       }
     }
-  
+
     // **
     // Output file for graphs
-    TString fName = "NL" + sysName[isys[m]] + ".root";
-    gSystem->cd("data");
-    auto GraphSave = new TFile(fName,"recreate");
+    TFile *GraphSave;
+    if(iout == 1){
+      TString fName = "NL" + sysName[isys[m]] + ".root";
+      gSystem->cd("data");
+      GraphSave = new TFile(fName,"recreate");
+    }
 
     // neutron
     auto gvn_v1 = new TGraphErrors();
@@ -2469,19 +2564,27 @@ void PlotNeuLANDv1v2()                        //%% Executable :
     mv2->Draw("apl");
     aLeg2->Draw();
 
-    gvn_v1->Write();
-    gvn_v2->Write();
-    gvp_v1->Write();
-    gvp_v2->Write();
-
+    if(iout == 1){
+      gvn_v1->Write();
+      gvn_v2->Write();
+      gvp_v1->Write();
+      gvp_v2->Write();
+    }
     //    GraphSave->Close();    
 
   }
 
-  gSystem->cd("..");
+  if(iout == 1){
+    gSystem->cd("..");
+    //    std::cout << GraphSave->GetName() << " is created. " << std::endl;    
+  }
+
 }
 
-  //--------------------------------------------//%% Executable : 
+
+
+
+//--------------------------------------------//%% Executable : 
 void Template()                   
 {
   //----- Parametres
@@ -2521,7 +2624,6 @@ UInt_t SetBranch(UInt_t m)
     std::cout << " no file is loaded " << std::endl;
     return 0;
   }
-
 
   rChain[m]->SetBranchAddress("STParticle",&aArray);
   rChain[m]->SetBranchAddress("ntrack",   ntrack);

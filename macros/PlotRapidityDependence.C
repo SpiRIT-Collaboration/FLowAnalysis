@@ -41,8 +41,8 @@ void PlotRapidityDependence()
 {
 
   // --> Plotting selection                                                                                                                           
-  Bool_t bsys[nsys]  = { 0, 1, 0, 0};  //{"132","108","124","112"};
-  Bool_t bpid[nprt]  = { 1, 1, 1, 1, 1};     //{"proton","deuteron","triton","pi-","pi+"};
+  Bool_t bsys[nsys]  = { 1, 1, 1, 1};  //{"132","108","124","112"};
+  Bool_t bpid[nprt]  = { 1, 1, 1, 0, 0};     //{"proton","deuteron","triton","pi-","pi+"};
 
   Bool_t bCM = kTRUE; // cm frame
   //------------------------------
