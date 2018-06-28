@@ -21,6 +21,7 @@ STNeuLANDCluster::STNeuLANDCluster()
 
   //  tof_offset = 37.5; //ns temp.
   tof_offset = 0.; // after 1 Feb. 2018
+  //tof_offset = 0.7171; // after 19 June 2018
 }
 
 
@@ -131,7 +132,7 @@ void STNeuLANDCluster::SetMass(UInt_t v)
 
 void STNeuLANDCluster::SetMomentum() 
 {
-  Double_t gtof = ncdistance/c;
+  Double_t gtof = 0.;//ncdistance/c;
 
   nctof -= tof_offset;
 

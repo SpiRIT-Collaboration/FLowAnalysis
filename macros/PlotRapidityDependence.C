@@ -1,5 +1,4 @@
-TCanvas *cc0;
-TCanvas *cc1;
+TCanvas *cc[5];
 
 const UInt_t nsys = 4;
 const UInt_t nprt = 5;
@@ -11,7 +10,7 @@ Double_t y_bl[nsys]= {0.742652,  0.742652, 0.744367, 0.744367};
 
 TString fsys[nsys] = {"132Sn+124Sn","108Sn+112Sn","124Sn+112Sn","112Sn+124Sn"};
 TString rsys[nsys] = {"132",        "108",        "124",        "112"};
-TString fpid[nprt] = {"proton","deuteron","triton","pi-","pi+"};  
+TString fpid[nprt] = {"pi-","pi+","proton","deuteron","triton",};  
 UInt_t  imrk[nsys] = {20, 21, 22, 23};
 Size_t  imsz[nsys] = {1, 1, 1.3, 1.3};
 Color_t icol[nprt][nsys]= { {kRed,          kBlue,  kOrange-3,   kGreen+1}, 
@@ -19,7 +18,7 @@ Color_t icol[nprt][nsys]= { {kRed,          kBlue,  kOrange-3,   kGreen+1},
 			    {kGreen-3,    kPink+7,  kCyan-1,    kYellow-2}, 
 			    {kRed-2,      kBlue-2,  kOrange-2,   kGreen-1},
 			    {kBlue-3,   kOrange+5,  kGreen+3,     kPink-9} };
-
+TString iopt[]     = {"","same","same","same","same"};
 
 Double_t ycmoff[nprt][nsys] = {{0.,0.,0.,0}, {0.,0.,0.,0},{0.,0.,0.,0},
 			    {0.,0.,0.,0}, {0.,0.,0.,0}};
@@ -30,161 +29,84 @@ Double_t ycmoff[nprt][nsys] = {{0.,0.,0.,0}, {0.,0.,0.,0},{0.,0.,0.,0},
 
 
 
-void Save(TString cnt = "")
+void Save(TString fopt = "", Int_t isel=-1)
 {
-  cc0->SaveAs("v1RpSn"+cnt+".png");
-  cc1->SaveAs("v2RpSn"+cnt+".png");
+  TString printHeader = "dNdy";
+  
+  if(isel > -1)
+    gROOT->GetListOfCanvases()->At(isel)->SaveAs(printHeader+fopt+Form("_%d",isel)+".png");
+
+  else {
+    Int_t iCanvas = gROOT->GetListOfCanvases()->GetEntries();  
+    for(Int_t i = 0; i < iCanvas; i++)
+      gROOT->GetListOfCanvases()->At(i)->SaveAs(printHeader+fopt+Form("_%d",i)+".png");
+  }
 }
+
 
 
 void PlotRapidityDependence()
 {
-
   // --> Plotting selection                                                                                                                           
   Bool_t bsys[nsys]  = { 1, 1, 1, 1};  //{"132","108","124","112"};
-  Bool_t bpid[nprt]  = { 1, 1, 1, 0, 0};     //{"proton","deuteron","triton","pi-","pi+"};
+  Bool_t bpid[nprt]  = { 0, 0, 1, 0, 0};     //{"pi-","pi+","proton","deuteron","triton"};
 
   Bool_t bCM = kTRUE; // cm frame
   //------------------------------
 
-  TString fname[nsys][nprt];
-  for(UInt_t is = 0; is < nsys; is++){
-    for(UInt_t ip = 0; ip < nprt; ip++){
-      fname[is][ip] = "data/VN"+rsys[is]+"Sn_"+fpid[ip]+".root";
-    }
+  //----- Booking
+  TFile* fOpen;
+  TH1D* hrap[nsys][nprt];
+  TH1D* hnpart[nsys][nprt];
+
+  TLegend* lg[nprt];
+  for(UInt_t ip = 0; ip < nprt; ip++){
+    if( !bpid[ip] ) continue;
+    lg[ip] = new TLegend(0.1,0.7,0.35,0.9,"");
+    cc[ip] = new TCanvas(Form("cc%d",ip),fpid[ip]);
   }
-  
-  TFile *fOpen;
-  TGraphErrors *gr_v1[12];
-  TGraphErrors *gr_v2[12];
+  //  auto lg2 = new TLegend(0.1,0.7,0.35,0.9,"");
 
-  auto mv1 = new TMultiGraph("mv1",";Rapidity_lab; v1");
-  auto mv2 = new TMultiGraph("mv2",";Rapidity_lab; v2");
-  auto lg1 = new TLegend(0.1,0.7,0.35,0.9,"v1 ");
-  auto lg2 = new TLegend(0.1,0.7,0.35,0.9,"v2 ");
-
-
-  UInt_t igr = 0;
 
   for(UInt_t is = 0; is < nsys; is++){
 
     if( !bsys[is] ) continue;
 
+    fOpen = TFile::Open("data/dNdySn"+rsys[is]+".root");
+    
+    if( fOpen == NULL ) continue;
+    else
+      std::cout << fOpen->GetName() << " is opened. " << std::endl;
+     
+
     for(UInt_t ip = 0; ip < nprt; ip++){
 
       if( !bpid[ip] ) continue;
 
-      fOpen = TFile::Open(fname[is][ip]);
+      hrap[is][ip]   = (TH1D*)fOpen->Get(Form("hrap%d_%d",is,ip));
+      hnpart[is][ip] = (TH1D*)fOpen->Get(Form("hnpart%d_%d",is,ip));
 
-      if( fOpen == NULL ) continue;
-      else
-	std::cout << fname[is][ip] << " is opened. " << std::endl;
+      cout <<  hrap[is][ip] -> GetName() << endl;
 
+      if(hrap[is][ip] != NULL && hnpart[is][ip] != NULL ){
+	cc[ip]->cd();
+	hrap[is][ip]->SetLineColor( icol[0][is] );
+	//	Int_t    nybin = hnpart[is][ip]->GetNBin();
+	//	Double_t dybin =  
+	hrap[is][ip]->Scale(1./hnpart[is][ip]->GetEntries());
+	hrap[is][ip]->Draw(iopt[is]);
 
-      TGraphErrors *gv1 = (TGraphErrors*)fOpen->Get("gv_v1");
-      TGraphErrors *gv2 = (TGraphErrors*)fOpen->Get("gv_v2");
-
-      gr_v1[igr] = new TGraphErrors();
-      gr_v2[igr] = new TGraphErrors();
-
-
-      if( bCM ) {
-	// mv1->SetTitle("; y_cm/y_beam; v1");
-	// mv2->SetTitle("; y_cm/y_beam; v2");
-	mv1->SetTitle("; y_lab; v1");
-	mv2->SetTitle("; y_lab; v2");
-	
-	const UInt_t npoint = gv1->GetN(); 
-	Double_t xp;
-	Double_t xe;
-	Double_t yp;
-	Double_t ye;
-
-	std::vector<Double_t> xpp;
-	std::vector<Double_t> ypp;
-
-      
-	for(UInt_t ik = 0; ik < npoint; ik++){
-	  gv1->GetPoint(ik, xp, yp);
-	  xe = gv1->GetErrorX(ik);
-	  ye = gv1->GetErrorY(ik);
-	
-	  //xp = (xp - y_cm[is])/y_bc[is] - ycmoff[ip][is];
-	  
-	  //xp = (xp - y_bc[is]); ///y_bl[is] ;
-
-	  gr_v1[igr]->SetPoint(ik, xp, yp);
-	  gr_v1[igr]->SetPointError(ik, xe, ye);
-	  xpp.push_back(xp);
-	  ypp.push_back(yp);
-
-
-	  gv2->GetPoint(ik, xp, yp);
-	  xe = gv2->GetErrorX(ik);
-          ye = gv2->GetErrorY(ik);
-
-	  xp = (xp - y_cm[is])/y_bc[is];
-          gr_v2[igr]->SetPoint(ik, xp, yp);
-          gr_v2[igr]->SetPointError(ik, xe, ye);
-	}
-
-	//	auto inter = new ROOT::Math::Interpolator(ypp,xpp,ROOT::Math::Interpolation::kCSPLINE);
-	//	std::cout << rsys[is] << " : " << fpid[ip] << " " << inter->Eval(0) << std::endl;
+	lg[ip]->AddEntry( hrap[is][ip], fsys[is]+" : "+fpid[ip],"lp");
       }
-      else {
-	      
-	TString gvname = Form("gPt_v1%d",igr);
-	gr_v1[igr] = (TGraphErrors*)gv1->Clone(gvname);
-	gvname = Form("gPt_v2%d",igr);
-	gr_v2[igr] = (TGraphErrors*)gv2->Clone(gvname);
-      }
-
-      mv1->Add(gr_v1[igr],"lp");
-      mv2->Add(gr_v2[igr],"lp");
-
-      gr_v1[igr]->SetMarkerStyle(imrk[is]);
-      gr_v1[igr]->SetMarkerColor(icol[ip][is]);
-      gr_v1[igr]->SetMarkerSize(imsz[is]);
-      gr_v1[igr]->SetLineColor(icol[ip][is]);
-      lg1->AddEntry(gr_v1[igr], rsys[is]+" "+fpid[ip] ,"lp");
-
-
-      gr_v2[igr]->SetMarkerStyle(imrk[is]);
-      gr_v2[igr]->SetMarkerColor(icol[ip][is]);
-      gr_v2[igr]->SetMarkerSize(imsz[is]);
-      gr_v2[igr]->SetLineColor(icol[ip][is]);
-      lg2->AddEntry(gr_v2[igr], rsys[is]+" "+fpid[ip],"lp");
-
-      
-      fOpen->Close();
-      igr++;
     }
   }
-
-
   
+  for(UInt_t ip = 0; ip < nprt; ip++) {
+    if( !cc[ip] ) continue;
+    cc[ip]->cd();
+    lg[ip]->Draw();
+  }
 
-  cc1 = new TCanvas("cc1","v2");
-  mv2->SetMaximum(0);
-  mv2->Draw("ALP");
-  auto aLineX2 = new TLine(mv2->GetXaxis()->GetXmin(), 0., mv2->GetXaxis()->GetXmax(), 0.);
-  auto aLineY2 = new TLine(0., mv2->GetYaxis()->GetXmin(), 0., mv2->GetYaxis()->GetXmax());
-  aLineX2->SetLineStyle(3);
-  aLineY2->SetLineStyle(3);
-  aLineX2->Draw();
-  aLineY2->Draw();
-  lg2->Draw();
-
-  cc0 = new TCanvas("cc0","v1");
-  mv1->Draw("ALP");
-  auto aLineX1 = new TLine(mv1->GetXaxis()->GetXmin(), 0., mv1->GetXaxis()->GetXmax(), 0.);
-  //  auto aLineY1 = new TLine(0., mv1->GetYaxis()->GetXmin(), 0., mv1->GetYaxis()->GetXmax());
-  auto aLineY1 = new TLine(y_cm[0], mv1->GetYaxis()->GetXmin(), y_cm[0], mv1->GetYaxis()->GetXmax());
-  aLineX1->SetLineStyle(3);
-  aLineY1->SetLineStyle(3);
-  aLineX1->Draw();
-  aLineY1->Draw();
-  lg1->Draw();
 }
 
 

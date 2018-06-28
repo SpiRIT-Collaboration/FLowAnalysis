@@ -6,13 +6,16 @@
 # ----------------------
 
 # TPC data
-export STTPCDIR=/cache/scr/spirit/recoData/20180309/
-export ST132DIR=${STTPCDIR}132Sn124Sn/
-export ST108DIR=${STTPCDIR}108Sn112Sn/
-export ST124DIR=${STTPCDIR}124Sn112Sn/
-export ST112DIR=${STTPCDIR}112Sn124Sn/
-export STCkT100=${STTPCDIR}Cocktail100MeV/
-export STCkT300=${STTPCDIR}Cocktail300MeV/
+#export STTPCDIR=/cache/scr/spirit/recoData/20180309/
+#export ST132DIR=${STTPCDIR}132Sn124Sn/
+#export ST108DIR=${STTPCDIR}108Sn112Sn/
+#export ST124DIR=${STTPCDIR}124Sn112Sn/
+#export ST112DIR=${STTPCDIR}112Sn124Sn/
+#export STCkT100=${STTPCDIR}Cocktail100MeV/
+#export STCkT300=${STTPCDIR}Cocktail300MeV/
+
+export STTPCDIR=/cache/scr/spirit/recoData/20180627/
+export STVERSION=1580.2b32d25
 
 #BigRIPS data
 export STBEAM132=/cache/scr/spirit/DataAskedByMizuki/beam.Sn132_all/
@@ -29,6 +32,7 @@ export STKYMLTDIR=/cache/scr/spirit/kaneko/rootfile/kyoto_re/mult/
 
 #NeuLAND data
 export STNLDIR=/cache/scr/spirit/NeuLand/
+#export STNLDIR=/cache/scr/spirit/NeuLand/neuland_18jun2018
 
 #Anlaysis Flag
 export BIGRIPS=1;
@@ -50,13 +54,13 @@ source runList.sh
 #RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
-RUNNUMBER1=(${RNF112})
+#RUNNUMBER1=(${RNF112})
 
-RUNNUMBER1="2602,2606,2608,2611,2615,2616"
+RUNNUMBER1="2855"
 
 
 # *****> <Edit Here>     
-VERSION=5
+VERSION=6
 
 
 function process1(){

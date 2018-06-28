@@ -22,12 +22,12 @@ void Setup()
   SnA = 0;
   if(iRun >= 2174 && iRun <= 2509)
     SnA = 108;
+  else if( iRun >= 2520 && iRun <= 2653)
+    SnA = 112;
   else if( iRun >= 2836 && iRun <= 3039)
     SnA = 132;
   else if( iRun >= 3058 && iRun <= 3184)
     SnA = 124;
-  else if( iRun >= 2520 && iRun <= 2653)
-    SnA = 112;
 
   BigRIPS  = (Bool_t)atoi(gSystem->Getenv("BIGRIPS"));
   KyotoArry= (Bool_t)atoi(gSystem->Getenv("KYOTOARRY"));
@@ -209,15 +209,15 @@ void flw_process1(Int_t nevt = -1)
     TIter next(trackArray);
     STRecoTrack *trackFromArray = NULL;
 
-    //    cout << " mtrack " << mtrack << " ?? " << ntrack[0] << " at " << i << endl;
     
     while( (trackFromArray = (STRecoTrack*)next()) ) {
       
       TClonesArray &ptpcParticle = *tpcParticle;
 
       auto parentvid = trackFromArray->GetVertexID();
-      STVertex* vertex;
 
+
+      STVertex* vertex;
       if (parentvid > -1) {
 	vertex = (STVertex *) vertexArray -> At(parentvid);
 	
@@ -551,14 +551,20 @@ void LoadNeuLANDPID()
 void SetDataDirectory()
 {
 
-  if(SnA == 132)
-    rootDir = gSystem -> Getenv("ST132DIR");
-  else if(SnA == 108)
-    rootDir = gSystem -> Getenv("ST108DIR");
-  else if(SnA == 124)
-    rootDir = gSystem -> Getenv("ST124DIR");
-  else if(SnA == 112)
-    rootDir = gSystem -> Getenv("ST112DIR");
+  if( gSystem -> Getenv("ST132DIR") != NULL ) {
+    if(SnA == 132)
+      rootDir = gSystem -> Getenv("ST132DIR");
+    else if(SnA == 108)
+      rootDir = gSystem -> Getenv("ST108DIR");
+    else if(SnA == 124)
+      rootDir = gSystem -> Getenv("ST124DIR");
+    else if(SnA == 112)
+      rootDir = gSystem -> Getenv("ST112DIR");
+  }
+
+  else
+  //for v6.
+    rootDir = gSystem -> Getenv("STTPCDIR");
 
 }
 
@@ -822,11 +828,12 @@ void SetTPC()
 {
   fChain = new TChain("cbmsim");
   SetDataDirectory();
+  TString fileversion = gSystem->Getenv("STVERSION");
    
   Int_t i = 0;
-  while(kTRUE){
-    
-    TString recoFile = Form("run"+sRun+"_s%d.reco.develop.1523.dc416ee.root",i);
+  while(kTRUE && fileversion != ""){
+
+    TString recoFile = Form("run"+sRun+"_s%d.reco.develop."+fileversion+".root",i);
     std::cout << " recoFile " << rootDir+recoFile << std::endl;
     
     if(gSystem->FindFile(rootDir,recoFile)){

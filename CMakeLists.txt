@@ -14,6 +14,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.2 FATAL_ERROR)
 foreach(p
   CMP0025 # CMake 3.0
   CMP0042 # CMake 3.0
+  CMP0054 # CMake 3.9
   )
   if(POLICY ${p})
   cmake_policy(SET ${p} NEW)
@@ -39,6 +40,7 @@ ENDIF(NOT DEFINED ENV{SIMPATH})
 SET(SIMPATH $ENV{SIMPATH})
 SET(FAIRROOTPATH $ENV{FAIRROOTPATH})
 SET(SPIRITROOTPATH $ENV{SPIRITROOTPATH})
+SET(SPIRITANAPATH $ENV{SPIRITANAPATH})
 
 # where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ 
 # is checked
@@ -54,9 +56,7 @@ Set(SpiRIT_MODULES STFormat STGlobal)
 
 
 find_package(FairRoot)
-find_package(GENFIT2 REQUIRED)
-find_package(SpiRITROOT)
-find_package(ANAROOT)
+
 
 # Load some basic macros which are needed later on
 include(FairMacros)
@@ -110,6 +110,12 @@ CHECK_EXTERNAL_PACKAGE_INSTALL_DIR()
 find_package(ROOT 5.32.00 REQUIRED)
 find_package(OpenMP)
 find_package(PythonInterp 2.7 REQUIRED)
+find_package(ANAROOT)
+find_package(CLHEP)
+find_package(GENFIT2 REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(SpiRITROOT REQUIRED)
+
 If(NOT APPLE)
   set(PYTHON_LIBRARY ${PYTHON_EXECUTABLE})
   set(PYTHON_INCLUDE_DIR ${PYTHON_EXECUTABLE})
