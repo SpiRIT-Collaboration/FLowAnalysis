@@ -104,10 +104,6 @@ TClonesArray *tpcParticle = NULL;
 TClonesArray *nlhit       = NULL;
 TClonesArray *nlcluster   = NULL;
 
-TBranch      *brtrackArray;
-TBranch      *brvertexArray;
-
-
 ULong_t event_number;
 Float_t max_veto;
 Int_t   katanaM;
@@ -191,6 +187,7 @@ TString sVer;
 Int_t   iRun;
 Int_t   iVer;
 
+Bool_t  STPC;
 Bool_t  BigRIPS;
 Bool_t  KyotoArry;
 Bool_t  KATANA;

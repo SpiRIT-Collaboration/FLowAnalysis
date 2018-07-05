@@ -1,9 +1,9 @@
 #ifndef STNEULANDCLUSTER_HH
 #define STNEULANDCLUSTER_HH
 
-#include "TObject.h"
-#include "TMath.h"
-#include "TVector3.h"
+#include <TObject.h>
+#include <TVector3.h>
+#include <TMath.h>
 
 class STNeuLANDCluster : public TObject
 {
@@ -41,16 +41,15 @@ private:
   void SetMomentum();
 
 public:
-  Int_t GetNHit ()  {return ncnhit;}
-  UInt_t GetPID()   {return ncPID;}
-
+  Int_t    GetNHit(){return ncnhit;}
+  UInt_t   GetPID() {return ncPID;}
   Double_t GetEdep(){return ncedep;}
   Double_t GetTOF() {return nctof;}
 
   Double_t GetBeta() {return ncbeta;}
   Double_t GetGamma(){return ncgamma;}
-  Double_t GetMom()  {return ncP.Mag(); }
-  TVector3 GetP()    {return ncP;}
+  Double_t GetMom(){return ncP.Mag(); }
+  TVector3 GetP()  {return ncP;}
   Double_t GetEnergy()   {return ncE; }
   Double_t GetRapidity() {return ncRapidity; }
 
@@ -79,7 +78,6 @@ public:
   Int_t GetVetoHitMid(){return ncveto_mid;}
   Int_t GetVetoHitLoose(){return ncveto_loose;}
 
-  
   // on the assumption of neutron
 
  private:

@@ -29,13 +29,15 @@ void Setup()
   else if( iRun >= 3058 && iRun <= 3184)
     SnA = 124;
 
+  STPC     = (Bool_t)atoi(gSystem->Getenv("STPC"));
   BigRIPS  = (Bool_t)atoi(gSystem->Getenv("BIGRIPS"));
   KyotoArry= (Bool_t)atoi(gSystem->Getenv("KYOTOARRY"));
   KATANA   = (Bool_t)atoi(gSystem->Getenv("KATANA"));
   NeuLAND  = (Bool_t)atoi(gSystem->Getenv("NEULAND"));
   
   std::cout << "Included data sets -> " ; 
-  if(BigRIPS)   std::cout << " BigRIPS "     ;
+  if(STPC)      std::cout << " SpiRIT-TPC"   ;
+  if(BigRIPS)   std::cout << " & BigRIPS "   ;
   if(KyotoArry) std::cout << " & KyotoArry " ;
   if(KATANA)    std::cout << " & KATANA "    ;
   if(NeuLAND)   std::cout << " & NeuLAND "   ;
@@ -56,13 +58,21 @@ void flw_process1(Int_t nevt = -1)
   //----- Beam PID ------------------------
   BeamPID();
 
+
+  Int_t nEntry = 0;
+
   //----- TPC data ------------------------
-  SetTPC();
-  Int_t nEvtTPC = 0;
-  if(fChain) nEvtTPC = fChain -> GetEntries();
-  std::cout << "Number of events in TPC: " << nEvtTPC << std::endl;
-  if(nEvtTPC == 0) return;
-  
+  Long64_t nEvtTPC = 0;
+  if( STPC ) {
+    SetTPC();
+
+    if(fChain) nEvtTPC = fChain -> GetEntries();
+    std::cout << "Number of events in TPC: " << nEvtTPC << std::endl;
+    if(nEvtTPC == 0) return;
+
+    nEntry = nEvtTPC;
+  }
+
   //----- BigRIPS data --------------------
   Long64_t nEvents = 0;
   if(BigRIPS) {
@@ -77,6 +87,9 @@ void flw_process1(Int_t nevt = -1)
       }
     }
     std::cout << "Number of events in RIDF: " << nEvents << std::endl;
+
+    if( nEntry == 0 ) nEntry = nEvents;
+
   }
   //----- KATANA Array --------------------  
   Long64_t nEvtKTN = 0;
@@ -84,6 +97,8 @@ void flw_process1(Int_t nevt = -1)
     SetKATANARoot_bt();
     nEvtKTN = kChain -> GetEntries();
     std::cout << "Number of events in KATANA: " << nEvtKTN << std::endl;
+
+    if( nEntry == 0 ) nEntry = nEvtKTN;
   }
   //----- Kyoto Array ---------------------
   Long64_t nEvtKyt = 0;
@@ -98,6 +113,8 @@ void flw_process1(Int_t nevt = -1)
 
     nEvtKyt = kaChain -> GetEntries();
     std::cout << "Number of events in KyotoArray: " << nEvtKyt << std::endl;
+
+    if( nEntry == 0 ) nEntry = nEvtKyt;
   }
 
   //---- NeuLAND ---------------------------
@@ -113,21 +130,30 @@ void flw_process1(Int_t nevt = -1)
       std::cout << "No NeuLAND data is found. " << std::endl;
       NeuLAND=kFALSE;
     }
+
+    if( nEntry == 0 ) nEntry = nEvtNL;
   }
 
   //-------------------- event number check --------------------
-  Int_t nEntry = nEvtTPC;
-  if(nEvtTPC > nEvents && nEvents != 0)
+  if( nEntry == 0 ) {
+    std::cout << "No data wwas found so stopped...." << std::endl;
+    return;
+  }
+
+  if( nEvtTPC != 0 && nEntry > nEvtTPC )
     nEntry = nEvents;
 
-  if(nEvtKTN != 0 && nEntry > nEvtKTN)
+  if( nEvtKTN != 0 && nEntry > nEvtKTN)
     nEntry = nEvtKTN;
   
-  if(nEvtKyt != 0 && nEntry > nEvtKyt)
+  if( nEvtKyt != 0 && nEntry > nEvtKyt)
     nEntry = nEvtKyt;
 
-  if(nEvtNL  != 0 && nEntry > nEvtNL)
+  if( nEvtNL  != 0 && nEntry > nEvtNL)
     nEntry = nEvtNL;
+
+
+  std::cout << "Number of events will be processed ---->  " << nEntry << std::endl;
 
   //  nEntry = 100;
   //--------------------output root--------------------
@@ -155,7 +181,8 @@ void flw_process1(Int_t nevt = -1)
 
 
     // --------------- TPC ---------------
-    fChain -> GetEntry(i);
+    if(STPC)
+      fChain -> GetEntry(i);
 
     // --------------- RIDF --------------
     if(BigRIPS) {
@@ -200,77 +227,79 @@ void flw_process1(Int_t nevt = -1)
     //
 
     //------- TPC ------
-    Int_t numTracksFromArray = trackArray -> GetEntries();
-    ntrack[0] = numTracksFromArray;
+    if(STPC) {
+      Int_t numTracksFromArray = trackArray -> GetEntries();
+      ntrack[0] = numTracksFromArray;
 
-    UInt_t mtrack = 0;
-    tpcParticle->Clear();
+      UInt_t mtrack = 0;
+      tpcParticle->Clear();
 
-    TIter next(trackArray);
-    STRecoTrack *trackFromArray = NULL;
+      TIter next(trackArray);
+      STRecoTrack *trackFromArray = NULL;
 
     
-    while( (trackFromArray = (STRecoTrack*)next()) ) {
+      while( (trackFromArray = (STRecoTrack*)next()) ) {
       
-      TClonesArray &ptpcParticle = *tpcParticle;
+	TClonesArray &ptpcParticle = *tpcParticle;
 
-      auto parentvid = trackFromArray->GetVertexID();
+	auto parentvid = trackFromArray->GetVertexID();
 
 
-      STVertex* vertex;
-      if (parentvid > -1) {
-	vertex = (STVertex *) vertexArray -> At(parentvid);
+	STVertex* vertex = NULL;
+	if (parentvid > -1) {
+	  vertex = (STVertex *) vertexArray -> At(parentvid);
 	
-	STParticle *aParticle = new STParticle();
-	aParticle->SetRecoTrack(trackFromArray);
+	  STParticle *aParticle = new STParticle();
+	  aParticle->SetRecoTrack(trackFromArray);
 
-	//--- Rotate tracks along beam direction ---;
-	if(ProjA > -1000 && ProjB > -1000)
-	  aParticle->RotateAlongBeamDirection(ProjA/1000., ProjB/1000.);
-
-
-	//--- check origin of the track ---;
-	aParticle->SetTrackAtTarget(vertex->GetPos()); 
-
-	if( aParticle->GetMomentumAtTarget().Mag() == 0)
-	  aParticle->SetMaxMomentumFlag(0);
-
-	else if( CheckVertex(aParticle) )   {
-
-	  aParticle->SetBestTrackFlag(1);
-	  ntrack[2]++;
+	  //--- Rotate tracks along beam direction ---;
+	  if(ProjA > -1000 && ProjB > -1000)
+	    aParticle->RotateAlongBeamDirection(ProjA/1000., ProjB/1000.);
 
 
-	  //--- Set track quality flag ---;
-	  if( aParticle->GetDistanceAtVertex() >= 5 )
-	    aParticle->SetDistanceAtVertexFlag(0);
+	  //--- check origin of the track ---;
+	  aParticle->SetTrackAtTarget(vertex->GetPos()); 
 
-	  if( aParticle->GetNDF() <= 30)
-	    aParticle->SetNDFFlag(0);
-	    
-	  if( aParticle->GetP() >= 2500 )
+	  if( aParticle->GetMomentumAtTarget().Mag() == 0)
 	    aParticle->SetMaxMomentumFlag(0);
-	    
-	  if( aParticle->GetRotatedMomentum().Theta() >= 0.8 )
-	    aParticle->SetMaxThetaFlag(0);
 
-	  if( aParticle->GetdEdx() > 1000 )
-	    aParticle->SetMaxdEdxFlag(0);
+	  else if( CheckVertex(aParticle) )   {
+
+	    aParticle->SetBestTrackFlag(1);
+	    ntrack[2]++;
+
+
+	    //--- Set track quality flag ---;
+	    if( aParticle->GetDistanceAtVertex() >= 5 )
+	      aParticle->SetDistanceAtVertexFlag(0);
+
+	    if( aParticle->GetNDF() <= 30)
+	      aParticle->SetNDFFlag(0);
+	    
+	    if( aParticle->GetP() >= 2500 )
+	      aParticle->SetMaxMomentumFlag(0);
+	    
+	    if( aParticle->GetRotatedMomentum().Theta() >= 0.8 )
+	      aParticle->SetMaxThetaFlag(0);
+
+	    if( aParticle->GetdEdx() > 1000 )
+	      aParticle->SetMaxdEdxFlag(0);
+
+	  }
+
+	  if( aParticle->GetBestTrackFlag() )
+	    ntrack[3]++;
+
+
+	  aParticle->SetTrackID(mtrack);      
+	  new(ptpcParticle[mtrack]) STParticle(*aParticle);      
+	  mtrack++;
 
 	}
-
-	if( aParticle->GetBestTrackFlag() )
-	  ntrack[3]++;
-
-
-	aParticle->SetTrackID(mtrack);      
-	new(ptpcParticle[mtrack]) STParticle(*aParticle);      
-	mtrack++;
-
-      }
     
+      }
+      ntrack[1] = mtrack;
     }
-    ntrack[1] = mtrack;
     ////  ---- end of TPC  ----
 
     // ----- NeuLAND -----
@@ -323,7 +352,7 @@ void flw_process1(Int_t nevt = -1)
 
 
     //-------------------- end of track LOOP User Analysis --------------------
-    if(ntrack[1] > 0)
+    if(ntrack[1] > 0 || nhitnl[0] > 0)
       flw->Fill();
   }
 
@@ -347,33 +376,40 @@ void OutputTree(Int_t nmax)
   TString sdeb = ".s";
   if(nmax < 0)  sdeb = "";
 
-  TString foutname = "data/run"+sRun+"_f0.v"+sVer+sdeb+".root";
+  //  TString foutname = "data/run"+sRun+"_f0.v"+sVer+sdeb+".root";
+  TString foutname = "data/run"+sRun+"_nl.v"+sVer+sdeb+".root";
 
   fout = new TFile(foutname,"recreate");
   flw  = new TTree("flw","Beam and TPC track");
   
   BeamonTarget = new TVector2();
 
-  tpcParticle = new TClonesArray("STParticle",150);
-
   std::cout << "Output file is " << foutname << std::endl;
 
   //-- output
   flw->Branch("irun",&iRun,"irun/I");
-  flw->Branch("aoq",&aoq,"aoq/D");
-  flw->Branch("z",&z,"z/D");
-  flw->Branch("snbm",&bmpid,"snbm/I");
-  flw->Branch("intZ",&intZ,"intZ/I");
-  flw->Branch("intA",&intA,"intA/I");
-  flw->Branch("BDCtc",&BeamonTarget);
-  flw->Branch("bdcax",&bdcax,"bdcax/D");
-  flw->Branch("bdcby",&bdcby,"bdcby/D");
-  flw->Branch("ProjA",&ProjA,"ProjA/D");
-  flw->Branch("ProjB",&ProjB,"ProjB/D");
-  flw->Branch("STVertex",&vertexArray);  
-  flw->Branch("STParticle",&tpcParticle);
-  flw->Branch("ntrack",ntrack,"ntrack[7]/I");
- 
+
+  if(BigRIPS){
+    flw->Branch("aoq",&aoq,"aoq/D");
+    flw->Branch("z",&z,"z/D");
+    flw->Branch("snbm",&bmpid,"snbm/I");
+    flw->Branch("intZ",&intZ,"intZ/I");
+    flw->Branch("intA",&intA,"intA/I");
+    flw->Branch("BDCtc",&BeamonTarget);
+    flw->Branch("bdcax",&bdcax,"bdcax/D");
+    flw->Branch("bdcby",&bdcby,"bdcby/D");
+    flw->Branch("ProjA",&ProjA,"ProjA/D");
+    flw->Branch("ProjB",&ProjB,"ProjB/D");
+  }
+
+  if(STPC) {
+    tpcParticle = new TClonesArray("STParticle",120);
+
+    flw->Branch("STVertex",&vertexArray);  
+    flw->Branch("STParticle",&tpcParticle);
+    flw->Branch("ntrack",ntrack,"ntrack[7]/I");
+  }
+
   if(KyotoArry){  //Kyoto Array
     flw->Branch("kymult",&kynHit,"kymult/I");
     
@@ -659,8 +695,8 @@ Bool_t CheckBDCvsVertexCorrelation(TVector2 vxy)
   Double_t diffy = BeamonTarget->Y() - vxy.Y() - beamVy_offset;
 
 
-  if((abs(diffx) < beamVx_nsig*beamVx_sigma) &&
-     (abs(diffy) < beamVy_nsig*beamVy_sigma)) {
+  if((TMath::Abs(diffx) < beamVx_nsig*beamVx_sigma) &&
+     (TMath::Abs(diffy) < beamVy_nsig*beamVy_sigma)) {
     return kTRUE;
   }
   else
@@ -673,8 +709,8 @@ Bool_t CheckBDCvsTrackCorrelation(TVector3 trackatTarget)
   Double_t diffy = BeamonTarget->Y() - trackatTarget.Y() + trackVy_offset;
 
 
-  if(abs(diffx) < trackVx_nsig*trackVx_sigma &&
-     abs(diffy) < trackVy_nsig*trackVy_sigma)
+  if(TMath::Abs(diffx) < trackVx_nsig*trackVx_sigma &&
+     TMath::Abs(diffy) < trackVy_nsig*trackVy_sigma)
     return kTRUE;
   else
     return kFALSE;
@@ -845,8 +881,8 @@ void SetTPC()
 
   }
 
-  fChain -> SetBranchAddress("STRecoTrack", &trackArray, &brtrackArray);
-  fChain -> SetBranchAddress("STVertex"   , &vertexArray,&brvertexArray);
+  fChain -> SetBranchAddress("STRecoTrack", &trackArray);
+  fChain -> SetBranchAddress("STVertex"   , &vertexArray);
 }
 
 Bool_t DefineVersion()
@@ -862,21 +898,6 @@ Bool_t DefineVersion()
 
     bfound = kTRUE;
   }
-  //  TString ver = sVer + ".";
-  
-  // for ( Int_t i = 0; i < 2; i++) {
-  //   if( ver.First(".") < 0 ) break;
-
-  //   Ssiz_t end = ver.First(".")  ;
-  //   TString ver1 = ver(0, end);
-
-  //   ver = ver(end+1, ver.Length());
-
-  //   iVer[i] = atoi(ver1);
-
-  //   if(i==1) bfound = kTRUE;
-  // }
-
   
   
   if(!bfound)

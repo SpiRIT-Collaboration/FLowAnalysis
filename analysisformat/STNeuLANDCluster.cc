@@ -7,7 +7,7 @@ ClassImp(STNeuLANDCluster)
 STNeuLANDCluster::STNeuLANDCluster()
 {
   Clear();
-  angle = 29.579*TMath::Pi()/180. ; // deg.
+  angle = 29.579*TMath::DegToRad() ; // deg.
 
   target_offset = -8.9; //mm
   targetPos = TVector3(0,0,target_offset);
@@ -19,9 +19,7 @@ STNeuLANDCluster::STNeuLANDCluster()
 
   c = 299.79245; //mm/ns
 
-  //  tof_offset = 37.5; //ns temp.
   tof_offset = 0.; // after 1 Feb. 2018
-  //tof_offset = 0.7171; // after 19 June 2018
 }
 
 
@@ -132,11 +130,12 @@ void STNeuLANDCluster::SetMass(UInt_t v)
 
 void STNeuLANDCluster::SetMomentum() 
 {
-  Double_t gtof = 0.;//ncdistance/c;
+  Double_t gtof = ncdistance/c;
 
   nctof -= tof_offset;
 
-  ncbeta  = (ncdistance/(nctof+gtof))/c;
+  //  ncbeta  = (ncdistance/(nctof+gtof))/c;
+  ncbeta  = ncdistance/nctof/c;
 
   if(ncbeta < 1.)
     ncgamma = 1/TMath::Sqrt(1. - ncbeta*ncbeta);

@@ -7,15 +7,16 @@
 
 # TPC data
 #export STTPCDIR=/cache/scr/spirit/recoData/20180309/
-#export ST132DIR=${STTPCDIR}132Sn124Sn/
-#export ST108DIR=${STTPCDIR}108Sn112Sn/
-#export ST124DIR=${STTPCDIR}124Sn112Sn/
-#export ST112DIR=${STTPCDIR}112Sn124Sn/
-#export STCkT100=${STTPCDIR}Cocktail100MeV/
-#export STCkT300=${STTPCDIR}Cocktail300MeV/
+#export STVERSION=1523.dc416ee   ###@develop.1535.1915a48
 
 export STTPCDIR=/cache/scr/spirit/recoData/20180627/
 export STVERSION=1580.2b32d25
+export ST132DIR=${STTPCDIR}132Sn124Sn/
+export ST108DIR=${STTPCDIR}108Sn112Sn/
+export ST124DIR=${STTPCDIR}124Sn112Sn/
+export ST112DIR=${STTPCDIR}112Sn124Sn/
+export STCkT100=${STTPCDIR}Cocktail100MeV/
+export STCkT300=${STTPCDIR}Cocktail300MeV/
 
 #BigRIPS data
 export STBEAM132=/cache/scr/spirit/DataAskedByMizuki/beam.Sn132_all/
@@ -31,10 +32,11 @@ export STKYOTODIR=/cache/scr/spirit/kaneko/rootfile/kyoto/
 export STKYMLTDIR=/cache/scr/spirit/kaneko/rootfile/kyoto_re/mult/
 
 #NeuLAND data
-export STNLDIR=/cache/scr/spirit/NeuLand/
+export STNLDIR=/cache/scr/spirit/NeuLand/neuland_3jul2018
 #export STNLDIR=/cache/scr/spirit/NeuLand/neuland_18jun2018
 
 #Anlaysis Flag
+export STPC=0;
 export BIGRIPS=1;
 export KYOTOARRY=0;
 export KATANA=0;
@@ -51,16 +53,16 @@ source runList.sh
 # *****> <Edit Here>
 # Set RUNNUMBER1 
 
-#RUNNUMBER1=(${RNF132})
+RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
 
-RUNNUMBER1="2855"
+#RUNNUMBER1="2855"
 
 
 # *****> <Edit Here>     
-VERSION=6
+VERSION=9
 
 
 function process1(){
