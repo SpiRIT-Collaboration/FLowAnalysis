@@ -9,7 +9,8 @@
 class STBootStrap : public TObject {
 
 public:
-  STBootStrap(){};
+  STBootStrap(){ clear(); };
+  STBootStrap(UInt_t ival);
   STBootStrap(UInt_t ival1, UInt_t ival2, Double_t *sample);
   STBootStrap(UInt_t ival1, UInt_t ival2, TVector2 *sample);
   STBootStrap(UInt_t ival1, std::vector<TVector2> *sample);
@@ -18,6 +19,10 @@ public:
   void clear();
   void Initialize();
   
+
+  void SetBootNumber(UInt_t ival) {nboot = ival;}
+  void Add(TVector2 sample);
+
   Double_t GetPhiOriginal() {return TVector2::Phi_mpi_pi( phi_mean );}
 
   Double_t GetMean(UInt_t idx);
@@ -41,7 +46,7 @@ public:
   void StoreResults(UInt_t idx = 0, Double_t off = 0 );
 
   std::vector< UInt_t > Resampling(UInt_t ival);
-  void SumUpVector();
+  void BootStrapping(UInt_t nbt = 0);
 
 private:
 

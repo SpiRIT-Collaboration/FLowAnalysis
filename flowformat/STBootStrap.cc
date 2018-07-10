@@ -1,4 +1,11 @@
 #include "STBootStrap.hh"
+STBootStrap::STBootStrap(UInt_t ival)
+{
+  clear();
+  
+  nboot  = ival;
+}
+
 STBootStrap::STBootStrap(UInt_t ival1, UInt_t ival2, Double_t *sample)
 {
   clear();
@@ -34,7 +41,7 @@ STBootStrap::STBootStrap(UInt_t ival1, UInt_t ival2, TVector2 *sample)
   for(UInt_t i = 0; i < numElements; i++)
     elementsTV2.push_back( sample[i] );
 
-  SumUpVector();
+  BootStrapping();
 }
 
 STBootStrap::STBootStrap(UInt_t ival1, std::vector<TVector2> *sample)
@@ -46,14 +53,22 @@ STBootStrap::STBootStrap(UInt_t ival1, std::vector<TVector2> *sample)
 
   elementsTV2 = *sample;
 
-  SumUpVector();
+  BootStrapping();
+}
+
+void STBootStrap::Add(TVector2 sample)
+{
+  elementsTV2.push_back(sample);
+
+  numElements = (Int_t)elementsTV2.size();
 }
 
 
-void STBootStrap::SumUpVector()
+void STBootStrap::BootStrapping(UInt_t nbt)
 {
   Double_t hrm = 1.;
 
+  if(nbt != 0 ) nboot = nbt;
 
   std::vector<TVector2> rvec;
   TVector2 rvec_sum = TVector2(0,0);
@@ -61,18 +76,10 @@ void STBootStrap::SumUpVector()
     rvec.push_back( elementsTV2.at(ielm) );
     rvec_sum += elementsTV2.at(ielm);
 
-    // cout << setw(3) << ielm 
-    // 	 << " X = "  << setw(10) <<  elementsTV2.at(ielm).X()
-    // 	 << " Y = "  << setw(10) <<  elementsTV2.at(ielm).Y()
-    // 	 << " Phi= " << setw(10) <<  elementsTV2.at(ielm).Phi()
-    // 	 << endl;
   }
 
 
   Double_t phi_rot = 0;
-  // if(rvec_sum.X() > 0)
-  //   phi_rot = rvec_sum.Phi();
-
 
   for(UInt_t i = 0; i < nboot; i++) {
     std::vector< UInt_t> rep = Resampling(numElements);
@@ -120,9 +127,6 @@ void STBootStrap::StoreResults(UInt_t idx, Double_t off)
   iend = replace[idx].end();
   resMean[idx].push_back( TMath::Mean(ibgn, iend) );
   resStdv[idx].push_back( TMath::StdDev(ibgn, iend) );
-
-
-
   
   //  final results
   ibgn = resMean[idx].begin();
@@ -135,6 +139,8 @@ void STBootStrap::StoreResults(UInt_t idx, Double_t off)
   ibgn = resStdv[idx].begin();
   iend = resStdv[idx].end();
   cnvStdv2[idx].push_back( TMath::StdDev(ibgn, iend) );
+
+
 
 }
 
