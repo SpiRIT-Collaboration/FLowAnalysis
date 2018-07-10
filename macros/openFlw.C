@@ -83,6 +83,11 @@ UInt_t OpenChain(UInt_t m)
     treename = "mflw";
 
 
+  else if(sDB[0](1,2) == "nl")
+    treename = "flw";
+
+
+
   // loading file
   TString fform = sDB[m] + ".root";
  

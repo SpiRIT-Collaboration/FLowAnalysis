@@ -1,7 +1,7 @@
 TChain *fChain;
 //
-// oommand
-// RUN=2841,2843,2844,2845,2846,2848,2849,2850,2851,2852 STTPCDIR=/cache/scr/spirit/recoData/20180627/ STVERSION=1580.2b32d25 root Open_runreco.C
+// How to use command
+// RUN=2900,2901,2902.2903 STTPCDIR=/cache/scr/spirit/recoData/20180706/132Sn124Sn/ STVERSION=develop.RC.1603.e284ae9 root Open_runreco.C
 
 void Open_runreco()
 {

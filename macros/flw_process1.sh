@@ -53,16 +53,16 @@ source runList.sh
 # *****> <Edit Here>
 # Set RUNNUMBER1 
 
-RUNNUMBER1=(${RNF132})
+#RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
 
-#RUNNUMBER1="2855"
-
+#RUNNUMBER1=(${RNF108},${RNF124},${RNF112}) 
+RUNNUMBER1="2273"
 
 # *****> <Edit Here>     
-VERSION=9
+VERSION=0
 
 
 function process1(){

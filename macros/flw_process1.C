@@ -376,8 +376,12 @@ void OutputTree(Int_t nmax)
   TString sdeb = ".s";
   if(nmax < 0)  sdeb = "";
 
-  //  TString foutname = "data/run"+sRun+"_f0.v"+sVer+sdeb+".root";
-  TString foutname = "data/run"+sRun+"_nl.v"+sVer+sdeb+".root";
+  
+  TString foutname = "data/run"+sRun+"_f0.v"+sVer+sdeb+".root";
+
+  if( !STPC && NeuLAND ) 
+    foutname = "data/run"+sRun+"_nl.v"+sVer+sdeb+".root";
+
 
   fout = new TFile(foutname,"recreate");
   flw  = new TTree("flw","Beam and TPC track");
