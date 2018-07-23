@@ -87,33 +87,59 @@ void STBootStrap::BootStrapping(UInt_t nbt)
     for(UInt_t j = 0; j < nidx; j++)
       replace[j].clear();
 
-    Double_t tsumX = 0;
-    Double_t tsumY = 0;
+    TVector2 vsum = TVector2(0,0);
 
     for(std::vector< UInt_t >::iterator it = rep.begin(); it != rep.end(); it++)      
-      tsumX += cos(hrm * rvec.at( *it ).Phi() );
-    //    tsumX /= (Double_t)numElements;
+      vsum += rvec.at( *it );
 
-    replace[0].push_back( tsumX );
-    StoreResults(0);
 
-    for(std::vector< UInt_t >::iterator it = rep.begin(); it != rep.end(); it++)      
-      tsumY += sin(hrm * rvec.at( *it ).Phi() );
+      
 
-    //  tsumY /= (Double_t)numElements;
+    // Double_t tsumX = 0;
+    // Double_t tsumY = 0;
+    
+    // for(std::vector< UInt_t >::iterator it = rep.begin(); it != rep.end(); it++)      
+    //   tsumX += cos(hrm * rvec.at( *it ).Phi() );
+    // //    tsumX /= (Double_t)numElements;
+
+    // replace[0].push_back( tsumX );
+    // StoreResults(0);
+
+    // for(std::vector< UInt_t >::iterator it = rep.begin(); it != rep.end(); it++)      
+    //   tsumY += sin(hrm * rvec.at( *it ).Phi() );
+
+    // //  tsumY /= (Double_t)numElements;
    
-    replace[1].push_back( tsumY );
+    // replace[1].push_back( tsumY );
 
-    StoreResults(1);
+    // StoreResults(1);
 
-    TVector2 vt2 = TVector2(tsumX, tsumY);
-    replace[2].push_back( vt2.DeltaPhi( rvec_sum )); 
+    // TVector2 vt2 = TVector2(tsumX, tsumY);
+    //    replace[2].push_back( vt2.DeltaPhi( rvec_sum )); 
 
-    phi_mean =  rvec_sum.Phi() ;
-    StoreResults(2, phi_mean );
-
+ 
+    phi_mean =  vsum.Phi() ;
+    replaceVec.push_back( vsum );
+    StoreVectors();
     
   }  
+}
+
+
+void STBootStrak::StoreVectors(TVector2 vec)
+{
+  std::vector< Double_t >::iterator ibgn;
+  std::vector< Double_t >::iterator iend;
+
+  ibgn = replaceVec.begin();
+  iend = replaceVec.end();
+
+  
+
+
+  resVec.push_back( vec );
+
+  
 }
 
 

@@ -32,7 +32,8 @@ export STKYOTODIR=/cache/scr/spirit/kaneko/rootfile/kyoto/
 export STKYMLTDIR=/cache/scr/spirit/kaneko/rootfile/kyoto_re/mult/
 
 #NeuLAND data
-export STNLDIR=/cache/scr/spirit/NeuLand/neuland_3jul2018
+export STNLDIR=/cache/scr/spirit/NeuLand/neuland_23jul2018
+#export STNLDIR=/cache/scr/spirit/NeuLand/neuland_3jul2018
 #export STNLDIR=/cache/scr/spirit/NeuLand/neuland_18jun2018
 
 #Anlaysis Flag
