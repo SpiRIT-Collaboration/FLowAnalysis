@@ -19,6 +19,8 @@ void flw_process2(Long64_t nmax = -1)
   gRandom = new TRandom3(0);
   gRandom->SetSeed(itime);
 
+
+
   // I/O
   Open();
 
@@ -156,6 +158,8 @@ void flw_process2(Long64_t nmax = -1)
 
 void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
 {
+  auto bs_unitP_1 = new STBootStrap(50);
+  auto bs_unitP_2 = new STBootStrap(50);
 
   UInt_t *rndArray = new UInt_t[npart];
   
@@ -177,11 +181,15 @@ void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
       if( rndArray[itrack] == 0 ) {
 
 	unitP_1r+= wt * ptr.Unit();
+	bs_unitP_1->Add(wt * ptr.Unit());
+
 	aPart1->AddReactionPlaneFlag(100);
         mtrack_1++;
       }
       else  {
         unitP_2r+= wt * ptr.Unit();
+	bs_unitP_2->Add(wt * ptr.Unit());
+
 	aPart1->AddReactionPlaneFlag(200);
         mtrack_2++;
       }
@@ -191,6 +199,22 @@ void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
 
     }
   }
+
+  if( mtrack_1 > 0 && mtrack_2 > 0 ) {
+    bs_unitP_1->BootStrapping();
+    bs_unitP_2->BootStrapping();
+    
+    bsPhi_1[0] = bs_unitP_1->GetMean(2);
+    bsPhi_1[1] = bs_unitP_1->GetStdDev(2);
+    
+    bsPhi_2[0] = bs_unitP_2->GetMean(2);
+    bsPhi_2[1] = bs_unitP_2->GetStdDev(2);
+  }
+  //  cout << " bsphi1 " << bsPhi_1[0] << " +- " << bsPhi_1[1] << endl;
+  //  cout << " bsphi2 " << bsPhi_2[0] << " +- " << bsPhi_2[1] << endl;
+
+  delete bs_unitP_1;
+  delete bs_unitP_2;
 }
 
 UInt_t *RanndomDivide2(UInt_t npart)
@@ -427,7 +451,11 @@ void Initialize()
   unitP_1r   = TVector2(0.,0.);
   unitP_2r   = TVector2(0.,0.);
 
-
+  for(UInt_t i = 0; i < 2; i++){
+    bsPhi[i]   = -999.;
+    bsPhi_1[i] = -999.;
+    bsPhi_2[i] = -999.;
+  }
 }
 
 
@@ -586,6 +614,10 @@ void OutputTree(Long64_t nmax)
 
   mflw->Branch("unitP_1r",&unitP_1r);
   mflw->Branch("unitP_2r",&unitP_2r);
+  mflw->Branch("bsPhi"     ,bsPhi   ,"bsPhi[2]/D");
+  mflw->Branch("bsPhi_1"   ,bsPhi_1 ,"bsPhi_1[2]/D");
+  mflw->Branch("bsPhi_2"   ,bsPhi_2 ,"bsPhi_2[2]/D");
+
   mflw->Branch("mtrack_1",&mtrack_1);
   mflw->Branch("mtrack_2",&mtrack_2);
   

@@ -69,13 +69,13 @@ TCutG *gTriton   = NULL;
 TCutG *gPip      = NULL;
 TCutG *gPim      = NULL;
 
-vector<TVector2> pt;
+std::vector<TVector2> pt;
 
 TClonesArray *aParticleArray = NULL;
 TClonesArray *nParticleArray = NULL;
 TClonesArray *aNLCluster     = NULL;
 
-vector<TString> vfname;
+std::vector<TString> vfname;
 
 UInt_t  binmapsize = 0;
 
@@ -83,7 +83,7 @@ UInt_t  binmapsize = 0;
 Int_t    iRun;
 Int_t    numGoodTrack;
 Int_t    mtrack;
-vector<Int_t>    event;
+std::vector<Int_t>    event;
 TVector3 unitP_ave;
 TVector3 unitP_rot;
 TVector2 unitP2_ave;
@@ -92,7 +92,9 @@ TVector2 unitP_1r;
 TVector2 unitP_2r;
 UInt_t   mtrack_1;
 UInt_t   mtrack_2;
-
+Double_t bsPhi[2];
+Double_t bsPhi_1[2];
+Double_t bsPhi_2[2];
 
 // Tree out end
 

@@ -32,11 +32,12 @@ export STKYOTODIR=/cache/scr/spirit/kaneko/rootfile/kyoto/
 export STKYMLTDIR=/cache/scr/spirit/kaneko/rootfile/kyoto_re/mult/
 
 #NeuLAND data
-export STNLDIR=/cache/scr/spirit/NeuLand/neuland_3jul2018
+export STNLDIR=/cache/scr/spirit/NeuLand/neuland_23jul2018
+#export STNLDIR=/cache/scr/spirit/NeuLand/neuland_3jul2018
 #export STNLDIR=/cache/scr/spirit/NeuLand/neuland_18jun2018
 
 #Anlaysis Flag
-export STPC=0;
+export STPC=1;
 export BIGRIPS=1;
 export KYOTOARRY=0;
 export KATANA=0;
@@ -59,10 +60,10 @@ source runList.sh
 #RUNNUMBER1=(${RNF112})
 
 #RUNNUMBER1=(${RNF108},${RNF124},${RNF112}) 
-RUNNUMBER1="2273"
+RUNNUMBER1="2841"
 
 # *****> <Edit Here>     
-VERSION=0
+VERSION=6
 
 
 function process1(){
