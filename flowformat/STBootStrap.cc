@@ -84,39 +84,20 @@ void STBootStrap::BootStrapping(UInt_t nbt)
     std::vector< UInt_t> rep = Resampling(numElements);
     
 
-    std::vector< Double_t > deltPhi;
+    TVector2 sum_vec = TVector2(0,0);
 
     for(std::vector< UInt_t >::iterator it = rep.begin(); it != rep.end(); it++)  {
-      deltPhi.push_back( rvec_sum.DeltaPhi(rvec.at( *it )) );
+
+      sum_vec += rvec.at( *it ).Unit(); 
     }      
 
-    std::vector< Double_t >::iterator ibgn;
-    std::vector< Double_t >::iterator iend;
-
-    ibgn = deltPhi.begin();
-    iend = deltPhi.end();
-
-    //    std::cout << " hdeltaphi " << TMath::Mean(ibgn, iend) << " + " << rvec_sum.Phi() << " +- " << TMath::StdDev(ibgn, iend) << std::endl;
-
-    replace.push_back( TVector2::Phi_mpi_pi( TMath::Mean(ibgn, iend)) );     
+    Double_t vec_delt = rvec_sum.DeltaPhi( sum_vec );
+    replace.push_back( TVector2::Phi_mpi_pi( vec_delt ) );
 
   }  
 
   StoreResults(rvec_sum.Phi());
 }
-
-
-// void STBootStrap::StoreVectors(TVector2 vec)
-// {
-//   std::vector< Double_t >::iterator ibgn;
-//   std::vector< Double_t >::iterator iend;
-
-//   ibgn = replaceVec.begin();
-//   iend = replaceVec.end();
-
-//   resVec.push_back( vec );
-// }
-
 
 
 void STBootStrap::StoreResults(Double_t off)
