@@ -1,6 +1,6 @@
 void BootStrapTest()
 {
-  Double_t pxy[22][2] = { { 300.30820 , -196.1504 },
+  Double_t pxy[][2] = { { 300.30820 , -196.1504 },
 			  { 151.66651 , -271.1333 },
 			  { 177.78397 , -93.96121 },
 			  { 48.376354 , 97.354136 },
@@ -10,25 +10,25 @@ void BootStrapTest()
 			  { -134.8822 , -43.27171 },
 			  { 31.988070 , -280.8166 },
 			  { 1085.5061 , -13.50405 },
-			  { -77.49755 , 154.50885 },
-			  { 407.17399 , -234.7863 },
-			  { 311.75433 , 135.90189 },
-			  { 108.63103 , -280.2595 },
-			  { -518.5169 , -209.0715 },
-			  { 384.42002 , -278.8419 },
-			  { -815.0031 , 28.662856 },
-			  { -414.8316 , 66.177955 },
-			  { 326.15717 , -426.7524 },
-			  { 500.45768 , 346.02029 }};
+			  { -77.49755 , 154.50885 }};
+
+			  // { 407.17399 , -234.7863 },
+			  // { 311.75433 , 135.90189 },
+			  // { 108.63103 , -280.2595 },
+			  // { -518.5169 , -209.0715 },
+			  // { 384.42002 , -278.8419 },
+			  // { -815.0031 , 28.662856 },
+			  // { -414.8316 , 66.177955 },
+			  // { 326.15717 , -426.7524 },
+			  // { 500.45768 , 346.02029 }};
 
 
 
-  auto hstrap = new TGraph();
+  auto hstrap = new TGraphErrors();
   hstrap->SetTitle("hstrap");
 
-  auto bstrap = new STBootStrap();
+  auto bstrap = new STBootStrap(1);
 
-  Double_t phi_mean = 0;
   TVector2 vcsum = TVector2(0.,0.);
   
 
@@ -37,21 +37,20 @@ void BootStrapTest()
 
     bstrap->Add(vec);
 
-    phi_mean += vec.Phi();
-    
     vcsum += vec;
   }
 
 
-  for(UInt_t it = 1; it < 200; it++){
+  for(UInt_t it = 1; it < 100; it++){
     bstrap->BootStrapping(it);
 
-    hstrap->SetPoint(it-1, (Double_t)it, bstrap->GetMean(2));
+    hstrap->SetPoint(it-1, (Double_t)it, bstrap->GetMean());
+    hstrap->SetPointError(it-1, 0., bstrap->GetStdDev());
   }
   
-  cout << " mean " << bstrap->GetMean(2) << endl;
-  cout << " vec  " << phi_mean/22. << endl;
-  cout << " vsum " << vcsum.Phi() << endl;
+  cout << " res mean " << bstrap->GetResidualMean() << endl;
+  cout << " BST mean " << bstrap->GetMean() << endl;
+  cout << " vsum Phi " << TVector2::Phi_mpi_pi(vcsum.Phi()) << endl;
 
 
   hstrap->SetMarkerStyle(20);
