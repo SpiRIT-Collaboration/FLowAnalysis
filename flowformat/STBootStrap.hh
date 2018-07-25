@@ -22,16 +22,16 @@ public:
   void SetBootNumber(UInt_t ival) {nboot = ival;}
   void Add(TVector2 sample);
 
-  Double_t GetPhiOriginal() {return TVector2::Phi_mpi_pi( phi_mean );}
+  Double_t GetPhiOriginal() {return TVector2::Phi_mpi_pi( phi_off );}
 
   Double_t GetMean()       {return cnvMean; }
   Double_t GetCosMean()    {return cnvCosMean;}
-  Double_t GetStdDev()     {return cnvStdv;}
+  Double_t GetStdDev()     {std::cout << cnvStdv << std::endl; return cnvStdv;}
   Double_t GetStdDevError();
   Double_t GetStdDev2()    {return cnvStdv2;}
   Double_t GetNElem(){return (Double_t)numElements;}
-  Double_t GetResidualMean();
-  Double_t GetResidualStdDev();
+  Double_t GetResidualMean(UInt_t ival);
+  Double_t GetResidualStdDev(UInt_t ival);
 
 
   std::vector< Double_t > GetMeanVector()      {return resMean;   }
@@ -43,10 +43,10 @@ public:
   Double_t  GetStdDev2CnvVector(){return cnvStdv2;  }
   
 
-  void StoreResults(Double_t off = 0 );
+  void StoreResults();
   
   std::vector< UInt_t > Resampling(UInt_t ival);
-  void BootStrapping(UInt_t nbt = 0);
+  UInt_t BootStrapping(UInt_t nbt = 0);
 
 private:
 
@@ -55,7 +55,7 @@ private:
   std::vector< TVector2 > elementsTV2;
 
   UInt_t numElements;
-  Double_t     phi_mean;
+  Double_t     phi_off = -99.;
 
   UInt_t nboot = 0;
 

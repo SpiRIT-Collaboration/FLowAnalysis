@@ -39,15 +39,17 @@ void BootStrapTest()
     vcsum += vec;
   }
 
+  UInt_t itry = 2000000;
+  bstrap->BootStrapping(itry);
 
-  for(UInt_t it = 1; it < 300; it++){
-    bstrap->BootStrapping(it);
+  for(UInt_t it = 1; it < itry; it++){
 
-    hstrap->SetPoint(it-1, (Double_t)it, bstrap->GetMean());
-    hstrap->SetPointError(it-1, 0., bstrap->GetStdDev());
+    hstrap->SetPoint(it-1, (Double_t)it, bstrap->GetResidualMean(it));
+    hstrap->SetPointError(it-1, 0., bstrap->GetResidualStdDev(it));
+
   }
   
-  cout << " res mean " << bstrap->GetResidualMean() << endl;
+  //  cout << " res mean " << bstrap->GetResidualMean() << endl;
   cout << " BST mean " << bstrap->GetMean() << endl;
   cout << " vsum Phi " << TVector2::Phi_mpi_pi(vcsum.Phi()) << endl;
 
