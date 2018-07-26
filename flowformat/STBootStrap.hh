@@ -26,7 +26,7 @@ public:
 
   Double_t GetMean()       {return cnvMean; }
   Double_t GetCosMean()    {return cnvCosMean;}
-  Double_t GetStdDev()     {std::cout << cnvStdv << std::endl; return cnvStdv;}
+  Double_t GetStdDev()     {return cnvStdv;}
   Double_t GetStdDevError();
   Double_t GetStdDev2()    {return cnvStdv2;}
   Double_t GetNElem(){return (Double_t)numElements;}

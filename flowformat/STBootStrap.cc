@@ -69,8 +69,6 @@ UInt_t STBootStrap::BootStrapping(UInt_t nbt)
   if ( numElements <= 0 ) return -1;
 
 
-  std::cout << " num elements " << numElements << std::endl;
-
   if(nbt > 0 ) nboot = nbt;
   else nboot = 100;
 
@@ -123,14 +121,14 @@ void STBootStrap::StoreResults()
   resMean.push_back( TMath::Mean(ibgn, iend) );
   resStdv.push_back( TMath::StdDev(ibgn, iend) );
   
-  std::cout << " res " << iend - ibgn <<  " std " << TMath::StdDev(ibgn, iend) <<  std::endl;
+  //  std::cout << " res " << iend - ibgn <<  " std " << TMath::StdDev(ibgn, iend) <<  std::endl;
 
   //  ibgn = resMean.begin();
   //  iend = resMean.end();
 
   cnvMean = TVector2::Phi_mpi_pi( TMath::Mean(ibgn, iend) + phi_off ) ;
   cnvStdv = TMath::StdDev(ibgn, iend) ;
-  std::cout << " mean std " << cnvMean << " " << cnvStdv << std::endl;
+  //  std::cout << " mean std " << cnvMean << " " << cnvStdv << std::endl;
 
   cnvCosMean = cos(TMath::Mean(ibgn, iend) ) ;
 }

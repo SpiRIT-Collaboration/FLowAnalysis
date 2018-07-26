@@ -204,11 +204,11 @@ void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
     bs_unitP_1->BootStrapping();
     bs_unitP_2->BootStrapping();
     
-    bsPhi_1[0] = bs_unitP_1->GetMean(2);
-    bsPhi_1[1] = bs_unitP_1->GetStdDev(2);
+    bsPhi_1[0] = bs_unitP_1->GetMean();
+    bsPhi_1[1] = bs_unitP_1->GetStdDev();
     
-    bsPhi_2[0] = bs_unitP_2->GetMean(2);
-    bsPhi_2[1] = bs_unitP_2->GetStdDev(2);
+    bsPhi_2[0] = bs_unitP_2->GetMean();
+    bsPhi_2[1] = bs_unitP_2->GetStdDev();
   }
   //  cout << " bsphi1 " << bsPhi_1[0] << " +- " << bsPhi_1[1] << endl;
   //  cout << " bsphi2 " << bsPhi_2[0] << " +- " << bsPhi_2[1] << endl;

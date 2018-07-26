@@ -9,8 +9,8 @@
 #export STTPCDIR=/cache/scr/spirit/recoData/20180309/
 #export STVERSION=1523.dc416ee   ###@develop.1535.1915a48
 
-export STTPCDIR=/cache/scr/spirit/recoData/20180627/
-export STVERSION=1580.2b32d25
+export STTPCDIR=/cache/scr/spirit/recoData/20180719/
+export STVERSION=1665.2e3712e
 export ST132DIR=${STTPCDIR}132Sn124Sn/
 export ST108DIR=${STTPCDIR}108Sn112Sn/
 export ST124DIR=${STTPCDIR}124Sn112Sn/
@@ -37,7 +37,7 @@ export STNLDIR=/cache/scr/spirit/NeuLand/neuland_23jul2018
 #export STNLDIR=/cache/scr/spirit/NeuLand/neuland_18jun2018
 
 #Anlaysis Flag
-export STPC=1;
+export STPC=0;
 export BIGRIPS=1;
 export KYOTOARRY=0;
 export KATANA=0;
@@ -54,13 +54,13 @@ source runList.sh
 # *****> <Edit Here>
 # Set RUNNUMBER1 
 
-#RUNNUMBER1=(${RNF132})
+RUNNUMBER1=(${RNF132s})
 #RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
 
 #RUNNUMBER1=(${RNF108},${RNF124},${RNF112}) 
-RUNNUMBER1="2841"
+#RUNNUMBER1="2900"
 
 # *****> <Edit Here>     
 VERSION=6
