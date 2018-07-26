@@ -32,10 +32,12 @@ class STNeuLANDCluster : public TObject
   void SetLocalYLast(Double_t v){nclocaly_last = v;}
   void SetLocalZLast(Double_t v){nclocalz_last = v;}
 
-  void SetVetoHitAll(Int_t v)  {ncveto_all = v;}
-  void SetVetoHitOne(Int_t v)  {ncveto_bar = v;}
-  void SetVetoHitMid(Int_t v)  {ncveto_mid = v;}
-  void SetVetoHitLoose(Int_t v){ncveto_loose = v;}
+  void SetVetoHitAll(Int_t id, Int_t v)   {if(id == 0)ncvetot_all = v;   else ncvetoq_all = v;}
+  void SetVetoHitOne(Int_t id, Int_t v)   {if(id == 0)ncvetot_bar = v;   else ncvetoq_bar = v;}
+  void SetVetoHitMid(Int_t id, Int_t v)   {if(id == 0)ncvetot_mid = v;	 else ncvetoq_mid = v;}
+  void SetVetoHitLoose (Int_t id, Int_t v){if(id == 0)ncvetot_loose = v; else ncvetoq_loose = v;}
+  void SetVetoHitLoose1(Int_t id, Int_t v){if(id == 0)ncvetot_loose1 = v;else ncvetoq_loose1 = v;}
+  void SetVetoHitLoose2(Int_t id, Int_t v){if(id == 0)ncvetot_loose2 = v;else ncvetoq_loose2 = v;}
 
 private:
   void SetMomentum();
@@ -73,10 +75,12 @@ public:
   Double_t GetLocalYLast(){return nclocaly_last;}
   Double_t GetLocalZLast(){return nclocalz_last;}
 
-  Int_t GetVetoHitAll(){return ncveto_all;}
-  Int_t GetVetoHitOne(){return ncveto_bar;}
-  Int_t GetVetoHitMid(){return ncveto_mid;}
-  Int_t GetVetoHitLoose(){return ncveto_loose;}
+  Int_t GetVetoHitAll(Int_t id){if(id == 0)return ncvetot_all;      else return ncvetoq_all;}
+  Int_t GetVetoHitOne(Int_t id){if(id == 0)return ncvetot_bar;      else return ncvetoq_bar; }
+  Int_t GetVetoHitMid(Int_t id){if(id == 0)return ncvetot_mid;      else return ncvetoq_mid; }
+  Int_t GetVetoHitLoose(Int_t id){ if(id == 0)return ncvetot_loose; else return ncvetoq_loose; }
+  Int_t GetVetoHitLoose1(Int_t id){if(id == 0)return ncvetot_loose1;else return ncvetoq_loose1; }
+  Int_t GetVetoHitLoose2(Int_t id){if(id == 0)return ncvetot_loose2;else return ncvetoq_loose2; }
 
   // on the assumption of neutron
 
@@ -109,10 +113,18 @@ public:
   Double_t ncRapidity;
 
 
-  Int_t ncveto_all; // strong cut, if there is one hit on any veto
-  Int_t ncveto_bar; // strong cut, if there is one hit on veto bar in front of the cluster, delta x<30cm
-  Int_t ncveto_mid; // intermediate cut, if there is one hit on veto delta x < 22cm && delta y < 30cm
-  Int_t ncveto_loose; // loose cut, if there is one hit on veto delta x < 18cm && delta y < 20cm
+  Int_t ncvetot_all; // strong cut, if there is one hit on any veto
+  Int_t ncvetoq_all; // strong cut, if there is one hit on any veto
+  Int_t ncvetot_bar; // strong cut, if there is one hit on veto bar in front of the cluster, delta x<30cm
+  Int_t ncvetoq_bar; // strong cut, if there is one hit on veto bar in front of the cluster, delta x<30cm
+  Int_t ncvetot_mid; // intermediate cut, if there is one hit on veto delta x < 22cm && delta y < 30cm
+  Int_t ncvetoq_mid; // intermediate cut, if there is one hit on veto delta x < 22cm && delta y < 30cm
+  Int_t ncvetot_loose; // loose cut, if there is one hit on veto delta x < 18cm && delta y < 20cm
+  Int_t ncvetoq_loose; // loose cut, if there is one hit on veto delta x < 18cm && delta y < 20cm
+  Int_t ncvetot_loose1; // loose cut, if there is one hit on veto delta x < 18cm && delta y < 20cm
+  Int_t ncvetoq_loose1; // loose cut, if there is one hit on veto delta x < 18cm && delta y < 20cm
+  Int_t ncvetot_loose2; // loose cut, if there is one hit on veto delta x < 18cm && delta y < 20cm
+  Int_t ncvetoq_loose2; // loose cut, if there is one hit on veto delta x < 18cm && delta y < 20cm
 
   // constant values
   Double_t distance_to_center; //! distance from target to center of NeuLAND 1st plane
@@ -121,7 +133,7 @@ public:
   Double_t c;     //!
   Double_t target_offset; //!
   Double_t tof_offset;  //!
-  ClassDef(STNeuLANDCluster, 3);
+  ClassDef(STNeuLANDCluster, 4);
 
 };
 

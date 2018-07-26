@@ -7,7 +7,7 @@ ClassImp(STNeuLANDCluster)
 STNeuLANDCluster::STNeuLANDCluster()
 {
   Clear();
-  angle = 29.579*TMath::DegToRad() ; // deg.
+  angle = 29.579*TMath::Pi()/180. ; // deg.
 
   target_offset = -8.9; //mm
   targetPos = TVector3(0,0,target_offset);
@@ -19,6 +19,7 @@ STNeuLANDCluster::STNeuLANDCluster()
 
   c = 299.79245; //mm/ns
 
+  //  tof_offset = 37.5; //ns temporaly.
   tof_offset = 0.; // after 1 Feb. 2018
 }
 
@@ -134,8 +135,7 @@ void STNeuLANDCluster::SetMomentum()
 
   nctof -= tof_offset;
 
-  //  ncbeta  = (ncdistance/(nctof+gtof))/c;
-  ncbeta  = ncdistance/nctof/c;
+  ncbeta  = (ncdistance/(nctof+gtof))/c;
 
   if(ncbeta < 1.)
     ncgamma = 1/TMath::Sqrt(1. - ncbeta*ncbeta);
@@ -189,10 +189,18 @@ void STNeuLANDCluster::Clear(Option_t *)
   ncglobalPos.SetY(nclocaly);
   ncglobalPos.SetZ(nclocalz);
 
-  ncveto_all = -1;
-  ncveto_bar = -1;
-  ncveto_mid = -1;
-  ncveto_loose = -1;
+  ncvetot_all = -1;
+  ncvetoq_all = -1;
+  ncvetot_bar = -1;
+  ncvetoq_bar = -1;
+  ncvetot_mid = -1;
+  ncvetoq_mid = -1;
+  ncvetot_loose = -1;
+  ncvetoq_loose = -1;
+  ncvetot_loose1 = -1;
+  ncvetoq_loose1 = -1;
+  ncvetot_loose2 = -1;
+  ncvetoq_loose2 = -1;
 
   ncP = TVector3(0.,0.,1.);
   ncbeta  = 0.;
