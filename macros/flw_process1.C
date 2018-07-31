@@ -311,25 +311,29 @@ void flw_process1(Int_t nevt = -1)
       TIter nlnext(nlcluster);
       STNeuLANDCluster *nlFromCluster = NULL;
     
+      UInt_t veto_torq = 0;
+      if (SnA == 108)
+	veto_torq = 1;
+
       while( (nlFromCluster = (STNeuLANDCluster*)nlnext() ) ){
- 	if( nlFromCluster->GetVetoHitAll() == 0) 
+ 	if( nlFromCluster->GetVetoHitAll(veto_torq) == 0) 
 	  nhitnl[1]++;
 	else
 	  nhitnl[5]++;	  
 	
 
-	if( nlFromCluster->GetVetoHitOne() == 0) 
+	if( nlFromCluster->GetVetoHitOne(veto_torq) == 0) 
 	  nhitnl[2]++;
 	else
 	  nhitnl[6]++;
 
-	if( nlFromCluster->GetVetoHitMid() == 0) 
+	if( nlFromCluster->GetVetoHitMid(veto_torq) == 0) 
 	  nhitnl[3]++;
 	else
 	  nhitnl[7]++;
 	  
 	
-	auto nlPID = GetNeuLANDPID(nlFromCluster->GetEdep(), nlFromCluster->GetTOF(), nlFromCluster->GetVetoHitLoose());
+	auto nlPID = GetNeuLANDPID(nlFromCluster->GetEdep(), nlFromCluster->GetTOF(), nlFromCluster->GetVetoHitLoose(veto_torq));
 	if(nlPID > 0){
 	  nlFromCluster->SetMass(nlPID);
 
@@ -340,7 +344,7 @@ void flw_process1(Int_t nevt = -1)
 	}
 	else{ // if NeuLAND PID is not found
 
-	  if( nlFromCluster->GetVetoHitLoose() == 0)
+	  if( nlFromCluster->GetVetoHitLoose(veto_torq) == 0)
 	    nhitnl[4]++;
 	  else
 	    nhitnl[8]++;
