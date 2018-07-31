@@ -37,7 +37,7 @@ export STNLDIR=/cache/scr/spirit/NeuLand/neuland_23jul2018
 #export STNLDIR=/cache/scr/spirit/NeuLand/neuland_18jun2018
 
 #Anlaysis Flag
-export STPC=0;
+export STPC=1;
 export BIGRIPS=1;
 export KYOTOARRY=0;
 export KATANA=0;
@@ -63,7 +63,7 @@ RUNNUMBER1=(${RNF132s})
 #RUNNUMBER1="2900"
 
 # *****> <Edit Here>     
-VERSION=6
+VERSION=7
 
 
 function process1(){
