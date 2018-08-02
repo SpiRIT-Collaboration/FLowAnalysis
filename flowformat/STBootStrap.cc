@@ -1,11 +1,13 @@
 #include "STBootStrap.hh"
-STBootStrap::STBootStrap(UInt_t ival)
+STBootStrap::STBootStrap(UInt_t ival=1)
 {
   clear();
   
   nboot  = ival;
-}
 
+  hbsphi = new TH1D("hbsphi","BootStrap distribution",100, -1. * TMath::Pi(), TMath::Pi() );
+		    
+}
 STBootStrap::STBootStrap(UInt_t ival1, UInt_t ival2, Double_t *sample)
 {
   clear();
@@ -73,15 +75,15 @@ UInt_t STBootStrap::BootStrapping(UInt_t nbt)
   else nboot = 100;
 
   std::vector<TVector2> rvec;
-  TVector2 rvec_sum = TVector2(0,0);
+  rvec_sum = TVector2(0,0);
 
   for(UInt_t ielm = 0; ielm < numElements; ielm++) { 
     rvec.push_back( elementsTV2.at(ielm) );
-    rvec_sum += elementsTV2.at(ielm);
+
+    rvec_sum += (elementsTV2.at(ielm)).Unit();
   }
   
-  phi_off = rvec_sum.Phi();
-
+  phi_off = TVector2::Phi_mpi_pi(rvec_sum.Phi());
 
   replace.clear();
 
@@ -92,7 +94,9 @@ UInt_t STBootStrap::BootStrapping(UInt_t nbt)
     TVector2 sum_vec = TVector2(0,0);
 
     for(std::vector< UInt_t >::iterator it = rep.begin(); it != rep.end(); it++)  {
-
+      
+      hbsphi->Fill( TVector2::Phi_mpi_pi( (rvec.at(*it)).Phi() )  );
+      
       sum_vec += rvec.at( *it ).Unit(); 
     }      
 
@@ -119,12 +123,10 @@ void STBootStrap::StoreResults()
   iend = replace.end();
 
   resMean.push_back( TMath::Mean(ibgn, iend) );
-  resStdv.push_back( TMath::StdDev(ibgn, iend) );
-  
-  //  std::cout << " res " << iend - ibgn <<  " std " << TMath::StdDev(ibgn, iend) <<  std::endl;
 
-  //  ibgn = resMean.begin();
-  //  iend = resMean.end();
+  ibgn = resMean.begin();
+  iend = resMean.end();
+  resStdv.push_back( TMath::StdDev(ibgn, iend) );
 
   cnvMean = TVector2::Phi_mpi_pi( TMath::Mean(ibgn, iend) + phi_off ) ;
   cnvStdv = TMath::StdDev(ibgn, iend) ;

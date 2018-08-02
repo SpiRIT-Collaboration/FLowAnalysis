@@ -32,7 +32,8 @@ public:
   Double_t GetNElem(){return (Double_t)numElements;}
   Double_t GetResidualMean(UInt_t ival);
   Double_t GetResidualStdDev(UInt_t ival);
-
+  Double_t GetOriginalPhi() {return phi_off;}
+  TVector2 GetVectorSum()   {return rvec_sum;}
 
   std::vector< Double_t > GetMeanVector()      {return resMean;   }
   std::vector< Double_t > GetStdDevVector()    {return resStdv;   }
@@ -56,6 +57,8 @@ private:
 
   UInt_t numElements;
   Double_t     phi_off = -99.;
+  TVector2     rvec_sum;
+
 
   UInt_t nboot = 0;
 
@@ -70,6 +73,10 @@ private:
 
   TRandom3 rnd;
 
+  TH1D *hbsphi; // temporary
+public:
+  TH1D *GetBSPhiDistribution() {return hbsphi;}
+  
   ClassDef(STBootStrap,0);
 };
 
