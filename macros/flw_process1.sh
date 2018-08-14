@@ -54,10 +54,10 @@ source runList.sh
 # *****> <Edit Here>
 # Set RUNNUMBER1 
 
-RUNNUMBER1=(${RNF132})
+#RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
-#RUNNUMBER1=(${RNF112})
+RUNNUMBER1=(${RNF112})
 
 #RUNNUMBER1=(${RNF108},${RNF124},${RNF112}) 
 #RUNNUMBER1="2900"
@@ -65,6 +65,7 @@ RUNNUMBER1=(${RNF132})
 # *****> <Edit Here>     
 VERSION=7
 
+source setup.sh
 
 function process1(){
     typeset -i I=0

@@ -19,16 +19,6 @@ STBootStrap::STBootStrap(UInt_t ival1, UInt_t ival2, Double_t *sample)
   for(UInt_t i = 0; i < numElements; i++)
     elements.push_back( sample[i] );
 
-  for(UInt_t i = 0; i < nboot; i++) {
-
-    std::vector< UInt_t> rep = Resampling(numElements);
-
-    replace.clear();
-    for(std::vector< UInt_t >::iterator it = rep.begin(); it != rep.end(); it++)      
-      replace.push_back( elements.at( *it ) );
-			 
-    StoreResults();
-  }
 }
 
 
@@ -37,10 +27,10 @@ STBootStrap::STBootStrap(UInt_t ival1, UInt_t ival2, TVector2 *sample)
   clear();
   
   nboot       = ival1;
-  numElements = ival2;
+  numElementsTV2 = ival2;
 
 
-  for(UInt_t i = 0; i < numElements; i++)
+  for(UInt_t i = 0; i < numElementsTV2; i++)
     elementsTV2.push_back( sample[i] );
 
   BootStrapping();
@@ -51,7 +41,7 @@ STBootStrap::STBootStrap(UInt_t ival1, std::vector<TVector2> *sample)
   clear();
   
   nboot       = ival1;
-  numElements = sample->size();
+  numElementsTV2 = sample->size();
 
   elementsTV2 = *sample;
 
@@ -61,82 +51,146 @@ STBootStrap::STBootStrap(UInt_t ival1, std::vector<TVector2> *sample)
 void STBootStrap::Add(TVector2 sample)
 {
   elementsTV2.push_back(sample);
+  org_sum += sample.Unit();
+  numElementsTV2 = (Int_t)elementsTV2.size();
 
-  numElements = (Int_t)elementsTV2.size();
+
 }
-
+void STBootStrap::Add(Double_t sample)
+{
+  elements.push_back(sample);
+  r_sum += sample;
+  numElements = (Int_t)elements.size();
+}
 
 UInt_t STBootStrap::BootStrapping(UInt_t nbt)
 {
-  if ( numElements <= 0 ) return -1;
+  if ( numElements > 0 ) return BootStrapingDouble(nbt);
+
+  if ( numElementsTV2 > 0 ) return BootStrapingTVector2(nbt);
+
+  if ( numElements < 0 && numElementsTV2 < 0 ) return -1;
 
 
+  
+  return 0;
+}
+
+
+UInt_t STBootStrap::BootStrapingDouble(UInt_t nbt)
+{
   if(nbt > 0 ) nboot = nbt;
   else nboot = 100;
-
-  std::vector<TVector2> rvec;
-  rvec_sum = TVector2(0,0);
-
-  for(UInt_t ielm = 0; ielm < numElements; ielm++) { 
-    rvec.push_back( elementsTV2.at(ielm) );
-
-    rvec_sum += (elementsTV2.at(ielm)).Unit();
-  }
   
-  phi_off = TVector2::Phi_mpi_pi(rvec_sum.Phi());
+  ordn_Mean   = TMath::Mean( elements.begin(), elements.end() );
+  ordn_StdDev = TMath::StdDev(elements.begin(), elements.end()); 
+
+  replace.clear();
+  
+  for(UInt_t i = 0; i < nboot; i++) {
+    std::vector< UInt_t > rep = Resampling(numElements);
+
+    Double_t sum_double = 0.;
+    std::vector< Double_t > resampling;
+    
+    for( std::vector< UInt_t >::iterator it = rep.begin(); it != rep.end(); it++ )
+      resampling.push_back( elements.at( *it ) );
+
+    Double_t mean   = TMath::Mean( resampling.begin(), resampling.end() );    
+
+
+    replace.push_back( mean );
+
+    // for median 
+    // std::sort( resampling.begin(), resampling.end() );
+    // Double_t median = *(resampling.begin() + resampling.size()/2);
+    // if( resampling.size()%2 == 1 ) median = (median + *(resampling.begin() + resampling.size()/2 + 1))/2.;
+    // replace.push_back( median );
+
+    //    StoreResults;
+    cnvMean = TMath::Mean(replace.begin(), replace.end()) ;
+    cnvStdv = TMath::StdDev(replace.begin(), replace.end());
+
+    resMean.push_back( cnvMean );
+    resStdv.push_back( cnvStdv );
+
+  }
+
+  StoreConfideneLevel();
+
+  return 1;
+}
+
+UInt_t STBootStrap::BootStrapingTVector2(UInt_t nbt)
+{
+  if(nbt > 0 ) nboot = nbt;
+  else nboot = 1000;
+
+  // Ordinary method
+  ordn_Mean = TVector2::Phi_mpi_pi(org_sum.Phi());
+
+  std::vector< Double_t > org_phiv;
+  for(std::vector< TVector2 >::iterator it = elementsTV2.begin(); it != elementsTV2.end(); it++) 
+    org_phiv.push_back( TVector2::Phi_mpi_pi( (*it).DeltaPhi( org_sum ) ) );
+					     //org_sum.DeltaPhi( *it ) ) );
+  
+  ordn_StdDev = TMath::StdDev( org_phiv.begin(), org_phiv.end() );
 
   replace.clear();
 
   for(UInt_t i = 0; i < nboot; i++) {
-    std::vector< UInt_t> rep = Resampling(numElements);
-    
+    std::vector< UInt_t> rep = Resampling(numElementsTV2);
 
     TVector2 sum_vec = TVector2(0,0);
 
     for(std::vector< UInt_t >::iterator it = rep.begin(); it != rep.end(); it++)  {
       
-      hbsphi->Fill( TVector2::Phi_mpi_pi( (rvec.at(*it)).Phi() )  );
+      hbsphi->Fill( TVector2::Phi_mpi_pi( (elementsTV2.at(*it)).Phi() )  );
       
-      sum_vec += rvec.at( *it ).Unit(); 
+      sum_vec += elementsTV2.at( *it ).Unit(); 
     }      
 
-    Double_t vec_delt = rvec_sum.DeltaPhi( sum_vec );
+    Double_t vec_delt = sum_vec.DeltaPhi( org_sum ); //org_sum.DeltaPhi( sum_vec );
     replace.push_back( TVector2::Phi_mpi_pi( vec_delt ) );
 
+    //    StoreResults();
+    cnvMean = TVector2::Phi_mpi_pi( TMath::Mean(replace.begin(), replace.end()) + org_sum.Phi() );
+    resMean.push_back( cnvMean );
 
-    StoreResults();
+    cnvStdv = TMath::StdDev(resMean.begin(), resMean.end());
+    resStdv.push_back( cnvStdv );
+
 
   }  
 
-  
-  return numElements;
+  StoreConfideneLevel();
+
+  return 1;
 }
 
 
-void STBootStrap::StoreResults()
+void STBootStrap::StoreConfideneLevel()
 {
+  std::sort(replace.begin(), replace.end());
 
-  std::vector< Double_t >::iterator ibgn;
-  std::vector< Double_t >::iterator iend;
-    
-  ibgn = replace.begin();
-  iend = replace.end();
+  UInt_t CL_25  = UInt_t( (Double_t)replace.size() * 0.025);
+  UInt_t CL_975 = UInt_t( (Double_t)replace.size() * 0.975);
 
-  resMean.push_back( TMath::Mean(ibgn, iend) );
+  std::vector< Double_t >::iterator itr;
+  itr = replace.begin();
 
-  ibgn = resMean.begin();
-  iend = resMean.end();
-  resStdv.push_back( TMath::StdDev(ibgn, iend) );
+  CL_25lw  = *(itr + CL_25 );
 
-  cnvMean = TVector2::Phi_mpi_pi( TMath::Mean(ibgn, iend) + phi_off ) ;
-  cnvStdv = TMath::StdDev(ibgn, iend) ;
-  //  std::cout << " mean std " << cnvMean << " " << cnvStdv << std::endl;
+  CL_975up = *(itr + CL_975 - 1);
 
-  cnvCosMean = cos(TMath::Mean(ibgn, iend) ) ;
+
+  Error = (CL_975up - CL_25lw) * cnvStdv;
 }
 
 void STBootStrap::clear()
 {
+  numElements = 0;
+  numElementsTV2 = 0;
   elements.clear();
   elementsTV2.clear();
 
@@ -148,6 +202,14 @@ void STBootStrap::clear()
   cnvStdv2 = 0.;
   cnvCosMean = 0.;
 
+  org_sum = TVector2(0.,0.);
+  r_sum    = 0.;
+  
+  ordn_StdDev = 0.;
+  
+  CL_25lw = 0.;
+  CL_975up= 0.;
+  Error   = 0.;
 }
 
 std::vector< UInt_t > STBootStrap::Resampling(UInt_t ival)
@@ -164,7 +226,7 @@ std::vector< UInt_t > STBootStrap::Resampling(UInt_t ival)
 Double_t STBootStrap::GetResidualMean(UInt_t ival)
 {
 
-  if( resMean.size() > 0 && ival < resMean.size()) return TVector2::Phi_mpi_pi( resMean.at(ival) + phi_off); 
+  if( resMean.size() > 0 && ival < resMean.size()) return resMean.at(ival) ; 
 
   else return -999.;
 }
@@ -183,5 +245,4 @@ Double_t STBootStrap::GetStdDevError()
   UInt_t vsize = 1.;
   return cnvStdv / sqrt( Double_t(vsize) ); 
 }
-
 

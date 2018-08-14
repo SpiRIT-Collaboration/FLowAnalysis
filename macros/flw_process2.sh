@@ -7,8 +7,8 @@ source runList.sh
 ##--- for Process2 ------------------------------------
 # *****> <Edit Here>  
 
-RUNNUMBER1=(${RNF132})    
-#RUNNUMBER1=(${RNF108})                                                                              
+#RUNNUMBER1=(${RNF132})    
+RUNNUMBER1=(${RNF108})                                                                              
 #RUNNUMBER1=(${RNF124}) 
 #RUNNUMBER1=(${RNF112})
 

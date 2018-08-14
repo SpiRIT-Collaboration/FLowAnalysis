@@ -507,7 +507,7 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
       cc[im] = new TCanvas(Form("cc%d",im),Form("cc%d",im),700,500);
       cc[im]->Divide(2,2);
     
-      iv = 1;
+      UInt_t iv = 1;
       cc[im]->cd(iv); iv++;
     
       auto hvphi  = new TH1D("hvphi"  ,"phi"   ,100,-3.2,3.2);
@@ -522,10 +522,10 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
 	   << " t " << flowcorr[0][0]->GetBin_min(1) << " ~ " << flowcorr[0][0]->GetBin_max(1)
 	   << endl;
 
-      cout << " ------------" << endl;
-      cout << " m " << ntrkbin[0]  << " ~ " << ntrkbin[1]
-	   << " t " << thetabin[0] << " ~ " << thetabin[1]
-	   << endl;
+      // cout << " ------------" << endl;
+      // cout << " m " << ntrkbin[0]  << " ~ " << ntrkbin[1]
+      // 	   << " t " << thetabin[0] << " ~ " << thetabin[1]
+      // 	   << endl;
 
       vector<Double_t> vec1 =  flowcorr[0][0]->GetOriginalPhi();
       for(itr=vec1.begin(); itr!=vec1.end(); itr++)      
@@ -610,8 +610,8 @@ void Flatten_iphi_ntrkthetabin()  //%% Not used  :
     hbntrkiphi[m] = new TH2D(Form("hbntrkiphi%d",m)," before ; Number of tracks; #phi"     , 40,0,40,400,-3.2,3.2);
     hantrkiphi[m] = new TH2D(Form("hantrkiphi%d",m)," after  ; Number of tracks; #phi"     , 40,0,40,400,-3.2,3.2);
 
-    p_org = new TClonesArray("TVector3", 100);
-    p_rot = new TClonesArray("TVector3", 100);
+    //    p_org = new TClonesArray("TVector3", 100);
+    //    p_rot = new TClonesArray("TVector3", 100);
 
     rChain[m]->SetBranchAddress("ntrack",ntrack);
     rChain[m]->SetBranchAddress("STParticle",&aArray);
