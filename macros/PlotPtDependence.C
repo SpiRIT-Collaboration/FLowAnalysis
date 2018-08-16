@@ -14,8 +14,8 @@ Color_t icol[3][4]= { {kRed,          kBlue,  kOrange-3,   kGreen+1},
 void PlotPtDependence()
 {
   // --> Plotting selection
-  Bool_t bsys[4]  = { 0, 0, 1, 1};
-  Bool_t bpid[3]  = { 0, 0, 1};
+  Bool_t bsys[4]  = { 1, 1, 1, 1};
+  Bool_t bpid[3]  = { 1, 0, 0};
 
   TString fname[4][3];
   for(UInt_t is = 0; is < 4; is++){
@@ -25,20 +25,22 @@ void PlotPtDependence()
   }
 
   //  Double_t rrange[3] = {0.27, 0.54, 1.};
-  TString  rapRange[3] = {"Rapidity < 0.27 ",
-			  "0.27 <= Rapidity < 0.54",
-			  "0.54 <= Rapidity"};
+  TString  rapRange[] = {"Rapidity < 0.3 ",
+			 "0.3 <= Rapidity < 0.54",
+			 "0.54 <= Rapidity < 0.74",
+			 "0.74 <= Rapidity < 1.2"};
 
+  const UInt_t rbin = 4;
 
   TFile *fOpen;
-  TGraphErrors *gr_v1[12];
-  TGraphErrors *gr_v2[12];
-  TMultiGraph  *mv1[3];
-  TMultiGraph  *mv2[3];
-  TLegend      *lg1[3];
-  TLegend      *lg2[3];
+  TGraphErrors *gr_v1[rbin*4];
+  TGraphErrors *gr_v2[rbin*4];
+  TMultiGraph  *mv1[rbin];
+  TMultiGraph  *mv2[rbin];
+  TLegend      *lg1[rbin];
+  TLegend      *lg2[rbin];
 
-  for(UInt_t k = 0; k < 3; k++){
+  for(UInt_t k = 0; k < rbin; k++){
     mv1[k] = new TMultiGraph((TString)Form("mv1%d",k),";Pt [MeV/c]; v1");
     mv1[k]->SetTitle(rapRange[k]+";Pt [MeV/c]; v1");
     mv2[k] = new TMultiGraph((TString)Form("mv2%d",k),";Pt [MeV/c]; v2");
@@ -64,7 +66,7 @@ void PlotPtDependence()
 	std::cout << fname[is][ip] << " is opened. " << std::endl;
 
     
-      for(UInt_t k = 0; k < 3; k++){
+      for(UInt_t k = 0; k < rbin; k++){
 	TGraphErrors *gv1 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v1%d",k));
 	TGraphErrors *gv2 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v2%d",k));
   
@@ -101,30 +103,30 @@ void PlotPtDependence()
   
 
   cc1 = new TCanvas("cc1","v2",110,2280,1000,500);
-  cc1->Divide(3,1);
-  for(UInt_t k = 0; k < 3; k++){
+  cc1->Divide(rbin,1);
+  for(UInt_t k = 0; k < rbin; k++){
     cc1->cd(k+1);
-    mv2[k]->SetMaximum(0.02);
+    mv2[k]->SetMaximum( 0.02);
     mv2[k]->SetMinimum(-0.07);
     mv2[k]->Draw("ALP");
-    if( k == 2 ) lg2[k]->Draw();
+    if( k == rbin-1 ) lg2[k]->Draw();
   }
 
   cc0 = new TCanvas("cc0","v1",110,1280,1000,500);
-  cc0->Divide(3,1);
-  for(UInt_t k = 0; k < 3; k++){
+  cc0->Divide(rbin,1);
+  for(UInt_t k = 0; k < rbin; k++){
     cc0->cd(k+1);
-    mv1[k]->SetMaximum(0.35);
-    mv1[k]->SetMinimum(-0.35);
+    mv1[k]->SetMaximum(0.4);
+    mv1[k]->SetMinimum(-0.25);
     mv1[k]->Draw("ALP");
-    if( k == 2 )
+    if( k == rbin-1 )
       lg1[k]->Draw();
   }
 
 }
 
 
-void Save(TString cnt = "")
+void SaveCanvas(TString cnt = "")
 {
   cc0->SaveAs("v1PtSn"+cnt+".png");
   cc1->SaveAs("v2PtSn"+cnt+".png");

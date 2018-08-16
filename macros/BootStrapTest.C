@@ -84,7 +84,6 @@ void  Rndv1v2Distribution(UInt_t np = 50)
 
     //    hexpphic->Fill(phi);
     //    cout << " phi " << phi << " " << xbin << " " << rate << " : " << rnd << endl;
-
     
     // gr->SetPoint(k, phi, rate); 
     // grd->SetPoint(k, phi, rnd);

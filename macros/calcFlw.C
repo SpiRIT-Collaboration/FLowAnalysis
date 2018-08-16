@@ -133,11 +133,16 @@ Double_t atpl2e;
 // Double_t mcos2e[4] = {0.00197, 0.00251, 0.00788, 0.00241};
 
 // v5.0.0 ntrack[4]>=16"
-Double_t mcos1[4]  = {0.53374, 0.53512, 0.53195, 0.55687} ;
-Double_t mcos1e[4] = {0.00287, 0.00365, 0.00114, 0.00340};
-Double_t mcos2[4]  = {0.18136, 0.18230, 0.18015, 0.19742};
-Double_t mcos2e[4] = {0.00196, 0.00249, 0.00783, 0.00241};
+// Double_t mcos1[4]  = {0.53374, 0.53512, 0.53195, 0.55687} ;
+// Double_t mcos1e[4] = {0.00287, 0.00365, 0.00114, 0.00340};
+// Double_t mcos2[4]  = {0.18136, 0.18230, 0.18015, 0.19742};
+// Double_t mcos2e[4] = {0.00196, 0.00249, 0.00783, 0.00241};
 
+// v7.0.0
+Double_t mcos1[]  = {0.529983, 0.538748, 0.528896, 0.547655 };
+Double_t mcos1e[] = {0.003497, 0.004449, 0.014239, 0.004235 };
+Double_t mcos2[]  = {0.178815, 0.184779, 0.178082, 0.190939 };
+Double_t mcos2e[] = {0.002368, 0.003064, 0.009718, 0.002964 };
 
 
 Int_t   iVer;
@@ -744,8 +749,6 @@ void Plotv1v2(UInt_t selid=2)                 //%% Executable : v1  as a functio
     cc[ic]->Divide(3, nybin/3);
     cc[ic+1] = new TCanvas("dphi2","dphi2",1500,1000);
     cc[ic+1]->Divide(3, nybin/3);
-
-
 
     for(UInt_t jn = 0; jn < nybin; jn++){
 
@@ -1479,31 +1482,40 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
   cout << " Particle " << partname[selid] << endl;
   
-  const UInt_t rbin = 3;
-  Double_t rrange[3] = {0.27, 0.54, 1.}; 
-  TString rangeLabel[3];
-  rangeLabel[0] = Form(" Rapidity < %f "    ,rrange[0]);
-  rangeLabel[1] = Form("%f <= Rapidity < %f",rrange[0],rrange[1]);
-  rangeLabel[2] = Form("%f <= Rapidity "    ,rrange[1]);
+
+  Double_t rrange[] = {0.3, 0.54, 0.74, 1.2}; 
+  const UInt_t rbin = sizeof(rrange)/sizeof(Double_t);  
+  std::cout << " Rapidity binning " << rbin << std::endl;
+  TString rangeLabel[rbin];
+  for(UInt_t i = 0; i < rbin; i++ ){
+    if( i == 0 )
+      rangeLabel[0] = Form(" Rapidity < %f ",rrange[0]);
+    else if ( i == rbin -1 )
+      rangeLabel[i] = Form("%f <= Rapidity "    ,rrange[rbin-1]);
+    else 
+      rangeLabel[i] = Form("%f <= Rapidity < %f",rrange[i-1],rrange[i]);
+  }
 
 
   TH2D *hPtphi1[rbin];
   TH2D *hPtphi2[rbin];
   TH2D *hypt[rbin+1];
 
-  UInt_t nbin1 = 16;
-  UInt_t nbin2 = 10;
+  UInt_t nbin1 = 10; //16
+  UInt_t nbin2 = 8; //10
 
-  hypt[3]    = new TH2D("hypt_3","; Rapidity; Pt [MeV/c]"  , 200,0.,1.2, 200,0.,800);
+  hypt[rbin]    = new TH2D(Form("hypt_%d",rbin),"; Rapidity; Pt [MeV/c]"  , 200,0.,1.2, 200,0.,800);
 
   for(Int_t m = m_bgn; m < m_end; m++){
     
-    hypt[3]->Reset();
+    hypt[rbin]->Reset();
     
     TString sname;
     for(UInt_t kn = 0; kn < rbin; kn++){ 
-      hPtphi1[kn] = new TH2D((TString)Form("hPtphi1_%d",kn),";#Delta(#phi-#Phi)  ; Pt [MeV/c]"    , 50, -3.2, 3.2, nbin1, 0., 800);
-      hPtphi2[kn] = new TH2D((TString)Form("hPtphi2_%d",kn),";2 x #Delta(#phi-#Phi)  ; Pt [MeV/c]", 50, -3.2, 3.2, nbin2, 0., 800);
+      // hPtphi1[kn] = new TH2D((TString)Form("hPtphi1_%d",kn),";#Delta(#phi-#Phi)  ; Pt [MeV/c]"    , 50, -3.2, 3.2, nbin1, 0., 800);
+      // hPtphi2[kn] = new TH2D((TString)Form("hPtphi2_%d",kn),";2 x #Delta(#phi-#Phi)  ; Pt [MeV/c]", 50, -3.2, 3.2, nbin2, 0., 800);
+      hPtphi1[kn] = new TH2D((TString)Form("hPtphi1_%d",kn),";#Delta(#phi-#Phi)  ; Pt [MeV/c]"    , 20, -3.2, 3.2, nbin1, 0., 800);
+      hPtphi2[kn] = new TH2D((TString)Form("hPtphi2_%d",kn),";2 x #Delta(#phi-#Phi)  ; Pt [MeV/c]", 20, -3.2, 3.2, nbin2, 0., 800);
       
       TString sname = rangeLabel[kn]+"; Rapidity; Pt [MeV/c]";
       hypt[kn]    = new TH2D((TString)Form("hypt_%d",kn), sname  , 200,0.,1.2, 200,0.,800);
@@ -1535,20 +1547,22 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	  auto dphi  = aPart->GetAzmAngle_wrt_RP();
 
 	  UInt_t irapid = 0;
-	  if(rapid >= rrange[0] && rapid < rrange[1]) 
-	    irapid = 1;
-	  else if(rapid >= rrange[1]) 
-	    irapid = 2; 
+	  for( UInt_t i = 0; i < rbin; i++){
+	    if(rapid < rrange[i]){
+	      irapid = i;
+	      break;
+	    }
+	  }
 	  
 	  hPtphi1[irapid]->Fill(                        dphi, pt);
 	  hPtphi2[irapid]->Fill(TVector2::Phi_mpi_pi(2.*dphi), pt);
-
+	  
 	  hypt[irapid]->Fill(rapid, pt);
-	  hypt[3]->Fill(rapid, pt);
+	  hypt[rbin]->Fill(rapid, pt);
 	}
       }
     }
-  
+    
 
     TString fName = "PT" + sysName[isys[m]] + "_" + partname[selid]+".root";
     gSystem->cd("data");
@@ -1572,10 +1586,10 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
     ic++; id = 1; UInt_t idd = 1;
     cc[ic]   = new TCanvas("dphi1","dphi1",2000,1200);
-    cc[ic]->Divide(nbin1, 3);
+    cc[ic]->Divide(nbin1, rbin);
 
     cc[ic+1] = new TCanvas("dphi2","dphi2",1400,1200);
-    cc[ic+1]->Divide(nbin2, 3);
+    cc[ic+1]->Divide(nbin2, rbin);
 
     std::cout << " ---- Resutls ---------------------" << std::endl;
 
@@ -1590,7 +1604,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	Double_t ptce= hPtphi1[0]->GetYaxis()->GetBinWidth(jn)/sqrt(12.);
 
 	cc[ic]->cd(id); id++;
-	hyPtphi1[kn][jn] = (TH1D*)hPtphi1[kn]->ProjectionX( (TString)Form("hPtphi1_%d-%d",kn,jn+1),jn+1, jn+1,"eo" );
+	hyPtphi1[kn][jn] = (TH1D*)hPtphi1[kn]->ProjectionX( (TString)Form("hPtphi1_%d%d",kn,jn+1),jn+1, jn+1,"eo" );
 	hyPtphi1[kn][jn]->GetXaxis()->SetRange(2,49);
 
 	if( hyPtphi1[kn][jn]->GetEntries() > 0 ){
@@ -1615,7 +1629,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	Double_t ptce= hPtphi2[0]->GetYaxis()->GetBinWidth(jn)/sqrt(12.);
 
 	cc[ic+1]->cd(idd); idd++;
-	hyPtphi2[kn][jn] = (TH1D*)hPtphi2[kn]->ProjectionX( (TString)Form("hPtphi2_%d-%d",kn,jn+1),jn+1, jn+1,"eo" );
+	hyPtphi2[kn][jn] = (TH1D*)hPtphi2[kn]->ProjectionX( (TString)Form("hPtphi2_%d%d",kn,jn+1),jn+1, jn+1,"eo" );
 	hyPtphi2[kn][jn]->GetXaxis()->SetRange(2,49);
 
 	if( hyPtphi2[kn][jn]->GetEntries() > 0 ){
@@ -1641,7 +1655,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     //plotting
     ic++; id = 1;
     cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
-    cc[ic]->Divide(3,1);
+    cc[ic]->Divide(rbin,1);
     for(UInt_t kn = 0; kn < rbin; kn++){
       cc[ic]->cd(id); id++;
       gPt_v1[kn]->Draw("ALP");
@@ -1649,7 +1663,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
     ic++; id = 1;
     cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
-    cc[ic]->Divide(3,1);
+    cc[ic]->Divide(rbin,1);
     for(UInt_t kn = 0; kn < rbin; kn++){
       cc[ic]->cd(id); id++;
       gPt_v2[kn]->Draw("ALP");
@@ -1657,7 +1671,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
     ic++; id = 1;
     cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,400);
-    cc[ic]->Divide(3,1);
+    cc[ic]->Divide(rbin,1);
     for(UInt_t kn = 0; kn < rbin; kn++){
       cc[ic]->cd(id); id++;
       hypt[kn]->Draw("colz");
@@ -1665,7 +1679,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
     ic++; id = 1;
     cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
-    hypt[3]->Draw("colz");
+    hypt[rbin]->Draw("colz");
 
   }
   
@@ -2203,7 +2217,10 @@ void PlotNeuLANDProperty(UInt_t iout)           //%% Executable :
 
     Int_t nevt = SetBranch(m);
     cout << " Number of events " << nevt << endl;
-
+    
+    UInt_t vID = 0;
+    if( snbm == 108 )
+      vID = 1;
 
     for(Int_t i = 0; i < nevt; i++){
       rChain[m]->GetEntry(i);
@@ -2217,8 +2234,8 @@ void PlotNeuLANDProperty(UInt_t iout)           //%% Executable :
         auto pid      = aNLClust->GetPID();
         auto rapidity = aNLClust->GetRapidity();
         auto pt       = aNLClust->GetP().Pt();
-        auto veto_all = aNLClust->GetVetoHitAll();
-        auto veto_bar = aNLClust->GetVetoHitOne();
+        auto veto_all = aNLClust->GetVetoHitAll(vID);
+        auto veto_bar = aNLClust->GetVetoHitOne(vID);
 	
 	if( pid == 2112 ){
 
@@ -2280,12 +2297,17 @@ void PlotNeuLANDv1v2(UInt_t iout)             //%% Executable :
 
 
     // neutron
-    auto gvn_v1 = new TGraphErrors();
-    gvn_v1->SetName("gvn_v1");
-    gvn_v1->SetTitle("Neutron; Rapidity ; v1 ");
-    auto gvn_v2 = new TGraphErrors();
-    gvn_v2->SetName("gvn_v2");
-    gvn_v2->SetTitle("Neutron; Rapidity ; v2 ");
+    auto gv_v1 = new TGraphErrors();
+    gv_v1->SetName("gv_v1");
+    gv_v1->SetTitle("Neutron; Rapidity ; v1 ");
+    auto gv_v2 = new TGraphErrors();
+    gv_v2->SetName("gv_v2");
+    gv_v2->SetTitle("Neutron; Rapidity ; v2 ");
+
+
+    UInt_t vid = 0;
+    if( snbm == 108 )
+      vid = 1;
 
 
     Int_t nevt = SetBranch(m);
@@ -2304,9 +2326,9 @@ void PlotNeuLANDv1v2(UInt_t iout)             //%% Executable :
    	auto phi      = aNLClust->GetGlobalPos().Phi(); 
 	auto pt       = aNLClust->GetP().Pt();
 
-	auto veto_all = aNLClust->GetVetoHitAll();
-	auto veto_bar = aNLClust->GetVetoHitOne();
-	auto veto_mid = aNLClust->GetVetoHitMid();
+	auto veto_all = aNLClust->GetVetoHitAll(vid);
+	auto veto_bar = aNLClust->GetVetoHitOne(vid);
+	auto veto_mid = aNLClust->GetVetoHitMid(vid);
 
 
    	auto dphi     = TVector2::Phi_mpi_pi(unitP_fc->Phi() - phi);
@@ -2319,6 +2341,8 @@ void PlotNeuLANDv1v2(UInt_t iout)             //%% Executable :
 
 	  hpty   ->Fill( pt, rapidity);
 
+
+	  // @@@@@@@@@@ Pt dependece
 	  if( rapidity >= 0.2 && rapidity < 0.3) {
 	    hdphiptymd1->Fill(                          dphi, pt);
 	    hdphiptymd2->Fill(TVector2::Phi_mpi_pi(2.* dphi), pt);
@@ -2372,7 +2396,8 @@ void PlotNeuLANDv1v2(UInt_t iout)             //%% Executable :
       Double_t pt_mean = hpt->GetMean();
       Double_t pt_std  = hpt->GetStdDev();
 
-      cout << jn << " Low " << LowEdge << " Up " << UpEdge << " : " << hydphin -> GetEntries() << " pt " << pt_mean << " +- " << pt_std << endl;
+      cout << jn << " Low " << LowEdge << " Up " << UpEdge << " : " << hydphin -> GetEntries() 
+	   << " pt " << pt_mean << " +- " << pt_std << endl;
 
 
       cc[ic]->cd(id); id++;
@@ -2386,8 +2411,8 @@ void PlotNeuLANDv1v2(UInt_t iout)             //%% Executable :
 	Double_t v1   = para[4]/mcos1[isys[m]];
 	Double_t v1e  = sqrt( pow(v1,2)*( pow(para[5]/para[4],2) + pow(mcos1e[isys[m]]/mcos1[isys[m]],2) ) );
 
-	gvn_v1->SetPoint(npnt, rpd, v1);
-	gvn_v1->SetPointError(npnt, rpde, v1e);
+	gv_v1->SetPoint(npnt, rpd, v1);
+	gv_v1->SetPointError(npnt, rpde, v1e);
 
 	cc[ic]->cd(id); id++;
 	auto hpt = (TH1D*)gROOT->Get(Form("hpt_%d",jn+1));
@@ -2433,8 +2458,8 @@ void PlotNeuLANDv1v2(UInt_t iout)             //%% Executable :
 	Double_t v2   = para[4]/mcos2[isys[m]];
 	Double_t v2e  = sqrt( pow(v2,2)*( pow(para[5]/para[4],2) + pow(mcos2e[isys[m]]/mcos2[isys[m]],2) ));
 	
-	gvn_v2->SetPoint(npnt, rpd, v2);
-	gvn_v2->SetPointError(npnt, rpde, v2e);
+	gv_v2->SetPoint(npnt, rpd, v2);
+	gv_v2->SetPointError(npnt, rpde, v2e);
 	npnt++;
 
 	std::cout << setw(5) << jn << " w  c : " << setw(12)
@@ -2461,25 +2486,25 @@ void PlotNeuLANDv1v2(UInt_t iout)             //%% Executable :
 
     //----- Drawing                                                                                                                        
     auto mv1 = new TMultiGraph("mv1","NeuLAND v1; Rapidity; v1");
-    mv1->Add(gvn_v1,"lp");
+    mv1->Add(gv_v1,"lp");
 
-    gvn_v1->SetLineColor(2);
-    gvn_v1->SetMarkerStyle(20);
-    gvn_v1->SetMarkerColor(2);
+    gv_v1->SetLineColor(2);
+    gv_v1->SetMarkerStyle(20);
+    gv_v1->SetMarkerColor(2);
 
     auto aLeg1 = new TLegend(0.65,0.15,0.9,0.3,"");
-    aLeg1->AddEntry(gvn_v1 ,"Neutron","lp");
+    aLeg1->AddEntry(gv_v1 ,"Neutron","lp");
 
 
     auto mv2 = new TMultiGraph("mv2","NeuLAND v2; Rapidity; v2");
-    mv2->Add(gvn_v2,"lp");
+    mv2->Add(gv_v2,"lp");
 
-    gvn_v2->SetLineColor(2);
-    gvn_v2->SetMarkerStyle(20);
-    gvn_v2->SetMarkerColor(2);
+    gv_v2->SetLineColor(2);
+    gv_v2->SetMarkerStyle(20);
+    gv_v2->SetMarkerColor(2);
 
     auto aLeg2 = new TLegend(0.12,0.15,0.4,0.3,"");
-    aLeg2->AddEntry(gvn_v2 ,"Neutron","lp");
+    aLeg2->AddEntry(gv_v2 ,"Neutron","lp");
 
    
     ic++;
@@ -2498,8 +2523,8 @@ void PlotNeuLANDv1v2(UInt_t iout)             //%% Executable :
       gSystem->cd("data");
       hout = TFile::Open(fName,"recreate");
 
-      gvn_v1->Write();
-      gvn_v2->Write();
+      gv_v1->Write();
+      gv_v2->Write();
 
       hout->Close();
       gSystem->cd("..");

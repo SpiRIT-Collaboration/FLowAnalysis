@@ -6,10 +6,10 @@ source setup.sh
 ##--- for Process4 ------------------------------------
 # *****> <Edit Here>  
 
-RUNNUMBER1=(${RNF132})    
+#RUNNUMBER1=(${RNF132})    
 #RUNNUMBER1=(${RNF108})                                                                              
 #RUNNUMBER1=(${RNF124}) 
-#RUNNUMBER1=(${RNF112})
+RUNNUMBER1=(${RNF112})
 
 
 CVRUN=${RUNNUMBER1[0]}

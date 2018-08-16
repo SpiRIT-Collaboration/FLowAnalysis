@@ -4,13 +4,14 @@
 
 source runList.sh
 
+source setup.sh
 ##--- for Process2 ------------------------------------
 # *****> <Edit Here>  
 
 #RUNNUMBER1=(${RNF132})    
-RUNNUMBER1=(${RNF108})                                                                              
+#RUNNUMBER1=(${RNF108})                                                                              
 #RUNNUMBER1=(${RNF124}) 
-#RUNNUMBER1=(${RNF112})
+RUNNUMBER1=(${RNF112})
 
 # *****> <Edit Here>                                                                                                            
 VERSION=7.0
