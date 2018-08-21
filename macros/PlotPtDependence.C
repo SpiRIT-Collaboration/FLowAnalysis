@@ -14,7 +14,7 @@ Color_t icol[3][4]= { {kRed,          kBlue,  kOrange-3,   kGreen+1},
 void PlotPtDependence()
 {
   // --> Plotting selection
-  Bool_t bsys[4]  = { 1, 1, 1, 1};
+  Bool_t bsys[4]  = { 1, 1, 0, 1};
   Bool_t bpid[3]  = { 1, 0, 0};
 
   TString fname[4][3];
@@ -106,8 +106,8 @@ void PlotPtDependence()
   cc1->Divide(rbin,1);
   for(UInt_t k = 0; k < rbin; k++){
     cc1->cd(k+1);
-    mv2[k]->SetMaximum( 0.02);
-    mv2[k]->SetMinimum(-0.07);
+    mv2[k]->SetMaximum( 0.2);
+    mv2[k]->SetMinimum(-0.2);
     mv2[k]->Draw("ALP");
     if( k == rbin-1 ) lg2[k]->Draw();
   }

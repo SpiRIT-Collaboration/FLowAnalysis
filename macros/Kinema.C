@@ -46,6 +46,7 @@ void Kinema(UInt_t isel = 0)
 
   for(UInt_t isys = 0; isys < 5; isys++){
 
+
     Double_t EkB_lb    = eB_lb[isys]  * mB[isys];
     mB[isys] *= amu;
     mT[isys] *= amu;
@@ -53,6 +54,8 @@ void Kinema(UInt_t isel = 0)
     // Beam      
     Double_t EB_lb  = EkB_lb + mB[isys];
     Double_t PB_lb     = sqrt(EB_lb*EB_lb - mB[isys]*mB[isys]);
+
+
     //PB_lb = sqrt(EkB_lb*EkB_lb + 2.*mB[isys]*EkB_lb);
     Double_t YB_lb  = 0.5 * log( (EB_lb + PB_lb) / (EB_lb - PB_lb) );
 
@@ -104,6 +107,51 @@ void Kinema(UInt_t isel = 0)
 	 << endl;
 
     cout << " dY " << YB_cm - YT_cm << endl;
+
+    cout << " ------------------------ " << endl;
+    auto bmVec = new TLorentzVector( TVector3(0., 0., PB_lb), EB_lb );
+    auto tgVec = new TLorentzVector( TVector3(0., 0., 0.), mT[isys] );
+    auto totalVec = *bmVec + *tgVec;
+    TVector3 boostVec = totalVec.BoostVector();
+
+    cout << " before " << endl;
+    cout << " beam g : " << bmVec->Gamma()
+	 << "      Y : " << bmVec->Y()
+	 << "      Z : " << bmVec->Z()
+	 << "      E : " << bmVec->E()
+	 << endl;
+
+    cout << " Targ g : " << tgVec->Gamma()
+	 << "      Y : " << tgVec->Y()
+	 << "      Z : " << tgVec->Z()
+	 << "      E : " << tgVec->E()
+	 << endl;
+
+    bmVec->Boost(-boostVec);
+    tgVec->Boost(-boostVec);
+
+    cout << " after " << endl;
+    cout << " beam g : " << bmVec->Gamma()
+	 << "      Y : " << bmVec->Y()
+	 << "      Z : " << bmVec->Z()
+	 << "      E : " << bmVec->E()
+	 << endl;
+
+    cout << " Targ g : " << tgVec->Gamma()
+	 << "      Y : " << tgVec->Y()
+	 << "      Z : " << tgVec->Z()
+	 << "      E : " << tgVec->E()
+	 << endl;
+
+    cout << " Ecm " << (*bmVec + *tgVec).E() << endl;
+
+    cout << " Beam   Rapidity " << 0.5 * log( ( bmVec->E() + bmVec->Z())/(bmVec->E() - bmVec->Z()) )  << endl;
+    cout << " Target Rapidity " << 0.5 * log( ( tgVec->E() + tgVec->Z())/(tgVec->E() - tgVec->Z()) )  << endl;
+
+
+
+
+    cout << " =====-------=====---------- " << endl;
   }
 }
 
