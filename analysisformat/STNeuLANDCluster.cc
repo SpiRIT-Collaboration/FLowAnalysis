@@ -135,7 +135,8 @@ void STNeuLANDCluster::SetMomentum()
 
   nctof -= tof_offset;
 
-  ncbeta  = (ncdistance/(nctof+gtof))/c;
+  //  ncbeta  = (ncdistance/(nctof+gtof))/c;
+  ncbeta  = (ncdistance/nctof)/c;
 
   if(ncbeta < 1.)
     ncgamma = 1/TMath::Sqrt(1. - ncbeta*ncbeta);

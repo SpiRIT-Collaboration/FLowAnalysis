@@ -1,4 +1,4 @@
-void PlotNLProperty()
+void PlotNLAcceptance()
 {
   Double_t vpt1[50];
   Double_t vpt2[50];
@@ -8,8 +8,8 @@ void PlotNLProperty()
 
   Double_t mass = 939.565346;
 
-  Double_t thta[2] = {0.4, 0.65};
-  Double_t dist = 8900.;
+  Double_t thta[2] = {0.38, 0.65};
+  Double_t dist = 8561.05 + 280.;
 
 
   Double_t beta;
@@ -26,11 +26,15 @@ void PlotNLProperty()
     vpt1[i] = p * sin(thta[0]);
     vpt2[i] = p * sin(thta[1]);
 
-    vrap1[i] = 0.5 * log( (E + p*cos(thta[0]))/(E - p*cos(thta[0])));
-    vrap2[i] = 0.5 * log( (E + p*cos(thta[1]))/(E - p*cos(thta[1])));
+    vrap1[i] = 0.5 * log( (E + p*cos(thta[0]))/(E - p*cos(thta[0]))) - 0.382453;
+    vrap2[i] = 0.5 * log( (E + p*cos(thta[1]))/(E - p*cos(thta[1]))) - 0.382453;
 
   }
   
+  Double_t tof_gamma = dist/299.792458;
+
+  cout << " tof-gamma " << tof_gamma << endl;
+    
 
   auto mgr = new TMultiGraph();
 

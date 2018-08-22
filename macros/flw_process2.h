@@ -26,6 +26,7 @@ void      OutputTree(Long64_t val);
 Long64_t  GetRandomNumTrack();
 Long64_t  GetMultiplicityDistribution();
 Bool_t    DefineVersion();
+void      DefineLorentzBoostVector();
 
 STParticle* GetRealTrack(Long64_t ival);
 STParticle* GetMixedTrack(Long64_t *ival, Int_t *kval);
@@ -57,6 +58,7 @@ Int_t   maxProc;
 //TChain *fChain;
 TTree    *fTree;
 Long64_t nEntry;
+TVector3 boostVec;
 
 TRandom3 rnd;
 vector<UInt_t> trackID;

@@ -34,6 +34,7 @@ private:
   TVector3 ftrackatTarget;
   Int_t    fPID;
   Double_t fRapidity;
+  Double_t fRapiditycm;
   Double_t fpsudoRapidity;
   Double_t fEtotal;
   Int_t    fChar;
@@ -134,6 +135,9 @@ public:
 
   void     SetRapidity();
   Double_t GetRapidity()                 {return fRapidity;}
+
+  void     SetRapiditycm(Double_t val)   {fRapiditycm = val;}
+  Double_t GetRapiditycm()               {return fRapiditycm;}
 
   void     SetpsudoRapidity();
   Double_t GetpsudoRapidity()            {return fpsudoRapidity;}
@@ -271,7 +275,7 @@ public:
   TVector3     GetVertex()                      { return fvertex;}
 
 
-  ClassDef(STParticle, 7)
+  ClassDef(STParticle, 8)
 
 };
 
