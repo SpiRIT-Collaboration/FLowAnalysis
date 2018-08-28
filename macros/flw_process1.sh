@@ -8,15 +8,17 @@
 # TPC data
 #export STTPCDIR=/cache/scr/spirit/recoData/20180309/
 #export STVERSION=1523.dc416ee   ###@develop.1535.1915a48
+#export STTPCDIR=/cache/scr/spirit/recoData/20180719/
+#export STVERSION=1665.2e3712e
 
-export STTPCDIR=/cache/scr/spirit/recoData/20180719/
-export STVERSION=1665.2e3712e
-export ST132DIR=${STTPCDIR}132Sn124Sn/
-export ST108DIR=${STTPCDIR}108Sn112Sn/
-export ST124DIR=${STTPCDIR}124Sn112Sn/
-export ST112DIR=${STTPCDIR}112Sn124Sn/
-export STCkT100=${STTPCDIR}Cocktail100MeV/
-export STCkT300=${STTPCDIR}Cocktail300MeV/
+export STTPCDIR=/xrootd/spdaq01/recoData/20180826/Sn132_JustinPRF_pion/
+export STVERSION=GenieTemp.1728.18d377e
+export ST132DIR=${STTPCDIR}
+export ST108DIR=${STTPCDIR}
+export ST124DIR=${STTPCDIR}
+export ST112DIR=${STTPCDIR}
+export STCkT100=${STTPCDIR}
+export STCkT300=${STTPCDIR}
 
 #BigRIPS data
 export STBEAM132=/cache/scr/spirit/DataAskedByMizuki/beam.Sn132_all/
@@ -59,11 +61,11 @@ source runList.sh
 #RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
 
-#RUNNUMBER1=(${RNF108},${RNF124},${RNF112}) 
+#RUNNUMBER1=(${RNF132},${RNF108},${RNF124},${RNF112}) 
 RUNNUMBER1="2900"
 
 # *****> <Edit Here>     
-VERSION=8
+VERSION=9
 
 source setup.sh
 

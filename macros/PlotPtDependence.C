@@ -1,36 +1,58 @@
 TCanvas *cc0;
 TCanvas *cc1;
+TCanvas *cc2;
 
 // --> configuration
-TString fsys[4] = {"132Sn+124Sn","108Sn+112Sn","124Sn+112Sn","112Sn+124Sn"};
-TString rsys[4] = {"132",        "108",        "124",        "112"};
-TString fpid[3] = {"proton","deuteron","triton"};  
-UInt_t  imrk[4] = {20, 21, 22, 23};
-Size_t  imsz[4] = {1, 1, 1.3, 1.3};
-Color_t icol[3][4]= { {kRed,          kBlue,  kOrange-3,   kGreen+1}, 
+TString fsys[] = {"132Sn+124Sn","108Sn+112Sn","124Sn+112Sn","112Sn+124Sn"};
+TString rsys[] = {"132",        "108",        "124",        "112"};
+TString fpid[] = {"proton","deuteron","triton","neutron"};  
+UInt_t  imrk[] = {20, 21, 22, 23, 21};
+Size_t  imsz[] = {1, 1, 1.3, 1.3, 1.3};
+Color_t icol[][4] = { {kRed,          kBlue,  kOrange-3,   kGreen+1}, 
 		      {kBlue+2,   kOrange+7,  kGreen-3,     kPink+9},
-		      {kGreen-3,    kPink+7,  kCyan-1,    kYellow-2} };
+		      {kGreen-3,    kPink+7,  kCyan-1,    kYellow-2},
+		      {kOrange-2, kGreen+3,   kCyan-1,    kBlue} };
+
+Double_t FittingAndIntegral(TGraphErrors *gr)
+{
+  TF1 *p1 = new TF1("p1","[0]+[1]*x",0.,800.);
+  
+  gr->Fit("p1","","",200.,700.);
+  
+  return p1->Integral(0., 800) / 800.;
+}
 
 void PlotPtDependence()
 {
   // --> Plotting selection
-  Bool_t bsys[4]  = { 1, 1, 0, 1};
-  Bool_t bpid[3]  = { 1, 0, 0};
+  Bool_t bsys[]  = { 1, 1, 0, 0};
+  Bool_t bpid[]  = { 1, 0, 0, 1};
 
-  TString fname[4][3];
+
+  TString fname[4][4];
   for(UInt_t is = 0; is < 4; is++){
+    if( !bsys[is] ) continue;
+
     for(UInt_t ip = 0; ip < 3; ip++){
-      fname[is][ip] = "data/PT"+rsys[is]+"Sn_"+fpid[ip]+".root";
+      if(bpid[ip])
+	fname[is][ip] = "data/PT"+rsys[is]+"Sn_"+fpid[ip]+".root";
     }
+
+    if(bpid[3])
+      fname[is][3] = "data/NLv1v2cm"+rsys[is]+"Sn.root";
   }
 
   //  Double_t rrange[3] = {0.27, 0.54, 1.};
-  TString  rapRange[] = {"Rapidity < 0.3 ",
-			 "0.3 <= Rapidity < 0.54",
-			 "0.54 <= Rapidity < 0.74",
-			 "0.74 <= Rapidity < 1.2"};
+  Double_t yrange[] =  {-0.25, -0.15, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45};
+  const UInt_t nyrange = sizeof(yrange)/sizeof(Double_t) + 1 ;
+  TString rapRange[nyrange];
+  for(UInt_t i = 1; i < nyrange - 1; i++)
+    rapRange[i] = Form(" %f <= Rapidity < %f", yrange[i-1],yrange[i]);
+  rapRange[0] = Form(" Rapidity < %f", yrange[0]);
+  rapRange[nyrange-1] = Form(" %f <= Rapidity", yrange[nyrange-2]);
 
-  const UInt_t rbin = 4;
+
+  const UInt_t rbin = nyrange-1;
 
   TFile *fOpen;
   TGraphErrors *gr_v1[rbin*4];
@@ -39,6 +61,8 @@ void PlotPtDependence()
   TMultiGraph  *mv2[rbin];
   TLegend      *lg1[rbin];
   TLegend      *lg2[rbin];
+  TGraphErrors *gr_v1f;
+
 
   for(UInt_t k = 0; k < rbin; k++){
     mv1[k] = new TMultiGraph((TString)Form("mv1%d",k),";Pt [MeV/c]; v1");
@@ -47,6 +71,9 @@ void PlotPtDependence()
     mv2[k]->SetTitle(rapRange[k]+";Pt [MeV/c]; v1");
     lg1[k] = new TLegend(0.4 , 0.15, 0.9 ,  0.4,"");
     lg2[k] = new TLegend(0.12, 0.14, 0.58, 0.35,"");
+
+    gr_v1f = new TGraphErrors();
+    gr_v1f->SetName("gr_v1f");
   }
   
   UInt_t igr = 0;
@@ -55,7 +82,7 @@ void PlotPtDependence()
     
     if( !bsys[is] ) continue;
 
-    for(UInt_t ip = 0; ip < 3; ip++){
+    for(UInt_t ip = 0; ip < 4; ip++){
 
       if( !bpid[ip] ) continue;
 
@@ -65,6 +92,7 @@ void PlotPtDependence()
       else
 	std::cout << fname[is][ip] << " is opened. " << std::endl;
 
+      fOpen->ls();
     
       for(UInt_t k = 0; k < rbin; k++){
 	TGraphErrors *gv1 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v1%d",k));
@@ -72,6 +100,10 @@ void PlotPtDependence()
   
 	TString gvname = Form("gPt_v1%d",igr);
 	gr_v1[igr] = (TGraphErrors*)gv1->Clone(gvname);
+	//	Double_t mean = FittingAndIntegral(gr_v1[igr]);
+	//	gr_v1f->SetPoint(k, (Double_t)k,mean);
+	
+
 	gvname = Form("gPt_v2%d",igr);
 	gr_v2[igr] = (TGraphErrors*)gv2->Clone(gvname);
 
@@ -123,6 +155,9 @@ void PlotPtDependence()
       lg1[k]->Draw();
   }
 
+  // cc2 = new TCanvas("cc2","v1fit");
+  // gr_v1f->SetMarkerStyle(20);
+  // gr_v1f->Draw("ALP");
 }
 
 

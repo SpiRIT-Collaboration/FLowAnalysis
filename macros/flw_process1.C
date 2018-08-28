@@ -877,7 +877,7 @@ void SetTPC()
   Int_t i = 0;
   while(kTRUE && fileversion != ""){
 
-    TString recoFile = Form("run"+sRun+"_s%d.reco.develop."+fileversion+".root",i);
+    TString recoFile = Form("run"+sRun+"_s%d.reco."+fileversion+".root",i);
     std::cout << " recoFile " << rootDir+recoFile << std::endl;
     
     if(gSystem->FindFile(rootDir,recoFile)){

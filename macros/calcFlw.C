@@ -1,5 +1,6 @@
 #include "FlowFunctions.h"
 #include "openFlw.C"
+#include "GetLorentzBoost.C"
 
 auto *fcos1 = new TF1("fcos1","[0]+2.*[1]*cos(x)"   ,-1.*TMath::Pi(),TMath::Pi());
 
@@ -155,7 +156,6 @@ TString sVer;
 // functions
 void GetFittingParameters(TH1D &h1, Double_t pp[6]);
 void GetFittingParameters(TH1D &h1, Double_t pp[6], Double_t corr[2]);
-TVector3 LorentzBoost(UInt_t m=0); 
 Double_t GetRapidity_cm(TVector3 p, Double_t mass, TVector3 bvec);
 
 UInt_t pxbooking();
@@ -668,7 +668,7 @@ void Plotv1v2(UInt_t selid=2)                 //%% Executable : v1  as a functio
     hdphi2->Reset();
     hcos2->Reset();
 
-    TVector3 boostVec = LorentzBoost(m);
+    TVector3 boostVec = LorentzBoost(4);
 
     Int_t nevt = SetBranch(m);
     cout << " Number of events " << nevt << endl;
@@ -1485,44 +1485,55 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
   cout << " Particle " << partname[selid] << endl;
   
-
-  Double_t rrange[] = {0.3, 0.54, 0.74, 1.2}; 
+  // Rapidity binning
+  Double_t rrange[] = { -0.25, -0.15, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45};
   const UInt_t rbin = sizeof(rrange)/sizeof(Double_t);  
+
+  // PT binning
+  Double_t pt_max = 800.;
+  UInt_t nbin1 = 10; //16
+  UInt_t nbin2 = 8; //10
+  Double_t dpt1 = pt_max/(Double_t)nbin1;
+  Double_t dpt2 = pt_max/(Double_t)nbin2;
+
+
   std::cout << " Rapidity binning " << rbin << std::endl;
   TString rangeLabel[rbin];
   for(UInt_t i = 0; i < rbin; i++ ){
     if( i == 0 )
-      rangeLabel[0] = Form(" Rapidity < %f ",rrange[0]);
+      rangeLabel[0] = Form(" y < %f ",rrange[0]);
     else if ( i == rbin -1 )
-      rangeLabel[i] = Form("%f <= Rapidity "    ,rrange[rbin-1]);
+      rangeLabel[i] = Form("%f <= y "    ,rrange[rbin-1]);
     else 
-      rangeLabel[i] = Form("%f <= Rapidity < %f",rrange[i-1],rrange[i]);
+      rangeLabel[i] = Form("%f <= y < %f",rrange[i-1],rrange[i]);
   }
 
 
-  TH2D *hPtphi1[rbin];
-  TH2D *hPtphi2[rbin];
-  TH2D *hypt[rbin+1];
-
-  UInt_t nbin1 = 10; //16
-  UInt_t nbin2 = 8; //10
-
-  hypt[rbin]    = new TH2D(Form("hypt_%d",rbin),"; Rapidity; Pt [MeV/c]"  , 200,0.,1.2, 200,0.,800);
-
   for(Int_t m = m_bgn; m < m_end; m++){
-    
-    hypt[rbin]->Reset();
-    
-    TString sname;
+
+    TH2D *hypt[rbin];
+    TH2D *hyphi1[rbin];
+    TH2D *hyphi2[rbin];
+    TH2D *hyptphi1[rbin][nbin1];
+    TH2D *hyptphi2[rbin][nbin2];
+
+    // Lorentz Transform    
+    TVector3 boostVec = LorentzBoost(4);
+  
     for(UInt_t kn = 0; kn < rbin; kn++){ 
-      // hPtphi1[kn] = new TH2D((TString)Form("hPtphi1_%d",kn),";#Delta(#phi-#Phi)  ; Pt [MeV/c]"    , 50, -3.2, 3.2, nbin1, 0., 800);
-      // hPtphi2[kn] = new TH2D((TString)Form("hPtphi2_%d",kn),";2 x #Delta(#phi-#Phi)  ; Pt [MeV/c]", 50, -3.2, 3.2, nbin2, 0., 800);
-      hPtphi1[kn] = new TH2D((TString)Form("hPtphi1_%d",kn),";#Delta(#phi-#Phi)  ; Pt [MeV/c]"    , 100, -3.2, 3.2, nbin1, 0., 800);
-      hPtphi2[kn] = new TH2D((TString)Form("hPtphi2_%d",kn),";2 x #Delta(#phi-#Phi)  ; Pt [MeV/c]", 100, -3.2, 3.2, nbin2, 0., 800);
-      
-      TString sname = rangeLabel[kn]+"; Rapidity; Pt [MeV/c]";
-      hypt[kn]    = new TH2D((TString)Form("hypt_%d",kn), sname  , 200,0.,1.2, 200,0.,800);
+
+      TString sname = rangeLabel[kn];
+      hypt[kn]    = new TH2D((TString)Form("hypt_%d",kn),    sname+"; Rapidity; Pt [MeV/c]"  , 200, -0.4, 0.45, 200, 0., 800);
+      hyphi1[kn]  = new TH2D((TString)Form("hyphi1_%d",kn),  sname+"; #Phi"   , 100, -3.2,  3.2, 200, 0., 800);
+      hyphi2[kn]  = new TH2D((TString)Form("hyphi2_%d",kn),  sname+";2*#Phi"  ,  50,  0.,   3.2, 200, 0., 800);
+
+      for(UInt_t pn = 0; pn < nbin1; pn++)
+	hyptphi1[kn][pn] = new TH2D((TString)Form("hyptphi1_%d%d",kn,pn),"pt; #Delta #Phi" , 100, -3.2, 3.2, 200, 0., 1000.); 
+
+      for(UInt_t pn = 0; pn < nbin2; pn++)
+	hyptphi2[kn][pn] = new TH2D((TString)Form("hyptphi2_%d%d",kn,pn),"pt; #Delta 2*#Phi", 50, 0., 3.2,   200, 0., 1000.); 
     }
+
 
     Int_t nevt = SetBranch(m);
     cout << " Number of events " << nevt << endl;
@@ -1546,22 +1557,40 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	  if( pid > 2000 && (rpf == 110 || rpf == 210 ) ) continue;
 
 	  auto pt    = aPart->GetRotatedMomentum().Pt();
-	  auto rapid = aPart->GetRapidity();
 	  auto dphi  = aPart->GetAzmAngle_wrt_RP();
+	  auto rapid = GetRapidity_cm(aPart->GetMomentum(), aPart->GetMass(), -boostVec);
 
-	  UInt_t irapid = 0;
+
+	  UInt_t irapid = rbin - 1;
 	  for( UInt_t i = 0; i < rbin; i++){
 	    if(rapid < rrange[i]){
 	      irapid = i;
 	      break;
 	    }
 	  }
-	  
-	  hPtphi1[irapid]->Fill(                        dphi, pt);
-	  hPtphi2[irapid]->Fill(TVector2::Phi_mpi_pi(2.*dphi), pt);
-	  
+
+
 	  hypt[irapid]->Fill(rapid, pt);
-	  hypt[rbin]->Fill(rapid, pt);
+	  hyphi1[irapid]->Fill(dphi, pt);
+	  hyphi2[irapid]->Fill(abs( TVector2::Phi_mpi_pi(2.*dphi)), pt );
+	  
+	  UInt_t ipt = nbin1 - 1;
+	  for(UInt_t i = 0; i < nbin1; i++){
+	    if( pt < dpt1*(i+1)) {
+	      ipt = i;
+	      break;
+	    }
+	  }
+	  hyptphi1[irapid][ipt]->Fill(dphi, pt);
+
+	  ipt = nbin2 - 1;
+	  for(UInt_t i = 0; i < nbin2; i++){
+	    if( pt < dpt2*(i+1)) {
+	      ipt = i;
+	      break;
+	    }
+	  }
+	  hyptphi2[irapid][ipt]->Fill(abs( TVector2::Phi_mpi_pi(2.*dphi) ), pt);
 	}
       }
     }
@@ -1571,11 +1600,15 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     gSystem->cd("data");
     auto GraphSave = new TFile(fName,"recreate");
     
+    TGraphErrors *gv_v1 = new TGraphErrors();
+    gv_v1->SetTitle("gv_v1");
+    TGraphErrors *gv_v2 = new TGraphErrors();
+    gv_v2->SetTitle("gv_v2");
+
     TGraphErrors *gPt_v1[rbin];
     TGraphErrors *gPt_v2[rbin];
 
-    for(UInt_t kn = 0; kn < rbin ; kn++){
-
+    for(UInt_t kn = 0; kn < rbin ; kn++){      
       gPt_v1[kn] = new TGraphErrors();
       gPt_v1[kn]->SetName((TString)Form("gPt_v1%d",kn));
       TString sname = partname[selid]+"; Pt [MeV/c]; v1";
@@ -1587,69 +1620,107 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       gPt_v2[kn]->SetTitle(sname);
     }
 
-    ic++; id = 1; UInt_t idd = 1;
+    ic++; 
     cc[ic]   = new TCanvas("dphi1","dphi1",2000,1200);
     cc[ic]->Divide(nbin1, rbin);
 
     cc[ic+1] = new TCanvas("dphi2","dphi2",1400,1200);
     cc[ic+1]->Divide(nbin2, rbin);
 
+    cc[ic+2] = new TCanvas(Form("cc%d",ic+2),Form("cc%d",ic+2), 1000, 1200);
+    cc[ic+2]->Divide(2, rbin);
+
+    //************************************************** 
     std::cout << " ---- Resutls ---------------------" << std::endl;
 
-    TH1D *hyPtphi1[rbin][nbin1];
-    TH1D *hyPtphi2[rbin][nbin2];
-
+    UInt_t kl = 0;
+    UInt_t id1 = 0;
+    UInt_t id2 = 0;
+    
     for(UInt_t kn = 0; kn < rbin; kn++){
+      
+      Double_t rapm  = hypt[kn]->GetMean(1);
+      Double_t rape  = hypt[kn]->GetStdDev(1);
+
+      // v1 vs rapidity
+      cc[ic+2]->cd(2*(kn+1)-1);
+      auto hyphi = (TH1D*)hyphi1[kn]->ProjectionX("",0,-1,"eo");
+      Double_t para[6];
+      Double_t corr[2]={mcos1[isys[m]], mcos1e[isys[m]]};
+      GetFittingParameters(*hyphi, para, corr);
+      
+      gv_v1->SetPoint( kl,     rapm, para[4]);
+      gv_v1->SetPointError( kl, rape, para[5]);
+
+      // v2 vs rapidity
+      cc[ic+2]->cd(2*(kn+1));
+
+      hyphi = (TH1D*)hyphi2[kn]->ProjectionX("",0,-1,"eo");
+      GetFittingParameters(*hyphi, para, corr);
+
+      gv_v2->SetPoint( kl,    rapm, para[4]);
+      gv_v2->SetPointError( kl, rape, para[5]);
+      
+      kl++;
+
+
+      // pt dependence 
+      UInt_t il = 0; 
 
       for(UInt_t jn = 0; jn < nbin1; jn++){
 
-	Double_t ptc = hPtphi1[0]->GetYaxis()->GetBinCenter(jn+1);
-	Double_t ptce= hPtphi1[0]->GetYaxis()->GetBinWidth(jn)/sqrt(12.);
+	id1++; cc[ic]->cd(id1); 
 
-	cc[ic]->cd(id); id++;
-	hyPtphi1[kn][jn] = (TH1D*)hPtphi1[kn]->ProjectionX( (TString)Form("hPtphi1_%d%d",kn,jn+1),jn+1, jn+1,"eo" );
-	//	hyPtphi1[kn][jn]->GetXaxis()->SetRange(2,49);
+	if( hyptphi1[kn][jn]->GetEntries() > 0 ) {	
 
-	if( hyPtphi1[kn][jn]->GetEntries() > 0 ){
+	  Double_t ptc  = hyptphi1[kn][jn]->GetMean(2);
+	  Double_t ptce = hyptphi1[kn][jn]->GetStdDev(2);
+	    
+	  auto hypt = (TH1D*)hyptphi1[kn][jn]->ProjectionX();
 
 	  Double_t para[6];
 	  Double_t corr[2]={mcos1[isys[m]], mcos1e[isys[m]]};
-	  GetFittingParameters(*hyPtphi1[kn][jn], para, corr);
+	  GetFittingParameters(*hypt, para, corr);
+	    
 
-	  Double_t v1   = para[4];
-	  Double_t v1e  = para[5];
+	  gPt_v1[kn]->SetPoint(il, ptc, para[4]);
+	  gPt_v1[kn]->SetPointError(il, ptce, para[5]);
+	    
+	  il++;
+	}
+      }
 
-	  gPt_v1[kn]->SetPoint(jn, ptc, v1);
-	  gPt_v1[kn]->SetPointError(jn, ptce, v1e);
+      il = 0; 
+      for(UInt_t jn = 0; jn < nbin2; jn++){
+	
+	id2++; cc[ic+1]->cd(id2); 
+	if( hyptphi2[kn][jn]->GetEntries() > 0 ){
+
+	  Double_t ptc  = hyptphi2[kn][jn]->GetMean(2);
+	  Double_t ptce = hyptphi2[kn][jn]->GetStdDev(2);
+
+	  auto hypt = (TH1D*)hyptphi2[kn][jn]->ProjectionX();
+
+	  Double_t para[6];
+	  Double_t corr[2] = {mcos2[isys[m]], mcos2e[isys[m]]};
+	  GetFittingParameters(*hypt, para, corr);
+
+	  gPt_v2[kn]->SetPoint(il, ptc, para[4]);
+	  gPt_v2[kn]->SetPointError(il, ptce, para[5]);
+	  
+	  il++;
 	}
       }
 
 
-      for(UInt_t jn = 0; jn < nbin2; jn++){
-	Double_t ptc = hPtphi2[0]->GetYaxis()->GetBinCenter(jn+1);
-	Double_t ptce= hPtphi2[0]->GetYaxis()->GetBinWidth(jn)/sqrt(12.);
-
-	cc[ic+1]->cd(idd); idd++;
-	hyPtphi2[kn][jn] = (TH1D*)hPtphi2[kn]->ProjectionX( (TString)Form("hPtphi2_%d%d",kn,jn+1),jn+1, jn+1,"eo" );
-	hyPtphi2[kn][jn]->GetXaxis()->SetRange(2,49);
-
-	if( hyPtphi2[kn][jn]->GetEntries() > 0 ){
-
-	  Double_t para[6];
-	  Double_t corr[2] = {mcos2[isys[m]], mcos2e[isys[m]]};
-	  GetFittingParameters(*hyPtphi2[kn][jn], para, corr);
-
-	  Double_t v2   = para[4];
-	  Double_t v2e  = para[5];
-
-	  gPt_v2[kn]->SetPoint(jn, ptc, v2);
-	  gPt_v2[kn]->SetPointError(jn, ptce, v2e);
-	} 
-      }
-      
       gPt_v1[kn]->Write();
       gPt_v2[kn]->Write();
     }
+    gv_v1->Write();
+    gv_v2->Write();
+
+    ic+=3;
+
 
     //plotting
     ic++; id = 1;
@@ -1676,9 +1747,22 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       hypt[kn]->Draw("colz");
     }
 
+
     ic++; id = 1;
     cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
-    hypt[rbin]->Draw("colz");
+    gv_v1->Draw("ALP");
+
+    auto LineV = new TLine(0.,gv_v1->GetYaxis()->GetXmin(), 0., gv_v1->GetYaxis()->GetXmax());
+    auto LineH = new TLine(gv_v1->GetXaxis()->GetXmin(),    0., gv_v1->GetXaxis()->GetXmax(), 0.);
+    LineV->SetLineStyle(3);
+    LineH->SetLineStyle(3);
+    LineV->Draw();
+    LineH->Draw();
+
+
+    ic++; id = 1;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
+    gv_v2->Draw("ALP");
 
   }
   
@@ -2196,14 +2280,14 @@ void PlotNeuLANDProperty(UInt_t iout)           //%% Executable :
 
   //----- Booking
   TH1D* hmult = new TH1D("hmult0",";Multiplicity ", 15,0.,15.);
-  TH2D* haccp = new TH2D("haccp0","; Rapidity ; Pt [MeV/c]",nybin, -0.4, 0.2, 100,   0., 350);
+  TH2D* haccp = new TH2D("haccp0","; Rapidity ; Pt [MeV/c]",nybin, -0.4, 0.4, 100,   0., 500);
 
 
   //----- Event loop
   for(Int_t m = m_bgn; m < m_end; m++){
 
     total_neut = 0;
-    TVector3 boostVec = LorentzBoost(m);
+    TVector3 boostVec = LorentzBoost(4);
 
   //----- Output file
     if( iout == 1 ) {
@@ -2258,7 +2342,14 @@ void PlotNeuLANDProperty(UInt_t iout)           //%% Executable :
       gSystem->cd("..");
     }
 
-    std::cout << " Number of neutron " << total_neut << " / " << hmult->GetEntries() << " = " << Float_t(total_neut/hmult->GetEntries())
+    gStyle->SetOptStat(0);
+    ic++; id = 1;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+    haccp->Draw("colz");
+
+
+    std::cout << " Number of neutron " << total_neut << " / " << hmult->GetEntries() 
+	      << " = " << Float_t(total_neut/hmult->GetEntries())
 	      << " : " << nevt << std::endl;
   }
 }
@@ -2267,42 +2358,51 @@ void PlotNeuLANDProperty(UInt_t iout)           //%% Executable :
 void PlotNeuLANDv1v2(UInt_t iout)             //%% Executable : 
 {
   std::cout << " Executing : PlotNeuLANDv1v2(" << iout << ")" << std::endl;
-
+  
   //----- Parametres                                                                                                                       
   TFile *hout;
+  
+  //  Double_t yrange[] =  {0.08, 0.15, 0.22, 0.3, 0.37, 0.6};
+  Double_t yrange[] =  {-0.25, -0.15, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45};
+  const UInt_t nyrange = sizeof(yrange)/sizeof(Double_t) + 1 ;
+  Double_t ptrange[] = { 80., 120., 180., 350., 600.};
+  const UInt_t nptrange = sizeof(ptrange)/sizeof(Double_t) + 1;
 
-  const UInt_t nybin  = 5;
-  const UInt_t dy     = 100;
-
+  const UInt_t nybin  = nyrange;
+  const UInt_t dy     = 50;
+  
   UInt_t nbin1 = 100;
   UInt_t nbin2 = 100;
 
   //----- Booking                                                                                                                          
-  auto hdphin1     = new TH2D("hdphin1" ,";#Delta(#phi-#Phi)  ; Rapidity"        , nbin1, -3.2, 3.2, nybin*dy, -0.4, 0.1);
-  auto hdphin2     = new TH2D("hdphin2" ,";2*#Delta(#phi-#Phi); Rapidity"        , nbin2, -3.2, 3.2, nybin*dy, -0.4, 0.1);
-  auto hpty        = new TH2D("hpty"    ,"; Pt [MeV/c];         Rapidity"        ,   400,  0. ,300., nybin*dy, -0.4, 0.1);  
+  auto hdphin1     = new TH2D("hdphin1" ,";#Delta(#phi-#Phi)  ; Rapidity", nbin1, -3.2, 3.2, nybin*dy, -0.4, 0.45);
+  auto hdphin2     = new TH2D("hdphin2" ,";2*#Delta(#phi-#Phi); Rapidity", nbin2, -3.2, 3.2, nybin*dy, -0.4, 0.45);
+  auto hpty        = new TH2D("hpty"    ,"; Pt [MeV/c];         Rapidity", nybin*dy, -0.4,0.45,400,  0. ,600. );  
 
 
-  //  Double_t yrange[] =  {0.08, 0.15, 0.22, 0.3, 0.37, 0.6};
-  Double_t yrange[] =  {-0.3, -0.22, -0.15, -0.1, 0., 0.2};
-  const UInt_t nyrange = sizeof(yrange)/sizeof(Double_t);
-  Double_t ptrange[] = { 80., 120., 180., 350.};
-  const UInt_t nptrange = sizeof(ptrange)/sizeof(Double_t);
 
-  TH1D *hdphipty1[nyrange*nptrange];
-  TH1D *hdphipty2[nyrange*nptrange];
-  TH2D *hyptcut[nyrange*nptrange];
-  for(UInt_t i = 0; i < nyrange*nptrange; i++){
-    hdphipty1[i] = new TH1D(Form("hdphipty1_%d",i),";#Delta(#phi-#Phi);pt" , 100, -3.2, 3.2);  
-    hdphipty2[i] = new TH1D(Form("hdphipty2_%d",i),";#Delta(#phi-#Phi);pt" ,  50,   0., 3.2);
-    hyptcut[i]   = new TH2D(Form("hyptcut_%d",i)  ,";Rapidity; pt"         , 100, -0.4, 0.2,  100.,  0., 350.);
+  TH1D *hdphipty1[nyrange][nptrange];
+  TH1D *hdphipty2[nyrange][nptrange];
+  TH2D *hyptcut[nyrange][nptrange];
+  for(UInt_t i = 0; i < nyrange; i++){
+    for(UInt_t j = 0; j < nptrange; j++){
+      hdphipty1[i][j] = new TH1D(Form("hdphipty1_%d%d",i,j),";#Delta(#phi-#Phi);pt" , 100, -3.2, 3.2);  
+      hdphipty2[i][j] = new TH1D(Form("hdphipty2_%d%d",i,j),";#Delta(#phi-#Phi);pt" ,  50,   0., 3.2);
+      hyptcut[i][j]   = new TH2D(Form("hyptcut_%d%d",i,j)  ,";Rapidity; pt"         , 100, -0.4, 0.45,100., 0., 600.);
+    }
   }
-
+  
   TGraphErrors* gpt_v1[nyrange];
   TGraphErrors* gpt_v2[nyrange];
   for(UInt_t i = 0; i < nyrange; i++) {
     gpt_v1[i] = new TGraphErrors();
     gpt_v2[i] = new TGraphErrors();
+
+    gpt_v1[i]->SetName((TString)Form("gPt_v1%d",i));
+    gpt_v1[i]->SetTitle("Neutron; Pt [MeV/c]; v1");
+
+    gpt_v2[i]->SetName((TString)Form("gPt_v2%d",i));
+    gpt_v2[i]->SetTitle("Neutron; Pt [MeV/c]; v2");
   }
 
 
@@ -2314,19 +2414,21 @@ void PlotNeuLANDv1v2(UInt_t iout)             //%% Executable :
     hpty        -> Reset(); 
 
 
-    TVector3 boostVec = LorentzBoost(m);
+    TVector3 boostVec = LorentzBoost(4);
 
-    for(UInt_t i = 0; i < nyrange*nptrange; i++){
-      hdphipty1[i]->Reset();
-      hdphipty2[i]->Reset();
-      hyptcut[i]  ->Reset();
+    for(UInt_t i = 0; i < nyrange; i++){
+      for(UInt_t j = 0; j < nptrange; j++){
+	hdphipty1[i][j]->Reset();
+	hdphipty2[i][j]->Reset();
+	hyptcut[i][j]  ->Reset();
+      }
     }
 
-    std::vector< std::vector< Double_t > > rapmean(nyrange*nptrange);
-    std::vector< std::vector< Double_t > > ptmean(nyrange*nptrange);
-    for(UInt_t i = 0; i < nyrange*nptrange; i++) {
-      rapmean[i].clear();
-      ptmean[i].clear();
+    std::vector< std::vector< std::vector< Double_t > > > rapmean(nyrange);
+    std::vector< std::vector< std::vector< Double_t > > > ptmean(nyrange);
+    for(UInt_t i = 0; i < nyrange; i++) {
+      rapmean[i].resize(nptrange);
+      ptmean[i].resize(nptrange);
     }
     
     // neutron
@@ -2344,6 +2446,7 @@ void PlotNeuLANDv1v2(UInt_t iout)             //%% Executable :
 
 
     Int_t nevt = SetBranch(m);
+
     cout << " Number of events " << nevt << endl;
 
     for(Int_t i = 0; i < nevt; i++){
@@ -2375,49 +2478,58 @@ void PlotNeuLANDv1v2(UInt_t iout)             //%% Executable :
    	  hdphin1->Fill(                          dphi , rapidity );
    	  hdphin2->Fill( TVector2::Phi_mpi_pi(2.* dphi), rapidity );
 
-	  hpty   ->Fill( pt, rapidity);
-
-
+	  Bool_t bFill = kFALSE;
 	  // @@@@@@@@@@ Pt dependece
-	  Bool_t bfill = kTRUE;
-	  for(UInt_t i = 0; i < nyrange; i++){
+	  UInt_t hidy  = nyrange-1;
+	  UInt_t hidpt = nptrange-1;
 
-	    if( rapidity < yrange[i] && bfill) {
-
-	      for(UInt_t j = 0; j < nptrange; j++) {
-		if( pt < ptrange[j] ) {
-		  UInt_t hid = nptrange*j + i;
-		  hyptcut[hid]  ->Fill( rapidity, pt );
-		  hdphipty1[hid]->Fill(                         dphi);
-		  hdphipty2[hid]->Fill( abs(TVector2::Phi_mpi_pi(2.* dphi)) );
-		  rapmean[hid].push_back(rapidity);
-		  ptmean[hid].push_back(pt);
-
-		  bfill = kFALSE;
-		  break;
-		}
-	      }
+	  for(UInt_t i = 0; i < nyrange-1; i++){
+	    
+	    if( rapidity < yrange[i]) {
 	      
+	      hidy = i;
+	      break;
 	    }
 	  }
+		
+	  for(UInt_t j = 0; j < nptrange-1; j++) {
+	    if( pt < ptrange[j] ) { 
+	      hidpt = j;
+	      break;
+	    }
+	  }
+
+	  
+
+	  //	  cout << hidy << " /  " << hidpt << " " << pt << " " << rapidity << endl;
+	  //	  cout << " ---- " << endl;
+
+	  hyptcut[hidy][hidpt]  ->Fill( rapidity, pt );
+	  hdphipty1[hidy][hidpt]->Fill(                         dphi);
+	  hdphipty2[hidy][hidpt]->Fill( abs(TVector2::Phi_mpi_pi(2.* dphi)) );
+	  rapmean[hidy][hidpt].push_back(rapidity);
+	  ptmean[hidy][hidpt].push_back(pt);
 	}
       }
     }
 
-    // **
+
+    // **`
     // Calculate resutls
     std::cout << " ---- Resutls ---------------------" << std::endl;
     std::cout << " < cos phi > " << mcos1[isys[m]] << std::endl;
 
     ic++; 
     cc[ic]   = new TCanvas(Form("cc%d",ic),"cc",800,1000);
-    cc[ic]->Divide(nyrange-1, nptrange);
+    cc[ic]->Divide(nptrange, nyrange);
     
-    for(UInt_t i = 0; i < (nyrange-1)*nptrange; i++){
-      cc[ic]->cd(i+1);
-      hyptcut[i]->Draw("colz");
+    id = 1;
+    for(UInt_t i = 0; i < nyrange; i++){
+      for(UInt_t j = 0; j < nptrange; j++){
+	cc[ic]->cd(id); id++;
+	hyptcut[i][j]->Draw("colz");
+      }
     }
-
 
     ic++; id = 1; UInt_t idd = 1;
     cc[ic]   = new TCanvas("dphin1","dphi1",800,1000);
@@ -2528,51 +2640,62 @@ void PlotNeuLANDv1v2(UInt_t iout)             //%% Executable :
     //----- pt  dependence
     ic+=2;
     cc[ic]   = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),800,1000);
-    cc[ic]->Divide(nyrange-1, nptrange);
+    cc[ic]->Divide(nptrange-1, nyrange-1);
 
     cc[ic+1]   = new TCanvas(Form("cc%d",ic+1),Form("cc%d",ic+1),800,1000);
-    cc[ic+1]->Divide(nyrange-1, nptrange);
+    cc[ic+1]->Divide(nptrange-1, nyrange-1);
     
-    for(UInt_t i = 0; i < (nyrange-1)*nptrange; i++) {
-      cc[ic]->cd(i+1);
+    id = 1;
+    for(UInt_t i = 0; i < nyrange-1; i++) {
 
-      if( hdphipty1[i]->GetEntries() > 5 ) {
-	Double_t para[6];
-	Double_t corr[2] = {mcos1[isys[m]], mcos1e[isys[m]]};
-	GetFittingParameters(*hdphipty1[i], para, corr);
+      UInt_t ipoint = 0;
+      for(UInt_t j = 0; j < nptrange-1; j++) {
 
-	std::cout << setw(3) << i << " th / " << nyrange << " * " << nptrange  
-		  << " : " << hdphipty1[i]->GetName()
-		  << " <pt>  " << setw(10) << TMath::Mean(ptmean[i].begin(), ptmean[i].end())
-		  << " +- "    << setw(10) << TMath::StdDev(ptmean[i].begin(), ptmean[i].end())
-		  << " <Rap> " << setw(10) << TMath::Mean(rapmean[i].begin(), rapmean[i].end())
-		  << " +- "    << setw(10) << TMath::StdDev(rapmean[i].begin(), rapmean[i].end())
-		  << std::endl;
-	std::cout << " v1 "    << setw(10) << para[1] << " +- " << setw(10) << para[3] << std::endl;
-	std::cout << " ==================================" << std::endl;
+	cc[ic]->cd(id);
+	cc[ic+1]->cd(id);
 
-	hdphipty1[i] -> Draw();
+	if( hdphipty1[i][j]->GetEntries() > 5 ) {
+	  Double_t para[6];
+	  Double_t corr[2] = {mcos1[isys[m]], mcos1e[isys[m]]};
+	  GetFittingParameters(*hdphipty1[i][j], para, corr);
+
+	  Double_t ptmn   = TMath::Mean(ptmean[i][j].begin(), ptmean[i][j].end());
+	  Double_t ptstd  = TMath::StdDev(ptmean[i][j].begin(), ptmean[i][j].end());
+
+	  std::cout << setw(3) << i << " th / " << nyrange << " * " << nptrange  
+		    << " : " << hdphipty1[i][j]->GetName()
+		    << " <pt>  " << setw(10) << ptmn
+		    << " +- "    << setw(10) << ptstd
+		    << " <Rap> " << setw(10) << TMath::Mean(rapmean[i][j].begin(), rapmean[i][j].end())
+		    << " +- "    << setw(10) << TMath::StdDev(rapmean[i][j].begin(), rapmean[i][j].end())
+		    << std::endl;
+	  std::cout << " v1 "    << setw(10) << para[1] << " +- " << setw(10) << para[3] << std::endl;
+	  std::cout << " ==================================" << std::endl;
+
+	  cc[ic]->cd(id); 
+	  hdphipty1[i][j] -> Draw();
+
+	  gpt_v1[i]->SetPoint(ipoint, ptmn, para[1]);
+	  gpt_v1[i]->SetPointError(ipoint, ptstd, para[3]);
+
+
+
+	  corr[0] = mcos2[isys[m]];
+	  corr[1] = mcos2e[isys[m]];
+	  GetFittingParameters( *hdphipty2[i][j], para, corr);
+	  
+	  std::cout << " v2 "    << setw(10) << para[1] << " +- " << setw(10) << para[3] << std::endl;
+	  std::cout << " ==================================" << std::endl;
+	  
+	  cc[ic+1]->cd(id); 
+	  hdphipty2[i][j] -> Draw();
+
+	  gpt_v2[i]->SetPoint(ipoint, ptmn, para[1]);
+	  gpt_v2[i]->SetPointError(ipoint, ptstd, para[3]);
+	  ipoint++;
+	}
+      	id++;
       }
-
-      cc[ic+1]->cd(i+1);
-      if( hdphipty2[i]->GetEntries() > 5 ){
-	Double_t para[6];
-	Double_t corr[2] = {mcos2[isys[m]], mcos2e[isys[m]]};
-	GetFittingParameters( *hdphipty2[i], para, corr);
-
-	std::cout << setw(3) << i << " th / " << nyrange << " * " << nptrange  
-		  << " : " << hdphipty1[i]->GetName()
-		  << " <pt>  " << setw(10) << TMath::Mean(ptmean[i].begin(), ptmean[i].end())
-		  << " +- "    << setw(10) << TMath::StdDev(ptmean[i].begin(), ptmean[i].end())
-		  << " <Rap> " << setw(10) << TMath::Mean(rapmean[i].begin(), rapmean[i].end())
-		  << " +- "    << setw(10) << TMath::StdDev(rapmean[i].begin(), rapmean[i].end())
-		  << std::endl;
-	std::cout << " v2 "    << setw(10) << para[1] << " +- " << setw(10) << para[3] << std::endl;
-	std::cout << " ==================================" << std::endl;
-
-	hdphipty2[i] -> Draw();
-      }
-      
     }
     ic++;
 
@@ -2610,6 +2733,24 @@ void PlotNeuLANDv1v2(UInt_t iout)             //%% Executable :
     mv2->Draw("apl");
     aLeg2->Draw();
 
+    ic++;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic), 1200, 500);
+    cc[ic]->Divide(nyrange-1,1);
+    for(UInt_t i = 0; i < nyrange-1; i++ ){
+      cc[ic]->cd(i+1);
+      gpt_v1[i]->Draw("alp");
+    }
+
+    ic++;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic), 1200, 500);
+    cc[ic]->Divide(nyrange-1,1);
+    for(UInt_t i = 0; i < nyrange-1; i++ ){
+      cc[ic]->cd(i+1);
+      gpt_v2[i]->Draw("alp");
+    }
+
+
+
     if(iout == 1){
       TString fName = "NLv1v2cm" + sysName[isys[m]] + ".root";
       gSystem->cd("data");
@@ -2618,13 +2759,16 @@ void PlotNeuLANDv1v2(UInt_t iout)             //%% Executable :
       gv_v1->Write();
       gv_v2->Write();
 
+      for(UInt_t i = 0; i < nyrange; i++){
+	gpt_v1[i]->Write();
+	gpt_v2[i]->Write();
+      }
+
       hout->Close();
       gSystem->cd("..");
     }  
-
     //    std::cout << hout->GetName() << " is created. " << std::endl;    
   }
-
 }
 
 void GetFittingParameters(TH1D &h1, Double_t pp[6])
@@ -2658,187 +2802,8 @@ void GetFittingParameters(TH1D &h1, Double_t pp[6], Double_t corr[2])
   }
 }
 
-Double_t GetRapidity_cm(TVector3 P, Double_t mass, TVector3 bvec)
-{
 
-  Double_t Etot = sqrt( P.Mag2() + pow(mass,2) );
-  TLorentzVector LrnzVec( P, Etot);
-
-  // cout << " p2 " << apart->GetMomentum().Mag2()
-  //      << " m "  << apart->GetMass()
-  //      << " pz " << apart->GetMomentum().Z()
-  //      <<  " etot " << LrnzVec.E() 
-  //      << endl;
-
-  LrnzVec.Boost(bvec);
-
-  Double_t PZcm = LrnzVec.Z();
-  Double_t Ecm  = LrnzVec.E();
-  // cout << " after Pz " << PZcm
-  //      << "  Etot " << Ecm
-  //      << endl;
-  auto rapidity = 0.5*log( (Ecm + PZcm)/(Ecm - PZcm) );
-  
-  return rapidity;
-}
-
-
-TVector3 LorentzBoost(UInt_t m)
-{
-  Double_t amu  = 931.4940954; //MeV/c2  
-  Double_t c    = 299792458.; //m/s                                                                 
-
-  TString system[5];
-  Double_t AB[5];
-  Double_t mB[5];
-  Double_t eB_lb[5];
-  Double_t mT[5];     
-
-  system[0] =  "(132Sn + 124Sn)";
-  AB[0]     =  132.;
-  mB[0]     =  131.8906 ; //amu                                                                 
-  eB_lb[0]  =  268.9 ;    //MeV/amu; incident energy    
-  mT[0]     =  123.8773895;   //amu Target mass
-
-  system[1] = "(108Sn + 112Sn)";
-  AB[1]     =  108.;
-  mB[1]     =  107.8844964; //amu
-  eB_lb[1]  =  268.9;
-  mT[1]     =  111.8773895;;
-
-  system[2] = "(124Sn + 112Sn)";
-  AB[2]     =  124.;
-  mB[2]     =  123.8778449; //amu
-  eB_lb[2]  =  270.2;
-  mT[2]     =  111.8773895;;
-
-  system[3] = "(112Sn + 124Sn)";
-  AB[3]     =  112.;
-  mB[3]     =  111.8773895; //amu
-  eB_lb[3]  =  270.2;
-  mT[3]     =  123.8773895;
-
-  system[4] = "(p + p)";
-  AB[4]     = 1.;
-  mB[4]     = 1.00727646688;
-  eB_lb[4]  = 268.9;
-  mT[4]     = 1.00727646688;
-
-
-
-  UInt_t sysid = isys[m];
-
-  Double_t EkB_lb    = eB_lb[sysid]  * mB[sysid];
-  mB[sysid] *= amu;
-  mT[sysid] *= amu;
-
-  // Beam      
-  Double_t EB_lb  = EkB_lb + mB[sysid];
-  Double_t PB_lb     = sqrt(EB_lb*EB_lb - mB[sysid]*mB[sysid]);
-
-
-  //PB_lb = sqrt(EkB_lb*EkB_lb + 2.*mB[sysid]*EkB_lb);
-  Double_t YB_lb  = 0.5 * log( (EB_lb + PB_lb) / (EB_lb - PB_lb) );
-
-  // CM system     
-  auto E_cm    = sqrt( mB[sysid]*mB[sysid] + mT[sysid]*mT[sysid] + 2.* mT[sysid] * EB_lb);
-  auto Beta_cm = PB_lb/(EB_lb + mT[sysid]);
-  auto Gamm_cm = (EB_lb + mT[sysid]) / E_cm;
-
-  auto y_cm = 0.5 * log( (1+Beta_cm)/ (1-Beta_cm) );
-
-
-  auto EB_cm = Gamm_cm * EB_lb - Gamm_cm*Beta_cm * PB_lb;
-  auto PB_cm = -Gamm_cm* Beta_cm * EB_lb + Gamm_cm * PB_lb;
-  auto YB_cm =  0.5 * log( (EB_cm + PB_cm) / (EB_cm - PB_cm) );
-
-  auto ET_cm = Gamm_cm * mT[sysid];
-  auto PT_cm = -Gamm_cm * Beta_cm * mT[sysid];
-  auto YT_cm =  0.5 * log( (ET_cm + PT_cm) / (ET_cm - PT_cm) );
-
-
-  cout << " --- Reaction  " << system[sysid] << endl
-       << " Beam Mass   " << mB[sysid]/amu << " [u] "
-       << " Beam Enery  " << eB_lb[sysid] << " [MeV/u] "
-       << " Target Mass " << mT[sysid]/amu
-       << " --- "
-       << endl;
-
-  cout << " Beam --- " 
-       << " Ekine  " << EkB_lb << " [MeV] "
-       << " Energy " << EB_lb  << " [MeV] "
-       << " P      " << PB_lb  << " [MeV/c] "
-       << " Y      " << YB_lb  
-       << endl;
-
-  cout << " Ecm  --- " << E_cm << " [MeV] "
-       << " Beta_cm " << Beta_cm 
-       << " Gamm_cm " << Gamm_cm 
-       << " Y_cm " << y_cm
-       << endl;
-
-
-  cout << " E_beam   " << EB_cm
-       << " P_beam   " << PB_cm
-       << " Y_beam   " << YB_cm
-       << endl;
-  cout << " E_target " << ET_cm
-       << " P_target " << PT_cm
-       << " Y_target " << YT_cm 
-       << endl;
-
-  cout << " dY " << YB_cm - YT_cm << endl;
-
-  cout << " ------------------------ " << endl;
-  auto bmVec = new TLorentzVector( TVector3(0., 0., PB_lb), EB_lb );
-  auto tgVec = new TLorentzVector( TVector3(0., 0., 0.), mT[sysid] );
-  auto totalVec = *bmVec + *tgVec;
-  TVector3 boostVec = totalVec.BoostVector();
-
-  cout << " before " << endl;
-  cout << " beam g : " << bmVec->Gamma()
-       << "      Y : " << bmVec->Y()
-       << "      Z : " << bmVec->Z()
-       << "      E : " << bmVec->E()
-       << endl;
-
-  cout << " Targ g : " << tgVec->Gamma()
-       << "      Y : " << tgVec->Y()
-       << "      Z : " << tgVec->Z()
-       << "      E : " << tgVec->E()
-       << endl;
-
-  bmVec->Boost(-boostVec);
-  tgVec->Boost(-boostVec);
-
-  cout << " after " << endl;
-  cout << " beam g : " << bmVec->Gamma()
-       << "      Y : " << bmVec->Y()
-       << "      Z : " << bmVec->Z()
-       << "      E : " << bmVec->E()
-       << endl;
-
-  cout << " Targ g : " << tgVec->Gamma()
-       << "      Y : " << tgVec->Y()
-       << "      Z : " << tgVec->Z()
-       << "      E : " << tgVec->E()
-       << endl;
-
-  cout << " Ecm " << (*bmVec + *tgVec).E() << endl;
-
-  cout << " Beam   Rapidity " << 0.5 * log( ( bmVec->E() + bmVec->Z())/(bmVec->E() - bmVec->Z()) )  << endl;
-  cout << " Target Rapidity " << 0.5 * log( ( tgVec->E() + tgVec->Z())/(tgVec->E() - tgVec->Z()) )  << endl;
-
-
-  cout << " =====-------=====---------- " << endl;
-
-
-  return boostVec;  
-}
-
-
-
-  //--------------------------------------------//%% Executable : 
+//--------------------------------------------//%% Executable : 
 void Template()                   
 {
   //----- Parametres

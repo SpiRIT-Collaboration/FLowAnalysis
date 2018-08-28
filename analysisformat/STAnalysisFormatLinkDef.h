@@ -11,4 +11,5 @@
 #pragma link C++ class STKatanaSignal+;
 #pragma link C++ class STNeuLANDCluster+;
 #pragma link C++ class STNeuLANDHit+;
+//#pragma link C++ class AMDParticle+;
 #endif

@@ -158,8 +158,8 @@ void flw_process2(Long64_t nmax = -1)
 
 void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
 {
-  auto bs_unitP_1 = new STBootStrap(50);
-  auto bs_unitP_2 = new STBootStrap(50);
+  auto bs_unitP_1 = new STBootStrap(0);
+  auto bs_unitP_2 = new STBootStrap(0);
 
   UInt_t *rndArray = new UInt_t[npart];
   
@@ -201,8 +201,8 @@ void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
   }
 
   if( mtrack_1 > 0 && mtrack_2 > 0 ) {
-    bs_unitP_1->BootStrapping();
-    bs_unitP_2->BootStrapping();
+    //    bs_unitP_1->BootStrapping();
+    //    bs_unitP_2->BootStrapping();
     
     bsPhi_1[0] = bs_unitP_1->GetMean();
     bsPhi_1[1] = bs_unitP_1->GetStdDev();

@@ -5,7 +5,7 @@ STBootStrap::STBootStrap(UInt_t ival=1)
   
   nboot  = ival;
 
-  hbsphi = new TH1D("hbsphi","BootStrap distribution",100, -1. * TMath::Pi(), TMath::Pi() );
+  //  hbsphi = new TH1D("hbsphi","BootStrap distribution",100, -1. * TMath::Pi(), TMath::Pi() );
 		    
 }
 STBootStrap::STBootStrap(UInt_t ival1, UInt_t ival2, Double_t *sample)
@@ -145,7 +145,7 @@ UInt_t STBootStrap::BootStrapingTVector2(UInt_t nbt)
 
     for(std::vector< UInt_t >::iterator it = rep.begin(); it != rep.end(); it++)  {
       
-      hbsphi->Fill( TVector2::Phi_mpi_pi( (elementsTV2.at(*it)).Phi() )  );
+      //      hbsphi->Fill( TVector2::Phi_mpi_pi( (elementsTV2.at(*it)).Phi() )  );
       
       sum_vec += elementsTV2.at( *it ).Unit(); 
     }      
