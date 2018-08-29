@@ -20,6 +20,9 @@ export ST112DIR=${STTPCDIR}
 export STCkT100=${STTPCDIR}
 export STCkT300=${STTPCDIR}
 
+export STBBFITTER=db/BBFitter.root
+
+
 #BigRIPS data
 export STBEAM132=/cache/scr/spirit/DataAskedByMizuki/beam.Sn132_all/
 export STBEAM108=/cache/scr/spirit/DataAskedByMizuki/beam.Sn108/

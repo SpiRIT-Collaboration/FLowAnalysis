@@ -42,6 +42,7 @@ STParticle::STParticle(const STParticle &cp)
   fEtotal       = cp.fEtotal;
   fChar         = cp.fChar;
   fMass         = cp.fMass;
+  fBBMass       = cp.fBBMass;
 
   fpipid        = cp.fpipid;
   fvertex       = cp.fvertex;
@@ -81,6 +82,7 @@ STParticle::STParticle(const STParticle &cp)
   rNDF             = cp.rNDF;
   rDist            = cp.rDist;
   rpocaVertex      = cp.rpocaVertex;
+
 
   //  std::cout << "initi " << fPID << " : " << cp.fPID << endl;
 }
@@ -157,6 +159,8 @@ void STParticle::Clear(Option_t *option)
   fcorrPt = ffltnPt;
 
   fReactionPlanef = 0;
+
+  fBBMass = 0.;
 }
 
 
@@ -336,6 +340,19 @@ void STParticle::Flattening(Double_t value)
   frtheta  = ffltnP3.Theta();
 
   bFlatten = kTRUE;
+}
+
+
+void STParticle::SetBetheBlochMass(Double_t *para)
+{
+  fitterpara[0] = para[0];
+  fitterpara[1] = para[1];
+  
+  fitterpara[2] = fChar * fP;
+  fitterpara[3] = fChar;
+  fitterpara[4] = fdEdx;
+  
+  fBBMass = BetheBlochFitter::CalcMass(fitterpara);
 }
 
 

@@ -194,4 +194,6 @@ Bool_t  KATANA;
 Int_t   KyotoRoot;
 Bool_t  NeuLAND;
 
+Double_t fitterPara[5];
+
 #endif

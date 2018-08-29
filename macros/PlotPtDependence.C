@@ -35,24 +35,37 @@ void PlotPtDependence()
 
     for(UInt_t ip = 0; ip < 3; ip++){
       if(bpid[ip])
-	fname[is][ip] = "data/PT"+rsys[is]+"Sn_"+fpid[ip]+".root";
+	fname[is][ip] = "data/YPT"+rsys[is]+"Sn_"+fpid[ip]+".root";
     }
 
     if(bpid[3])
-      fname[is][3] = "data/NLv1v2cm"+rsys[is]+"Sn.root";
+      fname[is][3] = "data/NL"+rsys[is]+"Sn_neutron.root";
   }
 
   //  Double_t rrange[3] = {0.27, 0.54, 1.};
   Double_t yrange[] =  {-0.25, -0.15, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45};
-  const UInt_t nyrange = sizeof(yrange)/sizeof(Double_t) + 1 ;
+  const UInt_t nyrange = sizeof(yrange)/sizeof(Double_t);
+
+  Double_t yrange2[] = {-0.25, -0.1,  0.1, 0.25, 0.45};
+  const UInt_t nyrange2 = sizeof(yrange2)/sizeof(Double_t);
+
+
+
   TString rapRange[nyrange];
   for(UInt_t i = 1; i < nyrange - 1; i++)
     rapRange[i] = Form(" %f <= Rapidity < %f", yrange[i-1],yrange[i]);
   rapRange[0] = Form(" Rapidity < %f", yrange[0]);
   rapRange[nyrange-1] = Form(" %f <= Rapidity", yrange[nyrange-2]);
 
+  TString rapRange2[nyrange2];
+  for(UInt_t i = 1; i < nyrange2 - 1; i++)
+    rapRange2[i] = Form(" %f <= Rapidity < %f", yrange2[i-1],yrange2[i]);
+  rapRange2[0] = Form(" Rapidity < %f", yrange2[0]);
+  rapRange2[nyrange2-1] = Form(" %f <= Rapidity", yrange2[nyrange2-2]);
 
-  const UInt_t rbin = nyrange-1;
+
+  const UInt_t rbin = nyrange;
+  const UInt_t rbin2 = nyrange2;
 
   TFile *fOpen;
   TGraphErrors *gr_v1[rbin*4];
@@ -68,7 +81,7 @@ void PlotPtDependence()
     mv1[k] = new TMultiGraph((TString)Form("mv1%d",k),";Pt [MeV/c]; v1");
     mv1[k]->SetTitle(rapRange[k]+";Pt [MeV/c]; v1");
     mv2[k] = new TMultiGraph((TString)Form("mv2%d",k),";Pt [MeV/c]; v2");
-    mv2[k]->SetTitle(rapRange[k]+";Pt [MeV/c]; v1");
+    mv2[k]->SetTitle(rapRange2[k]+";Pt [MeV/c]; v1");
     lg1[k] = new TLegend(0.4 , 0.15, 0.9 ,  0.4,"");
     lg2[k] = new TLegend(0.12, 0.14, 0.58, 0.35,"");
 
@@ -96,19 +109,15 @@ void PlotPtDependence()
     
       for(UInt_t k = 0; k < rbin; k++){
 	TGraphErrors *gv1 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v1%d",k));
-	TGraphErrors *gv2 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v2%d",k));
-  
+
+	if( gv1 == NULL ) {
+	  cout << " not found " << k << endl;
+	  continue;
+	}
 	TString gvname = Form("gPt_v1%d",igr);
 	gr_v1[igr] = (TGraphErrors*)gv1->Clone(gvname);
-	//	Double_t mean = FittingAndIntegral(gr_v1[igr]);
-	//	gr_v1f->SetPoint(k, (Double_t)k,mean);
-	
-
-	gvname = Form("gPt_v2%d",igr);
-	gr_v2[igr] = (TGraphErrors*)gv2->Clone(gvname);
 
 	mv1[k]->Add(gr_v1[igr],"lp");
-	mv2[k]->Add(gr_v2[igr],"lp");
 
 	gr_v1[igr]->SetMarkerStyle(imrk[is]);
 	gr_v1[igr]->SetMarkerColor(icol[ip][is]);
@@ -116,8 +125,18 @@ void PlotPtDependence()
 	gr_v1[igr]->SetLineColor(icol[ip][is]);
 	lg1[k]->AddEntry(gr_v1[igr], rsys[is]+" "+fpid[ip] ,"lp");
 
+      }
 
-	gr_v2[igr]->SetMarkerStyle(imrk[is]);
+      for(UInt_t k = 0; k < rbin2; k++){
+
+	TGraphErrors *gv2 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v2%d",k));
+	TString gvname = Form("gPt_v2%d",igr);
+	gr_v2[igr] = (TGraphErrors*)gv2->Clone(gvname);
+
+
+	mv2[k]->Add(gr_v2[igr],"lp");
+
+ 	gr_v2[igr]->SetMarkerStyle(imrk[is]);
 	gr_v2[igr]->SetMarkerColor(icol[ip][is]);
 	gr_v2[igr]->SetMarkerSize(imsz[is]);
 	gr_v2[igr]->SetLineColor(icol[ip][is]);
@@ -135,13 +154,13 @@ void PlotPtDependence()
   
 
   cc1 = new TCanvas("cc1","v2",110,2280,1000,500);
-  cc1->Divide(rbin,1);
-  for(UInt_t k = 0; k < rbin; k++){
+  cc1->Divide(rbin2,1);
+  for(UInt_t k = 0; k < rbin2; k++){
     cc1->cd(k+1);
     mv2[k]->SetMaximum( 0.2);
     mv2[k]->SetMinimum(-0.2);
     mv2[k]->Draw("ALP");
-    if( k == rbin-1 ) lg2[k]->Draw();
+    if( k == rbin2-1 ) lg2[k]->Draw();
   }
 
   cc0 = new TCanvas("cc0","v1",110,1280,1000,500);

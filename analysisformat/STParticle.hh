@@ -6,6 +6,8 @@
 
 #ifndef STPARTICLE
 #define STPARTICLE
+
+#include "STBetheBlochFittingFunction.hh"
 #include "TCutG.h"
 #include "TFile.h"
 
@@ -39,6 +41,7 @@ private:
   Double_t fEtotal;
   Int_t    fChar;
   Double_t fMass;
+  Double_t fBBMass;
 
   Int_t    fpipid;
   TVector3 fvertex;
@@ -102,6 +105,8 @@ private:
   Int_t     rNDF;
   Double_t  rDist;
   TVector3  rpocaVertex;  
+
+  Double_t  fitterpara[6];   //!  BetheBloch fitter parameters
 
 
 private:
@@ -274,8 +279,9 @@ public:
   void         SetVertex(TVector3 value)        { fvertex = value;}
   TVector3     GetVertex()                      { return fvertex;}
 
+  void    SetBetheBlochMass(Double_t *para);
 
-  ClassDef(STParticle, 8)
+  ClassDef(STParticle, 9)
 
 };
 

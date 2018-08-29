@@ -30,6 +30,7 @@ STParticle.cc
 STTriggerArray.cc
 STNeuLANDCluster.cc
 STNeuLANDHit.cc
+STBetheBlochFittingFunction.cc
 )
 
 CHANGE_FILE_EXTENSION(*.cc *.hh HEADERS "${SRCS}")

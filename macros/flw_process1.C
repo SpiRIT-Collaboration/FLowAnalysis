@@ -42,6 +42,24 @@ void Setup()
   if(KATANA)    std::cout << " & KATANA "    ;
   if(NeuLAND)   std::cout << " & NeuLAND "   ;
   std::cout << std::endl;
+
+  if(STPC) {
+    TString bbfitter = gSystem->Getenv("STBBFITTER");
+    auto fitFile = new TFile(bbfitter);
+    auto fit = (TF1 *) fitFile -> Get("fit_proton");
+
+    fitterPara[0] = fit -> GetParameter(0);
+    fitterPara[1] = fit -> GetParameter(1);
+
+    if( fitFile != NULL)
+      cout << "BetheBloch fitter is loaded. "
+	   << " para 0 " << fitterPara[0]
+	   << " 1 " << fitterPara[1]
+	   << endl; 
+
+    fitFile->Close();
+    delete fitFile;
+  }
 }
 
 void flw_process1(Int_t nevt = -1)
@@ -265,6 +283,8 @@ void flw_process1(Int_t nevt = -1)
 
 	  else if( CheckVertex(aParticle) )   {
 
+	    aParticle->SetBetheBlochMass(fitterPara);
+
 	    aParticle->SetBestTrackFlag(1);
 	    ntrack[2]++;
 
@@ -287,8 +307,9 @@ void flw_process1(Int_t nevt = -1)
 
 	  }
 
-	  if( aParticle->GetBestTrackFlag() )
+	  if( aParticle->GetBestTrackFlag() ) {
 	    ntrack[3]++;
+	  }
 
 
 	  aParticle->SetTrackID(mtrack);      
