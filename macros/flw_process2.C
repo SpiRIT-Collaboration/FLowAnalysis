@@ -256,11 +256,17 @@ Bool_t CheckParticle(STParticle *apart)
 {
   Bool_t bsel = kFALSE;
 
+
   if( apart == NULL ) return bsel;
+
+  //Kaneko-san's PID is Applied temporarly because it was missed in process1
+  //  apart->SetBBPID();
+
 
   if( !apart->GetBestTrackFlag() ) return bsel;
 
-  ResetPID(apart);
+  // ResetPID(apart); 
+
 
   auto pid    =  apart -> GetPID();
   auto charge =  apart -> GetCharge();
@@ -378,19 +384,21 @@ void SetNumberOfProcess(Int_t nmax)
 
 void Open()
 {
-  LoadPIDFile();
+  //  LoadPIDFile();
 
   TString fnameBase = "run%d_f0.v";
 
-  TString fn = Form(fnameBase + sVer(0,1)+".root",iRun);
+  Ssiz_t end = sVer.First(".");
+
+  TString fn = Form(fnameBase + sVer(0,end)+".root",iRun);
   if( !gSystem->FindFile("data/", fn) ) {
     
 
-    Int_t iver = atoi((TString)sVer(2,1));
+    Int_t iver = atoi((TString)sVer(end+1,1));
 
     while( iver > -1 ){
       TString ss = Form(".%d",iver);
-      fn = Form(fnameBase + sVer(0,1)+ss+".root",iRun);
+      fn = Form(fnameBase + sVer(0,end)+ss+".root",iRun);
 
       if( !gSystem->FindFile("data/", fn) ) 
 	iver--;

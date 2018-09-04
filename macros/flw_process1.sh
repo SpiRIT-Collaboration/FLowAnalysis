@@ -5,18 +5,21 @@
 #
 # ----------------------
 
+source $SPIRITROOTPATH/build/config.sh
+source ../build/config.sh
+
 # TPC data
 #export STTPCDIR=/cache/scr/spirit/recoData/20180309/
 #export STVERSION=1523.dc416ee   ###@develop.1535.1915a48
 #export STTPCDIR=/cache/scr/spirit/recoData/20180719/
 #export STVERSION=1665.2e3712e
 
-export STTPCDIR=/xrootd/spdaq01/recoData/20180826/Sn132_JustinPRF_pion/
+export STTPCDIR=/xrootd/spdaq01/recoData/20180826/
 export STVERSION=GenieTemp.1728.18d377e
-export ST132DIR=${STTPCDIR}
-export ST108DIR=${STTPCDIR}
-export ST124DIR=${STTPCDIR}
-export ST112DIR=${STTPCDIR}
+export ST132DIR=${STTPCDIR}Sn132_JustinPRF_pion/
+export ST108DIR=${STTPCDIR}Sn108_JustinPRF_pion/
+export ST124DIR=${STTPCDIR}Sn124_JustinPRF_pion/
+export ST112DIR=${STTPCDIR}Sn112_JustinPRF_pion/
 export STCkT100=${STTPCDIR}
 export STCkT300=${STTPCDIR}
 
@@ -37,7 +40,8 @@ export STKYOTODIR=/cache/scr/spirit/kaneko/rootfile/kyoto/
 export STKYMLTDIR=/cache/scr/spirit/kaneko/rootfile/kyoto_re/mult/
 
 #NeuLAND data
-export STNLDIR=/cache/scr/spirit/NeuLand/neuland_23jul2018
+export STNLDIR=/cache/scr/spirit/NeuLand/neuland_4sep2018
+#export STNLDIR=/cache/scr/spirit/NeuLand/neuland_23jul2018
 #export STNLDIR=/cache/scr/spirit/NeuLand/neuland_3jul2018
 #export STNLDIR=/cache/scr/spirit/NeuLand/neuland_18jun2018
 
@@ -64,13 +68,13 @@ source runList.sh
 #RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
 
-#RUNNUMBER1=(${RNF132},${RNF108},${RNF124},${RNF112}) 
-RUNNUMBER1="2900"
+RUNNUMBER1=(${RNF132},${RNF108},${RNF124},${RNF112}) 
+#RUNNUMBER1="2900"
 
+#RUNNUMBER1=(${RNF132s})
 # *****> <Edit Here>     
-VERSION=9
+VERSION=10
 
-source setup.sh
 
 function process1(){
     typeset -i I=0

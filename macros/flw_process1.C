@@ -269,6 +269,9 @@ void flw_process1(Int_t nevt = -1)
 	
 	  STParticle *aParticle = new STParticle();
 	  aParticle->SetRecoTrack(trackFromArray);
+	  
+	  //--- Set BetheBloch mass 
+	  aParticle->SetBetheBlochMass(fitterPara);
 
 	  //--- Rotate tracks along beam direction ---;
 	  if(ProjA > -1000 && ProjB > -1000)
@@ -276,27 +279,26 @@ void flw_process1(Int_t nevt = -1)
 
 
 	  //--- check origin of the track ---;
-	  aParticle->SetTrackAtTarget(vertex->GetPos()); 
+	  aParticle->SetVertex(vertex); 
 
 	  if( aParticle->GetMomentumAtTarget().Mag() == 0)
 	    aParticle->SetMaxMomentumFlag(0);
 
 	  else if( CheckVertex(aParticle) )   {
 
-	    aParticle->SetBetheBlochMass(fitterPara);
 
 	    aParticle->SetBestTrackFlag(1);
 	    ntrack[2]++;
 
 
 	    //--- Set track quality flag ---;
-	    if( aParticle->GetDistanceAtVertex() >= 5 )
+	    if( aParticle->GetDistanceAtVertex() > 20 )
 	      aParticle->SetDistanceAtVertexFlag(0);
 
-	    if( aParticle->GetNDF() <= 30)
+	    if( aParticle->GetNDF() < 30)
 	      aParticle->SetNDFFlag(0);
 	    
-	    if( aParticle->GetP() >= 2500 )
+	    if( aParticle->GetP() > 2500 )
 	      aParticle->SetMaxMomentumFlag(0);
 	    
 	    if( aParticle->GetRotatedMomentum().Theta() >= 0.8 )
@@ -700,20 +702,18 @@ Bool_t CheckBeamPosition()
 
 Bool_t CheckVertex(STParticle *aPart)
 {   
-  auto vec = aPart->GetTrackAtTarget(); 
+  auto vec = aPart->GetVertex(); 
 
-  if( vec.Z() < vrt_Zmin ||  vec.Z() > vrt_Zmax )
-    aPart->SetVertexZAtTargetFlag(0);
+  if( abs( vec.Z() + 12.9 ) <= 3. &&
+      abs( vec.X() ) <= 15.       &&
+      abs( vec.Y() + 226.06 ) <= 20. )
 
-
-  if( (vec.X() < trktgt_right || vec.X() > trktgt_left) ||
-      (vec.Y() < trktgt_btm   || vec.Y() > trktgt_top) )	 
+    aPart->SetVertexAtTargetFlag(1);
+  else
     aPart->SetVertexAtTargetFlag(0);
-    
-  if( aPart->GetVertexAtTargetFlag() * aPart->GetVertexZAtTargetFlag() )
-    return kTRUE;
-  else 
-    return kFALSE;
+  
+
+  return (Bool_t)aPart->GetVertexAtTargetFlag();
 }
 				   
 

@@ -15,6 +15,8 @@
 #include "TRotation.h"
 
 #include "STRecoTrack.hh"
+#include "STPID.hh"
+#include "STVertex.hh"
 
 #include <vector>
 #include <utility>
@@ -33,8 +35,7 @@ private:
 
   Int_t    ftrackID;
 
-  TVector3 ftrackatTarget;
-  Int_t    fPID;
+  UInt_t   fPID;
   Double_t fRapidity;
   Double_t fRapiditycm;
   Double_t fpsudoRapidity;
@@ -52,6 +53,7 @@ private:
   Double_t fdEdx;            // dEdx
   Double_t ftheta;           // Polar angle without any correction     = forigP3.Theta()
   Double_t fphi;             // Azimuthal angle without any correction = forigP3.Phi()
+  Double_t fNDF;             // STVertex::GetNDF()
 
   // for flow analysis 
   TVector3 fRotatedP3;       // Momentum vector rotated with respect to the beam angle.
@@ -68,7 +70,7 @@ private:
   Double_t fdeltphi;         // Azimuthal opening angle with respect to IRPO
   Double_t fwgt;             // Summing up weight
 
-  Int_t   fcorrBin[2];
+  Int_t   fcorrBin[2];      //!
   
   // --- mixed partiels
   Int_t    fmxevt  = -1;
@@ -104,13 +106,24 @@ private:
   Int_t     rdEdxPointSize_thr = 1;
   Int_t     rNDF;
   Double_t  rDist;
-  TVector3  rpocaVertex;  
+  TVector3  rPOCAVertex;  
+  Double_t  rChi2;
 
+  // BB mass parameters
   Double_t  fitterpara[6];   //!  BetheBloch fitter parameters
+  Double_t  BBmassRegion[4][3] = {{ 127.2,  21.3, 3.}, //pi
+				  { 925.6,  80.1, 3.}, //p
+				  {1901.1, 174.4, 2.}, //d
+				  {2880.2, 297.5, 2.} };   //!
 
+  TCutG     *gcutHe3BBmass; //!
+  TCutG     *gcutHe4BBmass; //!
+  UInt_t    nBBsize = 5;     //!
 
 private:
   virtual void Clear(Option_t *option = "");
+  
+  void     Initialize();
 
   //private:
   void     SetProperty();
@@ -123,8 +136,6 @@ private:
 public:
   void     SetRecoTrack(STRecoTrack *atrack);
 
-  void     SetTrackAtTarget(TVector3 value);
-  TVector3 GetTrackAtTarget()            {return ftrackatTarget;}
 
   void     RotateAlongBeamDirection(Double_t valuex, Double_t valuey);
   void     SetP(Double_t value)          {fP = value;}
@@ -135,6 +146,7 @@ public:
   void     SetPID(Int_t value);           
   Int_t    GetPID()                      {return fPID;}
   Double_t GetPIDProbability()           {return fPIDProbability;}
+  void     SetBBPID();
 
   void     SetMass();
 
@@ -169,9 +181,6 @@ public:
 
   void  SetVertexAtTargetFlag(Int_t value)      {fVatTargetf = value; fgoodtrackf*=value;}
   Int_t GetVertexAtTargetFlag()                 {return fVatTargetf;}
-
-  void  SetVertexZAtTargetFlag(Int_t value)      {fVZatTargetf = value; fgoodtrackf*=value;}
-  Int_t GetVertexZAtTargetFlag()                 {return fVZatTargetf;}
 
   void  SetVertexBDCCorrelationFlag(Int_t value){fVBDCCorf   = value;}
   Int_t GetVertexBDCCorrelationFlag()           {return fVBDCCorf;}
@@ -272,16 +281,18 @@ public:
 
   void         SetNDF(Int_t val)                  {rNDF = val;} 
   Int_t        GetNDF()                           {return rNDF;}
+  Int_t        GetNDFvertex()                     {return fNDF;}
   void         SetDistanceAtVertex(Double_t val)  {rDist = val;}
   Double_t     GetDistanceAtVertex()              {return rDist;}
 
 
-  void         SetVertex(TVector3 value)        { fvertex = value;}
+  void         SetVertex(TVector3 value);
+  void         SetVertex(STVertex *value);
   TVector3     GetVertex()                      { return fvertex;}
 
   void    SetBetheBlochMass(Double_t *para);
 
-  ClassDef(STParticle, 9)
+  ClassDef(STParticle, 11)
 
 };
 

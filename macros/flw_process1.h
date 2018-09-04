@@ -29,6 +29,8 @@ Double_t trktgt_left  =  15;
 Double_t trktgt_top   = -206.06;
 Double_t trktgt_btm   = -246.06 ;
 
+
+
 // KATANA offset                                                                     
 Double_t KATANA_frame_OffSet     = -1041.+ 25;
 Double_t KATANA_paddle_Width     =   100.;

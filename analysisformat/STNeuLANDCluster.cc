@@ -34,7 +34,7 @@ void STNeuLANDCluster::SetLocalPos(TVector3 posv)
   ncglobalPos = nclocalPos;
   ncglobalPos.RotateY(angle);
   ncglobalPos += ncglobal_offset;
-  ncglobalPos += targetPos;
+  //  ncglobalPos -= targetPos;
 
   //  globalPos.SetX(distance_to_center*TMath::Sin(angle) +
   // 	      localx*TMath::Cos(angle) + localz*TMath::Sin(angle) );
@@ -43,7 +43,7 @@ void STNeuLANDCluster::SetLocalPos(TVector3 posv)
   // globalPos.SetY(localy);
 
 
-  ncdistance = TVector3(ncglobalPos - targetPos).Mag();
+  ncdistance = ncglobalPos.Mag();
 
 }
 
@@ -131,7 +131,7 @@ void STNeuLANDCluster::SetMass(UInt_t v)
 
 void STNeuLANDCluster::SetMomentum() 
 {
-  Double_t gtof = ncdistance/c;
+  //  Double_t gtof = ncdistance/c;
 
   nctof -= tof_offset;
 
@@ -149,15 +149,13 @@ void STNeuLANDCluster::SetMomentum()
   }
 
   if(ncmass*ncbeta*ncgamma > 0){
-    ncP = ncglobalPos - targetPos;
+    ncP = ncglobalPos;
 
-    // ncP.SetTheta( TVector3(ncglobalPos - targetPos).Theta() );
-    // ncP.SetPhi(   TVector3(ncglobalPos - targetPos).Phi() );
-    
+    ncP.RotateY(-ncbeamAngle);
+
     ncP.SetMag(ncmass*ncbeta*ncgamma);
 
     ncE = ncmass * ncgamma;
-      //sqrt(ncmass*ncmass + ncP.Mag2())*c;
 
     Double_t p_para = ncP.Mag()*TMath::Cos(ncP.Theta());
     ncRapidity = 0.5 * log( (ncE + p_para)/(ncE - p_para) );
@@ -211,4 +209,5 @@ void STNeuLANDCluster::Clear(Option_t *)
   ncE = 0.;
   ncRapidity = 0.;
 
+  ncbeamAngle = 0.;
 }

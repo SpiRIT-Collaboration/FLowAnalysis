@@ -6,14 +6,14 @@ source setup.sh
 ##--- for Process4 ------------------------------------
 # *****> <Edit Here>  
 
-#RUNNUMBER1=(${RNF132})    
-RUNNUMBER1=(${RNF108})                                                                              
+RUNNUMBER1=(${RNF132s})    
+#RUNNUMBER1=(${RNF108})                                                                              
 #RUNNUMBER1=(${RNF124}) 
 #RUNNUMBER1=(${RNF132})
 
 
 #CVRUN=${RUNNUMBER1[0]}
-CVRUN="2274"
+CVRUN="2882"
 ###-------------------------------------
 RE1MX2=1
 ## 0 REAL and MIXed
@@ -25,9 +25,9 @@ RE1MX2=1
 #RUN=2841 VER=4.2.1 MIX=0 FLC=run2841_rf.v4.2.Psicv0 FLCS=run2841_rf.v4.5.Psis1rcv0 root flw_process4.C
 
 # *****> <Edit Here> 
-VERSION=8.0.0
-FLC=run${CVRUN}_rf.v8.0.Psi2rtcv0   # Phi_rp
-FLCS=run${CVRUN}_rf.v8.0.Psis1rcv0  # Phi_sub 
+VERSION=9.0.0
+FLC=run${CVRUN}_rf.v9.0.Psi2rtcv0   # Phi_rp
+FLCS=run${CVRUN}_rf.v9.0.Psis1rcv0  # Phi_sub 
      
 echo $RUNNUMBER1
 

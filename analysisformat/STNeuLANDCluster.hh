@@ -39,6 +39,8 @@ class STNeuLANDCluster : public TObject
   void SetVetoHitLoose1(Int_t id, Int_t v){if(id == 0)ncvetot_loose1 = v;else ncvetoq_loose1 = v;}
   void SetVetoHitLoose2(Int_t id, Int_t v){if(id == 0)ncvetot_loose2 = v;else ncvetoq_loose2 = v;}
 
+  void SetBeamAngle(Double_t v) {ncbeamAngle = v;}
+  
 private:
   void SetMomentum();
 
@@ -103,6 +105,8 @@ public:
   TVector3 ncglobalPos;
   TVector3 ncglobalPos_last;
   TVector3 ncglobal_offset;
+
+  Double_t ncbeamAngle;
   
   Double_t ncbeta;
   Double_t ncgamma;
@@ -133,7 +137,7 @@ public:
   Double_t c;     //!
   Double_t target_offset; //!
   Double_t tof_offset;  //!
-  ClassDef(STNeuLANDCluster, 4);
+  ClassDef(STNeuLANDCluster, 5);
 
 };
 

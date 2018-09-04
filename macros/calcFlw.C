@@ -2702,6 +2702,14 @@ void PlotNeuLANDv1v2()                        //%% Executable :
       hypt2[kn]->Draw("colz");
     }
 
+    ic++; id = 1;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,400);
+    cc[ic]->Divide(ybin1,1);
+    for(UInt_t kn = 0; kn < ybin1; kn++){
+      cc[ic]->cd(id); id++;
+      hypt[kn]->Draw("colz");
+    }
+
 
     ic++; id = 1;
     cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
