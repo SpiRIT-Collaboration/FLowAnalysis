@@ -58,6 +58,7 @@ const UInt_t ybin2 = sizeof(yrange2)/sizeof(Double_t);
 TString  partname[] = {"pi-","pi+","proton","deuteron","triton"};
 UInt_t   partid[]   = {211, 211, 2212, 1000010020, 1000010030};
 UInt_t   icol[]     = { 2, 58, 78, 68, 53, 96, 156, 52, 100, 226, 229, 108};
+Double_t cutbmass[] = {191.1, 191.1, 1165.9, 2249.9, 3,475.2};
 
 const UInt_t nsys = 4;
 const UInt_t nprt = 5;
@@ -81,6 +82,8 @@ TClonesArray *aNLClusterArray;// = new TClonesArray("STNueLANDCluster",100);
 Double_t aoq;
 Double_t z;
 Int_t    snbm;
+Double_t ProjA;
+Double_t ProjB;
 Int_t    mtrack;
 Int_t    mtrack_1;
 Int_t    mtrack_2;
@@ -152,10 +155,18 @@ Double_t atpl2e;
 // Double_t mcos2e[4] = {0.00196, 0.00249, 0.00783, 0.00241};
 
 // v7.0.0 // updated on 21 Aug 2018
-Double_t mcos1[]  = {0.506657, 0.516276, 0.496168, 0.524613};
-Double_t mcos1e[] = {0.002763, 0.003706, 0.011740, 0.003536};
-Double_t mcos2[]  = {0.163421, 0.169685, 0.156725, 0.17521};
-Double_t mcos2e[] = {0.001787, 0.002445, 0.007504, 0.002370};
+// Double_t mcos1[]  = {0.506657, 0.516276, 0.496168, 0.524613};
+// Double_t mcos1e[] = {0.002763, 0.003706, 0.011740, 0.003536};
+// Double_t mcos2[]  = {0.163421, 0.169685, 0.156725, 0.17521};
+// Double_t mcos2e[] = {0.001787, 0.002445, 0.007504, 0.002370};
+
+// v10.0.0 //
+Double_t mcos1[]  = {0.533779, 0.555799, 0.496168, 0.524613};
+Double_t mcos1e[] = {0.001789, 0.002174, 0.011740, 0.003536};
+Double_t mcos2[]  = {0.181385, 0.19666 , 0.156725, 0.17521};
+Double_t mcos2e[] = {0.001218, 0.001541, 0.007504, 0.002370};
+
+
 
 
 Int_t   iVer;
@@ -165,6 +176,7 @@ TString sVer;
 void GetFittingParameters(TH1D &h1, Double_t pp[6]);
 void GetFittingParameters(TH1D &h1, Double_t pp[6], Double_t corr[2]);
 Double_t GetRapidity_cm(TVector3 p, Double_t mass, TVector3 bvec);
+void combineHist(UInt_t sys, TH2D *hyptphi1, TH2D *hyptphi2);
 
 UInt_t pxbooking();
 void Plotv1v2(UInt_t selid=2);
@@ -607,7 +619,11 @@ Double_t GetRPInterpolator(UInt_t m, Double_t x)
 
 void PlotAcceptance(UInt_t m = 0, UInt_t selid = 2)         //
 {
-  auto haccp    = new TH2D("haccp"   , partname[selid]+"; Rapidity ; Pt [MeV/c]",100, -1.2, 1.2, 100,  0.,800.);
+  gStyle->SetOptStat(0);
+
+  TVector3 boostVec = LorentzBoost(4);
+
+  auto haccp    = new TH2D("haccp"   , partname[selid]+"; Rapidity ; Pt [MeV/c]",100, -0.4, 0.6, 100,  0.,600.);
 
   Int_t pcharge = 1;
   if(selid == 0)  pcharge = -1;
@@ -631,8 +647,10 @@ void PlotAcceptance(UInt_t m = 0, UInt_t selid = 2)         //
 
 	if( pid > 2000 && (rpf == 110 || rpf == 210 ) ) continue;
 
-	auto rapid = aPart-> GetRapidity();
-	rapid = (rapid - ycm[isys[m]])/ybeam_cm[isys[m]];
+	//	auto rapid = aPart-> GetRapidity();
+	//	rapid = (rapid - ycm[isys[m]])/ybeam_cm[isys[m]];
+
+	auto rapid = GetRapidity_cm(aPart->GetRotatedMomentum(), aPart->GetMass(), -boostVec);
 	auto pt    = aPart-> GetRotatedMomentum().Pt();
 
 	haccp -> Fill(rapid, pt);
@@ -700,8 +718,9 @@ void Plotv1v2(UInt_t selid=2)                 //%% Executable : v1  as a functio
 
 	auto rpf = aPart->GetReactionPlaneFlag();
 	auto pid = aPart->GetPID();
+	auto bmass = aPart->GetBBMass();
 
-	if(pid == partid[selid] && aPart->GetCharge() == pcharge ){
+	if(pid == partid[selid] && aPart->GetCharge() == pcharge && bmass <= cutbmass[selid] ){
 
 	  if( pid > 2000 && rpf < 2000 ) continue;
 
@@ -1001,10 +1020,10 @@ void dndy(UInt_t iout)                        //%% Executable : Make plots of dN
 
 	//----- Normalizing
 	auto scl = 1./nEntry * (Double_t)hrap[m][i]->GetNbinsX() / (y_max[i] -y_min[i]);
-	hrap[m][i]->Scale(scl);
+	//hrap[m][i]->Scale(scl);
 
 	scl = 1./nEntry;
-	hnpart[m][i]->Scale(scl);
+	//hnpart[m][i]->Scale(scl);
 	auto mean   = hnpart[m][i]->GetMean();
 	auto meaner = hnpart[m][i]->GetMeanError();
 	std::cout << setw(12) << partname[i] << " : " << mean << " +- " << meaner << std::endl;
@@ -1516,8 +1535,13 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       rangeLabel[i] = Form("%f <= y < %f",yrange1[i-1],yrange1[i]);
   }
 
+  
+  auto hmass = new TH2D("hmass",";P/Q; Mass [MeV/c]",200,0.,2500.,200,0.,7000);
 
   for(Int_t m = m_bgn; m < m_end; m++){
+
+    hmass->SetName(Form("hmass_%d",m));
+    hmass->Reset();
 
     TH2D *hypt[ybin1];
     TH2D *hypt2[ybin1];
@@ -1565,15 +1589,18 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
 	auto rpf   = aPart->GetReactionPlaneFlag();
 	auto pid   = aPart->GetPID();
+	auto bmass = aPart->GetBBMass();
 
-
-	if( pid == partid[selid] && aPart->GetCharge() == pcharge && aPart->GetIndividualRPAngle() > -9){
+	if( pid == partid[selid] && aPart->GetCharge() == pcharge && aPart->GetIndividualRPAngle() > -9 && bmass <= cutbmass[selid] ){
 
 	  if( pid > 2000 && (rpf == 110 || rpf == 210 ) ) continue;
 
 	  auto pt    = aPart->GetRotatedMomentum().Pt();
 	  auto dphi  = aPart->GetAzmAngle_wrt_RP();
 	  auto rapid = GetRapidity_cm(aPart->GetMomentum(), aPart->GetMass(), -boostVec);
+
+
+	  hmass->Fill( aPart->GetRotatedMomentum().Mag(), bmass);
 
 
 	  UInt_t irapid = ybin1 - 1;
@@ -1755,6 +1782,10 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
 
     //plotting
+    ic++;
+    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+    hmass->Draw("colz");
+
     ic++; id = 1;
     cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
     cc[ic]->Divide(ybin1,1);
@@ -2315,8 +2346,8 @@ void PlotNeuLANDProperty(UInt_t iout)           //%% Executable :
   }
 
   //----- Booking
-  TH1D* hmult = new TH1D("hmult0",";Multiplicity ", 15,0.,15.);
-  TH2D* haccp = new TH2D("haccp0","; Rapidity ; Pt [MeV/c]",nybin, -0.4, 0.4, 100,   0., 500);
+  TH1D* hmult = new TH1D("hmult0",";Multiplicity ", 12,0.,12.);
+  TH2D* haccp = new TH2D("haccp0","; Rapidity ; Pt [MeV/c]",nybin, -0.4, 0.5, 100,   0., 800);
 
 
   //----- Event loop
@@ -2351,12 +2382,13 @@ void PlotNeuLANDProperty(UInt_t iout)           //%% Executable :
 
       while( (aNLClust = (STNeuLANDCluster*)next()) ){
 
+	aNLClust->SetBeamAngle(ProjA/1000., ProjB/1000.);
         auto pid      = aNLClust->GetPID();
         auto pt       = aNLClust->GetP().Pt();
         auto veto_all = aNLClust->GetVetoHitAll(vID);
         auto veto_bar = aNLClust->GetVetoHitOne(vID);
 	
-	if( pid == 2112 ){
+	if( pid == 2112 && aNLClust->GetTOF()>40 ){
 	  auto rapidity = GetRapidity_cm( aNLClust->GetP(), 939.5731, -boostVec);
 	  haccp->Fill(rapidity, pt);
 	  nneut++;
@@ -2384,6 +2416,12 @@ void PlotNeuLANDProperty(UInt_t iout)           //%% Executable :
     haccp->Draw("colz");
 
 
+    ic++;
+    auto cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+    cc->SetLogy();
+    hmult->Draw();
+
+
     std::cout << " Number of neutron " << total_neut << " / " << hmult->GetEntries() 
 	      << " = " << Float_t(total_neut/hmult->GetEntries())
 	      << " : " << nevt << std::endl;
@@ -2406,7 +2444,6 @@ void PlotNeuLANDv1v2()                        //%% Executable :
   UInt_t nbin2 = 8; //10    
   Double_t dpt1 = pt_max/(Double_t)nbin1;
   Double_t dpt2 = pt_max/(Double_t)nbin2;
-
 
   std::cout << " Rapidity binning " << ybin1 << std::endl;
   TString rangeLabel[ybin1];
@@ -2470,10 +2507,11 @@ void PlotNeuLANDv1v2()                        //%% Executable :
       STNeuLANDCluster* aNLClust = NULL;
     
       while( (aNLClust = (STNeuLANDCluster*)next()) ){
+
+	aNLClust->SetBeamAngle(ProjA/1000., ProjB/1000.);
   	
    	auto pid      = aNLClust->GetPID();
-	//   	auto rapidity = aNLClust->GetRapidity();
-   	auto phi      = aNLClust->GetGlobalPos().Phi(); 
+   	auto phi      = aNLClust->GetP().Phi(); 
 	auto pt       = aNLClust->GetP().Pt();
 
 	auto rapid    = GetRapidity_cm( aNLClust->GetP(), 939.5731, -boostVec);
@@ -2484,8 +2522,8 @@ void PlotNeuLANDv1v2()                        //%% Executable :
 
    	auto dphi     = TVector2::Phi_mpi_pi(unitP_fc->Phi() - phi);
   	
-	//   	if( pid == 2112 && veto_all == 0){ // neutron
-   	if( pid == 2112 ){ // neutron
+	if( pid == 2112 && veto_all == 0){ // neutron
+	//   	if( pid == 2112 ){ // neutron
 
           UInt_t irapid = ybin1 - 1;
           for( UInt_t i = 0; i < ybin1; i++){
@@ -2529,11 +2567,86 @@ void PlotNeuLANDv1v2()                        //%% Executable :
     }
 
 
+    // // 132Sn
+    //    combineHist(132, hyptphi1, hyptphi2);
+    // Sumup edge of acceptance
+    // UInt_t highstat = 0;
+    // for(UInt_t irapid = 0; i < nbin1l; irapid++){
+    //   for(UInt_t ipt = 0; ipt < nbin1; ipt++) {
+
+    // 	if( hyptphi1[irapid][ipt] -> GetEntries() > 100 ) {
+    // 	  highstat = ipt;
+    // 	}
+    // 	else if( highstat < ipt ){
+    // 	*hyptphi1[0][0] = *hyptphi1[0][0] + *hyptphi1[0][1];	
+
+    //   }
+    // }
+
+
+    *hyptphi1[0][0] = *hyptphi1[0][0] + *hyptphi1[0][1];
+    hyptphi1[0][1]->Reset();
+
+    *hyptphi1[1][1] = *hyptphi1[1][1] + *hyptphi1[1][2];
+    hyptphi1[1][2]->Reset();
+
+    *hyptphi1[2][1] = *hyptphi1[2][1] + *hyptphi1[2][3];
+    hyptphi1[2][3]->Reset();
+
+    *hyptphi1[3][1] = *hyptphi1[3][1] + *hyptphi1[3][2];
+    hyptphi1[3][2]->Reset();
+
+    *hyptphi1[3][3] = *hyptphi1[3][3] + *hyptphi1[3][4];
+    hyptphi1[3][4]->Reset();
+    
+    *hyptphi1[4][5] = *hyptphi1[4][5] + *hyptphi1[4][6];
+    hyptphi1[4][6]->Reset();
+
+    *hyptphi1[5][2] = *hyptphi1[5][2] + *hyptphi1[5][3];
+    hyptphi1[5][3]->Reset();
+
+    *hyptphi1[5][6] = *hyptphi1[5][6] + *hyptphi1[5][7];
+    hyptphi1[5][7]->Reset();
+    *hyptphi1[5][6] = *hyptphi1[5][6] + *hyptphi1[5][8];
+    hyptphi1[5][8]->Reset();
+
+    *hyptphi1[6][3] = *hyptphi1[6][3] + *hyptphi1[6][4];
+    hyptphi1[6][4]->Reset();
+
+    *hyptphi1[6][7] = *hyptphi1[6][7] + *hyptphi1[6][8];
+    hyptphi1[6][8]->Reset();
+    *hyptphi1[6][7] = *hyptphi1[6][7] + *hyptphi1[6][9];
+    hyptphi1[6][9]->Reset();
+
+    *hyptphi1[7][4] = *hyptphi1[7][4] + *hyptphi1[7][5];
+    hyptphi1[7][5]->Reset();
+
+
+
+    //v2 pt
+    *hyptphi2[1][1] = *hyptphi2[1][1] + *hyptphi2[1][2];
+    hyptphi2[1][2]->Reset();
+
+    *hyptphi2[2][3] = *hyptphi2[2][3] + *hyptphi2[2][4];
+    hyptphi2[2][4]->Reset();
+
+    *hyptphi2[3][5] = *hyptphi2[3][5] + *hyptphi2[3][6];
+    hyptphi2[3][6]->Reset();
+
+    *hyptphi2[4][2] = *hyptphi2[4][2] + *hyptphi2[4][3];
+    hyptphi2[4][3]->Reset();
+
+    *hyptphi2[4][6] = *hyptphi2[4][6] + *hyptphi2[4][7];
+    hyptphi2[4][7]->Reset();
+
+
+
+
     // output    
     //************************************************** 
     std::cout << " ---- Resutls ---------------------" << std::endl;
 
-    TString fName = "NL" + sysName[isys[m]] + "_neutron.root";
+    TString fName = "vaNL" + sysName[isys[m]] + "_neutron.root";
     gSystem->cd("data");
     auto GraphSave = new TFile(fName,"recreate");
     
@@ -2611,7 +2724,6 @@ void PlotNeuLANDv1v2()                        //%% Executable :
 	  auto hypt = (TH1D*)hyptphi1[kn][jn]->ProjectionX();
 	  GetFittingParameters(*hypt, para, corr);
 	    
-
 	  if( !std::isnan(para[4]) && !std::isinf(para[4] )) {
 	    gPt_v1[kn]->SetPoint(il, ptc, para[4]);
 	    gPt_v1[kn]->SetPointError(il, ptce, para[5]);
@@ -2740,6 +2852,11 @@ void PlotNeuLANDv1v2()                        //%% Executable :
 
 }
 
+void combineHist(UInt_t sys, TH2D *hyptphi1, TH2D *hyptphi2)
+{
+
+}
+
 void GetFittingParameters(TH1D &h1, Double_t pp[6])
 {
   for(UInt_t i = 0; i < 6; i++)
@@ -2822,6 +2939,8 @@ UInt_t SetBranch(UInt_t m)
   rChain[m]->SetBranchAddress("aoq",&aoq);
   rChain[m]->SetBranchAddress("z",&z);
   rChain[m]->SetBranchAddress("snbm",&snbm);
+  rChain[m]->SetBranchAddress("ProjA",&ProjA);
+  rChain[m]->SetBranchAddress("ProjB",&ProjB);
   rChain[m]->SetBranchAddress("unitP_fc"  ,&unitP_fc,&bunitP_fc);
   rChain[m]->SetBranchAddress("unitP_rc"  ,&unitP_rc,&bunitP_rc);
   rChain[m]->SetBranchAddress("unitP_1"   ,&unitP_1,&bunitP_1);

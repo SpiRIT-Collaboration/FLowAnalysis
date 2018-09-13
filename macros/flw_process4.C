@@ -175,6 +175,8 @@ void Open()
   fTree->SetBranchAddress("aoq" ,&aoq);
   fTree->SetBranchAddress("z"   ,&z);
   fTree->SetBranchAddress("snbm",&snbm);
+  fTree->SetBranchAddress("ProjA",&ProjA);
+  fTree->SetBranchAddress("ProjB",&ProjB);
 
   fTree->SetBranchAddress("STNeuLANDCluster",&aNLCluster);
 }
@@ -267,6 +269,8 @@ void OutputTree()
   mflw->Branch("aoq",&aoq,"aoq/D");
   mflw->Branch("z",&z,"z/D");
   mflw->Branch("snbm",&snbm,"snbm/I");
+  mflw->Branch("ProjA",&ProjA,"ProjA/D");
+  mflw->Branch("ProjB",&ProjA,"ProjB/D");
 
   mflw->Branch("STParticle",&aParticleArray);
 

@@ -1,11 +1,11 @@
 void Plotv1v2()
 {
-  Bool_t TPC     = 1; //kTRUE; //kTRUE;
-  Bool_t NeuLAND = 0; // kTRUE;
-  Bool_t AMD     = 1;
+  Bool_t TPC     = 0; //kTRUE; //kTRUE;
+  Bool_t NeuLAND = 1; // kTRUE;
+  Bool_t AMD     = 0;
   Bool_t bsys[]  = { 1, 0, 0, 0};   //{"132","108","124","112"};
-  Bool_t bpid[]  = { 1, 0, 0, 0};   //{"proton","deuteron","triton","neutron"};                           
-  Bool_t bamd[]  = { 1, 1, 0, 0};   // amd configulation
+  Bool_t bpid[]  = { 1, 0, 0, 1};   //{"proton","deuteron","triton","neutron"};                           
+  Bool_t bamd[]  = { 1, 1, 1, 1};   // amd configulation
 
 
   Bool_t bYCM = 0; //kFALSE; //kTRUE;
@@ -40,7 +40,7 @@ void Plotv1v2()
 
 
   TString pamdname[]= {"prt","neut"};
-  TString pname[]   = {"prt","deut","trit","neut"};
+  TString pname[]   = {"proton","deutron","trit","neut"};
   TString pfname[]  = {"proton","deuteron","triton","neutron"};
 
   UInt_t  imrk[] = {20, 21, 22, 23};
@@ -67,13 +67,13 @@ void Plotv1v2()
 
       if( !bsys[i1] ) continue;
  
-      for(UInt_t i0 = 0; i0 < 4; i0++) {
+      for(UInt_t i0 = 0; i0 < 3; i0++) {
 	
 	if( !bpid[i0] ) continue;
 
-	//	foname[ico] = "VN" + expbeamconfig[i1]+"_"+pfname[i0]+".root"; 
-	foname[ico] = "YPT" + expbeamconfig[i1]+"_"+pfname[i0]+".root"; 
-	label.push_back( "DATA:" + expbeamconfig[i1] + pname[i0] );
+	//foname[ico] = "VN" + expbeamconfig[i1]+"_"+pfname[i0]+".root"; 
+       	foname[ico] = "YPT" + expbeamconfig[i1]+"_"+pfname[i0]+".root"; 
+	label.push_back( "DATA:" + expbeamconfig[i1] + " " + pname[i0] );
 	isys.push_back(i1);
 	ico++;
       }
@@ -87,11 +87,24 @@ void Plotv1v2()
 	
       if( !bsys[i1] ) continue;
 
-      //      foname[ico] = "NLv1v2cm" + expbeamconfig[i1]+".root";
-      foname[ico] = "NL" + expbeamconfig[i1]+"_neutron.root";
-      label.push_back( "DATA:" + expbeamconfig[i1] + "neut" );
+      // //      foname[ico] = "NLv1v2cm" + expbeamconfig[i1]+".root";
+      // foname[ico] = "NL" + expbeamconfig[i1]+"_neutron.root";
+      // label.push_back( "DATA:" + expbeamconfig[i1] + "neut" );
+      // isys.push_back(i1);
+      // ico++;
+
+      // without beam angle rotation
+      // foname[ico] = "noRotationNL" + expbeamconfig[i1]+"_neutron.root";
+      // label.push_back( "DATA: no Rot." + expbeamconfig[i1] + "neut" );
+      // isys.push_back(i1);
+      // ico++;
+
+      // veto_all == 0
+      foname[ico] = "vaNL" + expbeamconfig[i1]+"_neutron.root";
+      label.push_back( "DATA: no veto_all" + expbeamconfig[i1] + "neut" );
       isys.push_back(i1);
       ico++;
+
     }
   }
   
@@ -111,7 +124,8 @@ void Plotv1v2()
 	
 	if( !bamd[i2] ) continue;
 	
-	foname[ico] = amdbeamconfig[i1] +"_"+amdconfig[i2]+"_ts"+pamdname[i0]+".root"; 
+	//	foname[ico] = amdbeamconfig[i1] +"_"+amdconfig[i2]+"_ts"+pamdname[i0]+".root"; 
+	foname[ico] = amdbeamconfig[i1] +"_"+amdconfig[i2]+"_"+pamdname[i0]+".root"; 
 	label.push_back( amdbeamconfig[i1](0,5) + amdconfig[i2] + pamdname[i0] );
 	isys.push_back(i1);
 	ico++;
@@ -173,21 +187,21 @@ void Plotv1v2()
     gv_v1[lm] -> SetLineColor(icol[iicol]);
     gv_v1[lm] -> SetMarkerStyle(imrk[iicol]);
 
-    if( bYCM ) {
-      ginv_v1[lm] = new TGraphErrors(*gv_v1[lm]);
-      UInt_t npoint = gv_v1[lm]->GetN();
-      for(UInt_t i = 0; i < npoint; i++) {
-	Double_t v1;
-	Double_t rapid;
-	gv_v1[lm]->GetPoint(i, rapid, v1);
+    // if( bYCM ) {
+    //   ginv_v1[lm] = new TGraphErrors(*gv_v1[lm]);
+    //   UInt_t npoint = gv_v1[lm]->GetN();
+    //   for(UInt_t i = 0; i < npoint; i++) {
+    // 	Double_t v1;
+    // 	Double_t rapid;
+    // 	gv_v1[lm]->GetPoint(i, rapid, v1);
 	
-	ginv_v1[lm]->SetPoint(i, -rapid, -v1);
+    // 	ginv_v1[lm]->SetPoint(i, -rapid, -v1);
 
-	mv1->Add(ginv_v1[lm], "lp");
-	aleg1->AddEntry(ginv_v1[lm], "Inv."+label[lm]);
+    // 	mv1->Add(ginv_v1[lm], "lp");
+    // 	aleg1->AddEntry(ginv_v1[lm], "Inv."+label[lm]);
 	
-      }
-    }
+    //   }
+    // }
 
 
     mv1->Add(gv_v1[lm],"lp");
@@ -203,18 +217,18 @@ void Plotv1v2()
     gv_v2[lm] -> SetLineColor(icol[iicol]);
     gv_v2[lm] -> SetMarkerStyle(imrk[iicol]);
 
-    if( !bYCM ) {
-      UInt_t npoint = gv_v1[lm]->GetN();
-      for(UInt_t i = 0; i < npoint; i++) {
-	Double_t v2;
-	Double_t rapid;
-	gv_v2[lm]->GetPoint(i, rapid, v2);
+    // if( !bYCM ) {
+    //   UInt_t npoint = gv_v1[lm]->GetN();
+    //   for(UInt_t i = 0; i < npoint; i++) {
+    // 	Double_t v2;
+    // 	Double_t rapid;
+    // 	gv_v2[lm]->GetPoint(i, rapid, v2);
 	
-	rapid = (rapid + 0.05);
-	gv_v2[lm]->SetPoint(i, rapid, v2);
+    // 	rapid = (rapid + 0.05);
+    // 	gv_v2[lm]->SetPoint(i, rapid, v2);
 
-      }
-    }
+    //   }
+    // }
 
     iicol++;
 

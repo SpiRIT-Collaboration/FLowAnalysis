@@ -34,28 +34,31 @@ void  RPResolution(UInt_t np, UInt_t ntry);
 
 void BootStrapTest()
 {
-  fv1v2->SetParameter(0, 0.1);
-  fv1v2->SetParameter(1, 0.);
+  fv1v2->SetParameter(0, 0.);
+  fv1v2->SetParameter(1, -0.05);
 
   //  RPResolution();
 
 
   gROOT->ProcessLine(".! grep -i void BootStrapTest.C ");
+
+  fv1v2->SetLineColor(2);
+  fv1v2->Draw("LP");
 }
 
 
 void  Rndv1v2Distribution(UInt_t np = 50)
 {
-
   TH1F *hphidist;
-  if( hphidist == NULL ) {
+  //  if( hphidist == NULL ) {
     TFile *fin = TFile::Open("FlwRUN2841m113_rf.v7.0.Phi.root");
     //fin->ls();
     if( !fin->IsOpen() ) return;
     hphidist = (TH1F*)fin->Get("hphi");
     Double_t entry = hphidist->GetEntries();
     Double_t nbin  = (Double_t)hphidist->GetNbinsX()/(hphidist->GetXaxis()->GetXmax()-hphidist->GetXaxis()->GetXmin());
-  }
+    //  }
+
 
   // auto hexpphi  = new TH1D("hexpphi","",100,-3.2, 3.2);
   // auto hexpphic = new TH1D("hexpphic","",100,-3.2, 3.2);

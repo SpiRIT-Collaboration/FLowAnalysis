@@ -112,8 +112,8 @@ private:
   // BB mass parameters
   Double_t  fitterpara[6];   //!  BetheBloch fitter parameters
   Double_t  BBmassRegion[4][3] = {{ 127.2,  21.3, 3.}, //pi
-				  { 925.6,  80.1, 3.}, //p
-				  {1901.1, 174.4, 2.}, //d
+				  { 925.6,  80.1, 3.}, //p  685.3 to 1,165.9
+				  {1901.1, 174.4, 2.}, //d  1,552.3 to 2,249.9
 				  {2880.2, 297.5, 2.} };   //!
 
   TCutG     *gcutHe3BBmass; //!
@@ -167,6 +167,7 @@ public:
 
   void     SetMass(Double_t value)       {fMass = value;}
   Double_t GetMass()                     {return fMass;}
+  Double_t GetBBMass()                   {return fBBMass;}
 
 
   void     SetRotatedMomentum(TVector3 value)   

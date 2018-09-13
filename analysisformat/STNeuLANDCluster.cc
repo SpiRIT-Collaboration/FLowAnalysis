@@ -58,14 +58,7 @@ void STNeuLANDCluster::SetLocalPosLast(TVector3 posv)
   ncglobalPos_last = nclocalPos_last;
   ncglobalPos_last.RotateY(angle);
   ncglobalPos_last += ncglobal_offset;
-  ncglobalPos_last += targetPos;
-  
-  // globalPos_last.SetX(distance_to_center*TMath::Sin(angle) +
-  // 	      localx_last*TMath::Cos(angle) + localz_last*TMath::Sin(angle));
-  // globalPos_last.SetZ(distance_to_center*TMath::Cos(angle) -
-  // 	      localx_last*TMath::Sin(angle) + localz_last*TMath::Cos(angle) +
-  // 		      target_offset);
-  // globalPos_last.SetY(localy_last);
+  //  ncglobalPos_last += targetPos;
 }
 
 void STNeuLANDCluster::SetMass(TString v)
@@ -131,11 +124,9 @@ void STNeuLANDCluster::SetMass(UInt_t v)
 
 void STNeuLANDCluster::SetMomentum() 
 {
-  //  Double_t gtof = ncdistance/c;
 
   nctof -= tof_offset;
 
-  //  ncbeta  = (ncdistance/(nctof+gtof))/c;
   ncbeta  = (ncdistance/nctof)/c;
 
   if(ncbeta < 1.)
@@ -151,8 +142,6 @@ void STNeuLANDCluster::SetMomentum()
   if(ncmass*ncbeta*ncgamma > 0){
     ncP = ncglobalPos;
 
-    ncP.RotateY(-ncbeamAngle);
-
     ncP.SetMag(ncmass*ncbeta*ncgamma);
 
     ncE = ncmass * ncgamma;
@@ -163,6 +152,21 @@ void STNeuLANDCluster::SetMomentum()
   else
     ncPID = 0;
 
+}
+
+void STNeuLANDCluster::SetBeamAngle(Double_t va, Double_t vb)
+{
+  ncbeamAngleA = va; 
+  ncbeamAngleB = vb;
+
+  if(ncmass*ncbeta*ncgamma > 0){
+
+    ncP.RotateY(-ncbeamAngleA);
+    ncP.RotateX(-ncbeamAngleB);
+
+    Double_t p_para = ncP.Mag()*TMath::Cos(ncP.Theta());
+    ncRapidity = 0.5 * log( (ncE + p_para)/(ncE - p_para) );
+  }
 }
 
 void STNeuLANDCluster::Clear(Option_t *)
@@ -209,5 +213,6 @@ void STNeuLANDCluster::Clear(Option_t *)
   ncE = 0.;
   ncRapidity = 0.;
 
-  ncbeamAngle = 0.;
+  ncbeamAngleA = 0.;
+  ncbeamAngleB = 0.;
 }

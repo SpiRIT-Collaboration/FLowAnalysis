@@ -8,11 +8,11 @@ source setup.sh
 ##--- for Process2 ------------------------------------
 # *****> <Edit Here>  
 
-RUNNUMBER1=("2900")    
-#RUNNUMBER1=(${RNF132t})    
+#RUNNUMBER1=("2900")    
+#RUNNUMBER1=(${RNF132})    
 #RUNNUMBER1=(${RNF108})                                                                              
 #RUNNUMBER1=(${RNF124}) 
-#RUNNUMBER1=(${RNF112})
+RUNNUMBER1=(${RNF112})
 
 # *****> <Edit Here>                                                                                                            
 VERSION=10.0

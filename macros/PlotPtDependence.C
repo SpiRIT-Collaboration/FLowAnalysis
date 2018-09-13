@@ -1,7 +1,7 @@
 TCanvas *cc0;
 TCanvas *cc1;
 TCanvas *cc2;
-TCanvas *cv[8];
+TCanvas *cv[20];
 
 // --> configuration
 TString fsys[] = {"132Sn+124Sn","108Sn+112Sn","124Sn+112Sn","112Sn+124Sn"};
@@ -12,7 +12,7 @@ Size_t  imsz[] = {1, 1, 1.3, 1.3, 1.3};
 Color_t icol[][4] = { {kRed,          kBlue,  kOrange-3,   kGreen+1}, 
 		      {kBlue+2,   kOrange+7,  kGreen-3,     kPink+9},
 		      {kGreen-3,    kPink+7,  kCyan-1,    kYellow-2},
-		      {kOrange-2, kGreen+3,   kCyan-1,    kBlue} };
+		      {kBlue+1, kGreen+3,   kCyan-1,    kBlue} };
 
 //  Double_t rrange[3] = {0.27, 0.54, 1.};
 Double_t yrange[] =  {-0.25, -0.15, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45};
@@ -43,8 +43,8 @@ Double_t FittingAndIntegral(TGraphErrors *gr)
 void PlotPtDependence()
 {
   // --> Plotting selection
-  Bool_t bsys[]  = { 1, 1, 0, 0};
-  Bool_t bpid[]  = { 1, 0, 0, 1};
+  Bool_t bsys[]  = { 1, 0, 0, 0};
+  Bool_t bpid[]  = { 1, 0, 0, 1}; //p, d, t, n
 
 
   TString fname[4][4];
@@ -57,7 +57,7 @@ void PlotPtDependence()
     }
 
     if(bpid[3])
-      fname[is][3] = "data/NL"+rsys[is]+"Sn_neutron.root";
+      fname[is][3] = "data/vaNL"+rsys[is]+"Sn_neutron.root";
   }
 
 
@@ -104,7 +104,7 @@ void PlotPtDependence()
     mv2[k] = new TMultiGraph();
     mv2[k]->SetName((TString)Form("mv2%d",k));
     mv2[k]->SetTitle(rapRange2[k]+";Pt [MeV/c]; v2");
-    lg2[k] = new TLegend(0.33, 0.14, 0.96, 0.4,"");
+    lg2[k] = new TLegend(0.60, 0.70, 0.96, 0.92,"");
   }
 
   gr_v1f = new TGraphErrors();
@@ -126,11 +126,11 @@ void PlotPtDependence()
       else
 	std::cout << fname[is][ip] << " is opened. " << std::endl;
 
-      fOpen->ls();
+      //fOpen->ls();
     
       for(UInt_t k = 0; k < rbin; k++){
 	TGraphErrors *gv1 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v1%d",k));
-       	RemovePoints(fname[is][ip], *gv1);
+	//       	RemovePoints(fname[is][ip], *gv1);
 
 	if( gv1 == NULL ) {
 	  cout << " not found " << k << endl;
@@ -148,7 +148,7 @@ void PlotPtDependence()
 	gr_v1->SetMarkerSize(imsz[is]);
 	gr_v1->SetLineColor(icol[ip][is]);
 	gr_v1->GetXaxis()->SetRangeUser(0.,800.);
-	lg1[k]->AddEntry(gr_v1, rsys[is]+" "+fpid[ip] ,"lp");
+	lg1[k]->AddEntry(gr_v1, rsys[is]+"Sn "+fpid[ip] ,"lp");
 
 	igr++;
       }
@@ -156,7 +156,7 @@ void PlotPtDependence()
       for(UInt_t k = 0; k < rbin2; k++){
 
 	TGraphErrors *gv2 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v2%d",k));
-	RemovePoints(fname[is][ip], *gv2);
+	//RemovePoints(fname[is][ip], *gv2);
 	TString gvname = Form("gPt_v2%d",igr);
 	gr_v2 = (TGraphErrors*)gv2->Clone(gvname);
 
@@ -166,7 +166,7 @@ void PlotPtDependence()
 	gr_v2->SetMarkerColor(icol[ip][is]);
 	gr_v2->SetMarkerSize(imsz[is]);
 	gr_v2->SetLineColor(icol[ip][is]);
-	lg2[k]->AddEntry(gr_v2, rsys[is]+" "+fpid[ip],"lp");
+	lg2[k]->AddEntry(gr_v2, rsys[is]+"Sn "+fpid[ip],"lp");
 
 	igr++;
       }
@@ -175,45 +175,70 @@ void PlotPtDependence()
   }
 
 
-  cc1 = new TCanvas("cc1","v2",1100,500);
+  cc1 = new TCanvas("cc1","v2",1600,500);
   cc1->Divide(rbin2,1);
   for(UInt_t k = 0; k < rbin2; k++){
     cc1->cd(k+1);
     mv2[k]->SetMaximum( 0.2);
     mv2[k]->SetMinimum(-0.2);
     mv2[k]->Draw("ALP");
-    if( k == rbin2-1 ) lg2[k]->Draw();
+    if( k == rbin2-2 ) lg2[k]->Draw();
   }
 
-  cc0 = new TCanvas("cc0","v1",1200,700);
+  cc0 = new TCanvas("cc0","v1",1600,700);
   cc0->Divide(rbin/2,2);
   for(UInt_t k = 0; k < rbin; k++){
     cc0->cd(k+1);
-    mv1[k]->SetMaximum(0.4);
-    mv1[k]->SetMinimum(-0.35);
+    mv1[k]->SetMaximum(0.45);
+    mv1[k]->SetMinimum(-0.45);
     mv1[k]->Draw("ALP");
-    if( k == rbin-1 )
+    if( k == rbin-2 )
       lg1[k]->Draw();
   }
 
-  for(UInt_t i = 0; i < 8; i++) {
-    cv[i] = new TCanvas(Form("cv%d",i),Form("cv%d",i),400,450);
-    cv[i]->SetRightMargin(0.02);
-    cv[i]->SetLeftMargin(0.12);
-    cv[i]->SetTopMargin(0.05);
-    mv1[i]->GetXaxis()->SetLabelSize(0.04);
-    mv1[i]->GetYaxis()->SetLabelSize(0.04);
-    mv1[i]->GetXaxis()->SetTitleSize(0.05);
-    mv1[i]->GetYaxis()->SetTitleSize(0.05);
-    mv1[i]->GetYaxis()->SetTitleOffset(1.2);
+   for(UInt_t i = 0; i < 8; i++) {
+     cv[i] = new TCanvas(Form("cv%d",i),Form("cv%d",i),400,450);
+     cv[i]->SetRightMargin(0.02);
+     cv[i]->SetLeftMargin(0.12);
+     cv[i]->SetTopMargin(0.05);
+     mv1[i]->GetXaxis()->SetLabelSize(0.04);
+     mv1[i]->GetYaxis()->SetLabelSize(0.04);
+     mv1[i]->GetXaxis()->SetTitleSize(0.05);
+     mv1[i]->GetYaxis()->SetTitleSize(0.05);
+     mv1[i]->GetYaxis()->SetTitleOffset(1.2);
 
-    mv1[i]->GetYaxis()->SetRangeUser(-0.32,0.38);
+     if( i < 4 )
+       mv1[i]->GetYaxis()->SetRangeUser(-0.4,0.2);
+     else
+       mv1[i]->GetYaxis()->SetRangeUser(-0.2,0.48);
 
-    mv1[i]->Draw("ALP");
-    if( i == rbin-2 )
-      lg1[i]->Draw();
+     mv1[i]->Draw("ALP");
+     if( i == rbin-2 )
+       lg1[i]->Draw();
 
-  }
+   }
+
+   for(UInt_t i = 0; i < 5; i++) {
+     cv[i] = new TCanvas(Form("cv%d",i+10),Form("cv%d",i+10),400,450);
+     cv[i]->SetRightMargin(0.02);
+     cv[i]->SetLeftMargin(0.12);
+     cv[i]->SetTopMargin(0.05);
+     mv2[i]->GetXaxis()->SetLabelSize(0.04);
+     mv2[i]->GetYaxis()->SetLabelSize(0.04);
+     mv2[i]->GetXaxis()->SetTitleSize(0.05);
+     mv2[i]->GetYaxis()->SetTitleSize(0.05);
+     mv2[i]->GetYaxis()->SetTitleOffset(1.2);
+
+     mv2[i]->GetYaxis()->SetRangeUser(-0.2,0.14);
+
+     mv2[i]->Draw("ALP");
+     if( i == rbin2-2 )
+       lg2[i]->Draw();
+
+   }
+
+
+
 }
 
 
@@ -234,8 +259,6 @@ void RemovePoints(TString fn, TGraphErrors &gr)
 
   if( fn == "data/NL132Sn_neutron.root" ) {
 
-    cout << gr.GetName() << endl;
-    gr.Print();
 
     if( (TString)gr.GetName() == "gPt_v11") 
       gr.RemovePoint(1);
