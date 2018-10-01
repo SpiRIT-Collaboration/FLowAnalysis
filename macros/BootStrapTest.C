@@ -552,6 +552,9 @@ void DoubleBootStrap()
       0.0399924, -1.99582, -1.37325, -2.37492, -2.71541, 0.561993, 1.07201, 0.493534, 0.992499, -2.48385, 
       0.893496, -2.43326, -2.30386, -0.284414, -1.8529, -1.41362, -2.58612, -2.31054, -0.0351751, -2.59151, -1.39648, 2.32838};
 
+
+  std::vector< Double_t > data8{ 2.99426, 2.67382, -0.135867, 2.86401, -2.33724, 1.19059, 2.32359, 1.95302, -2.30459};//  ; 2.69684
+
   Double_t genmean = 50.;
   fgaus->SetParameter(0,100.);
   fgaus->SetParameter(1,genmean);
@@ -566,7 +569,7 @@ void DoubleBootStrap()
 
 
 
-  std::vector< Double_t > data = data7; 
+  std::vector< Double_t > data = data8; 
   genmean  = 0.;
 
   // ----------------------------------------------------------------------//
@@ -577,10 +580,8 @@ void DoubleBootStrap()
   Double_t min = data.front();
 
   
-  
-
-
-  auto horiginal = new TH1D("horiginal","data",100, min*0.95, max*1.05);
+  auto horiginal = new TH1D("horiginal","data",100, -3.2, 3.2);
+  //  auto horiginal = new TH1D("horiginal","data",100, min*0.95, max*1.05);
   auto hboot     = new TH1D("hboot","BS data" ,100, min*0.95, max*1.05);
   auto hqq       = new TGraph();
   auto hbsqq     = new TGraph();
@@ -590,7 +591,8 @@ void DoubleBootStrap()
   for( UInt_t i = 0; i < dataSize; i++ ){
 
     sum += data[i];
-    bstrap->Add( data[i] );
+    //    bstrap->Add( data[i] );
+    bstrap->Add( TVector2(cos(data[i]), sin(data[i])) );
 
     horiginal->Fill( data[i] );
   }
@@ -696,8 +698,8 @@ void DoubleBootStrap()
   cc[0]->Divide(2,3);
   
   UInt_t id = 1;
-  cc[0]->cd(id); id++; id++;
-  fgaus->Draw("lp");
+  // cc[0]->cd(id); id++; id++;
+  // fgaus->Draw("lp");
 
 
   cc[0]->cd(id); id++;
@@ -710,7 +712,7 @@ void DoubleBootStrap()
   //  cc[2] = new TCanvas("cc2","cc2");
   cc[0]->cd(id); id++;
   hqq->SetMarkerStyle(20);
-  hqq->SetMarkerSize(0.2);
+  hqq->SetMarkerSize(0.5);
   hqq->SetMarkerColor(2);
   hqq->Draw("AP");
 

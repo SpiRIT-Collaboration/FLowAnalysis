@@ -53,9 +53,8 @@ void STBootStrap::Add(TVector2 sample)
   elementsTV2.push_back(sample);
   org_sum += sample.Unit();
   numElementsTV2 = (Int_t)elementsTV2.size();
-
-
 }
+
 void STBootStrap::Add(Double_t sample)
 {
   elements.push_back(sample);
@@ -130,9 +129,16 @@ UInt_t STBootStrap::BootStrapingTVector2(UInt_t nbt)
   ordn_Mean = TVector2::Phi_mpi_pi(org_sum.Phi());
 
   std::vector< Double_t > org_phiv;
-  for(std::vector< TVector2 >::iterator it = elementsTV2.begin(); it != elementsTV2.end(); it++) 
+  for(std::vector< TVector2 >::iterator it = elementsTV2.begin(); it != elementsTV2.end(); it++) {
     org_phiv.push_back( TVector2::Phi_mpi_pi( (*it).DeltaPhi( org_sum ) ) );
 					     //org_sum.DeltaPhi( *it ) ) );
+
+    // if(ordn_Mean > 2.5)
+    //   std::cout << TVector2::Phi_mpi_pi( (*it).Phi() ) << ", " ;
+
+  }
+  // if(ordn_Mean > 2.5)
+  //   std::cout << " ; " <<ordn_Mean <<  std::endl;
   
   ordn_StdDev = TMath::StdDev( org_phiv.begin(), org_phiv.end() );
 
@@ -147,19 +153,21 @@ UInt_t STBootStrap::BootStrapingTVector2(UInt_t nbt)
       
       //      hbsphi->Fill( TVector2::Phi_mpi_pi( (elementsTV2.at(*it)).Phi() )  );
       
-      sum_vec += elementsTV2.at( *it ).Unit(); 
+      TVector2 rotElements = elementsTV2.at( *it ).Rotate( -1.* org_sum.Phi() );
+      sum_vec += rotElements.Unit(); 
     }      
 
-    Double_t vec_delt = sum_vec.DeltaPhi( org_sum ); //org_sum.DeltaPhi( sum_vec );
+    Double_t vec_delt = sum_vec.Phi(); //org_sum.DeltaPhi( sum_vec );
     replace.push_back( TVector2::Phi_mpi_pi( vec_delt ) );
 
     //    StoreResults();
-    cnvMean = TVector2::Phi_mpi_pi( TMath::Mean(replace.begin(), replace.end()) + org_sum.Phi() );
-    resMean.push_back( cnvMean );
+    cnvMean = TVector2::Phi_mpi_pi( TMath::Mean(replace.begin(), replace.end()) );
 
+    resMean.push_back( cnvMean );
     cnvStdv = TMath::StdDev(resMean.begin(), resMean.end());
     resStdv.push_back( cnvStdv );
 
+    cnvMean += org_sum.Phi() ;
 
   }  
 
