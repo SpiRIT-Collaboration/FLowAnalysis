@@ -1,6 +1,6 @@
 #! /bin/bash                 
 
-######>>>  RUN=2841 VER=4.1 MIX=0 root flw_process2.C 
+######>>>  RUN=2841 VER=4.1 MIX=0 root flw_process2.C\(2000\) 
 
 source runList.sh
 
@@ -9,7 +9,7 @@ source setup.sh
 # *****> <Edit Here>  
 
 #RUNNUMBER1=("2841")    
-RUNNUMBER1=(${RNF132s})    
+RUNNUMBER1=(${RNF132r})    
 #RUNNUMBER1=(${RNF108})                                                                              
 #RUNNUMBER1=(${RNF124}) 
 #RUNNUMBER1=(${RNF112})

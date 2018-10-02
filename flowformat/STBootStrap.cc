@@ -64,9 +64,9 @@ void STBootStrap::Add(Double_t sample)
 
 UInt_t STBootStrap::BootStrapping(UInt_t nbt)
 {
-  if ( numElements > 0 ) return BootStrapingDouble(nbt);
+  if ( numElements > 0 ) return BootStrappingDouble(nbt);
 
-  if ( numElementsTV2 > 0 ) return BootStrapingTVector2(nbt);
+  if ( numElementsTV2 > 0 ) return BootStrappingTVector2(nbt);
 
   if ( numElements < 0 && numElementsTV2 < 0 ) return -1;
 
@@ -76,7 +76,7 @@ UInt_t STBootStrap::BootStrapping(UInt_t nbt)
 }
 
 
-UInt_t STBootStrap::BootStrapingDouble(UInt_t nbt)
+UInt_t STBootStrap::BootStrappingDouble(UInt_t nbt)
 {
   if(nbt > 0 ) nboot = nbt;
   else nboot = 100;
@@ -120,7 +120,7 @@ UInt_t STBootStrap::BootStrapingDouble(UInt_t nbt)
   return 1;
 }
 
-UInt_t STBootStrap::BootStrapingTVector2(UInt_t nbt)
+UInt_t STBootStrap::BootStrappingTVector2(UInt_t nbt)
 {
   if(nbt > 0 ) nboot = nbt;
   else nboot = 1000;
@@ -130,6 +130,7 @@ UInt_t STBootStrap::BootStrapingTVector2(UInt_t nbt)
 
   std::vector< Double_t > org_phiv;
   for(std::vector< TVector2 >::iterator it = elementsTV2.begin(); it != elementsTV2.end(); it++) {
+
     org_phiv.push_back( TVector2::Phi_mpi_pi( (*it).DeltaPhi( org_sum ) ) );
 					     //org_sum.DeltaPhi( *it ) ) );
 
@@ -143,22 +144,24 @@ UInt_t STBootStrap::BootStrapingTVector2(UInt_t nbt)
   ordn_StdDev = TMath::StdDev( org_phiv.begin(), org_phiv.end() );
 
   replace.clear();
+  replaceMod.clear();
 
   for(UInt_t i = 0; i < nboot; i++) {
     std::vector< UInt_t> rep = Resampling(numElementsTV2);
 
     TVector2 sum_vec = TVector2(0,0);
+    TVector2 bs_vec  = TVector2(0,0);
 
     for(std::vector< UInt_t >::iterator it = rep.begin(); it != rep.end(); it++)  {
       
       //      hbsphi->Fill( TVector2::Phi_mpi_pi( (elementsTV2.at(*it)).Phi() )  );
       
       TVector2 rotElements = elementsTV2.at( *it ).Rotate( -1.* org_sum.Phi() );
-      sum_vec += rotElements.Unit(); 
+      sum_vec += rotElements.Unit();
+      bs_vec  += elementsTV2.at( *it ).Unit();
     }      
 
-    Double_t vec_delt = sum_vec.Phi(); //org_sum.DeltaPhi( sum_vec );
-    replace.push_back( TVector2::Phi_mpi_pi( vec_delt ) );
+    replace.push_back( TVector2::Phi_mpi_pi( sum_vec.Phi() ) );
 
     //    StoreResults();
     cnvMean = TVector2::Phi_mpi_pi( TMath::Mean(replace.begin(), replace.end()) );
@@ -169,6 +172,8 @@ UInt_t STBootStrap::BootStrapingTVector2(UInt_t nbt)
 
     cnvMean += org_sum.Phi() ;
 
+    replaceMod.push_back(bs_vec.Mod());
+    cnvMod = TMath::Mean(replaceMod.begin(), replaceMod.end());
   }  
 
   StoreConfideneLevel();
@@ -205,10 +210,13 @@ void STBootStrap::clear()
   replace.clear();
   resMean.clear();
   resStdv.clear();
-  cnvMean = 0.;
-  cnvStdv = 0.;
-  cnvStdv2 = 0.;
+  replaceMod.clear();
+
+  cnvMean    = 0.;
+  cnvStdv    = 0.;
+  cnvStdv2   = 0.;
   cnvCosMean = 0.;
+  cnvMod     = 0.;
 
   org_sum = TVector2(0.,0.);
   r_sum    = 0.;

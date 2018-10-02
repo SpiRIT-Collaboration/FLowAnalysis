@@ -72,6 +72,7 @@ TString sbVer;
 TString ssVer;
 TString ssbVer;
 TString scVer;
+TString sbsVer;
 UInt_t  nBin; 
 TString binpara;
 
@@ -94,22 +95,21 @@ vector<TVector2> pt;
 TClonesArray     *aParticleArray = NULL;
 TClonesArray     *aNLCluster     = NULL;
 STFlowCorrection *flowcorr       = NULL;
-TClonesArray     *aflowcorrArray[2];
 
-vector<TString> vfname[2];
-vector< vector<Double_t> >  binmax[2];
-vector< vector<Double_t> >  binmin[2];
-
-vector< pair<Double_t, Double_t> > pbinmin[2];
-
-vector<UInt_t> mtkbin[2];
+// flattening correction dbase
+const UInt_t ncorr = 3;
+TClonesArray     *aflowcorrArray[ncorr];
+vector<TString> vfname[ncorr];
+vector< vector<Double_t> >  binmax[ncorr];
+vector< vector<Double_t> >  binmin[ncorr];
+vector< pair<Double_t, Double_t> > pbinmin[ncorr];
+vector<UInt_t> mtkbin[ncorr];
 
 UInt_t  binmapsize = 0;
 
 // Tree out
 Int_t   iRun;
 Int_t    numGoodTrack;
-Int_t    mtrack;
 TVector3 unitP;
 TVector2 unitP_lang;
 TVector2 unitP_1;
@@ -117,10 +117,14 @@ TVector2 unitP_2;
 TVector3 unitP_fc;
 TVector3 unitP_rc;
 
-Double_t bsPhi[2];
-Double_t bsPhi_1[2];
-Double_t bsPhi_2[2];
+Double_t bsPhi[3];
+Double_t bsPhi_1[3];
+Double_t bsPhi_2[3];
 Double_t bsPhi_ex[3];
+
+TVector2 bsP_1;
+TVector2 bsP_2;
+
 
 Double_t         aX;
 Double_t         bY;

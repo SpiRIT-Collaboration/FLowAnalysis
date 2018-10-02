@@ -24,6 +24,7 @@ public:
   void Add(Double_t sample);
 
   Double_t GetMean()           {return cnvMean; }
+  Double_t GetMod()            {return cnvMod; }
   Double_t GetCosMean()        {return cnvCosMean;}
   Double_t GetStdDev()         {return cnvStdv;}
   Double_t GetStdDevError();
@@ -42,14 +43,14 @@ public:
   std::vector< Double_t > GetReplaceVector()   {return replace; }
   std::vector< Double_t > GetMeanVector()      {return resMean; }
   std::vector< Double_t > GetStdDevVector()    {return resStdv; }
-								  
+  std::vector< Double_t > GetReplaceMod()      {return replaceMod; }
 
   void StoreConfideneLevel();
   
   std::vector< UInt_t > Resampling(UInt_t ival);
   UInt_t BootStrapping(UInt_t nbt = 0);
-  UInt_t BootStrapingDouble(UInt_t nbt);
-  UInt_t BootStrapingTVector2(UInt_t nbt);
+  UInt_t BootStrappingDouble(UInt_t nbt);
+  UInt_t BootStrappingTVector2(UInt_t nbt);
 
 
 private:
@@ -70,11 +71,14 @@ private:
   std::vector< Double_t >    replace;    // resampling event
   std::vector< Double_t >    resMean;    // <Phi> / resampling event
   std::vector< Double_t >    resStdv;    // std<Phi> / resampling event
+  std::vector< Double_t >    replaceMod; 
   
   Double_t cnvMean;    // <Phi> for bootstrapped events
   Double_t cnvStdv;    // std<Phi> for bootstrapped events
   Double_t cnvCosMean; // cos(std_Phi) for bootstrapped events
   Double_t cnvStdv2;   // std<std<Phi>> for bootstrapped events
+  Double_t cnvMod;     // Vector2 Mod for bootstrapped events
+
 
   Double_t CL_25lw;
   Double_t CL_975up;

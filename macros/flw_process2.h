@@ -94,9 +94,9 @@ TVector2 unitP_1r;
 TVector2 unitP_2r;
 UInt_t   mtrack_1;
 UInt_t   mtrack_2;
-Double_t bsPhi[2];
-Double_t bsPhi_1[2];
-Double_t bsPhi_2[2];
+Double_t bsPhi[3];
+Double_t bsPhi_1[3];
+Double_t bsPhi_2[3];
 
 // Tree out end
 

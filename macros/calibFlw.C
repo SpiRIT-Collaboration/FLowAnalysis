@@ -47,6 +47,7 @@ void SaveReCenteringData(UInt_t m);
 void Flatten_Psi_ntrackthetabin(UInt_t isel = 0);//%% Executable : 
 void calibFlw()
 {
+  gStyle->SetOptStat(0);
   gROOT->Reset();
 
   SetEnvironment();
@@ -73,38 +74,28 @@ void calibFlw()
   
   gROOT->ProcessLine(".! grep -i void calibFlw.C | grep '//%%'");
 
-  Flatten_Psi_ntrackthetabin(2);
+  //  Flatten_Psi_ntrackthetabin(2);
   Flatten_Psi_ntrackthetabin(4);
+  //Flatten_Psi_ntrackthetabin(6);
 }
 
 //________________________________//%% Executable : 
 void ReCentering(UInt_t isel = 2, Int_t nmin=0, Int_t nmax=100) //%% Executable : Recentering calibration
 {
-  TH1D *hQx[4];
-  TH1D *hQy[4];
-  TF1  *fgX[2];
-  TF1  *fgY[2];
-
-
-  ic++; UInt_t id = 1;
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700, 500*m_end);
-  cc[ic]->Divide(2,m_end);
+  auto fgX  = new TF1("fgX","gaus",-30,30);;
+  auto fgY  = new TF1("fgY","gaus",-30,30);;
 
   for(UInt_t m = m_bgn; m < m_end; m++){
 
-    fgX[m]  = new TF1(Form("fgX%d_%d",nmin,m),"gaus",-30,30);;
-    fgY[m]  = new TF1(Form("fgY%d_%d",nmin,m),"gaus",-30,30);;
-
-    hQx[m] = new TH1D(Form("hQx%d_%d",nmin,m),"; Qx",100,-30,30);
-    hQy[m] = new TH1D(Form("hQy%d_%d",nmin,m),"; Qy",100,-30,30);
+    auto hQx  = new TH1D(Form("hQx%d_%d",nmin,m),"; Qx",100,-20,20);
+    auto hQy  = new TH1D(Form("hQy%d_%d",nmin,m),"; Qy",100,-20,20);
 
     TString htitle = Form("mult >= %d && mult < %d",nmin, nmax);
-    hQx[m]->SetTitle(htitle);
-    hQy[m]->SetTitle(htitle);
+    hQx->SetTitle(htitle);
+    hQy->SetTitle(htitle);
 
     SetPsiCorrectionFileHeader(isel);
 
-    
     TString cutdef;
     if(isel <= 3)
       cutdef = Form("ntrack[%d]>=%d && ntrack[%d]<%d",seltrackID,nmin,seltrackID,nmax);
@@ -116,24 +107,19 @@ void ReCentering(UInt_t isel = 2, Int_t nmin=0, Int_t nmax=100) //%% Executable 
     rChain[m]->Project(Form("hQx%d_%d",nmin,m), unitpX, multcut);
     rChain[m]->Project(Form("hQy%d_%d",nmin,m), unitpY, multcut);
 
-    cc[ic]->cd(id); id++;
-    hQx[m]->Fit(Form("fgX%d_%d",nmin,m),"Q0");
 
-    cc[ic]->cd(id); id++;
-    hQy[m]->Fit(Form("fgY%d_%d",nmin,m),"Q0");
+    hQx->Fit("fgX","Q0");
+    hQy->Fit("fgY","Q0");
 
-    constX= fgX[m]->GetParameter(0);
-    meanX = fgX[m]->GetParameter(1);
-    sigX  = fgX[m]->GetParameter(2);
+    constX= fgX->GetParameter(0);
+    meanX = fgX->GetParameter(1);
+    sigX  = fgX->GetParameter(2);
 
-    constY= fgY[m]->GetParameter(0);
-    meanY = fgY[m]->GetParameter(1);
-    sigY  = fgY[m]->GetParameter(2);
-
-    //SaveReCenteringData(m);
+    constY= fgY->GetParameter(0);
+    meanY = fgY->GetParameter(1);
+    sigY  = fgY->GetParameter(2);
 
   }
-
 }
 
 void SaveReCenteringData(UInt_t m)
@@ -177,8 +163,7 @@ void SaveReCenteringData(UInt_t m)
 
 }
 
-void SetPsiCorrectionFileHeader(UInt_t isel)
-{
+void SetPsiCorrectionFileHeader(UInt_t isel){
   fhead = "Psi";
   switch(isel){
   case 0:
@@ -211,14 +196,26 @@ void SetPsiCorrectionFileHeader(UInt_t isel)
     unitpY = "unitP_2r.Y()";
     fhead += "s2r";
     break;
+  case 6:
+    unitpX = "unitP_1r.Mod()*cos(bsPhi_1[0])";
+    unitpY = "unitP_1r.Mod()*sin(bsPhi_1[0])";
+    fhead += "bs_1";
+    break;
+  case 7:
+    unitpX = "unitP_2r.Mod()*cos(bsPhi_2[0])";
+    unitpY = "unitP_2r.Mod()*sin(bsPhi_2[0])";
+    fhead += "bs_2";
+    break;
   }
+
+
 }
 
 
 //________________________________//%% Executable : 
 void Flatten_Psi_ntrackthetabin(UInt_t isel)
 {
-  std::cout << "flatten_Psi_ntrackbin" << std::endl;
+  std::cout << "flatten_Psi_ntrackbin " << isel << std::endl;
 
   std::cout << "From " << m_bgn << " to " << m_end << std::endl;
 
@@ -244,40 +241,30 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
   // bin setting for multiplicity
   Double_t ntrkbin[ntrknbin+1];
   Double_t ntrk_min = 0;
-  Double_t ntrk_max[] = {40, 40, 40, 40, 22, 22};
+  Double_t ntrk_max[] = {40, 40, 40, 40, 22, 22, 22, 22};
   for(UInt_t n = 0; n < ntrknbin+2; n++)
     ntrkbin[n]   = ntrk_max[isel]/ntrknbin * n;
 
-  TH2D *hbaiphi[2];
-  TH1D *hniphi[2];
-  TH1D *hbiphi[2];
-  TH1D *haiphi[2];
-  TH2D *hbthetaiphi[2];
-  TH2D *hathetaiphi[2];
-  TH2D *hbntrkiphi[2];
-  TH2D *hantrkiphi[2];
-  TH2D *habiphi[2];
  
   UInt_t im = 0;
 
-
   for(UInt_t m = m_bgn; m < m_end; m++){
 
-    hbaiphi[m] = new TH2D(Form("hbaiphi%d",m),  " #Phi before and after; before #Phi [rad]; after #Phi [rad] ", 
+    auto hbaiphi = new TH2D(Form("hbaiphi%d",m),  " #Phi before and after; before #Phi [rad]; after #Phi [rad] ", 
 			  400,-3.5,3.5,400,-3.5,3.5);
-    hniphi[m]  = new TH1D(Form("hniphi%d",m),   " #Phi no corr.; Azimuthal angle [rad]"  , 200,-3.2,3.2);
-    hbiphi[m]  = new TH1D(Form("hbiphi%d",m),   " #Phi before  ; Azimuthal angle [rad]"  , 200,-3.2,3.2);
-    haiphi[m]  = new TH1D(Form("haiphi%d",m),   " #Phi after   ; Azimuthal angle [rad]"  , 200,-3.2,3.2);
+    auto hniphi  = new TH1D(Form("hniphi%d",m),   " #Phi no corr.; Azimuthal angle [rad]"  , 200,-3.2,3.2);
+    auto hbiphi  = new TH1D(Form("hbiphi%d",m),   " #Phi before  ; Azimuthal angle [rad]"  , 200,-3.2,3.2);
+    auto haiphi  = new TH1D(Form("haiphi%d",m),   " #Phi after   ; Azimuthal angle [rad]"  , 200,-3.2,3.2);
 
-    hbthetaiphi[m]= new TH2D(Form("hbthetaiphi%d",m), " before ; theta; #phi;  "           , 200,0.,theta_max, 400,-3.2,3.2); 
-    hathetaiphi[m]= new TH2D(Form("hathetaiphi%d",m), " after  ; theta; #phi;  "           , 200,0.,theta_max, 400,-3.2,3.2); 
+    auto hbthetaiphi= new TH2D(Form("hbthetaiphi%d",m), " before ; theta; #phi;  "           , 200,0.,theta_max, 400,-3.2,3.2); 
+    auto hathetaiphi= new TH2D(Form("hathetaiphi%d",m), " after  ; theta; #phi;  "           , 200,0.,theta_max, 400,-3.2,3.2); 
 
-    hbntrkiphi[m] = new TH2D(Form("hbntrkiphi%d",m)," before ; Number of tracks; #phi"     , 
+    auto hbntrkiphi = new TH2D(Form("hbntrkiphi%d",m)," before ; Number of tracks; #phi"     , 
 			     ntrk_max[isel],0,ntrk_max[isel],400,-3.2,3.2);
-    hantrkiphi[m] = new TH2D(Form("hantrkiphi%d",m)," after  ; Number of tracks; #phi"     , 
+    auto hantrkiphi = new TH2D(Form("hantrkiphi%d",m)," after  ; Number of tracks; #phi"     , 
 			     ntrk_max[isel],0,ntrk_max[isel],400,-3.2,3.2);
     
-    habiphi[m] = new TH2D(Form("habiphi%d",m)," ;#Psi_rot; #Psi_fc",200,-3.2,3.2,200,-3.2,3.2);
+    auto habiphi = new TH2D(Form("habiphi%d",m)," ;#Psi_rot; #Psi_fc",200,-3.2,3.2,200,-3.2,3.2);
 
     auto unitP_ave  = new TVector3();
     auto unitP_rot  = new TVector3();
@@ -287,11 +274,14 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
     auto unitP_2r   = new TVector2();
     UInt_t mtrack_1;
     UInt_t mtrack_2;
+    Double_t bsPhi_1[3];
+    Double_t bsPhi_2[3];
 
 
     rChain[m]->SetBranchAddress("ntrack",ntrack);
     rChain[m]->SetBranchAddress("unitP_ave",&unitP_ave);
     rChain[m]->SetBranchAddress("unitP_rot",&unitP_rot);
+
 
     if( isel >= 2) {
       rChain[m]->SetBranchAddress("unitP2_ave",&unitP2_ave);
@@ -300,6 +290,8 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
       rChain[m]->SetBranchAddress("unitP_2r"  ,&unitP_2r);
       rChain[m]->SetBranchAddress("mtrack_1"  ,&mtrack_1);
       rChain[m]->SetBranchAddress("mtrack_2"  ,&mtrack_2);
+      rChain[m]->SetBranchAddress("bsPhi_1"   ,bsPhi_1);
+      rChain[m]->SetBranchAddress("bsPhi_2"   ,bsPhi_2);
     }
 
     // Flattening with a shifting method
@@ -354,6 +346,9 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
       if( isel < 4 )        seltrack = ntrack[seltrackID];
       else if( isel == 4 )  seltrack = mtrack_1;
       else if( isel == 5 )  seltrack = mtrack_2;
+      else if( isel == 6 )  seltrack = mtrack_1;
+      else if( isel == 7 )  seltrack = mtrack_2;
+
 
       while(1){ 
 	if( seltrack >= ntrkbin[j] ){
@@ -373,14 +368,17 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
       //------------------------
       UInt_t itheta = 0;
 
+      // see -> SetPsiCorrectionFileHeader()
       TVector3 vec = *unitP_rot;
       if(isel == 1) vec = *unitP_ave;
       else if(isel == 2) vec = TVector3(unitP2_rot->X(), unitP2_rot->Y(), 0.);
       else if(isel == 3) vec = TVector3(unitP2_ave->X(), unitP2_ave->Y(), 0.);
       else if(isel == 4) vec = TVector3(unitP_1r->X(),   unitP_1r->Y(),   0.); 
       else if(isel == 5) vec = TVector3(unitP_2r->X(),   unitP_2r->Y(),   0.); 
+      else if(isel == 6) vec = TVector3(unitP_1r->Mod()*cos(bsPhi_1[0]), unitP_1r->Mod()*sin(bsPhi_1[0]), 0.);
+      else if(isel == 7) vec = TVector3(unitP_2r->Mod()*cos(bsPhi_2[0]), unitP_2r->Mod()*sin(bsPhi_2[0]), 0.);
 
-      hniphi[m]->Fill(vec.Phi());
+      hniphi->Fill(vec.Phi());
 
       // vec.SetX( (vec.X()-meanX)/sigX );
       // vec.SetY( (vec.Y()-meanY)/sigY );
@@ -431,19 +429,20 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
 	cout << "after " << mtk.size()  << endl;
 	if(mtk.size() > 0){
 	  for(UInt_t k = 0; k < (UInt_t)mtk.size(); k++){	  
-	    hbiphi[m]     ->Fill(rcphi.at(k));
-	    hbthetaiphi[m]->Fill(atheta.at(k), rcphi.at(k));	  
-	    hbntrkiphi[m] ->Fill(mtk.at(k)   , rcphi.at(k));	  
+	    hbiphi     ->Fill(rcphi.at(k));
+	    hbthetaiphi->Fill(atheta.at(k), rcphi.at(k));	  
+	    hbntrkiphi ->Fill(mtk.at(k)   , rcphi.at(k));	  
 
-	    hathetaiphi[m]->Fill(atheta.at(k), aphi.at(k));
-	    hantrkiphi[m] ->Fill(mtk.at(k)   , aphi.at(k));
-	    haiphi[m]     ->Fill(aphi.at(k));	  
+	    hathetaiphi->Fill(atheta.at(k), aphi.at(k));
+	    hantrkiphi ->Fill(mtk.at(k)   , aphi.at(k));
+	    haiphi     ->Fill(aphi.at(k));	  
 	    
 	    if(j == 1)
-	      habiphi[m]  ->Fill(ophi.at(k), aphi.at(k));
+	      habiphi  ->Fill(ophi.at(k), aphi.at(k));
 	  }
 	}
 
+	// finename :: comm1(fhead+"cv%d.m%dn%d);
 	TString comm1 = Form(fhead+"cv%d.m%dn%d:flatten_Psi_ntrkthetabin; ntrack>= %f && ntrack< %f theta>= %f && theta< %f",
 			     iVer,j,i,ntrkbin[j],ntrkbin[j+1],thetabin[i],thetabin[i+1]);
 
@@ -463,47 +462,42 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
     
       UInt_t iv = 1;
       cc[im]->cd(iv); iv++;
-      if(hbthetaiphi[m])  hbthetaiphi[m]->Draw("colz");
+      if(hbthetaiphi)  hbthetaiphi->Draw("colz");
     
       cc[im]->cd(iv); iv++;
-      if(hbntrkiphi[m])   hbntrkiphi[m]->Draw("colz");
+      if(hbntrkiphi)   hbntrkiphi->Draw("colz");
 
       cc[im]->cd(iv); iv++;
-      if(hathetaiphi[m])  hathetaiphi[m]->Draw("colz");
+      if(hathetaiphi)  hathetaiphi->Draw("colz");
 
       cc[im]->cd(iv); iv++;
-      if(hantrkiphi[m])   hantrkiphi[m]->Draw("colz");
+      if(hantrkiphi)   hantrkiphi->Draw("colz");
     }
     
-    cc[im]->cd(1);
    
     im++;
     cc[im] = new TCanvas(Form("cc%d",im),Form("cc%d",im),700,500);
 
 
-    hniphi[m]->SetLineColor(2);
-    hniphi[m]->Draw("e");
+    hniphi->SetLineColor(2);
+    hniphi->Draw("e");
 
-    hbiphi[m]->SetLineColor(8);
-    hbiphi[m]->Draw("samee");
+    hbiphi->SetLineColor(8);
+    hbiphi->Draw("samee");
 
-    haiphi[m]->SetLineColor(4);
-    haiphi[m]->Draw("samee");
+    haiphi->SetLineColor(4);
+    haiphi->Draw("samee");
 
-    auto aLeg = new TLegend(0.15,0.7,0.3,0.9,"");
-    aLeg->AddEntry(hniphi[m],"No Collection ","lp");
-    aLeg->AddEntry(hbiphi[m],"ReCentering","lp");
-    aLeg->AddEntry(haiphi[m],"ReCentering & Shifting","lp");
+    auto aLeg = new TLegend(0.75,0.13,0.9,0.3,"");
+    aLeg->AddEntry(hniphi,"No Collection ","lp");
+    aLeg->AddEntry(hbiphi,"ReCentering","lp");
+    aLeg->AddEntry(haiphi,"ReCentering & Shifting","lp");
 
     aLeg->Draw();
 
-    // im++;
-    // cc[im] = new TCanvas(Form("cc%d",im),Form("cc%d",im),700,500);
-    // habiphi[m]->Draw("colz");
-
 
     im++;
-    if(m == 0){
+    if(m == 0 && kFALSE){
       cc[im] = new TCanvas(Form("cc%d",im),Form("cc%d",im),700,500);
       cc[im]->Divide(2,2);
     

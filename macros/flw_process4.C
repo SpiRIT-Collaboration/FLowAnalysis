@@ -75,11 +75,12 @@ void flw_process4(Long64_t nmax = -1)
 void SetEnvironment()
 {
 
-  sRun = gSystem -> Getenv("RUN");  // RUN number
-  sVer = gSystem -> Getenv("VER");  // Version ID
-  sbVer= gSystem -> Getenv("FLC"); // BRUN version
-  sMix = gSystem -> Getenv("MIX");
-  ssVer= gSystem -> Getenv("FLCS"); // BRUN version
+  sRun   = gSystem -> Getenv("RUN");  // RUN number
+  sVer   = gSystem -> Getenv("VER");  // Version ID
+  sbVer  = gSystem -> Getenv("FLC"); // BRUN version
+  sMix   = gSystem -> Getenv("MIX");
+  ssVer  = gSystem -> Getenv("FLCS");  // Subevent correction
+  sbsVer = gSystem -> Getenv("FLCBS"); // BootStrap correction version
   
   if(sRun =="" || sVer == "" ||sMix == "" || sbVer == ""|| !DefineVersion()) {
     cout << " Please type " << endl;
@@ -162,7 +163,6 @@ void Open()
 
   fTree->SetBranchAddress("STParticle",&aParticleArray);
   fTree->SetBranchAddress("ntrack"    ,ntrack);
-  fTree->SetBranchAddress("mtrack"    ,&mtrack);
   fTree->SetBranchAddress("unitP_ave" ,&unitP_ave,  &bunitP_ave);
   fTree->SetBranchAddress("unitP_rot" ,&unitP_rot,  &bunitP_rot);
   fTree->SetBranchAddress("unitP2_ave",&unitP2_ave, &bunitP2_ave);
@@ -171,6 +171,8 @@ void Open()
   fTree->SetBranchAddress("mtrack_2"  ,&mtrack_2);
   fTree->SetBranchAddress("unitP_1r"  ,&unitP_1r  , &bunitP_1r);
   fTree->SetBranchAddress("unitP_2r"  ,&unitP_2r  , &bunitP_2r);
+  fTree->SetBranchAddress("bsPhi_1"   ,bsPhi_1);
+  fTree->SetBranchAddress("bsPhi_2"   ,bsPhi_2);
 
   fTree->SetBranchAddress("aoq" ,&aoq);
   fTree->SetBranchAddress("z"   ,&z);
@@ -198,7 +200,7 @@ void Initialize()
 	  
   numGoodTrack = 0;
 
-  for(UInt_t i = 0; i < 2; i++){
+  for(UInt_t i = 0; i < 3; i++){
     bsPhi[i]   = -999.;
     bsPhi_1[i] = -999.;
     bsPhi_2[i] = -999.;
@@ -207,6 +209,8 @@ void Initialize()
     bsPhi_ex[i]= -999.;
   }
   
+  bsP_1 = TVector2(0.,0.);
+  bsP_2 = TVector2(0.,0.);
 
   aParticleArray->Clear();
 
@@ -276,7 +280,6 @@ void OutputTree()
 
   mflw->Branch("ntrack",ntrack,"ntrack[7]/I");
   mflw->Branch("numGoodTrack",&numGoodTrack);
-  mflw->Branch("mtrack",&mtrack,"mtrack/I");
   mflw->Branch("mtrack_1",&mtrack_1,"mtrack_1/I");
   mflw->Branch("mtrack_2",&mtrack_2,"mtrack_1/I");
 
@@ -291,10 +294,13 @@ void OutputTree()
   mflw->Branch("unitP_fc"  ,&unitP_fc);
   mflw->Branch("unitP_rc"  ,&unitP_rc);
 
-  mflw->Branch("bsPhi"     ,bsPhi   ,"bsPhi[2]/D");
-  mflw->Branch("bsPhi_1"   ,bsPhi_1 ,"bsPhi_1[2]/D");
-  mflw->Branch("bsPhi_2"   ,bsPhi_2 ,"bsPhi_2[2]/D");
+  mflw->Branch("bsPhi"     ,bsPhi   ,"bsPhi[3]/D");
+  mflw->Branch("bsPhi_1"   ,bsPhi_1 ,"bsPhi_1[3]/D");
+  mflw->Branch("bsPhi_2"   ,bsPhi_2 ,"bsPhi_2[3]/D");
   mflw->Branch("bsPhi_ex"  ,bsPhi_ex,"bsPhi_ex[3]/D");
+
+  mflw->Branch("bsP_1"     ,&bsP_1  );
+  mflw->Branch("bsP_2"     ,&bsP_2  );
 
   if(aNLCluster != NULL)
     mflw->Branch("STNeuLANDCluster",&aNLCluster);
@@ -331,14 +337,17 @@ Bool_t DefineVersion()
 UInt_t SetDatabaseFiles()
 {
 
-  TString  fname[2];
+  UInt_t ncount = 3;
+  TString  fname[3];
+
+  // isel = 0
   fname[0] = sbVer + ".";
-  
-  UInt_t ncount = 1;
-  if(ssVer != "") {
-    fname[1] = ssVer + ".";
-    ncount = 2;
-  }
+    
+  // isel = 1
+  fname[1] = ssVer + ".";
+
+  // isel = 2
+  fname[2] = sbsVer + ".";
 
 
   for(UInt_t i = 0; i < ncount; i++){
@@ -481,7 +490,6 @@ void CheckPlot(UInt_t ival)
 
   hvphi  = new TH1D("hvphi"  ,"phi"   ,100,-3.2,3.2);
   hvthet = new TH1D("hvtheta","theta" ,100,0.,1.4);
-  hvmtk  = new TH1I("hvmtk"  ,"mtrack", 60,0,60);
 
   std::vector<Double_t>::iterator itr;
   std::vector<Int_t>::iterator   iitr;
@@ -521,6 +529,16 @@ void SubEventAnalysis()
 
     uvec = Psi_FlatteningCorrection(1, mtrack_2, TVector3(unitP_2r->X(), unitP_2r->Y(), 0.));
     unitP_2.SetX(uvec.X()); unitP_2.SetY(uvec.Y());
+
+    TVector3 bvec1(unitP_1r->Mod(),0.,0);
+    bvec1.SetPhi(bsPhi_1[0]);
+    uvec = Psi_FlatteningCorrection(2, mtrack_1, bvec1);
+    bsP_1.SetX(uvec.X()); bsP_1.SetY(uvec.Y()); 
+
+    TVector3 bvec2(unitP_2r->Mod(),0.,0);
+    bvec2.SetPhi(bsPhi_2[0]);
+    uvec = Psi_FlatteningCorrection(2, mtrack_2, bvec2);
+    bsP_2.SetX(uvec.X()); bsP_2.SetY(uvec.Y()); 
 
   }
 

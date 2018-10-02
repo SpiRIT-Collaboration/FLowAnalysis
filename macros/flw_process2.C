@@ -206,9 +206,11 @@ void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
     
     bsPhi_1[0] = bs_unitP_1->GetMean();
     bsPhi_1[1] = bs_unitP_1->GetStdDev();
+    bsPhi_1[2] = bs_unitP_1->GetMod();
     
     bsPhi_2[0] = bs_unitP_2->GetMean();
     bsPhi_2[1] = bs_unitP_2->GetStdDev();
+    bsPhi_2[2] = bs_unitP_2->GetMod();
   }
   //  cout << " bsphi1 " << bsPhi_1[0] << " +- " << bsPhi_1[1] << endl;
   //  cout << " bsphi2 " << bsPhi_2[0] << " +- " << bsPhi_2[1] << endl;
@@ -459,7 +461,7 @@ void Initialize()
   unitP_1r   = TVector2(0.,0.);
   unitP_2r   = TVector2(0.,0.);
 
-  for(UInt_t i = 0; i < 2; i++){
+  for(UInt_t i = 0; i < 3; i++){
     bsPhi[i]   = -999.;
     bsPhi_1[i] = -999.;
     bsPhi_2[i] = -999.;
@@ -624,9 +626,9 @@ void OutputTree(Long64_t nmax)
 
   mflw->Branch("unitP_1r",&unitP_1r);
   mflw->Branch("unitP_2r",&unitP_2r);
-  mflw->Branch("bsPhi"     ,bsPhi   ,"bsPhi[2]/D");
-  mflw->Branch("bsPhi_1"   ,bsPhi_1 ,"bsPhi_1[2]/D");
-  mflw->Branch("bsPhi_2"   ,bsPhi_2 ,"bsPhi_2[2]/D");
+  mflw->Branch("bsPhi"     ,bsPhi   ,"bsPhi[3]/D");
+  mflw->Branch("bsPhi_1"   ,bsPhi_1 ,"bsPhi_1[3]/D");
+  mflw->Branch("bsPhi_2"   ,bsPhi_2 ,"bsPhi_2[3]/D");
 
   mflw->Branch("mtrack_1",&mtrack_1);
   mflw->Branch("mtrack_2",&mtrack_2);
