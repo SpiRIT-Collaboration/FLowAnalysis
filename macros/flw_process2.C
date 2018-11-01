@@ -28,11 +28,15 @@ void flw_process2(Long64_t nmax = -1)
 
   SetNumberOfProcess(nmax);
 
+  //  auto bs_unitP = new STBootStrap(100);
+
   for(Long64_t ievt = 0; ievt < maxProc; ievt++){
 
     PrintProcess(ievt);
 
     Initialize();
+
+    //    bs_unitP->Clear();
     
     Long64_t nTrack = 0;
 
@@ -106,6 +110,8 @@ void flw_process2(Long64_t nmax = -1)
 
 	    unitP2_ave += aPart1->GetRotatedPt().Unit(); 
 	    unitP2_rot += aPart1->GetRPWeight() * aPart1->GetRotatedPt().Unit();
+
+	    //	    bs_unitP->Add(aPart1->GetRPWeight() * aPart1->GetRotatedPt().Unit());
 	  }
 
 	  if( aPart1->GetReactionPlaneFlag() == 20 )
@@ -119,8 +125,14 @@ void flw_process2(Long64_t nmax = -1)
     }
 
     
-    if(ntrack[4] > 0) 
+    if(ntrack[4] > 0) {
+      // bs_unitP->BootStrapping();
+      // bsPhi[0] = bs_unitP->GetMean();
+      // bsPhi[1] = bs_unitP->GetStdDev();
+      // bsPhi[2] = bs_unitP->GetMod();
+
       SetSubEvent(npar, ntrack[4]);
+    }
     else {
       unitP_ave.SetX(-999.);  unitP_ave.SetY(-999.);
       unitP_rot.SetX(-999.);  unitP_rot.SetY(-999.);
@@ -154,6 +166,8 @@ void flw_process2(Long64_t nmax = -1)
     exit(0);
   }
 
+  //  delete bs_unitP;
+  delete gRandom;
 }
 
 void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
@@ -183,6 +197,9 @@ void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
 	unitP_1r+= wt * ptr.Unit();
 	bs_unitP_1->Add(wt * ptr.Unit());
 
+	TVector2 ptpt = wt * ptr.Unit();
+	std::cout << ptpt.Phi() << ", "; 
+
 	aPart1->AddReactionPlaneFlag(100);
         mtrack_1++;
       }
@@ -200,20 +217,20 @@ void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
     }
   }
 
-  if( mtrack_1 > 0 && mtrack_2 > 0 ) {
-    bs_unitP_1->BootStrapping();
-    bs_unitP_2->BootStrapping();
+  std::cout << endl;
+
+  // if( mtrack_1 > 0 && mtrack_2 > 0 ) {
+  //   bs_unitP_1->BootStrapping();
+  //   bs_unitP_2->BootStrapping();
     
-    bsPhi_1[0] = bs_unitP_1->GetMean();
-    bsPhi_1[1] = bs_unitP_1->GetStdDev();
-    bsPhi_1[2] = bs_unitP_1->GetMod();
+  //   bsPhi_1[0] = bs_unitP_1->GetMean();
+  //   bsPhi_1[1] = bs_unitP_1->GetStdDev();
+  //   bsPhi_1[2] = bs_unitP_1->GetMod();
     
-    bsPhi_2[0] = bs_unitP_2->GetMean();
-    bsPhi_2[1] = bs_unitP_2->GetStdDev();
-    bsPhi_2[2] = bs_unitP_2->GetMod();
-  }
-  //  cout << " bsphi1 " << bsPhi_1[0] << " +- " << bsPhi_1[1] << endl;
-  //  cout << " bsphi2 " << bsPhi_2[0] << " +- " << bsPhi_2[1] << endl;
+  //   bsPhi_2[0] = bs_unitP_2->GetMean();
+  //   bsPhi_2[1] = bs_unitP_2->GetStdDev();
+  //   bsPhi_2[2] = bs_unitP_2->GetMod();
+  // }
 
   delete bs_unitP_1;
   delete bs_unitP_2;
@@ -261,13 +278,10 @@ Bool_t CheckParticle(STParticle *apart)
 
   if( apart == NULL ) return bsel;
 
-  //Kaneko-san's PID is Applied temporarly because it was missed in process1
-  //  apart->SetBBPID();
-
 
   if( !apart->GetBestTrackFlag() ) return bsel;
 
-  // ResetPID(apart); 
+  //  ResetPID(apart); // graphical cut PID
 
 
   auto pid    =  apart -> GetPID();

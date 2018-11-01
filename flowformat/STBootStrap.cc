@@ -132,19 +132,13 @@ UInt_t STBootStrap::BootStrappingTVector2(UInt_t nbt)
   for(std::vector< TVector2 >::iterator it = elementsTV2.begin(); it != elementsTV2.end(); it++) {
 
     org_phiv.push_back( TVector2::Phi_mpi_pi( (*it).DeltaPhi( org_sum ) ) );
-					     //org_sum.DeltaPhi( *it ) ) );
-
-    // if(ordn_Mean > 2.5)
-    //   std::cout << TVector2::Phi_mpi_pi( (*it).Phi() ) << ", " ;
 
   }
-  // if(ordn_Mean > 2.5)
-  //   std::cout << " ; " <<ordn_Mean <<  std::endl;
+
   
   ordn_StdDev = TMath::StdDev( org_phiv.begin(), org_phiv.end() );
 
   replace.clear();
-  replaceMod.clear();
 
   for(UInt_t i = 0; i < nboot; i++) {
     std::vector< UInt_t> rep = Resampling(numElementsTV2);
@@ -153,9 +147,6 @@ UInt_t STBootStrap::BootStrappingTVector2(UInt_t nbt)
     TVector2 bs_vec  = TVector2(0,0);
 
     for(std::vector< UInt_t >::iterator it = rep.begin(); it != rep.end(); it++)  {
-      
-      //      hbsphi->Fill( TVector2::Phi_mpi_pi( (elementsTV2.at(*it)).Phi() )  );
-      
       TVector2 rotElements = elementsTV2.at( *it ).Rotate( -1.* org_sum.Phi() );
       sum_vec += rotElements.Unit();
       bs_vec  += elementsTV2.at( *it ).Unit();
@@ -172,8 +163,7 @@ UInt_t STBootStrap::BootStrappingTVector2(UInt_t nbt)
 
     cnvMean += org_sum.Phi() ;
 
-    replaceMod.push_back(bs_vec.Mod());
-    cnvMod = TMath::Mean(replaceMod.begin(), replaceMod.end());
+    cnvMod = org_sum.Mod();
   }  
 
   StoreConfideneLevel();
@@ -210,7 +200,7 @@ void STBootStrap::clear()
   replace.clear();
   resMean.clear();
   resStdv.clear();
-  replaceMod.clear();
+  //  replaceMod.clear();
 
   cnvMean    = 0.;
   cnvStdv    = 0.;

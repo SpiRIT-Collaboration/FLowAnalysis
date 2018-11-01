@@ -81,6 +81,7 @@ void SetEnvironment()
   sMix   = gSystem -> Getenv("MIX");
   ssVer  = gSystem -> Getenv("FLCS");  // Subevent correction
   sbsVer = gSystem -> Getenv("FLCBS"); // BootStrap correction version
+  sNL    = gSystem -> Getenv("NL");
   
   if(sRun =="" || sVer == "" ||sMix == "" || sbVer == ""|| !DefineVersion()) {
     cout << " Please type " << endl;
@@ -98,6 +99,10 @@ void SetEnvironment()
   // Correction version
   Ssiz_t cv = sbVer.First("c");
   ssbVer = sbVer( cv, 3);
+
+  // w or w/o NeuLAND
+  if( sNL == "0") bNL = kFALSE;
+
 }
 
 void PrintProcess(Int_t ievt)
@@ -180,7 +185,8 @@ void Open()
   fTree->SetBranchAddress("ProjA",&ProjA);
   fTree->SetBranchAddress("ProjB",&ProjB);
 
-  fTree->SetBranchAddress("STNeuLANDCluster",&aNLCluster);
+  if(bNL)
+    fTree->SetBranchAddress("STNeuLANDCluster",&aNLCluster);
 }
 
 void Initialize()
@@ -302,7 +308,7 @@ void OutputTree()
   mflw->Branch("bsP_1"     ,&bsP_1  );
   mflw->Branch("bsP_2"     ,&bsP_2  );
 
-  if(aNLCluster != NULL)
+  if(aNLCluster != NULL && bNL)
     mflw->Branch("STNeuLANDCluster",&aNLCluster);
 
 }
@@ -337,18 +343,22 @@ Bool_t DefineVersion()
 UInt_t SetDatabaseFiles()
 {
 
-  UInt_t ncount = 3;
+  UInt_t ncount = 0;
   TString  fname[3];
 
   // isel = 0
   fname[0] = sbVer + ".";
-    
+  ncount++;
+
   // isel = 1
   fname[1] = ssVer + ".";
+  ncount++;
 
   // isel = 2
-  fname[2] = sbsVer + ".";
-
+  if( sbsVer != "" ) {
+    fname[2] = sbsVer + ".";
+    ncount++;
+  }
 
   for(UInt_t i = 0; i < ncount; i++){
     cout << " Database name is " << fname[i]  << endl;

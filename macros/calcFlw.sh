@@ -3,7 +3,8 @@ source runList.sh
 source setup.sh
 
 #export DB=_rf.v8.0.0.cv0
-export DB=_rf.v10.2.0.cv0
+export DB=_rf.v10.2.5.cv5
+#export DB=_rf.v10.2
 
 
 #RUN0={$RN132} DB0=$DB132 valgrind root calcFlw.C
@@ -18,6 +19,7 @@ alias run132="RUN0={\$RNF132} DB0=$DB root calcFlw.C"
 alias run108="RUN0={\$RNF108} DB0=$DB root calcFlw.C"
 alias run124="RUN0={\$RNF124} DB0=$DB root calcFlw.C"
 alias run112="RUN0={\$RNF112} DB0=$DB root calcFlw.C"
-alias run132s="RUN0={\$RNF132s} DB0=$DB root calcFlw.C"
+alias run132b="RUN0={\$RNF132} DB0=_rf.v10.2.5.cv5 root drawBootStrap.C"
 alias run108s="RUN0={\$RNF108s} DB0=$DB root calcFlw.C"
+alias run132s="RUN0={\$RNF132s} DB0=$DB root calcFlw.C"
 alias |grep run1

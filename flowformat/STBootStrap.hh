@@ -43,7 +43,6 @@ public:
   std::vector< Double_t > GetReplaceVector()   {return replace; }
   std::vector< Double_t > GetMeanVector()      {return resMean; }
   std::vector< Double_t > GetStdDevVector()    {return resStdv; }
-  std::vector< Double_t > GetReplaceMod()      {return replaceMod; }
 
   void StoreConfideneLevel();
   
@@ -71,7 +70,6 @@ private:
   std::vector< Double_t >    replace;    // resampling event
   std::vector< Double_t >    resMean;    // <Phi> / resampling event
   std::vector< Double_t >    resStdv;    // std<Phi> / resampling event
-  std::vector< Double_t >    replaceMod; 
   
   Double_t cnvMean;    // <Phi> for bootstrapped events
   Double_t cnvStdv;    // std<Phi> for bootstrapped events

@@ -1,4 +1,5 @@
 #include <algorithm>  
+#include "SetStyle.C"
 TCanvas *cc[10];
 auto fv1v2 = new TF1("fv1v2","1+2.*[0]*cos(x-[2]) + 2.*[1]*cos(2.* (x-[2]))",-3.14, 3.14); 
 auto fgaus = new TF1("fgaus","gaus",0.,100.);
@@ -31,6 +32,7 @@ Bool_t first = kTRUE;
 void  SingleBootStrap(UInt_t np, Double_t val);
 void  RndBootStrap(UInt_t np, UInt_t ith);
 void  RPResolution(UInt_t np, UInt_t ntry);
+void  DoubleBootStrap();
 
 void BootStrapTest()
 {
@@ -42,8 +44,10 @@ void BootStrapTest()
 
   gROOT->ProcessLine(".! grep -i void BootStrapTest.C ");
 
-  fv1v2->SetLineColor(2);
-  fv1v2->Draw("LP");
+  //  fv1v2->SetLineColor(2);
+  //  fv1v2->Draw("LP");
+
+  DoubleBootStrap();
 }
 
 
@@ -520,6 +524,8 @@ void SaveCanvas(TString str = "")
 
 void DoubleBootStrap()
 {
+  SetStyle();
+
   std::vector< Double_t > data0{
     3.11, 8.88, 9.26, 18.36, 18.43, 19.27, 24.58, 25.13, 26.24, 36.37, 38.64, 39.16, 50.39, 52.75, 54.80,
     10.81, 12.69, 13.78, 19.50, 19.54, 20.16, 26.26, 27.65, 28.06, 41.02, 42.97, 44.08, 59.07, 61.22, 70.32,
@@ -555,6 +561,14 @@ void DoubleBootStrap()
 
   std::vector< Double_t > data8{ 2.99426, 2.67382, -0.135867, 2.86401, -2.33724, 1.19059, 2.32359, 1.95302, -2.30459};//  ; 2.69684
 
+  //5.4028730 * 5.5671996
+  std::vector< Double_t > data9{ 0.0564980, 0.2115968, -0.663450, -0.634802, -1.148398, -2.998520, 2.6465250, 
+      2.9963681, -2.541403, -2.943897, -2.076007, -1.654803, 1.5584259, -0.985322, -2.362052, -2.920972, -2.693225, 0.5024560};
+
+  //0.3734517 * 0.3366785 
+  std::vector< Double_t > data10{0.110158, 5.92771, 1.17038, 0.897871, 4.38574, 4.2925, 3.86337, 3.50714, 6.27399, 1.89132, 0.385921, 5.1921, 5.25916, 3.10276, 5.40767, 0.558457};
+
+
   Double_t genmean = 50.;
   fgaus->SetParameter(0,100.);
   fgaus->SetParameter(1,genmean);
@@ -569,32 +583,33 @@ void DoubleBootStrap()
 
 
 
-  std::vector< Double_t > data = data8; 
+  std::vector< Double_t > data = data10; 
   genmean  = 0.;
 
   // ----------------------------------------------------------------------//
   UInt_t dataSize = (UInt_t)data.size();
 
-  std::sort( data.begin(), data.end() );
-  Double_t max = data.back();
-  Double_t min = data.front();
-
+  //  std::sort( data.begin(), data.end() );
   
-  auto horiginal = new TH1D("horiginal","data",100, -3.2, 3.2);
-  //  auto horiginal = new TH1D("horiginal","data",100, min*0.95, max*1.05);
-  auto hboot     = new TH1D("hboot","BS data" ,100, min*0.95, max*1.05);
+  auto horiginal = new TH1D("horiginal","data",100, 0., 6.4);
+  auto hboot     = new TH1D("hboot","; #Psi^{A}_{BS}" ,100, 0.,9.);
   auto hqq       = new TGraph();
   auto hbsqq     = new TGraph();
+  auto horig     = new TGraph(); horig->SetTitle("; cos(#phi_{k}); sin(#phi_{k})");
+  auto hbootstd = new TGraphErrors(); hbootstd->SetTitle(";Number of bootstrapping; #Psi^{A}_{BS}");
+
 
   Double_t sum = 0.;
 
   for( UInt_t i = 0; i < dataSize; i++ ){
 
     sum += data[i];
-    //    bstrap->Add( data[i] );
+    //bstrap->Add( data[i] );
     bstrap->Add( TVector2(cos(data[i]), sin(data[i])) );
+  
 
     horiginal->Fill( data[i] );
+    horig->SetPoint(i, cos(data[i]), sin(data[i]) );
   }
 
   Double_t average = sum/(Double_t)dataSize;
@@ -627,9 +642,12 @@ void DoubleBootStrap()
 
   sum = 0.;
   for( UInt_t i = 0; i < (UInt_t)replace.size(); i++) {
-    hboot->Fill(replace.at(i));
+    hboot->Fill(replace.at(i)+bstrap->GetOrdinarySum().Phi());
 
     sum += replace.at(i);
+
+    hbootstd->SetPoint(i, i, bstrap->GetResidualMean(i) + bstrap->GetOrdinarySum().Phi());
+    hbootstd->SetPointError(i, 0, bstrap->GetResidualStdDev(i));
   }
    
   average = sum/(Double_t)replace.size();
@@ -658,6 +676,8 @@ void DoubleBootStrap()
        << " CL low "<< bstrap->GetCLLow() 
        << " CL up  "<< bstrap->GetCLUp() 
        << " +-  +  "<< bstrap->GetError()
+       << " replaceing size " << replace.size()
+
        << endl;
 
 
@@ -694,34 +714,54 @@ void DoubleBootStrap()
   }
 
 
-  cc[0] = new TCanvas("cc0","cc0", 1200, 1000);
-  cc[0]->Divide(2,3);
-  
+  gStyle->SetOptStat(0);
+
   UInt_t id = 1;
-  // cc[0]->cd(id); id++; id++;
-  // fgaus->Draw("lp");
+  cc[0] = new TCanvas("cc0","cc0", 1200, 500);
+  cc[0]->Divide(3,1);
+
+  cc[0]->cd(id); id++;
+  //  horiginal->Draw();
+  horig->SetMarkerStyle(20);
+  horig->SetMarkerSize(0.5);
+  horig->SetMarkerColor(4);
+  horig->Draw("AP");
+  auto oline = new TArrow(0.,0.,(bstrap->GetOrdinarySum()).Unit().X(),(bstrap->GetOrdinarySum()).Unit().Y(),0.01,">");
+  oline->SetLineColor(2);
+  oline->Draw();
+
 
 
   cc[0]->cd(id); id++;
-  horiginal->Draw();
+  hbootstd->SetLineColor(7);
+  hbootstd->SetMarkerStyle(20);  
+  hbootstd->SetMarkerSize(0.5);  
+  hbootstd->SetMarkerColor(2);
+  hbootstd->Draw("ALP");
 
   //  cc[1] = new TCanvas("cc1","cc1");
   cc[0]->cd(id); id++;
   hboot->Draw();
+  
 
-  //  cc[2] = new TCanvas("cc2","cc2");
-  cc[0]->cd(id); id++;
-  hqq->SetMarkerStyle(20);
-  hqq->SetMarkerSize(0.5);
-  hqq->SetMarkerColor(2);
-  hqq->Draw("AP");
+  // cc[0]->cd(id); id++; id++;
+  // fgaus->Draw("lp");
 
-  //  cc[3] = new TCanvas("cc3","cc3");
-  cc[0]->cd(id); id++;
-  hbsqq->SetMarkerStyle(20);
-  hbsqq->SetMarkerSize(0.2);
-  hbsqq->SetMarkerColor(2);
-  hbsqq->Draw("AP");
+  // id = 1;
+  // cc[1] = new TCanvas("cc1","cc1", 1000, 500);
+  // cc[1]->Divide(2,1);
+
+  // cc[1]->cd(id); id++;
+  // hqq->SetMarkerStyle(20);
+  // hqq->SetMarkerSize(0.5);
+  // hqq->SetMarkerColor(2);
+  // hqq->Draw("AP");
+
+  // cc[1]->cd(id); id++;
+  // hbsqq->SetMarkerStyle(20);
+  // hbsqq->SetMarkerSize(0.2);
+  // hbsqq->SetMarkerColor(2);
+  //  hbsqq->Draw("AP");
 
 }
 

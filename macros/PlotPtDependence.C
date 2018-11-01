@@ -9,10 +9,10 @@ TString rsys[] = {"132",        "108",        "124",        "112"};
 TString fpid[] = {"proton","deuteron","triton","neutron"};  
 UInt_t  imrk[] = {20, 21, 22, 23, 21};
 Size_t  imsz[] = {1, 1, 1.3, 1.3, 1.3};
-Color_t icol[][4] = { {kRed,          kBlue,  kOrange-3,   kGreen+1}, 
+Color_t icol[][4] = { {kRed,          kBlue,  kOrange-3,   kGreen+3}, 
 		      {kBlue+2,   kOrange+7,  kGreen-3,     kPink+9},
 		      {kGreen-3,    kPink+7,  kCyan-1,    kYellow-2},
-		      {kBlue+1, kGreen+3,   kCyan-1,    kBlue} };
+		      {kGreen+3,   kOrange-1, kCyan-1,    kBlue} };
 
 //  Double_t rrange[3] = {0.27, 0.54, 1.};
 Double_t yrange[] =  {-0.25, -0.15, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45};
@@ -44,7 +44,7 @@ void PlotPtDependence()
 {
   // --> Plotting selection
   Bool_t bsys[]  = { 1, 0, 0, 0};
-  Bool_t bpid[]  = { 1, 0, 0, 1}; //p, d, t, n
+  Bool_t bpid[]  = { 1, 1, 1, 1}; //p, d, t, n
 
 
   TString fname[4][4];
@@ -80,36 +80,26 @@ void PlotPtDependence()
   TFile *fOpen;
   TGraphErrors *gr_v1;
   TGraphErrors *gr_v2;
-  TGraphErrors *gr_v1f;
+
+  // Rapidity dependence 
+  auto mrv1 = new TMultiGraph("mrv1",";Rapidity; v1");
+  auto mrv2 = new TMultiGraph("mrv2",";Rapidity; v2");
+  auto lgr1 = new TLegend(0.54, 0.13, 0.87, 0.4,""); 
+  auto lgr2 = new TLegend(0.54, 0.14, 0.9, 0.34,"");
 
 
+  // Pt dependence
   for(UInt_t k = 0; k < rbin; k++){
-    mv1[k] = new TMultiGraph();
-    mv1[k]->SetName((TString)Form("mv1%d",k));
-    mv1[k]->SetTitle(rapRange[k]+";Pt [MeV/c]; v1");
-
-    //    mv1[k]->GetXaxis()->SetRangeUser(0.,800);
-    //    mv1[k]->GetYaxis()->SetLabelSize(0.02);
-    
-    //    mv1[k]->GetXaxis()->SetLabelSize(0.04);
-    // mv1[k]->GetXaxis()->SetLabelOffset(0.0);
-    // mv1[k]->GetYaxis()->SetLabelSize(0.05);
-    // mv1[k]->GetYaxis()->SetLabelOffset(0.0);
-    
-    lg1[k] = new TLegend(0.33, 0.14, 0.96, 0.4,"");
+    mv1[k] = new TMultiGraph((TString)Form("mv1%d",k), rapRange[k]+";Pt [MeV/c]; v1");
+    lg1[k] = new TLegend(0.3, 0.13, 0.88, 0.4,"");
     lg1[k]->SetTextSize(0.07);
   }
 
-  for(UInt_t k = 0; k < rbin2; k++){
-    mv2[k] = new TMultiGraph();
-    mv2[k]->SetName((TString)Form("mv2%d",k));
-    mv2[k]->SetTitle(rapRange2[k]+";Pt [MeV/c]; v2");
-    lg2[k] = new TLegend(0.60, 0.70, 0.96, 0.92,"");
+  for(UInt_t k = 0; k < rbin2; k++) {
+    mv2[k] = new TMultiGraph((TString)Form("mv2%d",k), rapRange2[k]+";Pt [MeV/c]; v2");
+    lg2[k] = new TLegend(0.55, 0.70, 0.9, 0.9,"");
   }
 
-  gr_v1f = new TGraphErrors();
-  gr_v1f->SetName("gr_v1f");
-  
   UInt_t igr = 0;
 
   for(UInt_t is = 0; is < 4; is++){
@@ -128,6 +118,26 @@ void PlotPtDependence()
 
       //fOpen->ls();
     
+      // rapidity dependence
+      TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gv_v1");
+      yv1->SetMarkerColor(icol[ip][is]);
+      yv1->SetMarkerStyle(imrk[is]);
+      yv1->SetMarkerSize(imsz[is]);
+      yv1->SetLineColor(icol[ip][is]);
+      mrv1->Add(yv1,"lp");
+      lgr1->AddEntry(yv1, rsys[is]+"Sn "+fpid[ip] ,"lp");
+
+      TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gv_v2");
+      yv2->SetMarkerColor(icol[ip][is]);
+      yv2->SetMarkerStyle(imrk[is]);
+      yv2->SetMarkerSize(imsz[is]);
+      yv2->SetLineColor(icol[ip][is]);
+      mrv2->Add(yv2,"lp");
+      lgr2->AddEntry(yv2, rsys[is]+"Sn "+fpid[ip] ,"lp");
+      // --end of rapidity dependence
+
+
+      // Pt dependence 
       for(UInt_t k = 0; k < rbin; k++){
 	TGraphErrors *gv1 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v1%d",k));
 	//       	RemovePoints(fname[is][ip], *gv1);
@@ -170,6 +180,7 @@ void PlotPtDependence()
 
 	igr++;
       }
+
       fOpen->Close();
     }
   }
@@ -179,8 +190,8 @@ void PlotPtDependence()
   cc1->Divide(rbin2,1);
   for(UInt_t k = 0; k < rbin2; k++){
     cc1->cd(k+1);
-    mv2[k]->SetMaximum( 0.2);
-    mv2[k]->SetMinimum(-0.2);
+    //    mv2[k]->SetMaximum( 0.2);
+    //    mv2[k]->SetMinimum(-0.2);
     mv2[k]->Draw("ALP");
     if( k == rbin2-2 ) lg2[k]->Draw();
   }
@@ -189,59 +200,92 @@ void PlotPtDependence()
   cc0->Divide(rbin/2,2);
   for(UInt_t k = 0; k < rbin; k++){
     cc0->cd(k+1);
-    mv1[k]->SetMaximum(0.45);
-    mv1[k]->SetMinimum(-0.45);
+    //    mv1[k]->SetMaximum(0.45);
+    //    mv1[k]->SetMinimum(-0.45);
     mv1[k]->Draw("ALP");
     if( k == rbin-2 )
       lg1[k]->Draw();
   }
 
-   for(UInt_t i = 0; i < 8; i++) {
-     cv[i] = new TCanvas(Form("cv%d",i),Form("cv%d",i),400,450);
-     cv[i]->SetRightMargin(0.02);
-     cv[i]->SetLeftMargin(0.12);
-     cv[i]->SetTopMargin(0.05);
-     mv1[i]->GetXaxis()->SetLabelSize(0.04);
-     mv1[i]->GetYaxis()->SetLabelSize(0.04);
-     mv1[i]->GetXaxis()->SetTitleSize(0.05);
-     mv1[i]->GetYaxis()->SetTitleSize(0.05);
-     mv1[i]->GetYaxis()->SetTitleOffset(1.2);
+  if( kFALSE ) {  
+    for(UInt_t i = 0; i < 8; i++) {
+      cv[i] = new TCanvas(Form("cv%d",i),Form("cv%d",i),400,450);
+      cv[i]->SetRightMargin(0.02);
+      cv[i]->SetLeftMargin(0.12);
+      cv[i]->SetTopMargin(0.05);
+      mv1[i]->GetXaxis()->SetLabelSize(0.04);
+      mv1[i]->GetYaxis()->SetLabelSize(0.04);
+      mv1[i]->GetXaxis()->SetTitleSize(0.05);
+      mv1[i]->GetYaxis()->SetTitleSize(0.05);
+      mv1[i]->GetYaxis()->SetTitleOffset(1.2);
 
-     if( i < 4 )
-       mv1[i]->GetYaxis()->SetRangeUser(-0.4,0.2);
-     else
-       mv1[i]->GetYaxis()->SetRangeUser(-0.2,0.48);
+      if( i < 4 )
+	mv1[i]->GetYaxis()->SetRangeUser(-0.4,0.2);
+      else
+	mv1[i]->GetYaxis()->SetRangeUser(-0.2,0.48);
 
-     mv1[i]->Draw("ALP");
-     if( i == rbin-2 )
-       lg1[i]->Draw();
+      mv1[i]->Draw("ALP");
+      if( i == rbin-2 )
+	lg1[i]->Draw();
 
-   }
+    }
 
-   for(UInt_t i = 0; i < 5; i++) {
-     cv[i] = new TCanvas(Form("cv%d",i+10),Form("cv%d",i+10),400,450);
-     cv[i]->SetRightMargin(0.02);
-     cv[i]->SetLeftMargin(0.12);
-     cv[i]->SetTopMargin(0.05);
-     mv2[i]->GetXaxis()->SetLabelSize(0.04);
-     mv2[i]->GetYaxis()->SetLabelSize(0.04);
-     mv2[i]->GetXaxis()->SetTitleSize(0.05);
-     mv2[i]->GetYaxis()->SetTitleSize(0.05);
-     mv2[i]->GetYaxis()->SetTitleOffset(1.2);
+    for(UInt_t i = 0; i < 5; i++) {
+      cv[i] = new TCanvas(Form("cv%d",i+10),Form("cv%d",i+10),400,450);
+      cv[i]->SetRightMargin(0.02);
+      cv[i]->SetLeftMargin(0.12);
+      cv[i]->SetTopMargin(0.05);
+      mv2[i]->GetXaxis()->SetLabelSize(0.04);
+      mv2[i]->GetYaxis()->SetLabelSize(0.04);
+      mv2[i]->GetXaxis()->SetTitleSize(0.05);
+      mv2[i]->GetYaxis()->SetTitleSize(0.05);
+      mv2[i]->GetYaxis()->SetTitleOffset(1.2);
 
-     mv2[i]->GetYaxis()->SetRangeUser(-0.2,0.14);
+      mv2[i]->GetYaxis()->SetRangeUser(-0.2,0.14);
 
-     mv2[i]->Draw("ALP");
-     if( i == rbin2-2 )
-       lg2[i]->Draw();
+      mv2[i]->Draw("ALP");
+      if( i == rbin2-2 )
+	lg2[i]->Draw();
 
-   }
+    }
+  }
 
+  auto cc2 = new TCanvas("cc2","cc2");
+  mrv1->Draw("ALP");
+  lgr1->Draw();
 
+  auto Ymin = mrv1->GetYaxis()->GetXmin();
+  auto Ymax = mrv1->GetYaxis()->GetXmax();
+  auto Xmin = mrv1->GetXaxis()->GetXmin();
+  auto Xmax = mrv1->GetXaxis()->GetXmax();
+
+  auto aLineX1 = new TLine(Xmin, 0., Xmax, 0.);
+  aLineX1->SetLineColor(1);
+  aLineX1->SetLineStyle(3);
+  aLineX1->Draw();
+
+  auto aLineY1 = new TLine(0., Ymin, 0., Ymax);
+  aLineY1->SetLineColor(1);
+  aLineY1->SetLineStyle(3);
+  aLineY1->Draw();
+
+   
+
+  auto cc3 = new TCanvas("cc3","cc3");
+  mrv2->Draw("ALP");
+  lgr2->Draw();
+
+  Ymin = mrv2->GetYaxis()->GetXmin();
+  Ymax = mrv2->GetYaxis()->GetXmax();
+  Xmin = mrv2->GetXaxis()->GetXmin();
+  Xmax = mrv2->GetXaxis()->GetXmax();
+
+  auto aLineX2 = new TLine(0., Ymin, 0., Ymax);
+  aLineX2->SetLineColor(1);
+  aLineX2->SetLineStyle(3);
+  aLineX2->Draw();
 
 }
-
-
 
 
 

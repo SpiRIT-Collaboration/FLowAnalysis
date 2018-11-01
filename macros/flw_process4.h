@@ -73,6 +73,8 @@ TString ssVer;
 TString ssbVer;
 TString scVer;
 TString sbsVer;
+TString sNL;
+Bool_t  bNL = kTRUE;
 UInt_t  nBin; 
 TString binpara;
 
