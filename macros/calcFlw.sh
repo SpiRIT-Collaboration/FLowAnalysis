@@ -3,8 +3,8 @@ source runList.sh
 source setup.sh
 
 #export DB=_rf.v8.0.0.cv0
-export DB=_rf.v10.2.5.cv5
-#export DB=_rf.v10.2
+export DB=_rf.v10.4.0.cv0
+export DB1=_rf.v10.4
 
 
 #RUN0={$RN132} DB0=$DB132 valgrind root calcFlw.C

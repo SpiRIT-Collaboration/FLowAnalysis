@@ -48,10 +48,10 @@ Double_t pt_max   = 1100;
 Double_t pt_dbin  = (pt_max - pt_min)/(Double_t)(pt_nbin-1); 
 
 
-Double_t yrange1[] = { -0.25, -0.15, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45};
+Double_t yrange1[] = { -0.25, -0.15, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45, 0.5};
 const UInt_t ybin1 = sizeof(yrange1)/sizeof(Double_t);
 
-Double_t yrange2[] = {-0.25, -0.1,  0.1, 0.25, 0.45};
+Double_t yrange2[] = {-0.2, -0.05,  0.05, 0.2, 0.35, 0.5};
 const UInt_t ybin2 = sizeof(yrange2)/sizeof(Double_t);
 
 
@@ -64,7 +64,7 @@ Double_t cutlmass[] = {0.,      0. ,    0.,     0. , 2500.};
 
 const UInt_t nsys = 4;
 const UInt_t nprt = 5;
-Color_t icol2[nprt][nsys]= { {kRed,          kBlue,  kOrange-3,   kGreen+1}, 
+Color_t icol2[nprt][nsys]= { {kRed,         kBlue,  kOrange-3,   kGreen+1}, 
 			    {kBlue+2,   kOrange+7,  kGreen-3,     kPink+9},
 			    {kGreen-3,    kPink+7,  kCyan-1,    kYellow-2}, 
 			    {kRed-2,      kBlue-2,  kOrange-2,   kGreen-1},
@@ -169,12 +169,22 @@ Double_t atpl2e;
 // Double_t mcos2e[] = {0.001218, 0.001541, 0.007504, 0.002370};
 
 // v10.2.5 //
-Double_t mcos1[]  = {0.533915, 0.556924, 0.496168, 0.524613};
-Double_t mcos1e[] = {0.001789, 0.002167, 0.011740, 0.003536};
-Double_t mcos2[]  = {0.181478, 0.197456, 0.156725, 0.17521};
-Double_t mcos2e[] = {0.001218, 0.001542, 0.007504, 0.002370};
+// Double_t mcos1[]  = {0.533915, 0.556924, 0.496168, 0.524613};
+// Double_t mcos1e[] = {0.001789, 0.002167, 0.011740, 0.003536};
+// Double_t mcos2[]  = {0.181478, 0.197456, 0.156725, 0.17521};
+// Double_t mcos2e[] = {0.001218, 0.001542, 0.007504, 0.002370};
 
+// v10.4.0 all
+// Double_t mcos1[]  = {1., 0.567911, 1., 1.};
+// Double_t mcos1e[] = {1., 0.002134, 1., 1.};
+// Double_t mcos2[]  = {1., 0.205324, 1., 1.};
+// Double_t mcos2e[] = {1., 0.001546, 1., 1.};
 
+// v10.4.0 all ntrack[4]<=35
+Double_t mcos1[]  = {1., 1., 1., 1.};
+Double_t mcos1e[] = {1., 1., 1., 1.};
+Double_t mcos2[]  = {1., 1., 1., 1.};
+Double_t mcos2e[] = {1., 1., 1., 1.};
 
 
 Int_t   iVer;
@@ -203,7 +213,7 @@ UInt_t   LoadRPResolution(UInt_t m=0);
 void     GetRPResolution( UInt_t m=0);  
 Double_t GetRPInterpolator(UInt_t m=0, Double_t x=0);
 UInt_t   SetBranch(UInt_t m=0);
-void GetRPResolutionwChi(UInt_t m=0);
+Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180);
 void PlotNeuLANDv1v2();
 void PlotNeuLANDProperty(UInt_t iout=0);
 
@@ -230,21 +240,416 @@ void calcFlw()
   //  PlotNeuLANDProperty(1);
 }
 
-void GetRPResolutionwChi(UInt_t m)            //%% Executable : 
+//**************************************************
+//**************************************************
+
+void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 {
+  gStyle->SetOptStat(0);
+
   auto hphi0_180  = new TH1D("hphi0_180" ,"#Phi from  0 to 180; #Phi",100,0.,3.2);
   auto hphi90_180 = new TH1D("hphi90_180","#Phi from 90 to 180; #Phi",100,0.,3.2);
 
-  //  TCut mcut = "mtrack_1>0&&mtrack_2>0&&ntrack[4]>=16&&ntrack[4]<32"; // mid-central
-  //  TCut mcut = "mtrack_1>0&&mtrack_2>0&&ntrack[4]>=16"; // mid-central
-  //  TCut mcut = "mtrack_1>0&&mtrack_2>0&&ntrack[4]>=32"; // most-central
-  TCut mcut = "mtrack_1>0&&mtrack_2>0"; //all
 
-  rChain[m]->SetAlias("dPhi","abs(TVector2::Phi_mpi_pi(unitP_1->Phi()-unitP_2->Phi()))");
+  Int_t pcharge = 1;
+  if(selid == 0)  pcharge = -1;
 
-  rChain[m]->Project("hphi0_180" ,"dPhi",mcut);
-  rChain[m]->Project("hphi90_180","dPhi",mcut&&"dPhi>TMath::Pi()/2.");
+  Int_t RPflag = 0;
+  if(selid >= 2) RPflag = 10;
 
+  cout << " Particle " << partname[selid] << endl;
+  
+  // Rapidity binning
+  TArrayD arr_range1(ybin1, yrange1);
+  TArrayD arr_range2(ybin2, yrange2);
+
+  // PT binning
+  Double_t pt_max = 800.;
+  UInt_t nbin1 = 10; //16
+  UInt_t nbin2 = 8; //10
+  Double_t dpt1 = pt_max/(Double_t)nbin1;
+  Double_t dpt2 = pt_max/(Double_t)nbin2;
+
+
+  std::cout << " Rapidity binning " << ybin1 << std::endl;
+  TString rangeLabel[ybin1];
+  for(UInt_t i = 0; i < ybin1; i++ ){
+    if( i == 0 )
+      rangeLabel[0] = Form(" y < %5.2f ",yrange1[0]);
+    else if ( i == ybin1 -1 )
+      rangeLabel[i] = Form("%5.2f <= y "    ,yrange1[ybin1-1]);
+    else 
+      rangeLabel[i] = Form("%5.2f <= y < %5.2f",yrange1[i-1],yrange1[i]);
+  }
+
+  
+  auto hmass   = new TH2D("hmass",   ";P/Q; Mass [MeV/c^2]"     ,200,  0.,2500., 200, 0.,7000);
+  auto hyptacp = new TH2D("hyptacp", "; Y_{cm}; Pt [MeV/c]"    ,200, -0.4, 0.5, 200, 0., 800);
+  auto hmassy  = new TH2D("hmassy",  "; Y_{cm}; Mass [MeV/C^2]",200, -0.4, 0.5, 200, 0.,7000);
+  auto hpy     = new TH2D("hpy",     "; Y_{cm}; P/Q [MeV/c]"   ,200, -0.4, 0.5, 200, 0.,2500.);
+  auto hptmass = new TH2D("hptmass", "; Pt [MeV/c]; Mass [MeV/c^2]",200, 0., 800,200, 0.,7000);
+
+  TH2D *hypt1[ybin1];
+  TH2D *hypt2[ybin1];
+  TH2D *hyphi1[ybin1];
+  TH2D *hyphi2[ybin2];
+  TH2D *hyptphi1[ybin1][nbin1];
+  TH2D *hyptphi2[ybin2][nbin2];
+    
+  // Lorentz Transform    
+  TVector3 boostVec = LorentzBoost(4);
+  
+  for(UInt_t kn = 0; kn < ybin1; kn++){ 
+
+    TString sname = rangeLabel[kn];
+    hypt1[kn]   = new TH2D((TString)Form("hypt1_%d",kn),   sname+"; Rapidity; Pt [MeV/c]"  , 200, -0.4, 0.5, 200, 0., 800);
+    hyphi1[kn]  = new TH2D((TString)Form("hyphi1_%d",kn),  sname+"; #Phi"   , 100, -3.2,  3.2, 200, 0., 800);
+
+    for(UInt_t pn = 0; pn < nbin1; pn++)
+      hyptphi1[kn][pn] = new TH2D((TString)Form("hyptphi1_%d%d",kn,pn), sname+"; #Delta #Phi" , 100, -3.2, 3.2, 200, 0., 1000.); 
+  }
+
+
+  for(UInt_t kn = 0; kn < ybin2; kn++){ 
+    TString sname = rangeLabel[kn];
+    hypt2[kn]   = new TH2D((TString)Form("hypt2_%d",kn),   sname+"; Rapidity; Pt [MeV/c]"  , 200, -0.4, 0.5, 200, 0., 800);
+    hyphi2[kn]  = new TH2D((TString)Form("hyphi2_%d",kn),  sname+";2*#Phi"  ,  50,  0.,   3.2, 200, 0., 800);
+    
+    for(UInt_t pn = 0; pn < nbin2; pn++)
+      hyptphi2[kn][pn] = new TH2D((TString)Form("hyptphi2_%d%d",kn,pn),"pt; #Delta 2*#Phi", 50, 0., 3.2,   200, 0., 1000.); 
+  }
+
+  
+  Int_t nevt = SetBranch();
+  cout << " Number of events " << nevt << endl;
+  
+  for(Int_t i = 0; i < nevt; i++){
+    rChain[0]->GetEntry(i);
+      
+    if(ntrack[2] == 0) continue;
+    if(ntrack[4] > 35) continue;
+
+    Double_t subevt_phi = abs(TVector2::Phi_mpi_pi(unitP_1->Phi()-unitP_2->Phi())); 
+    hphi0_180->Fill( subevt_phi );
+    if( subevt_phi > TMath::Pi()/2. )
+      hphi90_180->Fill( subevt_phi );
+
+
+      
+    TIter next(aArray);
+    STParticle *aPart = NULL;
+
+    while( (aPart = (STParticle*)next()) ) {
+	
+      auto rpf   = aPart->GetReactionPlaneFlag();
+      auto pid   = aPart->GetPID();
+      auto bmass = aPart->GetBBMass();
+      
+      if( pid == partid[selid] && aPart->GetCharge() == pcharge && aPart->GetIndividualRPAngle() > -9 && bmass <= cutbmass[selid] && bmass >= cutlmass[selid]){
+
+	if( pid > 2000 && (rpf == 110 || rpf == 210 ) ) continue;
+
+	auto pt    = aPart->GetRotatedMomentum().Pt();
+	auto dphi  = aPart->GetAzmAngle_wrt_RP();
+	auto rapid = GetRapidity_cm(aPart->GetMomentum(), partmass[selid], -boostVec);
+	
+
+	hmass->Fill( aPart->GetRotatedMomentum().Mag(), bmass);
+	
+	hyptacp->Fill( rapid, pt );
+	hmassy ->Fill( rapid, bmass );
+	hpy    ->Fill( rapid, aPart->GetRotatedMomentum().Mag() );
+	hptmass->Fill( pt,   bmass );
+
+	UInt_t irapid = ybin1 - 1;
+	for( UInt_t i = 0; i < ybin1; i++){
+	  if(rapid < yrange1[i]){
+	    irapid = i;
+	    break;
+	  }
+	}
+	
+	hypt1[irapid]->Fill(rapid, pt);
+	hyphi1[irapid]->Fill(dphi, pt);
+	UInt_t ipt = nbin1 - 1;
+	for(UInt_t i = 0; i < nbin1; i++){
+	  if( pt < dpt1*(i+1)) {
+	    ipt = i;
+	    break;
+	  }
+	}
+	hyptphi1[irapid][ipt]->Fill(dphi, pt);
+	
+
+	  
+	irapid = ybin2 - 1;
+	for( UInt_t i = 0; i < ybin2; i++){
+	  if(rapid < yrange2[i]){
+	    irapid = i;
+	    break;
+	  }
+	}
+
+	hypt2[irapid]->Fill(rapid, pt);
+	hyphi2[irapid]->Fill(abs( TVector2::Phi_mpi_pi(2.*dphi)), pt );
+	
+	ipt = nbin2 - 1;
+	for(UInt_t i = 0; i < nbin2; i++){
+	  if( pt < dpt2*(i+1)) {
+	    ipt = i;
+	    break;
+	  }
+	}
+	hyptphi2[irapid][ipt]->Fill(abs( TVector2::Phi_mpi_pi(2.*dphi) ), pt);
+      }
+    }
+  }
+    
+  
+  gSystem->cd("data");
+
+  //  TString fName = "YPT" + sysName[isys[0]] + "_" + partname[selid]+".root";
+  TString fName = "YPT_n35" + sysName[isys[0]] + "_" + partname[selid]+".root";
+  auto GraphSave = new TFile(fName,"recreate");
+    
+  TGraphErrors *gv_v1 = new TGraphErrors();
+  gv_v1->SetName("gv_v1");
+  TGraphErrors *gv_v2 = new TGraphErrors();
+  gv_v2->SetName("gv_v2");
+  
+  TGraphErrors *gPt_v1[ybin1];
+  TGraphErrors *gPt_v2[ybin1];
+    
+  for(UInt_t kn = 0; kn < ybin1 ; kn++){      
+    gPt_v1[kn] = new TGraphErrors();
+    gPt_v1[kn]->SetName((TString)Form("gPt_v1%d",kn));
+    TString sname = partname[selid]+"; Pt [MeV/c]; v1";
+    gPt_v1[kn]->SetTitle(sname);
+  }
+  
+  for(UInt_t kn = 0; kn < ybin2 ; kn++){      
+    gPt_v2[kn] = new TGraphErrors();
+    gPt_v2[kn]->SetName((TString)Form("gPt_v2%d",kn));
+    TString sname = partname[selid]+"; Pt [MeV/c]; v2";
+    gPt_v2[kn]->SetTitle(sname);
+  }
+
+
+  Double_t *rpres = new Double_t[4];
+  rpres = GetRPResolutionwChi(hphi0_180, hphi90_180);
+  std::cout << " <cos(Phi)> = " << rpres[0] << " +- " << rpres[1] 
+	    << " <cos(2Phi)> = "<< rpres[2] << " +- " << rpres[3] 
+	    << std::endl;
+
+
+  ic++; 
+  cc[ic]   = new TCanvas("dphi1","dphi1",2000,1200);
+  cc[ic]->Divide(nbin1, ybin1);
+  
+  cc[ic+1] = new TCanvas("dphi2","dphi2",1400,1200);
+  cc[ic+1]->Divide(nbin2, ybin2);
+  
+
+  std::cout << " ---- Resutls ---------------------" << std::endl;
+  
+  UInt_t kl = 0;
+  UInt_t id1 = 0;
+  UInt_t id2 = 0;
+  Double_t para[6];
+
+  cc[ic+2] = new TCanvas(Form("cc%d",ic+2),Form("cc%d",ic+2), 1000, 1200);
+  cc[ic+2]->Divide(2, ybin1);
+    
+  for(UInt_t kn = 0; kn < ybin1; kn++){
+      
+    Double_t rapm  = hypt1[kn]->GetMean(1);
+    Double_t rape  = hypt1[kn]->GetStdDev(1);
+
+    // v1 vs rapidity
+    cc[ic+2]->cd(2*(kn+1)-1);
+    auto hyphi = (TH1D*)hyphi1[kn]->ProjectionX(Form("hyphiv1_%d",kn),0,-1,"eo");
+    
+    Double_t corr[2]={rpres[0], rpres[1]};
+    GetFittingParameters(*hyphi, para, corr);
+    hyphi->SetMaximum(1.5);
+    hyphi->SetMinimum(0.5);
+      
+    gv_v1->SetPoint( kl,     rapm, para[4]);
+    gv_v1->SetPointError( kl, rape, para[5]);
+    kl++;
+
+    // pt dependence 
+    UInt_t il = 0; 
+    for(UInt_t jn = 0; jn < nbin1; jn++){
+
+      id1++; cc[ic]->cd(id1); 
+
+      if( hyptphi1[kn][jn]->GetEntries() > 0 ) {	
+
+	Double_t ptc  = hyptphi1[kn][jn]->GetMean(2);
+	Double_t ptce = hyptphi1[kn][jn]->GetStdDev(2);
+	    
+	auto hypt = (TH1D*)hyptphi1[kn][jn]->ProjectionX();
+	GetFittingParameters(*hypt, para, corr);
+	    
+
+	gPt_v1[kn]->SetPoint(il, ptc, para[4]);
+	gPt_v1[kn]->SetPointError(il, ptce, para[5]);
+	    
+	il++;
+      }
+    }
+    gPt_v1[kn]->Write();
+  }
+
+  kl = 0;
+  for(UInt_t kn = 0; kn < ybin2; kn++){
+
+    Double_t rapm  = hypt2[kn]->GetMean(1);
+    Double_t rape  = hypt2[kn]->GetStdDev(1);
+
+    // v2 vs rapidity
+    cc[ic+2]->cd(2*(kn+1));
+
+    auto hyphii = (TH1D*)hyphi2[kn]->ProjectionX(Form("hyphiv2_%d",kn),0,-1,"eo");
+      
+    Double_t corr[2] = {rpres[2], rpres[3]};
+    GetFittingParameters(*hyphii, para, corr);
+    hyphii->SetMaximum(1.1);
+    hyphii->SetMinimum(0.9);
+
+    gv_v2->SetPoint( kl,    rapm, para[4]);
+    gv_v2->SetPointError( kl, rape, para[5]);      
+    kl++;
+
+    UInt_t il = 0; 
+    for(UInt_t jn = 0; jn < nbin2; jn++){
+	
+      id2++; cc[ic+1]->cd(id2); 
+      if( hyptphi2[kn][jn]->GetEntries() > 0 ){
+
+	Double_t ptc  = hyptphi2[kn][jn]->GetMean(2);
+	Double_t ptce = hyptphi2[kn][jn]->GetStdDev(2);
+
+	auto hypt = (TH1D*)hyptphi2[kn][jn]->ProjectionX();
+
+	GetFittingParameters(*hypt, para, corr);
+	hypt->SetMaximum(1.1);
+	hypt->SetMinimum(0.9);
+
+	gPt_v2[kn]->SetPoint(il, ptc, para[4]);
+	gPt_v2[kn]->SetPointError(il, ptce, para[5]);
+	  
+	il++;
+      }
+    }
+    gPt_v2[kn]->Write();
+  }
+
+  gv_v1->Write();
+  gv_v2->Write();
+
+  ic+=3;
+
+
+  //plotting
+  ic++; id=1;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+  cc[ic]->Divide(2,2);
+
+  cc[ic]->cd(id); id++;
+  hmass->Draw("colz");
+
+  cc[ic]->cd(id); id++;
+  hmassy->Draw("colz");
+
+  cc[ic]->cd(id); id++;
+  hpy->Draw("colz");
+
+  cc[ic]->cd(id); id++;
+  hptmass->Draw("colz");
+
+  
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+  hyptacp->Draw("colz");
+  
+
+
+  ic++; id = 1;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
+  cc[ic]->Divide(ybin1,1);
+  for(UInt_t kn = 0; kn < ybin1; kn++){
+    cc[ic]->cd(id); id++;
+    gPt_v1[kn]->Draw("ALP");
+  }
+
+  ic++; id = 1;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
+  cc[ic]->Divide(ybin2,1);
+  for(UInt_t kn = 0; kn < ybin2; kn++){
+    cc[ic]->cd(id); id++;
+    gPt_v2[kn]->Draw("ALP");
+  }
+
+  ic++; id = 1;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,400);
+  cc[ic]->Divide(ybin1,1);
+  for(UInt_t kn = 0; kn < ybin1; kn++){
+    cc[ic]->cd(id); id++;
+    hypt1[kn]->Draw("colz");
+  }
+
+  ic++; id = 1;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,400);
+  cc[ic]->Divide(ybin2,1);
+  for(UInt_t kn = 0; kn < ybin2; kn++){
+    cc[ic]->cd(id); id++;
+    hypt2[kn]->Draw("colz");
+  }
+
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+  hypt1[0]->Draw("colz");
+  for(UInt_t kn = 1; kn < ybin1; kn++)
+    hypt1[kn]->Draw("same colz");
+
+  ic++;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+  hypt2[0]->Draw("colz");
+  for(UInt_t kn = 1; kn < ybin2; kn++)
+    hypt2[kn]->Draw("same colz");
+
+
+  ic++; id = 1;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
+  gv_v1->Draw("ALP");
+
+  auto LineV = new TLine(0.,gv_v1->GetYaxis()->GetXmin(), 0., gv_v1->GetYaxis()->GetXmax());
+  auto LineH = new TLine(gv_v1->GetXaxis()->GetXmin(),    0., gv_v1->GetXaxis()->GetXmax(), 0.);
+  LineV->SetLineStyle(3);
+  LineH->SetLineStyle(3);
+  LineV->Draw();
+  LineH->Draw();
+
+  ic++; id = 1;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
+  gv_v2->Draw("ALP");
+
+
+  GraphSave->WriteObject(&arr_range1, "v1_yrange");
+  GraphSave->WriteObject(&arr_range2, "v2_yrange");
+  
+  gSystem->cd("..");
+
+  //  gROOT->cd();
+}
+
+//**************************************************
+//**************************************************
+
+Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)            //%% Executable : 
+{
   Double_t m0 = hphi0_180->GetEntries();
   Double_t m1 = hphi90_180->GetEntries();
 
@@ -253,15 +658,17 @@ void GetRPResolutionwChi(UInt_t m)            //%% Executable :
   Double_t m01e = m1/m0*sqrt(1./m1+1./m0);
   Double_t chie = chi - sqrt(-2.* log(2. * (m1/m0+m01e)));
 
-  mcos1[m]  = sqrt(TMath::Pi())/(2.*TMath::Gamma(1))*chi;
-  mcos1e[m] = sqrt(TMath::Pi())/(2.*TMath::Gamma(1))*(chi+chie) - mcos1[m];
-  mcos2[m]  = sqrt(TMath::Pi())/(2.*2.*TMath::Gamma(1.5))*pow(chi,2);
-  mcos2e[m] = sqrt(TMath::Pi())/(2.*2.*TMath::Gamma(1.5))*pow(chi+chie,2) - mcos2[m];
+  Double_t *rpres = new Double_t[4];
+
+  rpres[0] = sqrt(TMath::Pi())/(2.*TMath::Gamma(1))*chi;
+  rpres[1] = sqrt(TMath::Pi())/(2.*TMath::Gamma(1))*(chi+chie) - rpres[0];
+  rpres[2] = sqrt(TMath::Pi())/(2.*2.*TMath::Gamma(1.5))*pow(chi,2);
+  rpres[3] = sqrt(TMath::Pi())/(2.*2.*TMath::Gamma(1.5))*pow(chi+chie,2) - rpres[2];
 
   std::cout << m1 << " / " << m0 << " = " << m1/m0 << " -> Chi " << chi << " +- " << chie
 	    << std::endl;
-  std::cout << " <cos(Phi)> = " << mcos1[m] << " +- " << mcos1e[m] 
-	    << " <cos(2Phi)> = "<< mcos2[m] << " +- " << mcos2e[m] 
+  std::cout << " <cos(Phi)> = " << rpres[0] << " +- " << rpres[1] 
+	    << " <cos(2Phi)> = "<< rpres[2] << " +- " << rpres[3] 
 	    << std::endl;
 
   ic++;
@@ -276,6 +683,7 @@ void GetRPResolutionwChi(UInt_t m)            //%% Executable :
   cout << std::setw(14) << para[1] << " +- " << std::setw(10) << para[3]
        << std::endl;
 
+  return rpres;
 }
 
 
@@ -750,7 +1158,8 @@ void Plotv1v2(UInt_t selid=2)
     TH1D *hydphi2[nybin];
     TH1D *hycos2[nybin];
 
-    TString fName = "VN" + sysName[isys[m]] + "_" + partname[selid]+".root";
+    //TString fName = "VN" + sysName[isys[m]] + "_" + partname[selid]+".root";
+    TString fName = "VN_n35" + sysName[isys[0]] + "_" + partname[selid]+".root";
     gSystem->cd("data");
     auto GraphSave = new TFile(fName,"recreate");
 
@@ -1287,357 +1696,6 @@ void JPS()
 }
 
 
-void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
-{
-  gStyle->SetOptStat(0);
-
-
-  Int_t pcharge = 1;
-  if(selid == 0)  pcharge = -1;
-
-  Int_t RPflag = 0;
-  if(selid >= 2) RPflag = 10;
-
-  cout << " Particle " << partname[selid] << endl;
-  
-  // Rapidity binning
-  TArrayD arr_range1(ybin1, yrange1);
-  TArrayD arr_range2(ybin2, yrange2);
-
-  // PT binning
-  Double_t pt_max = 800.;
-  UInt_t nbin1 = 10; //16
-  UInt_t nbin2 = 8; //10
-  Double_t dpt1 = pt_max/(Double_t)nbin1;
-  Double_t dpt2 = pt_max/(Double_t)nbin2;
-
-
-  std::cout << " Rapidity binning " << ybin1 << std::endl;
-  TString rangeLabel[ybin1];
-  for(UInt_t i = 0; i < ybin1; i++ ){
-    if( i == 0 )
-      rangeLabel[0] = Form(" y < %5.2f ",yrange1[0]);
-    else if ( i == ybin1 -1 )
-      rangeLabel[i] = Form("%5.2f <= y "    ,yrange1[ybin1-1]);
-    else 
-      rangeLabel[i] = Form("%5.2f <= y < %5.2f",yrange1[i-1],yrange1[i]);
-  }
-
-  
-  auto hmass   = new TH2D("hmass",   ";P/Q; Mass [MeV/c^2]"     ,200,  0.,2500., 200, 0.,7000);
-  auto hyptacp = new TH2D("hyptacp", "; Y_{cm}; Pt [MeV/c]"    ,200, -0.4, 0.45, 200, 0., 800);
-  auto hmassy  = new TH2D("hmassy",  "; Y_{cm}; Mass [MeV/C^2]",200, -0.4, 0.45, 200, 0.,7000);
-  auto hpy     = new TH2D("hpy",     "; Y_{cm}; P/Q [MeV/c]"   ,200, -0.4, 0.45, 200, 0.,2500.);
-
-  TH2D *hypt1[ybin1];
-  TH2D *hypt2[ybin1];
-  TH2D *hyphi1[ybin1];
-  TH2D *hyphi2[ybin2];
-  TH2D *hyptphi1[ybin1][nbin1];
-  TH2D *hyptphi2[ybin2][nbin2];
-    
-  // Lorentz Transform    
-  TVector3 boostVec = LorentzBoost(4);
-  
-  for(UInt_t kn = 0; kn < ybin1; kn++){ 
-
-    TString sname = rangeLabel[kn];
-    hypt1[kn]   = new TH2D((TString)Form("hypt1_%d",kn),   sname+"; Rapidity; Pt [MeV/c]"  , 200, -0.4, 0.45, 200, 0., 800);
-    hyphi1[kn]  = new TH2D((TString)Form("hyphi1_%d",kn),  sname+"; #Phi"   , 100, -3.2,  3.2, 200, 0., 800);
-
-    for(UInt_t pn = 0; pn < nbin1; pn++)
-      hyptphi1[kn][pn] = new TH2D((TString)Form("hyptphi1_%d%d",kn,pn), sname+"; #Delta #Phi" , 100, -3.2, 3.2, 200, 0., 1000.); 
-  }
-
-
-  for(UInt_t kn = 0; kn < ybin2; kn++){ 
-    TString sname = rangeLabel[kn];
-    hypt2[kn]   = new TH2D((TString)Form("hypt2_%d",kn),   sname+"; Rapidity; Pt [MeV/c]"  , 200, -0.4, 0.45, 200, 0., 800);
-    hyphi2[kn]  = new TH2D((TString)Form("hyphi2_%d",kn),  sname+";2*#Phi"  ,  50,  0.,   3.2, 200, 0., 800);
-    
-    for(UInt_t pn = 0; pn < nbin2; pn++)
-      hyptphi2[kn][pn] = new TH2D((TString)Form("hyptphi2_%d%d",kn,pn),"pt; #Delta 2*#Phi", 50, 0., 3.2,   200, 0., 1000.); 
-  }
-
-  
-  Int_t nevt = SetBranch();
-  cout << " Number of events " << nevt << endl;
-  
-  for(Int_t i = 0; i < nevt; i++){
-    rChain[0]->GetEntry(i);
-      
-    if(ntrack[2] == 0) continue;
-      
-    TIter next(aArray);
-    STParticle *aPart = NULL;
-
-    while( (aPart = (STParticle*)next()) ) {
-	
-      auto rpf   = aPart->GetReactionPlaneFlag();
-      auto pid   = aPart->GetPID();
-      auto bmass = aPart->GetBBMass();
-      
-      if( pid == partid[selid] && aPart->GetCharge() == pcharge && aPart->GetIndividualRPAngle() > -9 && bmass <= cutbmass[selid] && bmass >= cutlmass[selid]){
-
-	if( pid > 2000 && (rpf == 110 || rpf == 210 ) ) continue;
-
-	auto pt    = aPart->GetRotatedMomentum().Pt();
-	auto dphi  = aPart->GetAzmAngle_wrt_RP();
-	auto rapid = GetRapidity_cm(aPart->GetMomentum(), partmass[selid], -boostVec);
-	
-
-	hmass->Fill( aPart->GetRotatedMomentum().Mag(), bmass);
-	
-	hyptacp->Fill( rapid, pt );
-	hmassy ->Fill( rapid, bmass );
-	hpy    ->Fill( rapid, aPart->GetRotatedMomentum().Mag() );
-	  
-	UInt_t irapid = ybin1 - 1;
-	for( UInt_t i = 0; i < ybin1; i++){
-	  if(rapid < yrange1[i]){
-	    irapid = i;
-	    break;
-	  }
-	}
-	
-	hypt1[irapid]->Fill(rapid, pt);
-	hyphi1[irapid]->Fill(dphi, pt);
-	UInt_t ipt = nbin1 - 1;
-	for(UInt_t i = 0; i < nbin1; i++){
-	  if( pt < dpt1*(i+1)) {
-	    ipt = i;
-	    break;
-	  }
-	}
-	hyptphi1[irapid][ipt]->Fill(dphi, pt);
-	
-
-	  
-	irapid = ybin2 - 1;
-	for( UInt_t i = 0; i < ybin2; i++){
-	  if(rapid < yrange2[i]){
-	    irapid = i;
-	    break;
-	  }
-	}
-
-	hypt2[irapid]->Fill(rapid, pt);
-	hyphi2[irapid]->Fill(abs( TVector2::Phi_mpi_pi(2.*dphi)), pt );
-	
-	ipt = nbin2 - 1;
-	for(UInt_t i = 0; i < nbin2; i++){
-	  if( pt < dpt2*(i+1)) {
-	    ipt = i;
-	    break;
-	  }
-	}
-	hyptphi2[irapid][ipt]->Fill(abs( TVector2::Phi_mpi_pi(2.*dphi) ), pt);
-      }
-    }
-  }
-    
-  
-  gSystem->cd("data");
-
-  TString fName = "YPT" + sysName[isys[0]] + "_" + partname[selid]+".root";
-  auto GraphSave = new TFile(fName,"recreate");
-    
-  TGraphErrors *gv_v1 = new TGraphErrors();
-  gv_v1->SetName("gv_v1");
-  TGraphErrors *gv_v2 = new TGraphErrors();
-  gv_v2->SetName("gv_v2");
-  
-  TGraphErrors *gPt_v1[ybin1];
-  TGraphErrors *gPt_v2[ybin1];
-    
-  for(UInt_t kn = 0; kn < ybin1 ; kn++){      
-    gPt_v1[kn] = new TGraphErrors();
-    gPt_v1[kn]->SetName((TString)Form("gPt_v1%d",kn));
-    TString sname = partname[selid]+"; Pt [MeV/c]; v1";
-    gPt_v1[kn]->SetTitle(sname);
-  }
-  
-  for(UInt_t kn = 0; kn < ybin2 ; kn++){      
-    gPt_v2[kn] = new TGraphErrors();
-    gPt_v2[kn]->SetName((TString)Form("gPt_v2%d",kn));
-    TString sname = partname[selid]+"; Pt [MeV/c]; v2";
-    gPt_v2[kn]->SetTitle(sname);
-  }
-
-  ic++; 
-  cc[ic]   = new TCanvas("dphi1","dphi1",2000,1200);
-  cc[ic]->Divide(nbin1, ybin1);
-  
-  cc[ic+1] = new TCanvas("dphi2","dphi2",1400,1200);
-  cc[ic+1]->Divide(nbin2, ybin2);
-  
-  cc[ic+2] = new TCanvas(Form("cc%d",ic+2),Form("cc%d",ic+2), 1000, 1200);
-  cc[ic+2]->Divide(2, ybin1);
-
-
-  std::cout << " ---- Resutls ---------------------" << std::endl;
-  
-  UInt_t kl = 0;
-  UInt_t id1 = 0;
-  UInt_t id2 = 0;
-  Double_t para[6];
-    
-  for(UInt_t kn = 0; kn < ybin1; kn++){
-      
-    Double_t rapm  = hypt1[kn]->GetMean(1);
-    Double_t rape  = hypt1[kn]->GetStdDev(1);
-
-    // v1 vs rapidity
-    cc[ic+2]->cd(2*(kn+1)-1);
-    auto hyphi = (TH1D*)hyphi1[kn]->ProjectionX("",0,-1,"eo");
-
-    Double_t corr[2]={mcos1[isys[0]], mcos1e[isys[0]]};
-    GetFittingParameters(*hyphi, para, corr);
-      
-    gv_v1->SetPoint( kl,     rapm, para[4]);
-    gv_v1->SetPointError( kl, rape, para[5]);
-    kl++;
-
-    // pt dependence 
-    UInt_t il = 0; 
-    for(UInt_t jn = 0; jn < nbin1; jn++){
-
-      id1++; cc[ic]->cd(id1); 
-
-      if( hyptphi1[kn][jn]->GetEntries() > 0 ) {	
-
-	Double_t ptc  = hyptphi1[kn][jn]->GetMean(2);
-	Double_t ptce = hyptphi1[kn][jn]->GetStdDev(2);
-	    
-	auto hypt = (TH1D*)hyptphi1[kn][jn]->ProjectionX();
-	GetFittingParameters(*hypt, para, corr);
-	    
-
-	gPt_v1[kn]->SetPoint(il, ptc, para[4]);
-	gPt_v1[kn]->SetPointError(il, ptce, para[5]);
-	    
-	il++;
-      }
-    }
-    gPt_v1[kn]->Write();
-  }
-
-  kl = 0;
-  for(UInt_t kn = 0; kn < ybin2; kn++){
-
-    Double_t rapm  = hypt2[kn]->GetMean(1);
-    Double_t rape  = hypt2[kn]->GetStdDev(1);
-
-    // v2 vs rapidity
-    cc[ic+2]->cd(2*(kn+1));
-
-    auto hyphi = (TH1D*)hyphi2[kn]->ProjectionX("",0,-1,"eo");
-      
-    Double_t corr[2] = {mcos2[isys[0]], mcos2e[isys[0]]};
-    GetFittingParameters(*hyphi, para, corr);
-
-    gv_v2->SetPoint( kl,    rapm, para[4]);
-    gv_v2->SetPointError( kl, rape, para[5]);
-      
-    kl++;
-    
-
-    UInt_t il = 0; 
-    for(UInt_t jn = 0; jn < nbin2; jn++){
-	
-      id2++; cc[ic+1]->cd(id2); 
-      if( hyptphi2[kn][jn]->GetEntries() > 0 ){
-
-	Double_t ptc  = hyptphi2[kn][jn]->GetMean(2);
-	Double_t ptce = hyptphi2[kn][jn]->GetStdDev(2);
-
-	auto hypt = (TH1D*)hyptphi2[kn][jn]->ProjectionX();
-
-	Double_t corr[2] = {mcos2[isys[0]], mcos2e[isys[0]]};
-	GetFittingParameters(*hypt, para, corr);
-
-	gPt_v2[kn]->SetPoint(il, ptc, para[4]);
-	gPt_v2[kn]->SetPointError(il, ptce, para[5]);
-	  
-	il++;
-      }
-    }
-    gPt_v2[kn]->Write();
-  }
-
-  gv_v1->Write();
-  gv_v2->Write();
-
-  ic+=3;
-
-
-  //plotting
-  ic++;
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
-  hmass->Draw("colz");
-
-  ic++; id = 1;
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
-  cc[ic]->Divide(ybin1,1);
-  for(UInt_t kn = 0; kn < ybin1; kn++){
-    cc[ic]->cd(id); id++;
-    gPt_v1[kn]->Draw("ALP");
-  }
-
-  ic++; id = 1;
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
-  cc[ic]->Divide(ybin2,1);
-  for(UInt_t kn = 0; kn < ybin2; kn++){
-    cc[ic]->cd(id); id++;
-    gPt_v2[kn]->Draw("ALP");
-  }
-
-  ic++; id = 1;
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,400);
-  cc[ic]->Divide(ybin2,1);
-  for(UInt_t kn = 0; kn < ybin2; kn++){
-    cc[ic]->cd(id); id++;
-    hypt2[kn]->Draw("colz");
-  }
-
-
-  ic++; id = 1;
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
-  gv_v1->Draw("ALP");
-
-  auto LineV = new TLine(0.,gv_v1->GetYaxis()->GetXmin(), 0., gv_v1->GetYaxis()->GetXmax());
-  auto LineH = new TLine(gv_v1->GetXaxis()->GetXmin(),    0., gv_v1->GetXaxis()->GetXmax(), 0.);
-  LineV->SetLineStyle(3);
-  LineH->SetLineStyle(3);
-  LineV->Draw();
-  LineH->Draw();
-
-
-  ic++; id = 1;
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
-  gv_v2->Draw("ALP");
-
-
-  ic++; 
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
-  hyptacp->Draw("colz");
-
-  ic++; 
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
-  hpy->Draw("colz");
-
-
-  GraphSave->WriteObject(&arr_range1, "v1_yrange");
-  GraphSave->WriteObject(&arr_range2, "v2_yrange");
-  
-  gSystem->cd("..");
-
-  gROOT->cd();
-}
-
-//**************************************************
-//**************************************************
-
 void YDependece(UInt_t hrm=1)
 {
   cout << " YDependece v"<< hrm  << endl;
@@ -1936,7 +1994,7 @@ void CorrectedPsi()
   hfc->Draw("samee");
 
 
-  auto aLeg = new TLegend(0.15,0.7,0.45,0.9,"");
+  auto aLeg = new TLegend(0.15,0.7,0.5,0.9,"");
   aLeg->AddEntry(hrt ,"No Collection ","lp");
   aLeg->AddEntry(hrc ,"ReCentering","lp");
   aLeg->AddEntry(hfc ,"ReCentering & Shifting","lp");
@@ -2268,11 +2326,17 @@ void PlotNeuLANDProperty(UInt_t iout)           //%% Executable :
   }
 }
 
+//************************************************** 
+//************************************************** 
 //--------------------------------------------//%% Executable : 
 void PlotNeuLANDv1v2()                        //%% Executable : 
 {
   //----- Parametres                                                                                                                       
   TFile *hout;
+
+  auto hphi0_180  = new TH1D("hphi0_180" ,"#Phi from  0 to 180; #Phi",100,0.,3.2);
+  auto hphi90_180 = new TH1D("hphi90_180","#Phi from 90 to 180; #Phi",100,0.,3.2);
+
 
   // Rapidity binning
   TArrayD arr_range1(ybin1, yrange1);
@@ -2296,405 +2360,420 @@ void PlotNeuLANDv1v2()                        //%% Executable :
       rangeLabel[i] = Form("%f <= y < %f",yrange1[i-1],yrange1[i]);
   }
 
+  auto hyptacp = new TH2D("hyptacp", "; Y_{cm}; Pt [MeV/c]"    ,200, -0.4, 0.5, 200, 0., 800);
 
-  //----- System Loop
-  for(Int_t m = m_bgn; m < m_end; m++){
-
-    TH2D *hypt[ybin1];
-    TH2D *hypt2[ybin1];
-    TH2D *hyphi1[ybin1];
-    TH2D *hyphi2[ybin2];
-    TH2D *hyptphi1[ybin1][nbin1];
-    TH2D *hyptphi2[ybin2][nbin2];
-
-    // Lorentz Transform                                                                                                                    
-    TVector3 boostVec = LorentzBoost(4);
-
-    for(UInt_t kn = 0; kn < ybin1; kn++){
-
-      TString sname = rangeLabel[kn];
-      hypt[kn]    = new TH2D((TString)Form("hypt_%d",kn),    sname+"; Rapidity; Pt [MeV/c]"  , 200, -0.4, 0.45, 200, 0., 800);
-      hyphi1[kn]  = new TH2D((TString)Form("hyphi1_%d",kn),  sname+"; #Phi"   , 100, -3.2,  3.2, 200, 0., 800);
-
-      for(UInt_t pn = 0; pn < nbin1; pn++)
-        hyptphi1[kn][pn] = new TH2D((TString)Form("hyptphi1_%d%d",kn,pn),"pt; #Delta #Phi" , 100, -3.2, 3.2, 200, 0., 1000.);
-    }
-
-    for(UInt_t kn = 0; kn < ybin2; kn++){
-      TString sname = rangeLabel[kn];
-      hypt2[kn]   = new TH2D((TString)Form("hypt2_%d",kn),   sname+"; Rapidity; Pt [MeV/c]"  , 200, -0.4, 0.45, 200, 0., 800);
-      hyphi2[kn]  = new TH2D((TString)Form("hyphi2_%d",kn),  sname+";2*#Phi"  ,  50,  0.,   3.2, 200, 0., 800);
-
-      for(UInt_t pn = 0; pn < nbin2; pn++)
-        hyptphi2[kn][pn] = new TH2D((TString)Form("hyptphi2_%d%d",kn,pn),"pt; #Delta 2*#Phi", 50, 0., 3.2,   200, 0., 1000.);
-    }
+  TH2D *hypt[ybin1];
+  TH2D *hypt2[ybin1];
+  TH2D *hyphi1[ybin1];
+  TH2D *hyphi2[ybin2];
+  TH2D *hyptphi1[ybin1][nbin1];
+  TH2D *hyptphi2[ybin2][nbin2];
 
 
+  // Lorentz Transform                                                                                                                    
+  TVector3 boostVec = LorentzBoost(4);
+
+  for(UInt_t kn = 0; kn < ybin1; kn++){
+
+    TString sname = rangeLabel[kn];
+    hypt[kn]    = new TH2D((TString)Form("hypt_%d",kn),    sname+"; Rapidity; Pt [MeV/c]"  , 200, -0.4, 0.5, 200, 0., 800);
+    hyphi1[kn]  = new TH2D((TString)Form("hyphi1_%d",kn),  sname+"; #Phi"   , 100, -3.2,  3.2, 200, 0., 800);
     
-    UInt_t vid = 0;
-    if( snbm == 108 )
-      vid = 1;
-
-
-    Int_t nevt = SetBranch(m);
-
-    cout << " Number of events " << nevt << endl;
-
-    for(Int_t i = 0; i < nevt; i++){
-      rChain[m]->GetEntry(i);
-
-      TIter next(aNLClusterArray);
-      STNeuLANDCluster* aNLClust = NULL;
-    
-      while( (aNLClust = (STNeuLANDCluster*)next()) ){
-
-	aNLClust->SetBeamAngle(ProjA/1000., ProjB/1000.);
-  	
-   	auto pid      = aNLClust->GetPID();
-   	auto phi      = aNLClust->GetP().Phi(); 
-	auto pt       = aNLClust->GetP().Pt();
-
-	auto rapid    = GetRapidity_cm( aNLClust->GetP(), 939.5731, -boostVec);
-	auto veto_all = aNLClust->GetVetoHitAll(vid);
-	auto veto_bar = aNLClust->GetVetoHitOne(vid);
-	auto veto_mid = aNLClust->GetVetoHitMid(vid);
-
-
-   	auto dphi     = TVector2::Phi_mpi_pi(unitP_fc->Phi() - phi);
-  	
-	if( pid == 2112 && veto_all == 0){ // neutron
-	//   	if( pid == 2112 ){ // neutron
-
-          UInt_t irapid = ybin1 - 1;
-          for( UInt_t i = 0; i < ybin1; i++){
-            if(rapid < yrange1[i]){
-              irapid = i;
-              break;
-            }
-          }
-
-	  hypt[irapid]->Fill(rapid, pt);
-          hyphi1[irapid]->Fill(dphi, pt);
-          UInt_t ipt = nbin1 - 1;
-          for(UInt_t i = 0; i < nbin1; i++){
-            if( pt < dpt1*(i+1)) {
-              ipt = i;
-              break;
-            }
-          }
-          hyptphi1[irapid][ipt]->Fill(dphi, pt);
-
-          irapid = ybin2 - 1;
-          for( UInt_t i = 0; i < ybin2; i++){
-            if(rapid < yrange2[i]){
-              irapid = i;
-              break;
-            }
-          }
-          
-	  ipt = nbin2 - 1;
-          for(UInt_t i = 0; i < nbin2; i++){
-            if( pt < dpt2*(i+1)) {
-              ipt = i;
-              break;
-            }
-          }
-	  hypt2[irapid]->Fill(rapid, pt);
-	  hyphi2[irapid]->Fill(abs( TVector2::Phi_mpi_pi(2.*dphi) ), pt);
-	  hyptphi2[irapid][ipt]->Fill(abs( TVector2::Phi_mpi_pi(2.*dphi) ), pt);
-        }
-      }
-    }
-
-
-    // // 132Sn
-    //    combineHist(132, hyptphi1, hyptphi2);
-    // Sumup edge of acceptance
-    // UInt_t highstat = 0;
-    // for(UInt_t irapid = 0; i < nbin1l; irapid++){
-    //   for(UInt_t ipt = 0; ipt < nbin1; ipt++) {
-
-    // 	if( hyptphi1[irapid][ipt] -> GetEntries() > 100 ) {
-    // 	  highstat = ipt;
-    // 	}
-    // 	else if( highstat < ipt ){
-    // 	*hyptphi1[0][0] = *hyptphi1[0][0] + *hyptphi1[0][1];	
-
-    //   }
-    // }
-
-
-    *hyptphi1[0][0] = *hyptphi1[0][0] + *hyptphi1[0][1];
-    hyptphi1[0][1]->Reset();
-
-    *hyptphi1[1][1] = *hyptphi1[1][1] + *hyptphi1[1][2];
-    hyptphi1[1][2]->Reset();
-
-    *hyptphi1[2][1] = *hyptphi1[2][1] + *hyptphi1[2][3];
-    hyptphi1[2][3]->Reset();
-
-    *hyptphi1[3][1] = *hyptphi1[3][1] + *hyptphi1[3][2];
-    hyptphi1[3][2]->Reset();
-
-    *hyptphi1[3][3] = *hyptphi1[3][3] + *hyptphi1[3][4];
-    hyptphi1[3][4]->Reset();
-    
-    *hyptphi1[4][5] = *hyptphi1[4][5] + *hyptphi1[4][6];
-    hyptphi1[4][6]->Reset();
-
-    *hyptphi1[5][2] = *hyptphi1[5][2] + *hyptphi1[5][3];
-    hyptphi1[5][3]->Reset();
-
-    *hyptphi1[5][6] = *hyptphi1[5][6] + *hyptphi1[5][7];
-    hyptphi1[5][7]->Reset();
-    *hyptphi1[5][6] = *hyptphi1[5][6] + *hyptphi1[5][8];
-    hyptphi1[5][8]->Reset();
-
-    *hyptphi1[6][3] = *hyptphi1[6][3] + *hyptphi1[6][4];
-    hyptphi1[6][4]->Reset();
-
-    *hyptphi1[6][7] = *hyptphi1[6][7] + *hyptphi1[6][8];
-    hyptphi1[6][8]->Reset();
-    *hyptphi1[6][7] = *hyptphi1[6][7] + *hyptphi1[6][9];
-    hyptphi1[6][9]->Reset();
-
-    *hyptphi1[7][4] = *hyptphi1[7][4] + *hyptphi1[7][5];
-    hyptphi1[7][5]->Reset();
-
-
-
-    //v2 pt
-    *hyptphi2[1][1] = *hyptphi2[1][1] + *hyptphi2[1][2];
-    hyptphi2[1][2]->Reset();
-
-    *hyptphi2[2][3] = *hyptphi2[2][3] + *hyptphi2[2][4];
-    hyptphi2[2][4]->Reset();
-
-    *hyptphi2[3][5] = *hyptphi2[3][5] + *hyptphi2[3][6];
-    hyptphi2[3][6]->Reset();
-
-    *hyptphi2[4][2] = *hyptphi2[4][2] + *hyptphi2[4][3];
-    hyptphi2[4][3]->Reset();
-
-    *hyptphi2[4][6] = *hyptphi2[4][6] + *hyptphi2[4][7];
-    hyptphi2[4][7]->Reset();
-
-
-
-
-    // output    
-    //************************************************** 
-    std::cout << " ---- Resutls ---------------------" << std::endl;
-
-    TString fName = "vaNL" + sysName[isys[m]] + "_neutron.root";
-    gSystem->cd("data");
-    auto GraphSave = new TFile(fName,"recreate");
-    
-    TGraphErrors *gv_v1 = new TGraphErrors();
-    gv_v1->SetName("gv_v1");
-    TGraphErrors *gv_v2 = new TGraphErrors();
-    gv_v2->SetName("gv_v2");
-
-    TGraphErrors *gPt_v1[ybin1];
-    TGraphErrors *gPt_v2[ybin1];
-
-    for(UInt_t kn = 0; kn < ybin1 ; kn++){      
-      gPt_v1[kn] = new TGraphErrors();
-      gPt_v1[kn]->SetName((TString)Form("gPt_v1%d",kn));
-      TString sname = "Neutron; Pt [MeV/c]; v1";
-      gPt_v1[kn]->SetTitle(sname);
-    }
-
-    for(UInt_t kn = 0; kn < ybin2 ; kn++){      
-      gPt_v2[kn] = new TGraphErrors();
-      gPt_v2[kn]->SetName((TString)Form("gPt_v2%d",kn));
-      TString sname = "Neutron; Pt [MeV/c]; v2";
-      gPt_v2[kn]->SetTitle(sname);
-    }
-
-    ic++; 
-    cc[ic]   = new TCanvas("dphi1","dphi1",2000,1200);
-    cc[ic]->Divide(nbin1, ybin1);
-
-    cc[ic+1] = new TCanvas("dphi2","dphi2",1400,1200);
-    cc[ic+1]->Divide(nbin2, ybin2);
-
-    cc[ic+2] = new TCanvas(Form("cc%d",ic+2),Form("cc%d",ic+2), 1000, 1200);
-    cc[ic+2]->Divide(2, ybin1);
-
-
-    UInt_t kl = 0;
-    UInt_t id1 = 0;
-    UInt_t id2 = 0;
-    Double_t para[6];
-    
-    for(UInt_t kn = 0; kn < ybin1; kn++){
-      // v1 vs rapidity
-      cc[ic+2]->cd(2*(kn+1)-1);
-
-      if(  hypt[kn]->GetEntries() < 0 ) continue;
-      
-      Double_t rapm  = hypt[kn]->GetMean(1);
-      Double_t rape  = hypt[kn]->GetStdDev(1);
-
-
-      if( hyphi1[kn]->GetEntries() < 0 ) continue;
-      auto hyphi = (TH1D*)hyphi1[kn]->ProjectionX("",0,-1,"eo");
-
-      Double_t corr[2]={mcos1[isys[m]], mcos1e[isys[m]]};
-      GetFittingParameters(*hyphi, para, corr);
-      
-      if( !std::isnan(para[4]) && !std::isinf(para[4] )) {
-	gv_v1->SetPoint( kl,     rapm, para[4]);
-	gv_v1->SetPointError( kl, rape, para[5]);
-	kl++;
-      }
-
-      // pt dependence 
-      UInt_t il = 0; 
-      for(UInt_t jn = 0; jn < nbin1; jn++){
-
-	id1++; cc[ic]->cd(id1); 
-
-	if( hyptphi1[kn][jn]->GetEntries() > 0 ) {	
-
-	  Double_t ptc  = hyptphi1[kn][jn]->GetMean(2);
-	  Double_t ptce = hyptphi1[kn][jn]->GetStdDev(2);
-	    
-	  auto hypt = (TH1D*)hyptphi1[kn][jn]->ProjectionX();
-	  GetFittingParameters(*hypt, para, corr);
-	    
-	  if( !std::isnan(para[4]) && !std::isinf(para[4] )) {
-	    gPt_v1[kn]->SetPoint(il, ptc, para[4]);
-	    gPt_v1[kn]->SetPointError(il, ptce, para[5]);
-	    
-	    il++;
-	  }
-	}
-      }
-      gPt_v1[kn]->Write();
-    }
-
-    kl = 0;
-    for(UInt_t kn = 0; kn < ybin2; kn++){
-
-      // v2 vs rapidity
-      cc[ic+2]->cd(2*(kn+1));
-
-      if(  hypt2[kn]->GetEntries() < 0 ) continue;
-
-      Double_t rapm  = hypt2[kn]->GetMean(1);
-      Double_t rape  = hypt2[kn]->GetStdDev(1);
-
-      if( hyphi2[kn]->GetEntries() < 0 ) continue;
-      auto hyphi = (TH1D*)hyphi2[kn]->ProjectionX("",0,-1,"eo");
-      
-      Double_t corr[2] = {mcos2[isys[m]], mcos2e[isys[m]]};
-      GetFittingParameters(*hyphi, para, corr);
-
-
-      if( !std::isnan(para[4]) && !std::isinf(para[4] )) {
-	  gv_v2->SetPoint( kl,    rapm, para[4]);
-	  gv_v2->SetPointError( kl, rape, para[5]);
-	  kl++;
-      }
-    
-
-      UInt_t il = 0; 
-      for(UInt_t jn = 0; jn < nbin2; jn++){
-	
-	id2++; cc[ic+1]->cd(id2); 
-	if( hyptphi2[kn][jn]->GetEntries() > 0 ){
-
-	  Double_t ptc  = hyptphi2[kn][jn]->GetMean(2);
-	  Double_t ptce = hyptphi2[kn][jn]->GetStdDev(2);
-
-	  auto hypt = (TH1D*)hyptphi2[kn][jn]->ProjectionX();
-
-	  Double_t corr[2] = {mcos2[isys[m]], mcos2e[isys[m]]};
-	  GetFittingParameters(*hypt, para, corr);
-
-	  if( !std::isnan(para[4]) && !std::isinf(para[4] )) {
-	    gPt_v2[kn]->SetPoint(il, ptc, para[4]);
-	    gPt_v2[kn]->SetPointError(il, ptce, para[5]);
-	    
-	    il++;
-	  }
-	}
-      }
-      gPt_v2[kn]->Write();
-    }
-
-
-    ic+=3;
-
-
-    //plotting
-    ic++; id = 1;
-    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
-    cc[ic]->Divide(ybin1,1);
-    for(UInt_t kn = 0; kn < ybin1; kn++){
-      cc[ic]->cd(id); id++;
-      gPt_v1[kn]->Draw("ALP");
-    }
-
-    ic++; id = 1;
-    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
-    cc[ic]->Divide(ybin2,1);
-    for(UInt_t kn = 0; kn < ybin2; kn++){
-      cc[ic]->cd(id); id++;
-      gPt_v2[kn]->Draw("ALP");
-    }
-
-    ic++; id = 1;
-    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,400);
-    cc[ic]->Divide(ybin2,1);
-    for(UInt_t kn = 0; kn < ybin2; kn++){
-      cc[ic]->cd(id); id++;
-      hypt2[kn]->Draw("colz");
-    }
-
-    ic++; id = 1;
-    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,400);
-    cc[ic]->Divide(ybin1,1);
-    for(UInt_t kn = 0; kn < ybin1; kn++){
-      cc[ic]->cd(id); id++;
-      hypt[kn]->Draw("colz");
-    }
-
-
-    ic++; id = 1;
-    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
-    gv_v1->Draw("ALP");
-
-    auto LineV = new TLine(0.,gv_v1->GetYaxis()->GetXmin(), 0., gv_v1->GetYaxis()->GetXmax());
-    auto LineH = new TLine(gv_v1->GetXaxis()->GetXmin(),    0., gv_v1->GetXaxis()->GetXmax(), 0.);
-    LineV->SetLineStyle(3);
-    LineH->SetLineStyle(3);
-    LineV->Draw();
-    LineH->Draw();
-
-
-    ic++; id = 1;
-    cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
-    gv_v2->Draw("ALP");
-
-
-    gv_v1->Write();
-    gv_v2->Write();
-
-    GraphSave->WriteObject(&arr_range1, "v1_yrange");
-    GraphSave->WriteObject(&arr_range2, "v2_yrange");
+    for(UInt_t pn = 0; pn < nbin1; pn++)
+      hyptphi1[kn][pn] = new TH2D((TString)Form("hyptphi1_%d%d",kn,pn),"pt; #Delta #Phi" , 100, -3.2, 3.2, 200, 0., 1000.);
   }
 
+  for(UInt_t kn = 0; kn < ybin2; kn++){
+    TString sname = rangeLabel[kn];
+    hypt2[kn]   = new TH2D((TString)Form("hypt2_%d",kn),   sname+"; Rapidity; Pt [MeV/c]"  , 200, -0.4, 0.5, 200, 0., 800);
+    hyphi2[kn]  = new TH2D((TString)Form("hyphi2_%d",kn),  sname+";2*#Phi"  ,  50,  0.,   3.2, 200, 0., 800);
+
+    for(UInt_t pn = 0; pn < nbin2; pn++)
+      hyptphi2[kn][pn] = new TH2D((TString)Form("hyptphi2_%d%d",kn,pn),"pt; #Delta 2*#Phi", 50, 0., 3.2,   200, 0., 1000.);
+  }
+
+
+    
+  UInt_t vid = 0;
+  if( snbm == 108 )
+    vid = 1;
+
+
+  Int_t nevt = SetBranch(0);
+
+  cout << " Number of events " << nevt << endl;
+
+  for(Int_t i = 0; i < nevt; i++){
+    rChain[0]->GetEntry(i);
+
+
+    if(ntrack[4] > 35) continue;
+
+    // Reaction Plane resolution evaluated with subevents
+    Double_t subevt_phi = abs(TVector2::Phi_mpi_pi(unitP_1->Phi()-unitP_2->Phi()));
+    hphi0_180->Fill( subevt_phi );
+    if( subevt_phi > TMath::Pi()/2. )
+      hphi90_180->Fill( subevt_phi );
+
+
+    TIter next(aNLClusterArray);
+    STNeuLANDCluster* aNLClust = NULL;
+    
+    while( (aNLClust = (STNeuLANDCluster*)next()) ){
+      
+      aNLClust->SetBeamAngle(ProjA/1000., ProjB/1000.);
+      
+      auto pid      = aNLClust->GetPID();
+      auto phi      = aNLClust->GetP().Phi(); 
+      auto pt       = aNLClust->GetP().Pt();
+      
+      auto rapid    = GetRapidity_cm( aNLClust->GetP(), 939.5731, -boostVec);
+      auto veto_all = aNLClust->GetVetoHitAll(vid);
+      auto veto_bar = aNLClust->GetVetoHitOne(vid);
+      auto veto_mid = aNLClust->GetVetoHitMid(vid);
+      
+
+      auto dphi     = TVector2::Phi_mpi_pi(unitP_fc->Phi() - phi);
+  	
+      if( pid == 2112 && veto_all == 0){ // neutron
+	//   	if( pid == 2112 ){ // neutron
+
+
+	hyptacp->Fill( rapid, pt );
+
+	UInt_t irapid = ybin1 - 1;
+	for( UInt_t i = 0; i < ybin1; i++){
+	  if(rapid < yrange1[i]){
+	    irapid = i;
+	    break;
+	  }
+	}
+	
+	hypt[irapid]->Fill(rapid, pt);
+	hyphi1[irapid]->Fill(dphi, pt);
+	UInt_t ipt = nbin1 - 1;
+	for(UInt_t i = 0; i < nbin1; i++){
+	  if( pt < dpt1*(i+1)) {
+	    ipt = i;
+	    break;
+	  }
+	}
+
+	hyptphi1[irapid][ipt]->Fill(dphi, pt);
+	
+	irapid = ybin2 - 1;
+	for( UInt_t i = 0; i < ybin2; i++){
+	  if(rapid < yrange2[i]){
+	    irapid = i;
+	    break;
+	  }
+	}
+          
+	ipt = nbin2 - 1;
+	for(UInt_t i = 0; i < nbin2; i++){
+	  if( pt < dpt2*(i+1)) {
+	    ipt = i;
+	    break;
+	  }
+	}
+	hypt2[irapid]->Fill(rapid, pt);
+	hyphi2[irapid]->Fill(abs( TVector2::Phi_mpi_pi(2.*dphi) ), pt);
+	hyptphi2[irapid][ipt]->Fill(abs( TVector2::Phi_mpi_pi(2.*dphi) ), pt);
+      }
+    }
+  }
+  
+
+  // // 132Sn
+  //    combineHist(132, hyptphi1, hyptphi2);
+  // Sumup edge of acceptance
+  // UInt_t highstat = 0;
+  // for(UInt_t irapid = 0; i < nbin1l; irapid++){
+  //   for(UInt_t ipt = 0; ipt < nbin1; ipt++) {
+  
+  // 	if( hyptphi1[irapid][ipt] -> GetEntries() > 100 ) {
+  // 	  highstat = ipt;
+  // 	}
+  // 	else if( highstat < ipt ){
+  // 	*hyptphi1[0][0] = *hyptphi1[0][0] + *hyptphi1[0][1];	
+
+  //   }
+  // }
+
+
+  *hyptphi1[0][0] = *hyptphi1[0][0] + *hyptphi1[0][1];
+  hyptphi1[0][1]->Reset();
+
+  *hyptphi1[1][1] = *hyptphi1[1][1] + *hyptphi1[1][2];
+  hyptphi1[1][2]->Reset();
+
+  *hyptphi1[2][1] = *hyptphi1[2][1] + *hyptphi1[2][3];
+  hyptphi1[2][3]->Reset();
+
+  *hyptphi1[3][1] = *hyptphi1[3][1] + *hyptphi1[3][2];
+  hyptphi1[3][2]->Reset();
+
+  *hyptphi1[3][3] = *hyptphi1[3][3] + *hyptphi1[3][4];
+  hyptphi1[3][4]->Reset();
+    
+  *hyptphi1[4][5] = *hyptphi1[4][5] + *hyptphi1[4][6];
+  hyptphi1[4][6]->Reset();
+
+  *hyptphi1[5][2] = *hyptphi1[5][2] + *hyptphi1[5][3];
+  hyptphi1[5][3]->Reset();
+
+  *hyptphi1[5][6] = *hyptphi1[5][6] + *hyptphi1[5][7];
+  hyptphi1[5][7]->Reset();
+  *hyptphi1[5][6] = *hyptphi1[5][6] + *hyptphi1[5][8];
+  hyptphi1[5][8]->Reset();
+
+  *hyptphi1[6][3] = *hyptphi1[6][3] + *hyptphi1[6][4];
+  hyptphi1[6][4]->Reset();
+
+  *hyptphi1[6][7] = *hyptphi1[6][7] + *hyptphi1[6][8];
+  hyptphi1[6][8]->Reset();
+  *hyptphi1[6][7] = *hyptphi1[6][7] + *hyptphi1[6][9];
+  hyptphi1[6][9]->Reset();
+
+  *hyptphi1[7][4] = *hyptphi1[7][4] + *hyptphi1[7][5];
+  hyptphi1[7][5]->Reset();
+
+
+
+  //v2 pt
+  *hyptphi2[1][1] = *hyptphi2[1][1] + *hyptphi2[1][2];
+  hyptphi2[1][2]->Reset();
+
+  *hyptphi2[2][3] = *hyptphi2[2][3] + *hyptphi2[2][4];
+  hyptphi2[2][4]->Reset();
+
+  *hyptphi2[3][5] = *hyptphi2[3][5] + *hyptphi2[3][6];
+  hyptphi2[3][6]->Reset();
+
+  *hyptphi2[4][2] = *hyptphi2[4][2] + *hyptphi2[4][3];
+  hyptphi2[4][3]->Reset();
+
+  *hyptphi2[4][6] = *hyptphi2[4][6] + *hyptphi2[4][7];
+  hyptphi2[4][7]->Reset();
+
+
+
+
+  // output    
+  //************************************************** 
+  std::cout << " ---- Resutls ---------------------" << std::endl;
+
+  TString fName = "vaNL" + sysName[isys[0]] + "_neutron.root";
+  gSystem->cd("data");
+  auto GraphSave = new TFile(fName,"recreate");
+    
+  TGraphErrors *gv_v1 = new TGraphErrors();
+  gv_v1->SetName("gv_v1");
+  TGraphErrors *gv_v2 = new TGraphErrors();
+  gv_v2->SetName("gv_v2");
+
+  TGraphErrors *gPt_v1[ybin1];
+  TGraphErrors *gPt_v2[ybin1];
+
+  for(UInt_t kn = 0; kn < ybin1 ; kn++){      
+    gPt_v1[kn] = new TGraphErrors();
+    gPt_v1[kn]->SetName((TString)Form("gPt_v1%d",kn));
+    TString sname = "Neutron; Pt [MeV/c]; v1";
+    gPt_v1[kn]->SetTitle(sname);
+  }
+
+  for(UInt_t kn = 0; kn < ybin2 ; kn++){      
+    gPt_v2[kn] = new TGraphErrors();
+    gPt_v2[kn]->SetName((TString)Form("gPt_v2%d",kn));
+    TString sname = "Neutron; Pt [MeV/c]; v2";
+    gPt_v2[kn]->SetTitle(sname);
+  }
+
+
+  Double_t *rpres = new Double_t[4];
+  rpres = GetRPResolutionwChi(hphi0_180, hphi90_180);
+
+  ic++; 
+  cc[ic]   = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+  hyptacp->Draw("colz");
+
+  ic++; 
+  cc[ic]   = new TCanvas("dphi1","dphi1",2000,1200);
+  cc[ic]->Divide(nbin1, ybin1);
+
+  cc[ic+1] = new TCanvas("dphi2","dphi2",1400,1200);
+  cc[ic+1]->Divide(nbin2, ybin2);
+
+  cc[ic+2] = new TCanvas(Form("cc%d",ic+2),Form("cc%d",ic+2), 1000, 1200);
+  cc[ic+2]->Divide(2, ybin1);
+
+  UInt_t kl = 0;
+  UInt_t id1 = 0;
+  UInt_t id2 = 0;
+  Double_t para[6];
+    
+  for(UInt_t kn = 0; kn < ybin1; kn++){
+    // v1 vs rapidity
+    cc[ic+2]->cd(2*(kn+1)-1);
+
+    if(  hypt[kn]->GetEntries() < 0 ) continue;
+      
+    Double_t rapm  = hypt[kn]->GetMean(1);
+    Double_t rape  = hypt[kn]->GetStdDev(1);
+
+
+    if( hyphi1[kn]->GetEntries() < 0 ) continue;
+    auto hyphi = (TH1D*)hyphi1[kn]->ProjectionX(Form("hyphiv1_%d",kn),0,-1,"eo");
+
+    Double_t corr[2]= {rpres[0], rpres[1]};
+    GetFittingParameters(*hyphi, para, corr);
+    hyphi->SetMaximum(1.5);
+    hyphi->SetMinimum(0.5);
+      
+    if( !std::isnan(para[4]) && !std::isinf(para[4] )) {
+      gv_v1->SetPoint( kl,     rapm, para[4]);
+      gv_v1->SetPointError( kl, rape, para[5]);
+      kl++;
+    }
+
+    // pt dependence 
+    UInt_t il = 0; 
+    for(UInt_t jn = 0; jn < nbin1; jn++){
+
+      id1++; cc[ic]->cd(id1); 
+
+      if( hyptphi1[kn][jn]->GetEntries() > 0 ) {	
+
+	Double_t ptc  = hyptphi1[kn][jn]->GetMean(2);
+	Double_t ptce = hyptphi1[kn][jn]->GetStdDev(2);
+	    
+	auto hypt = (TH1D*)hyptphi1[kn][jn]->ProjectionX();
+	GetFittingParameters(*hypt, para, corr);
+	    
+
+	if( !std::isnan(para[4]) && !std::isinf(para[4] )) {
+	  gPt_v1[kn]->SetPoint(il, ptc, para[4]);
+	  gPt_v1[kn]->SetPointError(il, ptce, para[5]);
+	    
+	  il++;
+	}
+      }
+    }
+    gPt_v1[kn]->Write();
+  }
+
+  kl = 0;
+  for(UInt_t kn = 0; kn < ybin2; kn++){
+
+    // v2 vs rapidity
+    cc[ic+2]->cd(2*(kn+1));
+
+    if(  hypt2[kn]->GetEntries() < 0 ) continue;
+
+    Double_t rapm  = hypt2[kn]->GetMean(1);
+    Double_t rape  = hypt2[kn]->GetStdDev(1);
+
+    if( hyphi2[kn]->GetEntries() < 0 ) continue;
+    auto hyphii = (TH1D*)hyphi2[kn]->ProjectionX(Form("hyphiv2_%d",kn),0,-1,"eo");
+      
+    Double_t corr[2] = {rpres[2], rpres[3]};
+    GetFittingParameters(*hyphii, para, corr);
+    hyphii->SetMaximum(1.1);
+    hyphii->SetMinimum(0.9);
+
+    if( !std::isnan(para[4]) && !std::isinf(para[4] )) {
+      gv_v2->SetPoint( kl,    rapm, para[4]);
+      gv_v2->SetPointError( kl, rape, para[5]);
+      kl++;
+    }
+    
+
+    UInt_t il = 0; 
+    for(UInt_t jn = 0; jn < nbin2; jn++){
+	
+      id2++; cc[ic+1]->cd(id2); 
+      if( hyptphi2[kn][jn]->GetEntries() > 0 ){
+
+	Double_t ptc  = hyptphi2[kn][jn]->GetMean(2);
+	Double_t ptce = hyptphi2[kn][jn]->GetStdDev(2);
+
+	auto hypt = (TH1D*)hyptphi2[kn][jn]->ProjectionX();
+
+	GetFittingParameters(*hypt, para, corr);
+
+	if( !std::isnan(para[4]) && !std::isinf(para[4] )) {
+	  gPt_v2[kn]->SetPoint(il, ptc, para[4]);
+	  gPt_v2[kn]->SetPointError(il, ptce, para[5]);
+	    
+	  il++;
+	}
+      }
+    }
+    gPt_v2[kn]->Write();
+  }
+
+
+  ic+=3;
+
+
+  //plotting
+  ic++; id = 1;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
+  cc[ic]->Divide(ybin1,1);
+  for(UInt_t kn = 0; kn < ybin1; kn++){
+    cc[ic]->cd(id); id++;
+    gPt_v1[kn]->Draw("ALP");
+  }
+
+  ic++; id = 1;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1000,500);
+  cc[ic]->Divide(ybin2,1);
+  for(UInt_t kn = 0; kn < ybin2; kn++){
+    cc[ic]->cd(id); id++;
+    gPt_v2[kn]->Draw("ALP");
+  }
+
+  ic++; id = 1;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,400);
+  cc[ic]->Divide(ybin2,1);
+  for(UInt_t kn = 0; kn < ybin2; kn++){
+    cc[ic]->cd(id); id++;
+    hypt2[kn]->Draw("colz");
+  }
+
+  ic++; id = 1;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,400);
+  cc[ic]->Divide(ybin1,1);
+  for(UInt_t kn = 0; kn < ybin1; kn++){
+    cc[ic]->cd(id); id++;
+    hypt[kn]->Draw("colz");
+  }
+
+
+  ic++; id = 1;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
+  gv_v1->Draw("ALP");
+
+  auto LineV = new TLine(0.,gv_v1->GetYaxis()->GetXmin(), 0., gv_v1->GetYaxis()->GetXmax());
+  auto LineH = new TLine(gv_v1->GetXaxis()->GetXmin(),    0., gv_v1->GetXaxis()->GetXmax(), 0.);
+  LineV->SetLineStyle(3);
+  LineH->SetLineStyle(3);
+  LineV->Draw();
+  LineH->Draw();
+
+
+  ic++; id = 1;
+  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
+  gv_v2->Draw("ALP");
+
+
+  gv_v1->Write();
+  gv_v2->Write();
+
+  GraphSave->WriteObject(&arr_range1, "v1_yrange");
+  GraphSave->WriteObject(&arr_range2, "v2_yrange");
   
   gSystem->cd("..");
-
-}
-
-void combineHist(UInt_t sys, TH2D *hyptphi1, TH2D *hyptphi2)
-{
-
 }
 
 void GetFittingParameters(TH1D &h1, Double_t pp[6])
@@ -2796,3 +2875,5 @@ UInt_t SetBranch(UInt_t m)
   return rChain[m]->GetEntries();
 
 }
+
+

@@ -20,7 +20,6 @@ void flw_process2(Long64_t nmax = -1)
   gRandom->SetSeed(itime);
 
 
-
   // I/O
   Open();
 
@@ -35,6 +34,9 @@ void flw_process2(Long64_t nmax = -1)
     PrintProcess(ievt);
 
     Initialize();
+
+    if(ievt == 0)
+      DefineLorentzBoostVector();
 
     //    bs_unitP->Clear();
     
@@ -198,7 +200,7 @@ void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
 	bs_unitP_1->Add(wt * ptr.Unit());
 
 	TVector2 ptpt = wt * ptr.Unit();
-	std::cout << ptpt.Phi() << ", "; 
+	//	std::cout << ptpt.Phi() << ", "; 
 
 	aPart1->AddReactionPlaneFlag(100);
         mtrack_1++;
@@ -217,7 +219,7 @@ void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
     }
   }
 
-  std::cout << endl;
+  //  std::cout << endl;
 
   // if( mtrack_1 > 0 && mtrack_2 > 0 ) {
   //   bs_unitP_1->BootStrapping();
@@ -481,7 +483,6 @@ void Initialize()
     bsPhi_2[i] = -999.;
   }
 
-  DefineLorentzBoostVector();
 }
 
 
@@ -778,7 +779,7 @@ void  DefineLorentzBoostVector()
   eB_lb[4]  = 268.9;
   mT[4]     = 1.00727646688;
 
-  UInt_t sysid = 0;
+  UInt_t sysid = 4;
   switch(snbm){
   case 132:
     sysid = 0;
@@ -794,6 +795,10 @@ void  DefineLorentzBoostVector()
     break;
   }
   
+
+  sysid = 4;
+
+  std::cout << " Lorentz Boost with " << system[sysid] << std::endl;
 
   Double_t EkB_lb    = eB_lb[sysid]  * mB[sysid];
   mB[sysid] *= amu;
@@ -814,14 +819,18 @@ void  DefineLorentzBoostVector()
 
 void SetPtWeight(STParticle *apart)
 {
+  apart->SetRapidity();
+
   Double_t Etot = sqrt(apart->GetMomentum().Mag2() + pow(apart->GetMass(),2) );
   TLorentzVector lrnzVec( apart->GetMomentum(), Etot);
   
   lrnzVec.Boost(-boostVec);
 
-  Double_t PZcm = lrnzVec.Z();
-  Double_t Ecm  = lrnzVec.E();
+  auto PZcm = lrnzVec.Z();
+  auto Ecm  = lrnzVec.E();
   auto rapidity = 0.5*log( (Ecm + PZcm)/(Ecm - PZcm) );
+
+  rapidity = 0.5*log( (Ecm + PZcm)/(Ecm - PZcm) );
 
   
   apart->SetRapiditycm(rapidity);

@@ -39,6 +39,7 @@ STParticle::STParticle(const STParticle &cp)
   fNDF          = cp.fNDF;
 
   fRapidity     = cp.fRapidity;
+  fRapiditycm   = cp.fRapiditycm;
   fpsudoRapidity= cp.fpsudoRapidity;
   fEtotal       = cp.fEtotal;
   fChar         = cp.fChar;
@@ -406,6 +407,7 @@ void STParticle::SetBBPID()
       fPID = STPID::GetPDG(pid);
 
       SetMass();
+      SetRapidity();
       return;
     }
   }

@@ -43,7 +43,7 @@ Double_t FittingAndIntegral(TGraphErrors *gr)
 void PlotPtDependence()
 {
   // --> Plotting selection
-  Bool_t bsys[]  = { 1, 0, 0, 0};
+  Bool_t bsys[]  = { 0, 1, 0, 0};
   Bool_t bpid[]  = { 1, 1, 1, 1}; //p, d, t, n
 
 
