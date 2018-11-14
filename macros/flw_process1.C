@@ -213,6 +213,7 @@ void flw_process1(Int_t nevt = -1)
       kChain -> GetEntry(i);
 
       max_veto = katanaroot->max_veto;
+
     }
     // --------------- KytoArray ----------
     if(KyotoArry && i < nEvtKyt){

@@ -81,7 +81,7 @@ UInt_t STBootStrap::BootStrappingDouble(UInt_t nbt)
   if(nbt > 0 ) nboot = nbt;
   else nboot = 100;
   
-  ordn_Mean   = TMath::Mean( elements.begin(), elements.end() );
+  ordn_Mean   = TMath::Mean(  elements.begin(), elements.end() );
   ordn_StdDev = TMath::StdDev(elements.begin(), elements.end()); 
 
   replace.clear();
@@ -92,11 +92,16 @@ UInt_t STBootStrap::BootStrappingDouble(UInt_t nbt)
     Double_t sum_double = 0.;
     std::vector< Double_t > resampling;
     
-    for( std::vector< UInt_t >::iterator it = rep.begin(); it != rep.end(); it++ )
+    for( std::vector< UInt_t >::iterator it = rep.begin(); it != rep.end(); it++ ) 
       resampling.push_back( elements.at( *it ) );
-
+    
     Double_t mean   = TMath::Mean( resampling.begin(), resampling.end() );    
 
+    if( kFALSE ){
+      for( std::vector< Double_t >::iterator it = resampling.begin(); it != resampling.end(); it++ )
+	std::cout  << std::setw(10) << *it ;
+      std::cout  << std::setw(10) << mean << std::endl;
+    }
 
     replace.push_back( mean );
 
@@ -111,6 +116,7 @@ UInt_t STBootStrap::BootStrappingDouble(UInt_t nbt)
     cnvStdv = TMath::StdDev(replace.begin(), replace.end());
 
     resMean.push_back( cnvMean );
+    //    cnvStdv = TMath::StdDev(resMean.begin(), resMean.end());
     resStdv.push_back( cnvStdv );
 
   }
@@ -129,11 +135,8 @@ UInt_t STBootStrap::BootStrappingTVector2(UInt_t nbt)
   ordn_Mean = TVector2::Phi_mpi_pi(org_sum.Phi());
 
   std::vector< Double_t > org_phiv;
-  for(std::vector< TVector2 >::iterator it = elementsTV2.begin(); it != elementsTV2.end(); it++) {
-
+  for(std::vector< TVector2 >::iterator it = elementsTV2.begin(); it != elementsTV2.end(); it++) 
     org_phiv.push_back( TVector2::Phi_mpi_pi( (*it).DeltaPhi( org_sum ) ) );
-
-  }
 
   
   ordn_StdDev = TMath::StdDev( org_phiv.begin(), org_phiv.end() );
@@ -156,9 +159,9 @@ UInt_t STBootStrap::BootStrappingTVector2(UInt_t nbt)
 
     //    StoreResults();
     cnvMean = TVector2::Phi_mpi_pi( TMath::Mean(replace.begin(), replace.end()) );
+    cnvStdv = TMath::StdDev(replace.begin(), replace.end()); ;
 
     resMean.push_back( cnvMean );
-    cnvStdv = TMath::StdDev(resMean.begin(), resMean.end());
     resStdv.push_back( cnvStdv );
 
     cnvMean += org_sum.Phi() ;
@@ -227,6 +230,13 @@ std::vector< UInt_t > STBootStrap::Resampling(UInt_t ival)
   
   return rep;
 }   
+
+Double_t STBootStrap::GetReplace(UInt_t ival)
+{
+  if( replace.size() > 0 && ival < replace.size() ) return replace.at(ival);
+
+  else return -999.;
+}
 
 
 Double_t STBootStrap::GetResidualMean(UInt_t ival)

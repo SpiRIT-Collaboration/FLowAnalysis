@@ -40,11 +40,11 @@ STParticle::STParticle(const STParticle &cp)
 
   fRapidity     = cp.fRapidity;
   fRapiditycm   = cp.fRapiditycm;
-  fpsudoRapidity= cp.fpsudoRapidity;
   fEtotal       = cp.fEtotal;
   fChar         = cp.fChar;
   fMass         = cp.fMass;
   fBBMass       = cp.fBBMass;
+  fLzvec        = cp.fLzvec;
 
   fpipid        = cp.fpipid;
 
@@ -147,6 +147,7 @@ void STParticle::Clear(Option_t *option)
   fRotatedP3 = TVector3(-9999,-9999,-9999);
   forigP3    = TVector3(-9999,-9999,-9999);
   fvertex    = TVector3(-9999,-9999,-9999);
+  fLzvec     = TLorentzVector(0.,0.,0.,0.);
 
   fP            = -9999.;
   fdEdx         = -9999.;
@@ -189,6 +190,8 @@ void STParticle::Clear(Option_t *option)
 
   rChi2   = 0.;
   fBBMass = 0.;
+
+
 }
 
 
@@ -276,7 +279,6 @@ void STParticle::SetMass()
 
   Double_t mass = 0;
   switch (fPID) {
-  case 12212:
   case 2212:
     mass = mp;
     break;
@@ -314,20 +316,13 @@ void STParticle::SetMass()
 }
 
 
-void STParticle::SetpsudoRapidity()
-{
-  fpsudoRapidity = -log( tan((fRotatedP3.Theta()/2)) );
-}
-
  
 void STParticle::SetRapidity()
 {
-  Double_t P    = fRotatedP3.Mag();
   Double_t Pz   = fRotatedP3.Z();
 
-
   if(fMass != 0 ){
-    fEtotal   = sqrt(fMass*fMass + P*P);
+    fEtotal   = sqrt(fMass*fMass + fP*fP);
     fRapidity = 0.5 * log( (fEtotal + Pz) / (fEtotal - Pz) );
   }
   else {
@@ -335,9 +330,9 @@ void STParticle::SetRapidity()
     fRapidity = -10.;
   }
 
-  SetpsudoRapidity();
+  fLzvec.SetVect(fRotatedP3);
+  fLzvec.SetT(fEtotal);
 }
-
 
 void  STParticle::RotateAlongBeamDirection(Double_t valuex, Double_t valuey)
 {
@@ -389,58 +384,45 @@ void STParticle::SetBetheBlochMass(Double_t *para)
 }
 
 void STParticle::SetBBPID()
-{
+{  
+  fPID  = 0;
 
+  if( fdEdx <= maxdEdx && fP <= maxMomentum ) { 
 
-  for(UInt_t i = 0; i < nBBsize; i++){
+    for(UInt_t i = 0; i < nBBsize; i++){
 
-    Double_t mass_low = BBmassRegion[i][0]-BBmassRegion[i][1]*BBmassRegion[i][2] ;
-    Double_t mass_up  = BBmassRegion[i][0]+BBmassRegion[i][1]*BBmassRegion[i][2] ;
+      Bool_t pcut = 1;
+      if( i == 1 && fP > protonMaxMomentum ) pcut = 0;
+      else if( i == 3 && fBBMass > 0.8*fP+2400. ) pcut = 0;      
 
-    Bool_t triton_cut = 1;
-    if( i == 3 && fBBMass > 0.8*fP+2400. ) triton_cut = 0;
+      Double_t mass_low = BBmassRegion[i][0]-BBmassRegion[i][1]*BBmassRegion[i][2] ;
+      Double_t mass_up  = BBmassRegion[i][0]+BBmassRegion[i][1]*BBmassRegion[i][3] ;
+
+      if( fBBMass >= mass_low && fBBMass <= mass_up && pcut) {
+	
+	STPID::PID pid = static_cast<STPID::PID>(i);
+	fPID = STPID::GetPDG(pid);
+
+	break;
+      }
+    }
       
+    if( gcutHe3BBmass != NULL && gcutHe4BBmass != NULL ) {
 
-    if( fBBMass >= mass_low &&	fBBMass <= mass_up && triton_cut) {
-
-      STPID::PID pid = static_cast<STPID::PID>(i);
-      fPID = STPID::GetPDG(pid);
-
-      SetMass();
-      SetRapidity();
-      return;
+      if( fPID == 0 && gcutHe3BBmass->IsInside(fP, fBBMass) ) {
+	STPID::PID pid = static_cast<STPID::PID>(4);
+	fPID = STPID::GetPDG(pid);
+      }
+  
+      if( fPID == 0 && gcutHe4BBmass->IsInside(fP, fBBMass) ) {
+	STPID::PID pid = static_cast<STPID::PID>(5);
+	fPID = STPID::GetPDG(pid);
+      }
     }
   }
 
-  // extended p
-  if( fBBMass > BBmassRegion[1][0]+BBmassRegion[1][1]*BBmassRegion[1][2] &&
-      fBBMass < BBmassRegion[2][0]-BBmassRegion[2][1]*BBmassRegion[2][2] ) {
-
-    STPID::PID pid = static_cast<STPID::PID>(1);
-    fPID = STPID::GetPDG(pid);
-  }    
-  // exptended d
-  if( fBBMass > BBmassRegion[2][0]+BBmassRegion[2][1]*BBmassRegion[2][2] &&
-      fBBMass < BBmassRegion[3][0]-BBmassRegion[3][1]*BBmassRegion[3][2] ) {
-
-    STPID::PID pid = static_cast<STPID::PID>(2);
-    fPID = STPID::GetPDG(pid);
-  }    
-
-
-  if( gcutHe3BBmass == NULL || gcutHe4BBmass == NULL ) return;
-
-  if( gcutHe3BBmass->IsInside(fP, fBBMass) ) {
-    STPID::PID pid = static_cast<STPID::PID>(4);
-    fPID = STPID::GetPDG(pid);
-  }
-  
-  if( gcutHe4BBmass->IsInside(fP, fBBMass) ) {
-    STPID::PID pid = static_cast<STPID::PID>(5);
-    fPID = STPID::GetPDG(pid);
-  }
-
   SetMass();
+  SetRapidity();
 
 }
 

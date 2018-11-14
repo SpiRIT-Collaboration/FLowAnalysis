@@ -8,6 +8,7 @@ UInt_t OpenChain(UInt_t m = 0);
 void openFlw()
 {
   gROOT->Reset();
+  gStyle->SetOptStat(0);
     
   for(UInt_t i = 0 ; i < nconfig; i++){
     TString form = Form("RUN%d",i);

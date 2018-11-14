@@ -46,6 +46,7 @@ void      SetPtWeight(STParticle *apart);
 void      FlatteningCorrection(UInt_t isel, STParticle *apart, Int_t ival);
 TVector3  Psi_FlatteningCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
 TVector3  Psi_ReCenteringCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
+void      DefineLorentzBoostVector(UInt_t isel);
 
 void      SubEventAnalysis();
 void      AzmAngleWRTReactionPlane();
@@ -79,6 +80,8 @@ UInt_t  nBin;
 TString binpara;
 
 Int_t   maxProc;;
+TVector3 boostVec;
+
 
 //TChain *fChain;
 TString  foutname;
@@ -127,6 +130,9 @@ Double_t bsPhi_ex[3];
 TVector2 bsP_1;
 TVector2 bsP_2;
 
+TVector2 eisott;
+TVector2 eisobm;
+TVector2 eisotg;
 
 Double_t         aX;
 Double_t         bY;

@@ -33,7 +33,7 @@ export STBEAM124=/cache/scr/spirit/DataAskedByMizuki/beam.Sn124/
 export STBEAM112=/cache/scr/spirit/DataAskedByMizuki/beam.Sn112/
 
 #KATANA data
-export STKATANADIR=/data/spdaq01/katana/root/katana/
+export STKATANADIR=/xrootd/spdaq02/katana/root/katana/
 
 #Kyoto data
 export STKYOTODIR=/cache/scr/spirit/kaneko/rootfile/kyoto/
@@ -49,7 +49,7 @@ export STNLDIR=/cache/scr/spirit/NeuLand/neuland_4sep2018
 export STPC=1;
 export BIGRIPS=1;
 export KYOTOARRY=0;
-export KATANA=0;
+export KATANA=1;
 export NEULAND=1;
 
 #--------------
@@ -66,14 +66,14 @@ source runList.sh
 #RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
-RUNNUMBER1=(${RNF112})
+#RUNNUMBER1=(${RNF112})
 
-#RUNNUMBER1=(${RNF124},${RNF112}) 
-#RUNNUMBER1="2900"
+RUNNUMBER1=(${RNFTEMP},${RNF108},${RNF124},${RNF112}) 
+#RUNNUMBER1="2273"
 
 #RUNNUMBER1=(${RNF132s})
 # *****> <Edit Here>     
-VERSION=10
+VERSION=11
 
 
 function process1(){
@@ -115,6 +115,8 @@ function process1(){
     done
 }
 
+#RUN=${RUNNUMBER1[0]}
+#RUN=${RUN} VER=$VERSION root -b -q flw_process1.C\(1000\)
 
 process1 
 

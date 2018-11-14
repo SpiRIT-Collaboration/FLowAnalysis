@@ -30,6 +30,7 @@ public:
   Double_t GetStdDevError();
   Double_t GetStdDev2()        {return cnvStdv2;}
   Double_t GetNElem()          {return (Double_t)numElements;}
+  Double_t GetReplace(UInt_t ival);
   Double_t GetResidualMean(UInt_t ival);
   Double_t GetResidualStdDev(UInt_t ival);
   Double_t GetOrdinaryMean()    {return ordn_Mean;}
@@ -68,8 +69,8 @@ private:
   UInt_t nboot = 0;
 
   std::vector< Double_t >    replace;    // resampling event
-  std::vector< Double_t >    resMean;    // <Phi> / resampling event
-  std::vector< Double_t >    resStdv;    // std<Phi> / resampling event
+  std::vector< Double_t >    resMean;    // <Phi> / with nth bootstrapping
+  std::vector< Double_t >    resStdv;    // std<Phi> / with nth bootstrapping
   
   Double_t cnvMean;    // <Phi> for bootstrapped events
   Double_t cnvStdv;    // std<Phi> for bootstrapped events

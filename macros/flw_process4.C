@@ -11,6 +11,9 @@
 void flw_process4(Long64_t nmax = -1)
 {
   SetEnvironment();
+  
+  DefineLorentzBoostVector(4);
+
 
   nBin = SetDatabaseFiles();
 
@@ -217,6 +220,11 @@ void Initialize()
   
   bsP_1 = TVector2(0.,0.);
   bsP_2 = TVector2(0.,0.);
+  eisott  = TVector2(0.,0.);
+  eisobm  = TVector2(0.,0.);
+  eisotg  = TVector2(0.,0.);
+
+
 
   aParticleArray->Clear();
 
@@ -307,6 +315,10 @@ void OutputTree()
 
   mflw->Branch("bsP_1"     ,&bsP_1  );
   mflw->Branch("bsP_2"     ,&bsP_2  );
+
+  mflw->Branch("eisott"      ,&eisott   );
+  mflw->Branch("eisobm"      ,&eisobm   );
+  mflw->Branch("eisotg"      ,&eisotg   );
 
   if(aNLCluster != NULL && bNL)
     mflw->Branch("STNeuLANDCluster",&aNLCluster);
@@ -573,10 +585,23 @@ void AzmAngleWRTReactionPlane()
 
   while( (aPart1 = (STParticle*)next()) ) {
 
-    //    if( aPart1->GetReactionPlaneFlag() > 1000 || aPart1->GetPID() == 211){
-
       Double_t wt = aPart1->GetRPWeight();
       TVector2 pt = aPart1->GetRotatedPt();
+
+      if( aPart1->GetBestTrackFlag() ){
+	TLorentzVector lrnzVec( aPart1->GetMomentum(), aPart1->GetEtotal() );
+	lrnzVec.Boost(-boostVec);
+      
+	auto Ekcm  = lrnzVec.T() - aPart1->GetMass();
+	auto theta = lrnzVec.Theta();
+
+	eisott += TVector2( Ekcm * cos(theta)*cos(theta), Ekcm * sin(theta)*sin(theta) );
+
+	if( lrnzVec.Z() >= 0 )
+	  eisobm += TVector2( Ekcm * cos(theta)*cos(theta), Ekcm * sin(theta)*sin(theta) );
+	else
+	  eisotg += TVector2( Ekcm * cos(theta)*cos(theta), Ekcm * sin(theta)*sin(theta) );
+      }
 
       std::vector < TVector2 > exVec;
       TVector2 mExcRP(0.,0.);
@@ -606,7 +631,6 @@ void AzmAngleWRTReactionPlane()
       TVector3 rp_recv = TVector3(-999.,-999.,-999.);
       if(itraex > 0)
 	rp_recv = Psi_FlatteningCorrection(0, seltrack , TVector3(mExcRP.X(), mExcRP.Y(), 0.));
-
 
       // bootstrap method
       // auto btsp  = new STBootStrap(500, &exVec);
@@ -698,4 +722,81 @@ TVector3 Psi_ReCenteringCorrection(UInt_t isel, Int_t ival, TVector3 Pvec)
   }
 
   return Psi_cf;
+}
+
+
+
+void  DefineLorentzBoostVector(UInt_t isel)
+{
+  Double_t amu  = 931.4940954; //MeV/c2                                                                           
+  Double_t c    = 299792458.; //m/s    
+  TString system[5];
+  Double_t AB[5];
+  Double_t mB[5];
+  Double_t eB_lb[5];
+  Double_t mT[5];
+
+  system[0] =  "(132Sn + 124Sn)";
+  AB[0]     =  132.;
+  mB[0]     =  131.8906 ; //amu
+  mT[0]     =  123.8773895;   //amu Target mass
+  system[1] = "(108Sn + 112Sn)";
+  AB[1]     =  108.;
+  mB[1]     =  107.8844964; //amu
+  eB_lb[1]  =  268.9;
+  mT[1]     =  111.8773895;;
+
+  system[2] = "(124Sn + 112Sn)";
+  AB[2]     =  124.;
+  mB[2]     =  123.8778449; //amu 
+  eB_lb[2]  =  270.2;
+  mT[2]     =  111.8773895;;
+
+  system[3] = "(112Sn + 124Sn)";
+  AB[3]     =  112.;
+  mB[3]     =  111.8773895; //amu
+  eB_lb[3]  =  270.2;
+  mT[3]     =  123.8773895;
+
+  system[4] = "(p + p)";
+  AB[4]     = 1.;
+  mB[4]     = 1.00727646688;
+  eB_lb[4]  = 268.9;
+  mT[4]     = 1.00727646688;
+
+  UInt_t sysid = 4;
+  switch(snbm){
+  case 132:
+    sysid = 0;
+    break;
+  case 108:
+    sysid = 1;
+    break;
+  case 124:
+    sysid = 2;
+    break;
+  case 112:
+    sysid = 3;
+    break;
+  }
+
+
+  sysid = 4;
+
+  std::cout << " Lorentz Boost with " << system[sysid] << std::endl;
+
+  Double_t EkB_lb    = eB_lb[sysid]  * mB[sysid];
+  mB[sysid] *= amu;
+  mT[sysid] *= amu;
+
+  // Beam   
+  Double_t EB_lb  = EkB_lb + mB[sysid];
+  Double_t PB_lb  = sqrt(EB_lb*EB_lb - mB[sysid]*mB[sysid]);
+
+  auto bmVec = new TLorentzVector( TVector3(0., 0., PB_lb), EB_lb );
+  auto tgVec = new TLorentzVector( TVector3(0., 0., 0.), mT[sysid] );
+  auto totalVec = *bmVec + *tgVec;
+
+  boostVec = totalVec.BoostVector();
+
 }

@@ -13,6 +13,7 @@
 
 #include "TVector3.h"
 #include "TRotation.h"
+#include "TLorentzVector.h"
 
 #include "STRecoTrack.hh"
 #include "STPID.hh"
@@ -38,7 +39,6 @@ private:
   UInt_t   fPID;
   Double_t fRapidity;
   Double_t fRapiditycm;
-  Double_t fpsudoRapidity;
   Double_t fEtotal;
   Int_t    fChar;
   Double_t fMass;
@@ -61,6 +61,8 @@ private:
 
   Double_t frtheta;          // Polar angle after corrections of the beam angle and flattening
   Double_t frphi;            // Azimuthal angle after corrections of the beam angle and flattening
+
+  TLorentzVector fLzvec;     // LorentzVector flzvec(fRotatedP3, Etotal);
 
   TVector3 ffltnP3;          // Momentum vector after corrections of the beam angle and flattening
   TVector2 ffltnPt;          // Transverse momentum vector after corrections of the beam angle and flattening
@@ -110,15 +112,21 @@ private:
   Double_t  rChi2;
 
   // BB mass parameters
-  Double_t  fitterpara[6];   //!  BetheBloch fitter parameters
-  Double_t  BBmassRegion[4][3] = {{ 127.2,  21.3, 3.}, //pi
-				  { 925.6,  80.1, 3.}, //p  685.3 to 1,165.9
-				  {1901.1, 174.4, 2.}, //d  1,552.3 to 2,249.9
-				  {2880.2, 297.5, 2.} };   //!
+  Double_t  fitterpara[6];   //!  BetheBloch fitter parameters //( mean, sigma , -factor, +factor)
+
+
+  Double_t  BBmassRegion[4][4] = {{ 127.2,  21.3, 3.,  3.},      //pi
+				  { 925.6,  80.1, 3.,  3.3},     //p  685.3 to 1,165.9
+				  {1901.1, 174.4, 2.8, 3.3},     //d  1,552.3 to 
+				  {2880.2, 297.5, 1.4, 2.} };    //t 2463
+  UInt_t  nBBsize = 4;     //!
+  
+  Double_t  maxdEdx     = 1000.;  //!
+  Double_t  maxMomentum = 4000.;  //!
+  Double_t  protonMaxMomentum = 1800.;  //!
 
   TCutG     *gcutHe3BBmass; //!
   TCutG     *gcutHe4BBmass; //!
-  UInt_t    nBBsize = 5;     //!
 
 private:
   virtual void Clear(Option_t *option = "");
@@ -155,9 +163,6 @@ public:
 
   void     SetRapiditycm(Double_t val)   {fRapiditycm = val;}
   Double_t GetRapiditycm()               {return fRapiditycm;}
-
-  void     SetpsudoRapidity();
-  Double_t GetpsudoRapidity()            {return fpsudoRapidity;}
 
   Double_t GetEtotal()                   {return fEtotal;}
 

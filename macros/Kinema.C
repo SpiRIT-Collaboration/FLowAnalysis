@@ -17,7 +17,7 @@ void RapidityShift()
   Double_t Etot = sqrt( p.Mag2() + mass_p*mass_p);
   TLorentzVector pp(p, Etot);
   
-  TVector3 boost = GetLorentzBoost(4);
+  TVector3 boost = GetLorentzBoost(3);
 
 
   UInt_t iy = 0;

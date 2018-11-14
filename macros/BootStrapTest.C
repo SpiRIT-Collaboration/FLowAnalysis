@@ -33,6 +33,7 @@ void  SingleBootStrap(UInt_t np, Double_t val);
 void  RndBootStrap(UInt_t np, UInt_t ith);
 void  RPResolution(UInt_t np, UInt_t ntry);
 void  DoubleBootStrap();
+void DoublePhiBootStrap();
 
 void BootStrapTest()
 {
@@ -47,7 +48,7 @@ void BootStrapTest()
   //  fv1v2->SetLineColor(2);
   //  fv1v2->Draw("LP");
 
-  DoubleBootStrap();
+  DoublePhiBootStrap();
 }
 
 
@@ -522,29 +523,9 @@ void SaveCanvas(TString str = "")
 
 
 
-void DoubleBootStrap()
+void DoublePhiBootStrap()
 {
   SetStyle();
-
-  std::vector< Double_t > data0{
-    3.11, 8.88, 9.26, 18.36, 18.43, 19.27, 24.58, 25.13, 26.24, 36.37, 38.64, 39.16, 50.39, 52.75, 54.80,
-    10.81, 12.69, 13.78, 19.50, 19.54, 20.16, 26.26, 27.65, 28.06, 41.02, 42.97, 44.08, 59.07, 61.22, 70.32,
-    15.23, 20.59, 28.08, 44.67, 82.70,
-    15.62, 17.00, 22.22, 23.04, 28.38, 32.03, 45.40, 46.69, 85.76, 86.37,
-    17.39, 24.47, 34.98, 48.65, 93.34 };
-
-  std::vector< Double_t > data1{3.12, 0.00, 1.57, 19.67, 0.22, 2.20};
-
-  std::vector< Double_t > data2{
-    142, 232, 175, 50, 197.5, 146.5, 149.4, 155, 705, 1850,
-    132.5, 200, 362, 215, 260, 307, 116.7, 449.9, 266, 244.9, 66.407, 166, 290, 164.95, 375,
-    244.95, 335, 210.95, 1370, 265, 256, 296, 148.5, 335, 987.5,
-    324.5, 222, 225, 215.5, 179.8, 217, 684.5, 257, 570, 270, 252.95, 507, 330, 149.95, 190 };
-
-  std::vector< Double_t > data3{ 43, 45, 74, 79, 84, 88, 100, 100, 109, 113, 139, 144, 191, 198, 522, 598, 
-      53, 56, 80, 80, 89, 91, 101, 102, 114, 118, 145, 147, 211, 214, 56, 57, 81, 81, 91, 92, 
-      102, 102, 121, 123, 156, 162, 243, 249, 58, 81, 92, 103, 126, 174, 329, 66, 82, 97, 104, 128, 178, 380, 
-      67, 73, 83, 83, 99, 99, 107, 108, 137, 138, 179, 184, 403, 511};
 
   std::vector< Double_t > data6{3.13797, -1.9299, -1.18035, 2.7284, -1.48609, -0.0786593, 2.8077, 1.33971, 
       0.209839, 1.31363, 1.43447, 0.84654, -0.990638, 1.71389, 0.102992, -1.89179, -0.128132, -0.568639, 
@@ -583,7 +564,9 @@ void DoubleBootStrap()
 
 
 
-  std::vector< Double_t > data = data10; 
+  std::vector< Double_t > data = data9; 
+  UInt_t ntry = 10000;
+
   genmean  = 0.;
 
   // ----------------------------------------------------------------------//
@@ -633,7 +616,6 @@ void DoubleBootStrap()
 
   //---------- BootStrap
   
-  UInt_t ntry = 10000;
   bstrap->BootStrapping(ntry);
 
   std::vector< Double_t > replace = bstrap->GetReplaceVector();
@@ -647,7 +629,7 @@ void DoubleBootStrap()
     sum += replace.at(i);
 
     hbootstd->SetPoint(i, i, bstrap->GetResidualMean(i) + bstrap->GetOrdinarySum().Phi());
-    hbootstd->SetPointError(i, 0, bstrap->GetResidualStdDev(i));
+    hbootstd->SetPointError(i, 0, 0.); //bstrap->GetResidualStdDev(i));
   }
    
   average = sum/(Double_t)replace.size();
@@ -660,7 +642,7 @@ void DoubleBootStrap()
 
   cout << " ----------- " << endl;
   cout << " Ordinary --> " 
-       << " Mean        " << bstrap->GetOrdinaryMean()
+       << " Mean        " <<  TVector2::Phi_0_2pi(bstrap->GetOrdinaryMean())
        << " s           " << bstrap->GetOrdinaryStdDev()
        << " s/sqrt(n)   " << bstrap->GetOrdinaryStdDev()/sqrt( (Double_t)ntry )
        << endl;
@@ -671,7 +653,7 @@ void DoubleBootStrap()
   Double_t bsstddev  = bstrap->GetStdDev();
   
   cout << " Bootstrap --> " 
-       << " Mean " << bstrap->GetMean()
+       << " Mean " << TVector2::Phi_0_2pi(bstrap->GetMean())
        << " s  "   << bstrap->GetStdDev()
        << " CL low "<< bstrap->GetCLLow() 
        << " CL up  "<< bstrap->GetCLUp() 
@@ -722,6 +704,8 @@ void DoubleBootStrap()
 
   cc[0]->cd(id); id++;
   //  horiginal->Draw();
+
+
   horig->SetMarkerStyle(20);
   horig->SetMarkerSize(0.5);
   horig->SetMarkerColor(4);
@@ -730,7 +714,16 @@ void DoubleBootStrap()
   oline->SetLineColor(2);
   oline->Draw();
 
-
+  //  cc[1] = new TCanvas("cc1","cc1");
+  cc[0]->cd(id); id++;
+  hboot->Draw();
+  auto aline = new TLine(bstrap->GetMean(), hboot->GetMinimum(), bstrap->GetMean(), hboot->GetMaximum());
+  aline->SetLineColor(8);
+  aline->Draw();
+  auto ophi = TVector2::Phi_0_2pi(bstrap->GetOrdinaryMean());
+  auto aline1 = new TLine(ophi, hboot->GetMinimum(), ophi, hboot->GetMaximum());
+  aline1->SetLineColor(2);
+  aline1->Draw();
 
   cc[0]->cd(id); id++;
   hbootstd->SetLineColor(7);
@@ -739,9 +732,6 @@ void DoubleBootStrap()
   hbootstd->SetMarkerColor(2);
   hbootstd->Draw("ALP");
 
-  //  cc[1] = new TCanvas("cc1","cc1");
-  cc[0]->cd(id); id++;
-  hboot->Draw();
   
 
   // cc[0]->cd(id); id++; id++;
@@ -763,6 +753,217 @@ void DoubleBootStrap()
   // hbsqq->SetMarkerColor(2);
   //  hbsqq->Draw("AP");
 
+}
+
+
+void DoubleBootStrap()
+{
+  SetStyle();
+
+  std::vector< Double_t > data0{
+    3.11, 8.88, 9.26, 18.36, 18.43, 19.27, 24.58, 25.13, 26.24, 36.37, 38.64, 39.16, 50.39, 52.75, 54.80,
+    10.81, 12.69, 13.78, 19.50, 19.54, 20.16, 26.26, 27.65, 28.06, 41.02, 42.97, 44.08, 59.07, 61.22, 70.32,
+    15.23, 20.59, 28.08, 44.67, 82.70,
+    15.62, 17.00, 22.22, 23.04, 28.38, 32.03, 45.40, 46.69, 85.76, 86.37,
+    17.39, 24.47, 34.98, 48.65, 93.34 };
+
+  std::vector< Double_t > data1{3.12, 0.00, 1.57, 19.67, 0.22, 2.20};
+
+  std::vector< Double_t > data2{
+    142, 232, 175, 50, 197.5, 146.5, 149.4, 155, 705, 1850,
+    132.5, 200, 362, 215, 260, 307, 116.7, 449.9, 266, 244.9, 66.407, 166, 290, 164.95, 375,
+    244.95, 335, 210.95, 1370, 265, 256, 296, 148.5, 335, 987.5,
+    324.5, 222, 225, 215.5, 179.8, 217, 684.5, 257, 570, 270, 252.95, 507, 330, 149.95, 190 };
+
+  std::vector< Double_t > data3{ 43, 45, 74, 79, 84, 88, 100, 100, 109, 113, 139, 144, 191, 198, 522, 598, 
+      53, 56, 80, 80, 89, 91, 101, 102, 114, 118, 145, 147, 211, 214, 56, 57, 81, 81, 91, 92, 
+      102, 102, 121, 123, 156, 162, 243, 249, 58, 81, 92, 103, 126, 174, 329, 66, 82, 97, 104, 128, 178, 380, 
+      67, 73, 83, 83, 99, 99, 107, 108, 137, 138, 179, 184, 403, 511};
+
+  std::vector< Double_t > data5{61, 88, 89, 89, 90, 92, 93, 94, 98, 98, 101, 102, 105, 108, 109, 113, 114, 115, 120, 138.};
+
+
+  std::vector< Double_t > data = data1; 
+
+  UInt_t ntry = 1000;
+
+  // ----------------------------------------------------------------------//
+  UInt_t dataSize = (UInt_t)data.size();
+
+  //  std::sort( data.begin(), data.end() );
+  
+
+  auto hqq       = new TGraph();
+  auto hbsqq     = new TGraph();
+  auto hbootstd  = new TGraphErrors(); 
+  hbootstd->SetTitle(";Number of bootstrapping; Mean");
+
+  TH1D *hmean;
+  TH1D *horiginal;
+  if( data1[0] == 3.12 ) { 
+    hmean     = new TH1D("hmean", " mean " , 100., 0., 15.);  
+    horiginal = new TH1D("horiginal","data", 100, 0., 10);
+  }
+  else  {
+    hmean     = new TH1D("hmean", " mean " , 100., 200., 500.);
+    horiginal = new TH1D("horiginal","data",100, 0., 2000);
+  }
+
+  Double_t sum = 0.;
+
+  for( UInt_t i = 0; i < dataSize; i++ ){
+
+    sum += data[i];
+    bstrap->Add( data[i] );
+    horiginal->Fill( data[i] );
+
+    std::cout << setw(10) << data[i] ;
+  }
+
+  Double_t average = sum/(Double_t)dataSize;
+
+  std::cout << std::setw(10) << average << std::endl;
+
+  Double_t dev = 0;
+  for( UInt_t i = 0; i < dataSize; i++ ) 
+    dev += pow(data[i] - average, 2);
+
+  Double_t dev2 = dev/(Double_t)(dataSize - 1);
+
+  Double_t stddev = TMath::StdDev( data.begin(), data.end() );
+
+  for( UInt_t i = 0; i < (UInt_t)dataSize; i++) {
+    Double_t percent = (Double_t)i / (Double_t)dataSize;
+    Double_t z_score = ROOT::Math::gaussian_quantile(percent, stddev)/stddev;
+    
+    if( !std::isnan(z_score) && !std::isinf(z_score) )
+      hqq->SetPoint(i, z_score, data.at(i) );
+  }
+
+
+  //---------- BootStrap
+  
+  bstrap->BootStrapping(ntry);
+
+  std::vector< Double_t > replace = bstrap->GetReplaceVector();
+
+  std::sort(replace.begin(), replace.end());
+
+  sum = 0.;
+  for( UInt_t i = 0; i < (UInt_t)replace.size(); i++) {
+    sum += replace.at(i);
+
+    hbootstd->SetPoint(i, i, bstrap->GetResidualMean(i));
+    hbootstd->SetPointError(i, 0, bstrap->GetResidualStdDev(i));
+
+    hmean->Fill( bstrap->GetReplace(i) );
+    //hmean->Fill( bstrap->GetResidualMean(i) );
+    
+    std::cout << i << " th " 
+     	      << " mean " << bstrap->GetReplace(i) 
+     	      << std::endl;
+
+  }
+   
+  average = sum/(Double_t)replace.size();
+  Double_t bsdev = 0.;
+  for( UInt_t i = 0; i < (UInt_t)replace.size(); i++)  
+    bsdev += pow( replace.at(i) - average , 2);
+
+  Double_t bsdev2 = bsdev/(Double_t)(replace.size() - 1);
+
+  cout << " ---------------------- " << endl;
+
+
+  cout << " Ordinal mean " << bstrap->GetOrdinaryMean() << " +- " << bstrap->GetOrdinaryStdDev() << endl;
+  cout << " Mean get from hist " << hmean->GetMean() << " +- " << hmean->GetStdDev() << endl;
+
+  Double_t bsaverage = bstrap->GetMean();
+  Double_t bsstddev  = bstrap->GetStdDev();
+  
+  cout << " Bootstrap --> " 
+       << " Mean " << bstrap->GetMean()
+       << " s  "   << bstrap->GetStdDev()
+       << " CL low "<< bstrap->GetCLLow() 
+       << " CL up  "<< bstrap->GetCLUp() 
+       << " +-  +  "<< bstrap->GetError()
+       << " replaceing size " << replace.size()
+       << endl;
+
+  
+  cout << " Deviation ++++++++++++++++++++ " << endl;
+
+  
+  cout << " BootStrap : 95%CL " << bstrap->GetMean() 
+       << " +-  " << bstrap->GetError()
+       << " ---> "
+       << bstrap->GetMean() - bstrap->GetError() << " ~ " 
+       << bstrap->GetMean() + bstrap->GetError()
+       << endl;
+
+
+  // QQ plot
+
+  for( UInt_t i = 0; i < (UInt_t)replace.size(); i++) {
+    
+    Double_t percent = (Double_t)i / (Double_t)replace.size();
+    Double_t z_score = ROOT::Math::gaussian_quantile(percent, bsstddev)/bsstddev;
+
+    if( !std::isnan(z_score) && !std::isinf(z_score) )
+      hbsqq->SetPoint(i, z_score,  replace.at(i) );
+
+    //    cout << z_score << " vs " << replace.at(i) << endl;
+  }
+
+
+  gStyle->SetOptStat(0);
+
+  UInt_t id = 1;
+
+  id = 1;
+  auto ccc = new TCanvas("cc1","cc1");
+  ccc->Divide(1,2);
+
+  ccc->cd(id); id++;
+  hqq->SetMarkerStyle(20);
+  hqq->SetMarkerSize(0.5);
+  hqq->SetMarkerColor(2);
+  hqq->Draw("AP");
+
+  ccc->cd(id); id++;
+  hbsqq->SetMarkerStyle(20);
+  hbsqq->SetMarkerSize(0.2);
+  hbsqq->SetMarkerColor(2);
+  hbsqq->Draw("AP");
+
+
+  ccc = new TCanvas("cc0","cc0");
+  horiginal->Draw();
+
+
+  ccc = new TCanvas("cc2","cc2");
+  hbootstd->SetMarkerStyle(20);
+  hbootstd->SetMarkerSize(1);
+  hbootstd->SetMarkerColor(4);
+  hbootstd->SetLineColor(8);
+  hbootstd->Draw("AP");
+  auto omean = bstrap->GetOrdinaryMean() ;
+  auto mline0 = new TLine(hbootstd->GetXaxis()->GetXmin(), omean, hbootstd->GetXaxis()->GetXmax(), omean);
+  mline0->SetLineColor(2);
+  mline0->Draw();
+
+  ccc = new TCanvas("cc3","cc3");
+  hmean->Draw();
+  auto mline1 = new TLine(omean, hmean->GetMinimum(), omean, hmean->GetMaximum());
+  mline1->SetLineColor(2);
+  mline1->Draw();
+
+  auto mline2 = new TLine(bstrap->GetMean(), hmean->GetMinimum(), bstrap->GetMean(), hmean->GetMaximum());
+  mline2->SetLineColor(6);
+  mline2->Draw();
+  auto mline3 = new TLine(hmean->GetMean(), hmean->GetMinimum(), hmean->GetMean(), hmean->GetMaximum());
+  mline3->SetLineColor(8);
+  mline3->Draw();
 }
 
 
