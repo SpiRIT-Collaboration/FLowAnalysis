@@ -5,12 +5,14 @@ TChain *fChain = NULL;
 TH2D *h2[10];
 TH2D *hangle;
 TCanvas *cc[20];
+TCanvas *ccv;
 UInt_t ic  = 0;
-TString pname[] = {"prt","neut"};
-TString pfname[] = {"proton","neutron"};
-UInt_t PID[] = {2212, 2112};
+TString pfname[] = {"pi-","pi+","proton","deuteron" ,"triton"};
+TString pname[] = {"pi-","pi+","prot","deut" ,"trit","neut"};
+UInt_t PID[] = {211,    211,    2212, 1000010020, 1000010030,  2112};
 
 TString printHeader;
+TString beamHeader;
 
 const UInt_t nybin = 8;
 std::vector< std::vector< Double_t > >vrapd(nybin);
@@ -29,8 +31,43 @@ void SaveCanvas(TString fopt = "", Int_t isel=-1)
   }
 }
 
-void Analysis(UInt_t ipid)
+void PlotCosv1v2(UInt_t ipid = 2)
 {
+  gStyle->SetOptStat(0);
+
+  printHeader += pname[ipid];
+
+  TFile *froot = new TFile("data/"+printHeader+".root","recreate");
+
+  auto hyptacp = new TH2D("hyptacp", beamHeader+":"+pname[ipid]+";Rapidity; Pt[MeV/c]" ,100, -0.65, 0.65, 100, 0., 1000);
+  auto hphi    = new TH1D("hphi"   , "phi", 100, -3.2, 3.2);
+
+
+  Double_t yrange1[] = {-0.35, -0.25, -0.15, -0.05, 0.05, 0.15, 0.25, 0.35,  0.5};
+  const UInt_t ybin1 = sizeof(yrange1)/sizeof(Double_t);
+
+  Double_t yrange2[] = {-0.3, -0.1, -0.05,  0.05, 0.2, 0.3, 0.5};
+  const UInt_t ybin2 = sizeof(yrange2)/sizeof(Double_t);
+
+  std::vector< std::vector< Double_t > > cosv1x(ybin1);
+  std::vector< std::vector< Double_t > > cosv2x(ybin2);
+  Double_t  cosv1[ybin1];
+  Double_t  cosv2[ybin2];
+  Double_t  sinv1[ybin1];
+  Double_t  sinv2[ybin2];
+
+  for( UInt_t i = 0; i < ybin1; i++) {
+    cosv1[i]   = 0.;
+    sinv1[i]   = 0.;
+    cosv1x[i].clear();
+  }
+
+  for( UInt_t i = 0; i < ybin2; i++) {
+    cosv2[i]   = 0.;
+    sinv2[i]   = 0.;
+    cosv2x[i].clear();
+  }
+
 
 
   TClonesArray *aAMDArray = NULL;
@@ -56,143 +93,109 @@ void Analysis(UInt_t ipid)
 	// if( aAMDParticle->fMomentum.Theta() > 0.75 &&
 	//     abs(aAMDParticle->fMomentum.Phi()) < 2 && abs(aAMDParticle->fMomentum.Phi()) > 1) continue;
 
-	Double_t rapidity = 0.5 * log( ( aAMDParticle->fMomentum.E() + aAMDParticle->fMomentum.Pz() ) /
-				       ( aAMDParticle->fMomentum.E() - aAMDParticle->fMomentum.Pz() ) ); 
+	Double_t rapid = aAMDParticle->fMomentum.Rapidity();
+	Double_t dphi  = aAMDParticle->fMomentum.Phi();
 
-	h2[0]->Fill( rapidity , aAMDParticle->fMomentum.Pt());
-	h2[1]->Fill( aAMDParticle->fMomentum.X(), aAMDParticle->fMomentum.Y());
-	h2[2]->Fill( rapidity , aAMDParticle->fMomentum.X());
 
-	h2[3]->Fill( aAMDParticle->fMomentum.Phi(), rapidity );
-	h2[4]->Fill( TVector2::Phi_mpi_pi(2.*aAMDParticle->fMomentum.Phi()), rapidity );
+	hyptacp->Fill(rapid, aAMDParticle->fMomentum.Pt());
 
-	hangle->Fill( aAMDParticle->fMomentum.Theta(), aAMDParticle->fMomentum.Phi() );
+        UInt_t irapid = ybin1 - 1;
+        for( UInt_t i = 0; i < ybin1; i++){
+          if(rapid < yrange1[i]){
+            irapid = i;
+            break;
+          }
+        }
 
-	for(UInt_t i = 0; i < nybin; i++) {
-	  Double_t upbin = h2[3]->GetYaxis()->GetBinUpEdge(i);
-	  if( rapidity < upbin ) {
-	    vrapd[i].push_back(rapidity);
-	    hphi1[i]->Fill( aAMDParticle->fMomentum.Phi() );
-	    hphi2[i]->Fill( TVector2::Phi_mpi_pi(2.*aAMDParticle->fMomentum.Phi()) );
-	    break;
-	  }
-	}
+        cosv1x[irapid].push_back( rapid );
+        cosv1[irapid] += cos(dphi);
+        sinv1[irapid] += sin(dphi);
+
+	irapid = ybin2 - 1;
+	for( UInt_t i = 0; i < ybin2; i++){
+          if(rapid < yrange2[i]){
+            irapid = i;
+            break;
+          }
+        }
+
+	if( irapid == 5 )
+	  hphi->Fill(2.*dphi);
+
+        cosv2x[irapid].push_back( rapid );
+        cosv2[irapid] += cos(2.*dphi);
+        sinv2[irapid] += sin(2.*dphi);
       }
     }
   }
 
-  // for(UInt_t i = 0; i < 4; i++){
-  //   cc[i] = new TCanvas(Form("cc%d",i),Form("cc%d",i)); 
-  //   h2[i]->Draw("colz");
-  // }
 
-}
-
-void getv1v2(UInt_t ipid)
-{
-
-  TH1D *hydphi1[nybin];
-  TH1D *hydphi2[nybin];
-  Double_t nbin1 = (Double_t)h2[3]->GetXaxis()->GetNbins();
-  Double_t nbin2 = (Double_t)h2[4]->GetXaxis()->GetNbins();
-
-  auto *fcos1 = new TF1("fcos1","[0]+2.*[1]*cos(x)"   ,-1.*TMath::Pi(),TMath::Pi());
-
-  auto gv_v1 = new TGraphErrors();
+  TGraphErrors *gv_v1 = new TGraphErrors();
   gv_v1->SetName("gv_v1");
-  gv_v1->SetTitle(pfname[ipid]+"; Rapidity ; v1 ");
-
-  auto gv_v2 = new TGraphErrors();
+  gv_v1->SetTitle(pname[ipid]+";Rapidity; v1");
+  TGraphErrors *gv_v2 = new TGraphErrors();
   gv_v2->SetName("gv_v2");
-  gv_v2->SetTitle(pfname[ipid]+"; Rapidity ; v2 ");
+  gv_v2->SetTitle(pname[ipid]+";Rapidity; v2");
 
-  
-  cc[ic]   = new TCanvas(Form("cc%d",ic),Form("cc%d",ic)); 
-  cc[ic+1] = new TCanvas(Form("cc%d",ic+1),Form("cc%d",ic+1)); 
+  UInt_t kl = 0;
+  for(UInt_t kn = 0; kn < ybin1; kn++){
 
-  cc[ic]  ->Divide(2, nybin/2);
-  cc[ic+1]->Divide(2, nybin/2);
+    if( cosv1x[kn].size() == 0 ) continue;
 
-  UInt_t id  = 1;
-  UInt_t idd = 1;
+    Double_t rapm  = TMath::Mean(cosv1x[kn].begin(), cosv1x[kn].end());
+    Double_t rape  = TMath::StdDev(cosv1x[kn].begin(), cosv1x[kn].end());
 
+    Double_t yv1  = cosv1[kn] / (Double_t)cosv1x[kn].size();
+    Double_t yv1e = sinv1[kn] / (Double_t)cosv1x[kn].size();
 
-  UInt_t il = 0;
-  for(UInt_t jn = 0; jn < nybin; jn++){
-    
-    if( vrapd[jn].size() == 0 ) continue;
+    Double_t yv1c  = yv1;
+    Double_t yv1ce = abs(yv1e);
 
-    Double_t rpd  = TMath::Mean(vrapd[jn].begin(), vrapd[jn].end());
-    Double_t rpde = TMath::StdDev(vrapd[jn].begin(), vrapd[jn].end());
-    
-    
-    cc[ic]->cd(id); id++;
-    //    hydphi1[jn] = (TH1D*)h2[3]->ProjectionX((TString)Form("hydphi1_%d",jn+1),jn+1, jn+1,"eo");
-    hydphi1[jn] = hphi1[jn];
-    
-    Double_t scf = hydphi1[jn]->GetEntries();
-    hydphi1[jn]->Scale(nbin1/scf);
-    hydphi1[jn]->GetXaxis()->SetRange(2, 99);
-    
-    hydphi1[jn]->Fit("fcos1","","",-3.,3.);
-    Double_t p0   = fcos1->GetParameter(0);
-    Double_t p1   = fcos1->GetParameter(1);
-    Double_t p0e  = fcos1->GetParError(0);
-    Double_t p1e  = fcos1->GetParError(1);
-    Double_t v1   = p1;
-    Double_t v1e  = p1e; //sqrt( pow(v1,2)*( pow(p1e/p1,2) + pow(p0e/p0,2) )) ;
-      
-    gv_v1->SetPoint(il, rpd, v1);
-    gv_v1->SetPointError(il, rpde, v1e);
-      
-    std::cout << setw(5) << jn << " w  c : " << setw(12)
-	      << rpd  << " +- " << rpde 
-	      <<  " v1 " << setw(12) << v1 << " +- " << setw(10) << v1e << std::endl;
-    std::cout << " ----------------------------------" << std::endl;
-
-
-
-    cc[ic+1]->cd(idd); idd++;
-    //    hydphi2[jn] = (TH1D*)h2[4]->ProjectionX((TString)Form("hydphi2_%d",jn+1),jn+1, jn+1,"eo");
-    hydphi2[jn] = hphi2[jn];
-
-    scf = hydphi2[jn]->GetEntries();
-    hydphi2[jn]->Scale(nbin2/scf);
-    hydphi2[jn]->GetXaxis()->SetRange(2, 99);
-
-    
-    hydphi2[jn]->Fit("fcos1","","",-3.,3.);
-    p0   = fcos1->GetParameter(0);
-    p1   = fcos1->GetParameter(1);
-    p0e  = fcos1->GetParError(0);
-    p1e  = fcos1->GetParError(1);
-    Double_t v2   = 0.5*p1/p0;
-    Double_t v2e  = 0.5*sqrt( pow(v2,2)*( pow(p1e/p1,2) + pow(p0e/p0,2) )) ;
-      
-    gv_v2->SetPoint(il, rpd, v2);
-    gv_v2->SetPointError(il, rpde, v2e);
-
-    std::cout << setw(5) << jn << " w  c : " << setw(12)
-	      << rpd  << " +- " << rpde 
-	      <<  " v2 " << setw(12) << v2 << " +- " << setw(10) << v2e << std::endl;
-    std::cout << " ==================================" << std::endl;
-
-    il++;
-      
+    if( !std::isnan( yv1c ) && !std::isinf( yv1c ) ) {
+      gv_v1->SetPoint( kl,      rapm, yv1c);
+      gv_v1->SetPointError( kl, rape, yv1ce);
+      kl++;
+    }
   }
 
-  ic += 2;
-  // cc[ic]   = new TCanvas(Form("cc%d",ic),Form("cc%d",ic)); ic++;
-  // h2[3]->Draw("colz");
+  kl = 0;
+  for(UInt_t kn = 0; kn < ybin2; kn++){
 
-  // cc[ic]   = new TCanvas(Form("cc%d",ic),Form("cc%d",ic)); ic++;
-  // h2[4]->Draw("colz");
+    if( cosv2x[kn].size() == 0 ) continue;
+
+    Double_t rapm  = TMath::Mean(cosv2x[kn].begin(), cosv2x[kn].end());
+    Double_t rape  = TMath::StdDev(cosv2x[kn].begin(), cosv2x[kn].end());
+
+    Double_t yv2  = cosv2[kn] / (Double_t)cosv2x[kn].size();
+    Double_t yv2e = sinv2[kn] / (Double_t)(cosv2x[kn].size());
+
+    Double_t yv2c  = yv2;
+    Double_t yv2ce = abs(yv2e);
+
+    if( !std::isnan( yv2c ) && !std::isinf( yv2c ) ) {
+      gv_v2->SetPoint( kl,    rapm, yv2c);
+      gv_v2->SetPointError( kl, rape, yv2ce);
+      kl++;
+
+      cout << " cos " << cosv2[kn] << " & " << sinv2[kn] << " size " << kn << " " << cosv2x[kn].size() 
+	   << " rapidty " << rapm << " + " << rape 
+	   << " <cos> " << yv2c << " +- " << yv2ce
+	   << endl;
+      
+
+    }
+  }
 
 
-  cc[ic]   = new TCanvas(Form("cc%d",ic),Form("cc%d",ic)); ic++;
+
+  ic++; 
+  ccv = new TCanvas(Form("ccv%d",ic),Form("ccv%d",ic));
+  hyptacp->Draw("colz");
+
+  ic++;
+  ccv = new TCanvas(Form("ccv%d",ic),Form("ccv%d",ic));
   gv_v1->Draw("ALP");
 
-  gv_v1->Write();
   auto LineV = new TLine(0.,gv_v1->GetYaxis()->GetXmin(), 0., gv_v1->GetYaxis()->GetXmax());
   auto LineH = new TLine(gv_v1->GetXaxis()->GetXmin(),    0., gv_v1->GetXaxis()->GetXmax(), 0.);
   LineV->SetLineStyle(3);
@@ -200,58 +203,24 @@ void getv1v2(UInt_t ipid)
   LineV->Draw();
   LineH->Draw();
 
-
-
-  cc[ic]   = new TCanvas(Form("cc%d",ic),Form("cc%d",ic)); ic++;
+  ic++; 
+  ccv = new TCanvas(Form("ccv%d",ic),Form("ccv%d",ic));
   gv_v2->Draw("ALP");
 
+  gv_v1->Write();
   gv_v2->Write();
-  auto LineV2 = new TLine(0.,gv_v2->GetYaxis()->GetXmin(), 0., gv_v2->GetYaxis()->GetXmax());
-  auto LineH2 = new TLine(gv_v2->GetXaxis()->GetXmin(),    0., gv_v2->GetXaxis()->GetXmax(), 0.);
-  LineV2->SetLineStyle(3);
-  LineH2->SetLineStyle(3);
-  LineV2->Draw();
-  LineH2->Draw();
-
-  cc[ic]   = new TCanvas(Form("cc%d",ic),Form("cc%d",ic)); ic++;
-  hangle->Draw("colz");
-}
-
-
-
-void Booking(UInt_t ipid)
-{
-  TFile *froot = new TFile("data/"+printHeader+"_ts"+pname[ipid]+".root","recreate");
-
-  h2[0] = new TH2D("h2_0",pfname[ipid]+"; Rapidity; Pt", 100, -0.2,   1, 100,    0, 500);
-  h2[1] = new TH2D("h2_1",pfname[ipid]+"; px; py"      , 100, -500, 500, 100, -500, 500);
-  h2[2] = new TH2D("h2_2",pfname[ipid]+"; Rapidity; px", 100, -0.2,   1, 100, -500, 500);
-  h2[3] = new TH2D("h2_3",pfname[ipid]+"; #Delta(#phi); Rapidity",100, -3.2, 3.2, nybin, -0.4, 0.45);
-  h2[4] = new TH2D("h2_4",pfname[ipid]+"; #Delta(2x#phi); Rapidity",100, -3.2, 3.2, nybin, -0.4, 0.45);
-
-  hangle    = new TH2D("hangle","; #theta; #phi", 100, 0., 1.6, 100, -3.2, 3.2);
-
-
-  for(UInt_t i = 0 ; i < nybin; i++ ){
-    hphi1[i] = new TH1D(Form("hphi1_%d",i),Form("hphi1_%d",i), 100, -3.2, 3.2);
-    hphi2[i] = new TH1D(Form("hphi2_%d",i),Form("hphi2_%d",i), 100,  0. , 3.2);
-  }
+  froot->Write();
 
 }
 
 
 
-void amdFlow(UInt_t isel = 0, UInt_t ipid = 0)
+void AMDFlw(UInt_t isel = 0, UInt_t ipid = 2)
 {
-  TString fdir;
   TString fname[4];
-
-  TString ffdir = "/data/Q18393/kaneko/amd/rootfiles/132Sn124Sn270AMeV/cluster/SLy4-L108/";
-  ffdir = "data/";
 
   switch(isel) {
   case 0:
-    fdir = "/data/Q18393/kaneko/amd/rootfiles/132Sn124Sn270AMeV/cluster/SLy4-L108/";
     fname[0] = "132Sn124Sn270AMeV_cluster_SLy4-L108_bimp01.root";
     fname[1] = "132Sn124Sn270AMeV_cluster_SLy4-L108_bimp13.root";
     fname[2] = "132Sn124Sn270AMeV_cluster_SLy4-L108_bimp35.root";
@@ -259,7 +228,6 @@ void amdFlow(UInt_t isel = 0, UInt_t ipid = 0)
     break;
 
   case 1:
-    fdir = "/data/Q18393/kaneko/amd/rootfiles/132Sn124Sn270AMeV/cluster/SLy4/";
     fname[0] = "132Sn124Sn270AMeV_cluster_SLy4_bimp01.root";
     fname[1] = "132Sn124Sn270AMeV_cluster_SLy4_bimp13.root";
     fname[2] = "132Sn124Sn270AMeV_cluster_SLy4_bimp35.root";
@@ -267,7 +235,6 @@ void amdFlow(UInt_t isel = 0, UInt_t ipid = 0)
     break;
 
   case 2:
-    fdir = "/data/Q18393/kaneko/amd/rootfiles/132Sn124Sn270AMeV/nocluster/SLy4/";
     fname[0] = "132Sn124Sn270AMeV_nocluster_SLy4_bimp01.root";
     fname[1] = "132Sn124Sn270AMeV_nocluster_SLy4_bimp13.root";
     fname[2] = "132Sn124Sn270AMeV_nocluster_SLy4_bimp35.root";
@@ -275,59 +242,62 @@ void amdFlow(UInt_t isel = 0, UInt_t ipid = 0)
     break;
 
   case 3:
-    fdir = "/data/Q18393/kaneko/amd/rootfiles/132Sn124Sn270AMeV/nocluster/SLy4-L108/";
-    fname[0] =  "132Sn124Sn270AMeV_nocluster_SLy4-L108_bimp01.root";
-    fname[1] =  "132Sn124Sn270AMeV_nocluster_SLy4-L108_bimp13.root";
-    fname[2] =  "132Sn124Sn270AMeV_nocluster_SLy4-L108_bimp35.root";
-    fname[3] =  "132Sn124Sn270AMeV_nocluster_SLy4-L108_bimp57.root";
+    fname[0] = "132Sn124Sn270AMeV_nocluster_SLy4-L108_bimp01.root";
+    fname[1] = "132Sn124Sn270AMeV_nocluster_SLy4-L108_bimp13.root";
+    fname[2] = "132Sn124Sn270AMeV_nocluster_SLy4-L108_bimp35.root";
+    fname[3] = "132Sn124Sn270AMeV_nocluster_SLy4-L108_bimp57.root";
     break;
 
   case 4:
-    fdir = "/data/Q18393/kaneko/amd/rootfiles/108Sn112Sn270AMeV/nocluster/SLy4-L108/";
-    fname[0] =  "108Sn112Sn270AMeV_nocluster_SLy4-L108_bimp01.root";
-    fname[1] =  "108Sn112Sn270AMeV_nocluster_SLy4-L108_bimp13.root";
-    fname[2] =  "108Sn112Sn270AMeV_nocluster_SLy4-L108_bimp35.root";
-    fname[3] =  "108Sn112Sn270AMeV_nocluster_SLy4-L108_bimp57.root";
+    fname[0] = "108Sn112Sn270AMeV_nocluster_SLy4-L108_bimp01.root";
+    fname[1] = "108Sn112Sn270AMeV_nocluster_SLy4-L108_bimp13.root";
+    fname[2] = "108Sn112Sn270AMeV_nocluster_SLy4-L108_bimp35.root";
+    fname[3] = "108Sn112Sn270AMeV_nocluster_SLy4-L108_bimp57.root";
     break;
 
   case 5:
-    fdir = "/data/Q18393/kaneko/amd/rootfiles/108Sn112Sn270AMeV/nocluster/SLy4/";
-    fname[0] =  "108Sn112Sn270AMeV_nocluster_SLy4_bimp01.root";
-    fname[1] = 	"108Sn112Sn270AMeV_nocluster_SLy4_bimp13.root";
-    fname[2] = 	"108Sn112Sn270AMeV_nocluster_SLy4_bimp35.root";
-    fname[3] = 	"108Sn112Sn270AMeV_nocluster_SLy4_bimp57.root";
+    fname[0] = "108Sn112Sn270AMeV_nocluster_SLy4_bimp01.root";
+    fname[1] = "108Sn112Sn270AMeV_nocluster_SLy4_bimp13.root";
+    fname[2] = "108Sn112Sn270AMeV_nocluster_SLy4_bimp35.root";
+    fname[3] = "108Sn112Sn270AMeV_nocluster_SLy4_bimp57.root";
     break;
 
   case 6:
-    fdir = "/data/Q18393/kaneko/amd/rootfiles/108Sn112Sn270AMeV/cluster/SLy4-L108/";
-    fname[0] =  "108Sn112Sn270AMeV_cluster_SLy4-L108_bimp01.root";
-    fname[1] =	"108Sn112Sn270AMeV_cluster_SLy4-L108_bimp13.root";
-    fname[2] =	"108Sn112Sn270AMeV_cluster_SLy4-L108_bimp35.root";
-    fname[3] =	"108Sn112Sn270AMeV_cluster_SLy4-L108_bimp57.root";
+    fname[0] = "108Sn112Sn270AMeV_cluster_SLy4-L108_bimp01.root";
+    fname[1] = "108Sn112Sn270AMeV_cluster_SLy4-L108_bimp13.root";
+    fname[2] = "108Sn112Sn270AMeV_cluster_SLy4-L108_bimp35.root";
+    fname[3] = "108Sn112Sn270AMeV_cluster_SLy4-L108_bimp57.root";
     break;
 
-  case 7:
-    fdir = "/data/Q18393/kaneko/amd/rootfiles/108Sn112Sn270AMeV/cluster/SLy4/";
-    fname[0] =  "108Sn112Sn270AMeV_cluster_SLy4_bimp01.root";
-    fname[1] =  "108Sn112Sn270AMeV_cluster_SLy4_bimp13.root";
-    fname[2] =  "108Sn112Sn270AMeV_cluster_SLy4_bimp35.root";
-    fname[3] =  "108Sn112Sn270AMeV_cluster_SLy4_bimp57.root";
+  case 7:       
+    fname[0] = "108Sn112Sn270AMeV_cluster_SLy4_bimp01.root";
+    fname[1] = "108Sn112Sn270AMeV_cluster_SLy4_bimp13.root";
+    fname[2] = "108Sn112Sn270AMeV_cluster_SLy4_bimp35.root";
+    fname[3] = "108Sn112Sn270AMeV_cluster_SLy4_bimp57.root";
   }                    
 
-  printHeader = fname[0](0,fname[0].Length()-12);
+
+  beamHeader  = fname[0](0,5);
+  printHeader = beamHeader+"-"+fname[0](18, fname[0].Length()-30 )+"-";
 
   fChain = new TChain("amdTree");
-  fChain->Add(ffdir+fname[0]);
-  fChain->Add(ffdir+fname[1]);
-  fChain->Add(ffdir+fname[2]);
-  fChain->Add(ffdir+fname[3]);
+
+  TString ffdir = "/cache/scr/spirit/mizuki/SpiRITAnalysis/macros/data/AMD/";
+  for(UInt_t i = 0; i < 3; i++){
+    if( gSystem->FindFile(ffdir, fname[i]) ) {
+	fChain->Add(fname[i]);
+	std::cout << " File : " << fname[i] << " is added. " << std::endl;
+    }
+  }
+
+  // Booking(ipid);
+  // Analysis(ipid);
+  // getv1v2(ipid);
 
 
-  Booking(ipid);
-  Analysis(ipid);
-  getv1v2(ipid);
+  PlotCosv1v2(ipid);
 
-  SaveCanvas("_"+pname[ipid]);
+  //  SaveCanvas("_"+pname[ipid]);
 }
 
 

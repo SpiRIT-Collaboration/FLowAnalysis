@@ -162,9 +162,18 @@ void SaveCanvas(TString fopt = "", Int_t isel=-1)
     gROOT->GetListOfCanvases()->At(isel)->SaveAs(printHeader+fopt+Form("_%d",isel)+".png");
 
   else {
+    
+    TString mdir = sDB[0](4,sDB[0].Sizeof())+fopt+gSystem->Now().AsString();
+    gSystem->mkdir(mdir);
+    gSystem->cd(mdir);
+    
     Int_t iCanvas = gROOT->GetListOfCanvases()->GetEntries();  
     for(Int_t i = 0; i < iCanvas; i++)
-      gROOT->GetListOfCanvases()->At(i)->SaveAs(printHeader+fopt+Form("_%d",i)+".png");
+      gROOT->GetListOfCanvases()->At(i)->SaveAs(sDB[0](4,sDB[0].Sizeof())+fopt+Form("_%d",i)+".png");
+
+    gSystem->cd("..");
+    std::cout << " Figures were saved in " << mdir << std::endl;
+
   }
 }
 

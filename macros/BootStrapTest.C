@@ -33,9 +33,9 @@ void  SingleBootStrap(UInt_t np, Double_t val);
 void  RndBootStrap(UInt_t np, UInt_t ith);
 void  RPResolution(UInt_t np, UInt_t ntry);
 void  DoubleBootStrap();
-void DoublePhiBootStrap();
+void  DoublePhiBootStrap();
 
-void BootStrapTest()
+void  BootStrapTest()
 {
   fv1v2->SetParameter(0, 0.);
   fv1v2->SetParameter(1, -0.05);
@@ -421,7 +421,6 @@ void SingleBootStrap(UInt_t np = 50, Double_t val = 0.)
 
     gsdiff->SetPoint(it-1, (Double_t)it, bstrap->GetResidualMean(it)-sphi);
   }
-
 
 
   cout << " BST mean " << bstrap->GetMean() << " +- " << bstrap->GetError() << endl;

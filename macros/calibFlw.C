@@ -77,6 +77,8 @@ void calibFlw()
 
   Flatten_Psi_ntrackthetabin(2);  //TVector3(unitP2_rot->X(), unitP2_rot->Y(), 0.);
   Flatten_Psi_ntrackthetabin(4);  //TVector3(unitP_1r->X(),   unitP_1r->Y(),   0.);
+
+
   //  Flatten_Psi_ntrackthetabin(6);  //TVector3(unitP_1r->Mod()*cos(bsPhi_1[0]), unitP_1r->Mod()*sin(bsPhi_1[0]), 0.);
 }
 
@@ -107,17 +109,19 @@ void ReCentering(UInt_t isel = 2, Int_t nmin=0, Int_t nmax=100) //%% Executable 
   rChain[0]->Project(Form("hQx%d_%d",nmin,isel), unitpX, multcut);
   rChain[0]->Project(Form("hQy%d_%d",nmin,isel), unitpY, multcut);
 
+  if(hQx->GetEntries() > 0) {
 
-  hQx->Fit("fgX","Q0");
-  hQy->Fit("fgY","Q0");
-
-  constX= fgX->GetParameter(0);
-  meanX = fgX->GetParameter(1);
-  sigX  = fgX->GetParameter(2);
-
-  constY= fgY->GetParameter(0);
-  meanY = fgY->GetParameter(1);
-  sigY  = fgY->GetParameter(2);
+    hQx->Fit("fgX","Q0");
+    hQy->Fit("fgY","Q0");
+    
+    constX= fgX->GetParameter(0);
+    meanX = fgX->GetParameter(1);
+    sigX  = fgX->GetParameter(2);
+    
+    constY= fgY->GetParameter(0);
+    meanY = fgY->GetParameter(1);
+    sigY  = fgY->GetParameter(2);
+  }
 
   delete hQx;
   delete hQy;
@@ -137,7 +141,7 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
 
   const UInt_t harm      = 5;
   const UInt_t thetanbin = 0;
-  const UInt_t ntrknbin  = 5;
+  const UInt_t ntrknbin  = 10;
   
   // bin setting for theta
   Double_t thetabin[thetanbin+1];
@@ -157,11 +161,10 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
   // bin setting for multiplicity
   Double_t ntrkbin[ntrknbin+1];
   Double_t ntrk_min = 0;
-  Double_t ntrk_max[] = {60, 60, 60, 60, 30, 30, 30, 30};
+  Double_t ntrk_max[] = {70, 70, 70, 70, 35, 35, 35, 35};
   for(UInt_t n = 0; n < ntrknbin+2; n++)
     ntrkbin[n]   = ntrk_max[isel]/ntrknbin * n;
 
- 
 
   auto hbaiphi = new TH2D(Form("hbaiphi_%d",isel),  " #Phi before and after; before #Phi [rad]; after #Phi [rad] ", 
 			  400,-3.5,3.5,400,-3.5,3.5);
@@ -326,7 +329,8 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
   for(UInt_t j = 0; j < ntrknbin+1; j++){   
 
     for(UInt_t i = 0; i < thetanbin+1; i++) {   
-      
+
+      if(flowcorr[j][i]->GetNPhi() == 0 ) continue;
       UInt_t nphi = flowcorr[j][i]->ReCenteringFourierCorrection();
       std::cout << " At " << ntrkbin[j] << " : " << thetabin[i] << " nphi " << nphi <<  std::endl;
       

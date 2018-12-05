@@ -74,6 +74,7 @@ class STFlowCorrection : public TObject {
   void   clear();
 
 
+  Int_t                 GetNPhi()         {return bphi.size();}
   std::vector<Double_t> GetOriginalPhi()  {return bphi;}             
   std::vector<Double_t> GetCorrectedPhi() {return vphi;}             
   std::vector<Double_t> GetReCeneringPhi(){return rcphi;}

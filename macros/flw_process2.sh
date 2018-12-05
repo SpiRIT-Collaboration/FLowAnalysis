@@ -13,9 +13,9 @@ source setup.sh
 #RUNNUMBER1=(${RNF108})                                                                              
 #RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
-RUNNUMBER1=(${RNF132} ${RNF108} ${RNF124})    
+RUNNUMBER1=(${RNF132} ${RNF108} ${RNF124} ${RNF112})    
 # *****> <Edit Here>                                                                                                            
-VERSION=10.4
+VERSION=11.0
 
 # *****> <Edit Here> 
 RE1MX2=1
