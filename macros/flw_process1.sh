@@ -14,12 +14,12 @@ source ../build/config.sh
 #export STTPCDIR=/cache/scr/spirit/recoData/20180719/
 #export STVERSION=1665.2e3712e
 
-export STTPCDIR=/xrootd/spdaq01/recoData/20180826/
-export STVERSION=GenieTemp.1728.18d377e
-export ST132DIR=${STTPCDIR}Sn132_JustinPRF_pion/
-export ST108DIR=${STTPCDIR}Sn108_JustinPRF_pion/
-export ST124DIR=${STTPCDIR}Sn124_JustinPRF_pion/
-export ST112DIR=${STTPCDIR}Sn112_JustinPRF_pion/
+export STTPCDIR=/xrootd/spdaq02/recoData/20181213/data/
+export STVERSION=HEAD.1766.ee70f52
+export ST132DIR=${STTPCDIR}
+export ST108DIR=${STTPCDIR}
+export ST124DIR=${STTPCDIR}
+export ST112DIR=${STTPCDIR}
 export STCkT100=${STTPCDIR}
 export STCkT300=${STTPCDIR}
 
@@ -63,18 +63,15 @@ source runList.sh
 # *****> <Edit Here>
 # Set RUNNUMBER1 
 
-#RUNNUMBER1=(${RNF132})
+RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
-
 #RUNNUMBER1=(${RNFTEMP} ${RNF108} ${RNF124} ${RNF112}) 
 #RUNNUMBER1=("2273")
-RUNNUMBER1=(${RNFTEMP})
-
-#RUNNUMBER1=(${RNF132s})
-# *****> <Edit Here>     
-VERSION=11
+#RUNNUMBER1=(${RNFTEMP})
+#RUNNUMBER1=(${RNF132r})
+VERSION=13
 
 
 function process1(){

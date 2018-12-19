@@ -8,10 +8,10 @@ source setup.sh
 
 #RUNNUMBER1=(2841)    
 #RUNNUMBER1=(2841 ${RNF132s} ${RNF132r})    
-#RUNNUMBER1=(${RNF108})
+RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF132}) 
 #RUNNUMBER1=(${RNF124})
-RUNNUMBER1=(${RNF112})
+#RUNNUMBER1=(${RNF112})
 
 CVRUN=${RUNNUMBER1[0]}
 #CVRUN=2841
@@ -29,9 +29,9 @@ NL=1
 #RUN=2841 VER=4.2.1 MIX=0 FLC=run2841_rf.v4.2.Psicv0 FLCS=run2841_rf.v4.5.Psis1rcv0 root flw_process4.C
 
 # *****> <Edit Here> 
-VERSION=11.0.1
-FLC=run${CVRUN}_rf.v11.0.Psi2rtcv2   # Phi_rp
-FLCS=run${CVRUN}_rf.v11.0.Psis1rcv2  # Phi_sub 
+VERSION=12.0.0
+FLC=run${CVRUN}_rf.v12.0.Psi2rtcv0   # Phi_rp
+FLCS=run${CVRUN}_rf.v12.0.Psis1rcv0  # Phi_sub 
 #FLCBS=run${CVRUN}_rf.v10.2.Psibs_1cv5 # Phi_sub bootstrap 
      
 echo $RUNNUMBER1

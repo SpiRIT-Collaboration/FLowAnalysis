@@ -818,25 +818,17 @@ void  DefineLorentzBoostVector()
 
 void SetPtWeight(STParticle *apart)
 {
-  apart->SetRapidity();
-
-  Double_t Etot = sqrt(apart->GetMomentum().Mag2() + pow(apart->GetMass(),2) );
-  TLorentzVector lrnzVec( apart->GetMomentum(), Etot);
+  TLorentzVector lrnzVec =  apart->GetLorentzVector();
   
   lrnzVec.Boost(-boostVec);
 
-  auto PZcm = lrnzVec.Z();
-  auto Ecm  = lrnzVec.E();
-  auto rapidity = 0.5*log( (Ecm + PZcm)/(Ecm - PZcm) );
-
-  rapidity = 0.5*log( (Ecm + PZcm)/(Ecm - PZcm) );
-
+  auto rapiditycm = lrnzVec.Rapidity();
   
-  apart->SetRapiditycm(rapidity);
+  apart->SetRapiditycm(rapiditycm);
   //  cout << " rap cm " << apart->GetRapiditycm() << endl;
   
 
-  if( rapidity  <  0 ) 
+  if( rapiditycm  <  0 ) 
     apart->SetRPWeight(-1);
   else
     apart->SetRPWeight(1);

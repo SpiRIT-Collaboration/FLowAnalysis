@@ -679,7 +679,7 @@ void FlatteningCorrection(UInt_t isel, STParticle *apart, Int_t ival)
     flowcorr = (STFlowCorrection*)aflowcorrArray[0]->At(iBIN);
 
     Double_t phi =  flowcorr->GetCorrection((apart->GetRotatedMomentum()).Phi());
-    apart->Flattening( phi );
+    //    apart->Flattening( phi );
 
   }
   else

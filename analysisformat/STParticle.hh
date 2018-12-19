@@ -51,29 +51,20 @@ private:
   TVector3 forigP3;;         // Momemtum vector without any correction.
   Double_t fP;               // Momentum/Q [MeV/c]
   Double_t fdEdx;            // dEdx
-  Double_t ftheta;           // Polar angle without any correction     = forigP3.Theta()
-  Double_t fphi;             // Azimuthal angle without any correction = forigP3.Phi()
+  //  Double_t ftheta;           // Polar angle without any correction     = forigP3.Theta()
+  //  Double_t fphi;             // Azimuthal angle without any correction = forigP3.Phi()
   Double_t fNDF;             // STVertex::GetNDF()
 
   // for flow analysis 
   TVector3 fRotatedP3;       // Momentum vector rotated with respect to the beam angle.
   TVector2 fRotatedPt;       // Transverse momentum vector rotated with respect to the beam angle. 
 
-  Double_t frtheta;          // Polar angle after corrections of the beam angle and flattening
-  Double_t frphi;            // Azimuthal angle after corrections of the beam angle and flattening
-
   TLorentzVector fLzvec;     // LorentzVector flzvec(fRotatedP3, Etotal);
-
-  TVector3 ffltnP3;          // Momentum vector after corrections of the beam angle and flattening
-  TVector2 ffltnPt;          // Transverse momentum vector after corrections of the beam angle and flattening
-  TVector2 fcorrPt;          // Transverse momentum vector would be equal to ffltnPt at the end.
 
   Double_t frpphi;           // Individual Reaction plane orientaion (IRPO) for each particle
   Double_t fdeltphi;         // Azimuthal opening angle with respect to IRPO
   Double_t fwgt;             // Summing up weight
 
-  Int_t   fcorrBin[2];      //!
-  
   // --- mixed partiels
   Int_t    fmxevt  = -1;
   Int_t    fmxntrk = -1;
@@ -158,7 +149,6 @@ public:
 
   void     SetMass();
 
-  void     SetRapidity();
   Double_t GetRapidity()                 {return fRapidity;}
 
   void     SetRapiditycm(Double_t val)   {fRapiditycm = val;}
@@ -175,12 +165,12 @@ public:
   Double_t GetBBMass()                   {return fBBMass;}
 
 
-  void     SetRotatedMomentum(TVector3 value)   
-  { fRotatedP3 = value; fcorrPt = TVector2(fRotatedP3.X(),fRotatedP3.Y()); }
+  void     SetRotatedMomentum(TVector3 value)   {fRotatedP3 = value;}
 
   TVector3 GetRotatedMomentum()                 {return fRotatedP3;}
-
   TVector2 GetRotatedPt()                       {return fRotatedPt;}
+  void     SetLorentzVector();
+  TLorentzVector GetLorentzVector()             {return fLzvec;}
 
   void  SetBeamonTargetFlag(Int_t value)        {fBeamonTargetf = value;}
   Int_t GetBeamonTargetFlag()                   {return fBeamonTargetf;}
@@ -224,12 +214,6 @@ public:
   Int_t GetBestTrackFlag()                      {return fgoodtrackf;}
 
 
-  void     SetPhi(Double_t value)        {fphi  = value;}
-  Double_t GetPhi()                      {return fphi;}
-
-  void     SetRotatedPhi(Double_t value) {frphi = value;}
-  Double_t GetRotatedPhi()               {return frphi;}
-
   Int_t    GetTrackID()                 {return   ftrackID;}
   void     SetTrackID(Int_t ival)       {ftrackID = ival;}
 
@@ -248,21 +232,11 @@ public:
   Double_t GetIndividualRPAngle()       {return frpphi;}
 
 
-  void     SetFlattenBinID(UInt_t value1, UInt_t value2) 
-  {fcorrBin[0]=value1; fcorrBin[1] = value2;}
-
-  Int_t    GetFlattenBinID(UInt_t value)       {if(value<2) return fcorrBin[value]; else return -1;}
-
 
   void     SetReactionPlaneFlag(Int_t value)    {fReactionPlanef = value;}
   void     AddReactionPlaneFlag(Int_t value)    {fReactionPlanef += value;}
   Int_t    GetReactionPlaneFlag()               {return fReactionPlanef;}
   
-  void     Flattening(Double_t value); 
-  TVector3 GetFlattenMomentum()                 {return ffltnP3;}
-  TVector2 GetFlattenPt()                       {return ffltnPt;}
-
-  TVector2 GetCorrectedPt()                     {return fcorrPt;}
 
   void     SetMomentumAtTarget(TVector3 value)  {forigP3 = value;}
   TVector3 GetMomentumAtTarget()                {return forigP3;}
@@ -298,7 +272,7 @@ public:
 
   void    SetBetheBlochMass(Double_t *para);
 
-  ClassDef(STParticle, 11)
+  ClassDef(STParticle, 12)
 
 };
 

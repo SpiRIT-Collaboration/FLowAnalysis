@@ -271,12 +271,12 @@ void flw_process1(Int_t nevt = -1)
 	  STParticle *aParticle = new STParticle();
 	  aParticle->SetRecoTrack(trackFromArray);
 	  
-	  //--- Set BetheBloch mass 
-	  aParticle->SetBetheBlochMass(fitterPara);
-
 	  //--- Rotate tracks along beam direction ---;
 	  if(ProjA > -1000 && ProjB > -1000)
 	    aParticle->RotateAlongBeamDirection(ProjA/1000., ProjB/1000.);
+
+	  //--- Set BetheBloch mass 
+	  aParticle->SetBetheBlochMass(fitterPara);
 
 
 	  //--- check origin of the track ---;

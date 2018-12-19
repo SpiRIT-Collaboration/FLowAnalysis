@@ -28,11 +28,6 @@ STParticle::STParticle(const STParticle &cp)
   fRotatedPt    = cp.fRotatedPt;
   fP            = cp.fP;
   fdEdx         = cp.fdEdx;
-  ftheta        = cp.ftheta;
-  frtheta       = cp.frtheta;
-  fphi          = cp.fphi;
-  frphi         = cp.frphi;
-  frpphi        = cp.frpphi;
   fwgt          = cp.fwgt;
   fPID          = cp.fPID;
   fPIDProbability = cp.fPIDProbability;  
@@ -84,9 +79,7 @@ STParticle::STParticle(const STParticle &cp)
   rDist            = cp.rDist;
   rPOCAVertex      = cp.rPOCAVertex;
 
-
   Initialize();
-
 }
 
 STParticle &STParticle::operator=(const STParticle &cp)
@@ -151,11 +144,6 @@ void STParticle::Clear(Option_t *option)
 
   fP            = -9999.;
   fdEdx         = -9999.;
-  ftheta        = -10.;
-  frtheta       = -10.;
-  fphi          = -10.;
-  frphi         = -10.;
-
 
   fpipid       = 0;
   fPID         = 0;
@@ -172,19 +160,12 @@ void STParticle::Clear(Option_t *option)
   fmaxdedxf    = 1;
 
   // for flow
-  ffltnP3 = TVector3(-9999,-9999,-9999);
-  ffltnPt = TVector2(-9999,-9999);
-
-  frpphi   = -10.;
   fdeltphi = -10.;
   fwgt   = 0.;
-  fcorrBin[0] = -1;  
-  fcorrBin[1] = -1;
   
   fmxevt = -1;
   fmxntrk = -1;
 
-  fcorrPt = ffltnPt;
 
   fReactionPlanef = 0;
 
@@ -200,14 +181,8 @@ void STParticle::SetRecoTrack(STRecoTrack *atrack)
   fRTrack = atrack;
 
   forigP3 = fRTrack->GetMomentumTargetPlane();
+  fRotatedP3 = forigP3;
 
-  //  forigP3 = fRTrack->GetMomentum();  // modified on 9 Nov. 2017
-  //Because of PZ bug for v1.04
-  if(forigP3.Z() < 0)
-    forigP3 = -forigP3;
-
-  fphi  = forigP3.Phi();
-  ftheta= forigP3.Theta();
   fP    = forigP3.Mag();
   fdEdx = fRTrack->GetdEdxWithCut(0, 0.7);
   fChar = fRTrack->GetCharge();
@@ -215,16 +190,12 @@ void STParticle::SetRecoTrack(STRecoTrack *atrack)
   fPID  = STPID::GetPDG(fRTrack->GetPID());
   fPIDProbability = fRTrack->GetPIDProbability();
 
-  fRotatedP3 = forigP3;
-
   rVertexID      =  fRTrack -> GetVertexID();
   rdEdxPointSize = (fRTrack -> GetdEdxPointArray()) -> size();
   rNDF           =  fRTrack -> GetNDF();
   rPOCAVertex    =  fRTrack -> GetPOCAVertex();
   rChi2          =  fRTrack -> GetChi2();
 
-  SetMass();
-  SetProperty();
 }
 
 
@@ -261,7 +232,6 @@ void STParticle::SetPID(Int_t value)
 
   SetMass();
 
-  SetRapidity();
 }
 
 
@@ -313,25 +283,23 @@ void STParticle::SetMass()
 
   fMass = mass;
 
+  SetLorentzVector();
 }
 
-
- 
-void STParticle::SetRapidity()
+void  STParticle::SetLorentzVector()
 {
-  Double_t Pz   = fRotatedP3.Z();
-
-  if(fMass != 0 ){
-    fEtotal   = sqrt(fMass*fMass + fP*fP);
-    fRapidity = 0.5 * log( (fEtotal + Pz) / (fEtotal - Pz) );
-  }
-  else {
-    fEtotal = 0;
-    fRapidity = -10.;
-  }
+  fEtotal     = sqrt(fMass*fMass + fRotatedP3.Mag2());
 
   fLzvec.SetVect(fRotatedP3);
   fLzvec.SetT(fEtotal);
+
+  fRapidity   = fLzvec.Rapidity();
+    
+  if(fMass == 0 ) {
+    fEtotal = 0;
+    fRapidity = -10.;
+    fLzvec.SetT(0.);
+  }
 }
 
 void  STParticle::RotateAlongBeamDirection(Double_t valuex, Double_t valuey)
@@ -342,30 +310,9 @@ void  STParticle::RotateAlongBeamDirection(Double_t valuex, Double_t valuey)
 
   fRotatedPt = TVector2(fRotatedP3.X(),fRotatedP3.Y());
 
-  fcorrPt = fRotatedPt;
-
-  frphi   = fRotatedP3.Phi();
-  frtheta = fRotatedP3.Theta();
+  SetLorentzVector();
 
   bRotated = kTRUE;
-}
-
-void STParticle::Flattening(Double_t value)
-{
-
-  ffltnP3  = fRotatedP3;
-
-  ffltnP3.SetPhi(value);
-
-  ffltnPt  = TVector2(ffltnP3.X(), ffltnP3.Y());
-
-  fcorrPt  = ffltnPt;
-
-  frphi    = ffltnP3.Phi();
-
-  frtheta  = ffltnP3.Theta();
-
-  bFlatten = kTRUE;
 }
 
 
@@ -412,17 +359,20 @@ void STParticle::SetBBPID()
       if( fPID == 0 && gcutHe3BBmass->IsInside(fP, fBBMass) ) {
 	STPID::PID pid = static_cast<STPID::PID>(4);
 	fPID = STPID::GetPDG(pid);
+
+	fRotatedP3.SetMag(fP * 2.);
       }
   
       if( fPID == 0 && gcutHe4BBmass->IsInside(fP, fBBMass) ) {
 	STPID::PID pid = static_cast<STPID::PID>(5);
 	fPID = STPID::GetPDG(pid);
+
+	fRotatedP3.SetMag(fP * 2.);
       }
     }
   }
 
   SetMass();
-  SetRapidity();
 
 }
 

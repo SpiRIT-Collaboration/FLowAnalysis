@@ -6,10 +6,10 @@ TF1 *lslope = new TF1("lslope","[0]+[1]*x",-0.1,0.2);
 // --> configuration
 TString fsys[] = {"132Sn+124Sn","108Sn+112Sn","124Sn+112Sn","112Sn+124Sn"};
 TString rsys[] = {"132",        "108",        "124",        "112"};
-TString fpid[] = {"proton","deuteron","triton","neutron"};  
-UInt_t  imrk[] = {20, 21, 22, 23};
-Size_t  imsz[] = {1, 1, 1.3, 1.3, 1.3};
-Color_t icol[] = { kPink, kAzure, kSpring, kViolet};
+TString fpid[] = {"proton","deuteron","triton","neutron","3He","4He"};  
+UInt_t  imrk[] = {20, 21, 22, 23, 24, 25, 26};
+Size_t  imsz[] = {1, 1, 1.3, 1.3, 1.3, 1.3, 1.3};
+Color_t icol[] = { kRed, kBlue, kSpring, kMagenta, kOrange, kViolet};
 Color_t icolnn[]={ kPink, kBlue+1, kGreen+2, kViolet-1};
 
 //  Double_t rrange[3] = {0.27, 0.54, 1.};
@@ -51,20 +51,20 @@ void PlotPtDependence()
 
   // --> Plotting selection
   Bool_t bsys[]  = { 1, 1, 0, 0};
-  Bool_t bpid[]  = { 1, 1, 0, 1}; //p, d, t, n
-  Bool_t bcnt[]  = { 1, 0, 0, 0}; 
-  Bool_t blcnt[] = { 1, 0, 0, 0};
+  Bool_t bpid[]  = { 1, 0, 1, 0, 1, 0}; //p, d, t, n
+  Bool_t bcnt[]  = { 1, 0, 0}; 
   UInt_t cntw = 3;
+  UInt_t bazm[]  = { 1, 0, 0}; // 1: pm, 10:m, 11:xsp, //1: <45, 2:>135, 3:45<&<135
 
   UInt_t ngr = 0;
   std::vector< TString > fname;
-  std::vector< std::vector< UInt_t >> index(4);
+  std::vector< std::vector< UInt_t >> index(5);
   TGraphErrors *g_slope[4][4];
   TGraphErrors *g_v2cm[4][4];
 
   for(UInt_t is = 0; is < 4; is++){
 
-    for(UInt_t ip = 0; ip < 4; ip++){
+    for(UInt_t ip = 0; ip < (UInt_t)sizeof(bpid)/sizeof(Bool_t); ip++){
 
       g_slope[is][ip] = new TGraphErrors();
       g_slope[is][ip] ->SetName( Form("g_slope_%d%d",is,ip) );
@@ -74,16 +74,20 @@ void PlotPtDependence()
 
       if( !bsys[is] || !bpid[ip] ) continue;
 
-      for(UInt_t it = 0; it < 4; it++){
+      for(UInt_t it = 0; it < (UInt_t)sizeof(bcnt)/sizeof(Bool_t); it++){
 	
 	if( !bcnt[it] ) continue;
-	
-	for(UInt_t ik = 0; ik < 4; ik++) {
 
-	  if( !blcnt[ik] ) continue;
+	for(UInt_t iz = 0; iz < (UInt_t)sizeof(bazm)/sizeof(UInt_t); iz++){
 	  
+	  if( bazm[iz] == 0 ) continue;
+
+	
 	  //	  fname.push_back( Form("data/cosYPT_n%dto%d_",cent[it],cent[it+cntw]) + rsys[is]+"Snyoff_"+fpid[ip]+".root" );
-	  fname.push_back( Form("data/cosYPT_n%dto%d_",cent[it],cent[it+cntw]) + rsys[is]+"Snyoffp_"+fpid[ip]+".root" );
+	  //	fname.push_back( Form("data/cosYPT_n%dto%d_",cent[it],cent[it+cntw]) + rsys[is]+"Snyoffp_"+fpid[ip]+".root" );
+
+	  fname.push_back( Form("data/cosYPT_n%dto%d_",cent[it],cent[it+cntw]) + rsys[is]+"Snyoffp_"+Form("az%d",bazm[iz]) + fpid[ip]+".root" );
+
 	  // fname.push_back( Form("data/cosYPT_n%dto%d_",cent[it],cent[it+cntw]) + rsys[is]+"Sn_"+fpid[ip]+".root" );
 	  //	  fname.push_back( Form("data/cosYPT_iso%dto%d_",isobin[it],isobin[ik+1]) + rsys[is]+"Sn_"+fpid[ip]+".root" );
 
@@ -92,8 +96,8 @@ void PlotPtDependence()
 	  index[0].push_back(is); // system
 	  index[1].push_back(ip); // pid
 	  index[2].push_back(it); // centrality
-	  index[3].push_back(ik); // centrality lower
-
+	  index[3].push_back(it+cntw);
+	  index[4].push_back(iz);
 	  ngr++;
 	}
       }
@@ -146,10 +150,11 @@ void PlotPtDependence()
 
 
 
-  ccv = new TCanvas("cc10","cc10",1000,1000);
-  ccv->Divide(2, ngr/2);
+  //  ccv = new TCanvas("cc10","cc10",1000,1000);
+  //  ccv->Divide(2, ngr/2);
   UInt_t id = 1;
 
+  Color_t icolor = 100; 
   for(UInt_t igr = 0; igr < ngr; igr++ ) {
 
     fOpen = TFile::Open(fname.at(igr)); 
@@ -158,6 +163,7 @@ void PlotPtDependence()
     else
       std::cout << fname.at(igr) << " is opened. " << std::endl;
 
+
     TH1D *fevt = (TH1D*)fOpen->Get("hphi0_180");
     UInt_t tevt = fevt->GetEntries();
 
@@ -165,18 +171,25 @@ void PlotPtDependence()
     UInt_t ip = index[1].at(igr);
     UInt_t it = index[2].at(igr);
     UInt_t ik = index[3].at(igr);
+    UInt_t iz = index[4].at(igr);
 
-    UInt_t icolor = (icol[is] + 4*ip - 2*it + ik );
+    if( igr < 7)
+      icolor = icol[igr];
+    else
+      icolor -= 2;
     //    UInt_t icolor = (icol[is] + 4*ip - 2*it );
-    if(icolor  >= 912) icolor = 4;
+    //    if(icolor  >= 912) icolor = 4;
 
-    icolor = icolnn[igr];
+    cout << igr  << " " << ip << " color " << icolor << endl;
+
+
+    //    icolor = icolnn[igr];
 
     //acceptance
     TH2D *ff = (TH2D*)fOpen->Get("hyptacp");
     ff->SetName(Form("hyptacp_%d",igr));
     //    TString otitle = rsys[is]+"Sn "+fpid[ip]+": "+ (TString)ff->GetTitle();
-    TString otitle = rsys[is]+"Sn "+fpid[ip];
+    TString otitle = rsys[is]+"Sn "+fpid[ip](0,3) + Form(":n%dto%d_azm%d",cent[it],cent[ik],bazm[iz]);
     ff->SetTitle(otitle);
     ff->SetDirectory(gROOT);
 
@@ -213,6 +226,8 @@ void PlotPtDependence()
     RemoveYPoint(yv1);
 
     yv1->SetMarkerColor(icolor);
+
+    cout << "imark[" << is << "] " << imrk[is] << endl;
     yv1->SetMarkerStyle(imrk[is]);
     if( ip == 3 )
       yv1->SetMarkerStyle(imrk[is]+4);
@@ -225,8 +240,8 @@ void PlotPtDependence()
 
 
     // slope
-    ccv->cd(id); id++;
-    yv1->Draw("ALP");
+    //    ccv->cd(id); id++;
+    //    yv1->Draw("ALP");
     yv1->Fit("lslope","Q0","",-0.11,0.2);
     Double_t constlslope = lslope->GetParameter(0);
     Double_t slope = lslope->GetParameter(1);
@@ -264,10 +279,14 @@ void PlotPtDependence()
     for(UInt_t k = 0; k < rbin; k++){
 
       TGraphErrors *gr_v1 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v1%d",k));
+      
 
       RemovePtPoint(ip, gr_v1);
       
+      if( gr_v1 == NULL ) continue;
       gr_v1->SetMarkerStyle(imrk[is]);
+
+
       if( ip == 3 )
 	gr_v1->SetMarkerStyle(imrk[is]+4);
       gr_v1->SetMarkerColor(icolor);
@@ -280,11 +299,15 @@ void PlotPtDependence()
       lg1[k]->AddEntry(gr_v1,  otitle,"lp");
     }
     
+    cout << " ==== " << endl;
+
     for(UInt_t k = 0; k < rbin2; k++){
 
       TGraphErrors *gr_v2 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v2%d",k));
+      if( gr_v2 == NULL ) continue;
 
       RemovePtPoint(ip,gr_v2);
+
       
       gr_v2->SetMarkerStyle(imrk[is]);
       if( ip == 3 )
@@ -299,9 +322,6 @@ void PlotPtDependence()
 	
     fOpen->Close();
   }
-
-
-
 
 
   auto cc4 = new TCanvas("cc4","aceptance", 700, 1000);
@@ -416,7 +436,6 @@ void PlotPtDependence()
   aLineY1->Draw();
 
    
-
   auto cc3 = new TCanvas("cc3","cc3");
   mrv2->Draw("ALP");
   lgr2->Draw();
@@ -454,43 +473,43 @@ void PlotPtDependence()
     }
 
   }
-  auto cc6 = new TCanvas("cc6","cc6");
-  mv1sl->Draw("ALP");
-  lgr4->Draw();
-  auto cc7 = new TCanvas("cc7","cc7");
-  mv2cm->Draw("ALP");
-  lgr5->Draw();
+  // auto cc6 = new TCanvas("cc6","cc6");
+  // mv1sl->Draw("ALP");
+  // lgr4->Draw();
+  // auto cc7 = new TCanvas("cc7","cc7");
+  // mv2cm->Draw("ALP");
+  // lgr5->Draw();
 
 
-  
-  //for NN v1-pt
-  gStyle->SetPadRightMargin(0.05);
-  gStyle->SetPadLeftMargin(0.1);
-  gStyle->SetTitleYSize(0.04);
-  gStyle->SetTitleYOffset(1.1);
+  if( kFALSE ){  
+    //for NN v1-pt
+    gStyle->SetPadRightMargin(0.05);
+    gStyle->SetPadLeftMargin(0.1);
+    gStyle->SetTitleYSize(0.04);
+    gStyle->SetTitleYOffset(1.1);
 
 
-  auto cc9 = new TCanvas("cc9","v1_target",500,500);
-  mv1[1]->SetMaximum(0.);
-  mv1[1]->SetMinimum(-0.27);
-  mv1[1]->Draw("ALP");
+    auto cc9 = new TCanvas("cc9","v1_target",500,500);
+    mv1[1]->SetMaximum(0.);
+    mv1[1]->SetMinimum(-0.27);
+    mv1[1]->Draw("ALP");
 
-  auto cc10 = new TCanvas("cc10","v1_mid",500,500);
-  mv1[3]->Draw("ALP");
+    auto cc12 = new TCanvas("cc12","v1_mid",500,500);
+    mv1[3]->Draw("ALP");
 
-  auto cc11 = new TCanvas("cc11","v1_beam",500,500);
-  mv1[5]->Draw("ALP");
-  lg1[5]->SetX1NDC(0.5);
-  lg1[5]->SetY1NDC(0.16);
-  lg1[5]->SetX2NDC(0.95);
-  lg1[5]->SetY2NDC(0.40);
-  lg1[5]->Draw();
+    auto cc11 = new TCanvas("cc11","v1_beam",500,500);
+    mv1[5]->Draw("ALP");
+    lg1[5]->SetX1NDC(0.5);
+    lg1[5]->SetY1NDC(0.16);
+    lg1[5]->SetX2NDC(0.95);
+    lg1[5]->SetY2NDC(0.40);
+    lg1[5]->Draw();
 
-  // v2-pt
-  auto cc8 = new TCanvas("cc8","v2 at Y_cm=0",500,500);
-  mv2[2]->Draw("ALP");
-  lg2[2]->Draw();
-
+    // v2-pt
+    auto cc8 = new TCanvas("cc8","v2 at Y_cm=0",500,500);
+    mv2[2]->Draw("ALP");
+    lg2[2]->Draw();
+  }
   
 }
 
@@ -615,11 +634,11 @@ void RemoveYPoint(TGraphErrors *gv)
     gv->GetPoint(k, xx, yy);
     if( xx < -0.2 ) {
       gv->RemovePoint(k);
-      std::cout << "===> REMOVEPOINT in Y (" << xx << "," << yy << ")" << std::endl;    
+      //      std::cout << "===> REMOVEPOINT in Y (" << xx << "," << yy << ")" << std::endl;    
     }
     if( xx > 0.37 ) {
       gv->RemovePoint(k);
-      std::cout << "===> REMOVEPOINT in Y (" << xx << "," << yy << ")" << std::endl;    
+      //      std::cout << "===> REMOVEPOINT in Y (" << xx << "," << yy << ")" << std::endl;    
     }
   }
 
@@ -633,7 +652,9 @@ void RemoveYPoint(TGraphErrors *gv)
 
 void RemovePtPoint(UInt_t ip, TGraphErrors *gv)
 {
-  cout << "removept " << gv->GetN() <<  endl;
+  if( gv == NULL ) return;
+
+  //  cout << "removept " << gv->GetN() <<  endl;
   Double_t ptcut = 700.;
   if( ip == 3 ) ptcut = 400.;
 
@@ -642,7 +663,7 @@ void RemovePtPoint(UInt_t ip, TGraphErrors *gv)
     gv->GetPoint(k, xx, yy);
     if( xx > ptcut ) {
       gv->RemovePoint(k);
-      std::cout << "===> REMOVEPOINT in Pt (" << xx << "," << yy << ")" <<  std::endl;
+      //      std::cout << "===> REMOVEPOINT in Pt (" << xx << "," << yy << ")" <<  std::endl;
     }
   }  
   for(Int_t k = (Int_t)gv->GetN()-1; k > -1; k--) {

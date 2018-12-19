@@ -41,6 +41,11 @@ const UInt_t ybin1 = sizeof(yrange1)/sizeof(Double_t);
 Double_t yrange2[] = {-0.2, -0.05,  0.05, 0.2, 0.35, 0.5};
 const UInt_t ybin2 = sizeof(yrange2)/sizeof(Double_t);
 
+// TCutG* ganglecut = new TCutG();
+// ganglecut->SetPoint(0,   0., 3.2);
+// ganglecut->SetPoint(1, 1.43, 3.2);
+// ganglecut->SetPoint(2, 0.94, 2.8);
+// ganglecut->SetPoint(3, 1.26,2.44);
 
 TString  partname[] = {"pi-","pi+","proton","deuteron" ,"triton", "neutron", "3He", "4He"};
 UInt_t   partid[]   = {211,    211,    2212, 1000010020, 1000010030, 2112, 1000020030, 1000020040};
@@ -111,6 +116,7 @@ UInt_t   npb = 30;
 
 UInt_t  icent = 0;
 UInt_t  jcent = 4;
+UInt_t iaz = 0;
 
 //--------- main ----------//
 void calcFlw(UInt_t isel = 0) 
@@ -127,10 +133,10 @@ void calcFlw(UInt_t isel = 0)
   if(rChain[0] == NULL)
     exit(0);
 
-  std::cout  << " Total  = " << m_end  << std::endl;
-  
   gROOT->ProcessLine(".! grep -i void calcFlw.C | grep '//%%'");
 
+
+  // Multiplicity cut ================================
   TString su = gSystem -> Getenv("UC");
   if( su != "" ) {
     UInt_t ucent = (UInt_t)atoi(su);
@@ -147,7 +153,15 @@ void calcFlw(UInt_t isel = 0)
   }
 
   std::cout << " Multiplicity :: " << cent[icent] << " to " << cent[jcent] << std::endl;
-  //std::cout << " ISO bin :: " << isobin[icent] << " to " << isobin[jcent] << std::endl;
+
+  // azimuthal cut ===================================
+  TString az = gSystem -> Getenv("AZ");
+  if( az != "" ) 
+    iaz = (UInt_t)atoi(az);
+
+  std::cout << " Azimuthal angle cut " << iaz << std::endl;
+  //==================================================
+
 
   //  PlotNeuLANDProperty(1);
   //  PlotPtDependence(isel);
@@ -174,10 +188,10 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 
   gSystem->cd("data");
 
-  TString fName = Form("cosYPT_n%2dto%d_",cent[icent],cent[jcent]) + sysName[isys[0]] + "yoffp_" + partname[selid];
+
+  TString fName = Form("cosYPT_n%2dto%d_",cent[icent],cent[jcent]) + sysName[isys[0]] + "yoffp_" + Form("az%d",iaz) + partname[selid];
   //  TString fName = Form("cosYPT_n%2dto%d_",cent[icent],cent[jcent]) + sysName[isys[0]] + "_" + partname[selid];
   //  TString fName = Form("cosYPT_iso%2dto%d_",(UInt_t)isobin[icent],(UInt_t)isobin[jcent]) + sysName[isys[0]] + "_" + partname[selid]+".root";
-
 
 
   auto GraphSave = new TFile(fName+".root","recreate");
@@ -226,6 +240,8 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   auto hmassy  = new TH2D("hmassy",  "; Y_{cm}; Mass [MeV/C^2]" ,200, -0.4, 0.5, 200, 0.,7000);
   auto hpy     = new TH2D("hpy",     "; Y_{cm}; P/Q [MeV/c]"    ,200, -0.4, 0.5, 200, 0.,2500.);
   auto hptmass = new TH2D("hptmass", "; Pt [MeV/c]; Mass [MeV/c^2]",200, 0., 800,200, 0.,7000);
+  auto hazm    = new TH1D("hazm",    "; #phi"                   ,100, -3.2, 3.2);
+  auto hmidv2  = new TH1D("hmidv2",  "; #Delta#phi"             ,100, -3.2, 3.2);
 
   //  TString hlabel = (TString)Form("iso %2d to %d ; Y_{cm}; Pt [MeV/c]",(UInt_t)isobin[icent],(UInt_t)isobin[jcent]);
   TString hlabel = (TString)Form("ntrack[4] %2d to %d ; Y_{cm}; Pt [MeV/c]",(UInt_t)cent[icent],(UInt_t)cent[jcent]);
@@ -303,12 +319,16 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
     heisoratio->Fill( isoratio );
     hntrack->Fill( ntrack[4] );
 
+
+    //    if( unitP_fc->Phi() < 0. || unitP_fc->Phi() > 50.*TMath::Pi()/180.) continue; 
+    //    if( abs(unitP_fc->Phi()) < 130.*TMath::Pi()/180. ) continue;
+
     Double_t subevt_phi = abs(TVector2::Phi_mpi_pi(unitP_1->Phi()-unitP_2->Phi())); 
     hphi0_180->Fill( subevt_phi );
     if( subevt_phi > TMath::Pi()/2. )
       hphi90_180->Fill( subevt_phi );
 
-      
+
     TIter next(aArray);
     STParticle *aPart = NULL;
 
@@ -317,12 +337,42 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
       auto rpf   = aPart->GetReactionPlaneFlag();
       auto pid   = aPart->GetPID();
       auto bmass = aPart->GetBBMass();
+      auto phi   = aPart->GetRotatedMomentum().Phi();
+      auto theta = aPart->GetRotatedMomentum().Theta();
       
       if( pid == partid[selid] ) { //&& 
+
+	if( iaz == 13 ){
+	  if( phi <= 
+	}
+	else if( iaz == 12){
+	  if( abs(phi) < 135.*TMath::DegToRad() &&  abs(phi) >  45.*TMath::DegToRad() ) continue;
+	}
+	else if( iaz == 1 || iaz == 10 || iaz == 11 ) {
+	  if( abs(phi) >  45.*TMath::DegToRad() ) continue;
+	}
+	else if( iaz== 2 || iaz == 20 || iaz == 21 ) {
+	  if( abs(phi) < 135.*TMath::DegToRad() ) continue;
+	}
+	else if( iaz == 3 || iaz == 30 || iaz == 31 ) {
+	  if( abs(phi) > 135.*TMath::DegToRad() ||  abs(phi) <  45.*TMath::DegToRad() ) continue;
+	}
+
+	if( iaz == 10 || iaz == 20 || iaz == 30 ){
+	  if( phi > 0 ) continue;
+	}
+	else if( iaz == 11 || iaz == 21 || iaz == 31 ) {
+	  if( phi < 0 ) continue;
+	}
+
+	hazm -> Fill(phi);
+
+
 
 	auto pt    = aPart->GetRotatedMomentum().Pt();
 	auto dphi  = aPart->GetAzmAngle_wrt_RP();
 	auto rapid = aPart->GetRapiditycm();;
+	
 	
 	rapid -= rapoffset[isys[0]];
 
@@ -387,6 +437,10 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 	cosv2ptx[irapid][ipt].push_back( pt );
 	cosv2pt[irapid][ipt] += cos(2.*dphi);
 	sinv2pt[irapid][ipt] += sin(2.*dphi);
+
+	if( irapid == 
+	
+	
 
       }
     }
@@ -543,7 +597,8 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   // hptmass->Draw("colz");
 
   cc[ic]->cd(id); id++;
-  heisoratio->Draw("colz");  
+  hazm->Draw();
+  //  heisoratio->Draw("colz");  
   
 
   ic++;
@@ -1536,6 +1591,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
 Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)            //%% Executable : 
 {
+  hphi90_180->SetLineColor(2);
+
   Double_t m0 = hphi0_180->GetEntries();
   Double_t m1 = hphi90_180->GetEntries();
 
@@ -1551,17 +1608,16 @@ Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)            //%%
   rpres[2] = sqrt(TMath::Pi())/(2.*2.*TMath::Gamma(1.5))*pow(chi,2);
   rpres[3] = sqrt(TMath::Pi())/(2.*2.*TMath::Gamma(1.5))*pow(chi+chie,2) - rpres[2];
 
-  ic++;
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
-  hphi0_180->Draw();
-  hphi90_180->SetLineColor(2);
-  hphi90_180->Draw("same");
+  // ic++;
+  // cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+  // hphi0_180->Draw();
+  // hphi90_180->Draw("same");
 
-  Double_t para[6];
-  GetFittingParameters( *hphi0_180, para);
+  //  Double_t para[6];
+  //  GetFittingParameters( *hphi0_180, para);
 
-  cout << std::setw(14) << para[1] << " +- " << std::setw(10) << para[3]
-       << std::endl;
+  //  cout << std::setw(14) << para[1] << " +- " << std::setw(10) << para[3]
+  //       << std::endl;
 
   return rpres;
 }
@@ -1646,7 +1702,7 @@ void FlatteningCheck()
     hphitheta[m] = new TH2D(hname, sysName[isys[m]]+"; #Theta ; #Phi",100,0,0.8, 100,-3.2, 3.2);
 
     hname = Form("hphimtrck%d",m);
-    hphimtrck[m] = new TH2D(hname, sysName[isys[m]]+"; Number of Track ; #Phi",35,0,35, 100,-3.2, 3.2);
+    hphimtrck[m] = new TH2D(hname, sysName[isys[m]]+"; Number of Track ; #Phi",60,0,60, 100,-3.2, 3.2);
   }
 
 
@@ -1671,14 +1727,14 @@ void FlatteningCheck()
 	// auto rapid = aPart->GetRapidity();
 	// auto vp    = aPart->GetFlattenMomentum();
 	// auto dltphi= aPart->GetAzmAngle_wrt_RP();;
-	auto phi   = aPart->GetFlattenMomentum().Phi();
-	auto theta = aPart->GetFlattenMomentum().Theta();
+	auto phi   = aPart->GetIndividualRPAngle();
+	auto theta = aPart->GetRotatedMomentum().Theta();
 	auto flag  = aPart->GetReactionPlaneFlag();
 
 	//	if(flag > 110 ){
 	if(flag >= selReactionPlanef ){
 	  hphitheta[m]->Fill( theta, phi );
-	  hphimtrck[m]->Fill( ntrack[5], phi ); 
+	  hphimtrck[m]->Fill( ntrack[4], phi ); 
 	}
       }
     }
@@ -2483,8 +2539,12 @@ void GetFittingParameters(TH1D &h1, Double_t pp[6])
   pp[1] = fcos1->GetParameter(1);
   pp[2] = fcos1->GetParError(0);
   pp[3] = fcos1->GetParError(1);
+  pp[3] = pp[1]*sqrt(pp[2]/pp[0]*pp[2]/pp[0] + pp[3]/pp[1]*pp[3]/pp[1]);
+  pp[1] = pp[1]/pp[0];
+  
   
 
+  h1.SetNormFactor(-1);
 }
 void GetFittingParameters(TH1D &h1, Double_t pp[6], Double_t corr[2])
 {
@@ -2567,6 +2627,77 @@ void DetectorBias()
 	    << " <sin 2phi> " << sin2phi/count << std::endl;
 
 
+}
+
+void CentralityDependence()            //%% Executable :
+{
+  //  UInt_t mrange[] = {70, 50, 45, 40, 35, 25, 20, 0};
+  UInt_t mrange[] = {70, 35, 28, 0};
+
+  const UInt_t mbin = sizeof(mrange)/sizeof(UInt_t) - 1;
+  TH1D *hphi0_180;
+  TH1D *hphi90_180;
+  TH1I *hmult;
+
+  auto gv_mcos1 = new TGraphErrors();
+  gv_mcos1->SetTitle(";Multiplicity; <cos(#Psi)>");
+  auto gv_mcos2 = new TGraphErrors();
+ gv_mcos2->SetTitle(";Multiplicity; <cos(2#Psi)>");
+
+
+  auto cc80 = new TCanvas("cc80","cc80",500,1000);
+  cc80->Divide(2,7);
+  
+  UInt_t id = 1;
+  for(UInt_t i = 0; i < mbin; i++) {
+    cc80->cd(id); id++;
+    TCut hcut = Form("ntrack[4]>%u&&ntrack[4]<=%u",mrange[i+1],mrange[i]);
+
+    TString htitle = Form("hphi0_%d",i);
+    hphi0_180  = new TH1D(htitle, "",100,0.,3.2);
+    rChain[0]->Project(htitle,"abs(TVector2::Phi_mpi_pi(unitP_1->Phi()-unitP_2->Phi()))",hcut);
+    hphi0_180->Draw();
+
+    htitle = Form("hphi90_%d",i);
+    hphi90_180 = new TH1D(htitle,"",100,0.,3.2);
+    TCut phicut = "abs(TVector2::Phi_mpi_pi(unitP_1->Phi()-unitP_2->Phi()))>1.5707963";
+    rChain[0]->Project(htitle,"abs(TVector2::Phi_mpi_pi(unitP_1->Phi()-unitP_2->Phi()))",hcut&&phicut);
+    hphi90_180->Draw("same");
+
+    hmult = new TH1I(Form("hmult_%u",i),"",70,0.,70.);
+    rChain[0]->Project(Form("hmult_%u",i),"ntrack[4]",hcut);
+    cc80->cd(id); id++;
+    hmult->Draw();
+    
+
+     Double_t *rpres = new Double_t[4];
+     rpres = GetRPResolutionwChi(hphi0_180, hphi90_180);
+     std::cout << mrange[i+1] << " ~ " << mrange[i] 
+     	      << " <cos(Phi)> = " << rpres[0] << " +- " << rpres[1] 
+     	      << " <cos(2Phi)> = "<< rpres[2] << " +- " << rpres[3] 
+     	      << std::endl;
+     
+     hmult->GetMean();
+
+     gv_mcos1->SetPoint(i, hmult->GetMean(), rpres[0]);
+     gv_mcos1->SetPointError(i, hmult->GetStdDev(), rpres[1]);
+
+     gv_mcos2->SetPoint(i, hmult->GetMean(), rpres[2]);
+     gv_mcos2->SetPointError(i, hmult->GetStdDev(), rpres[3]);
+  }
+
+  hmult = new TH1I("hmult",";Multiplicity",70,0,70);
+  rChain[0]->Project("hmult","ntrack[4]");
+
+
+  auto cc79 = new TCanvas("cc79","cc79");
+  hmult->Draw("");
+
+  auto cc81 = new TCanvas("cc81","cc81");
+  gv_mcos1->Draw("ALP");
+
+  auto cc82 = new TCanvas("cc82","cc82");
+  gv_mcos2->Draw("ALP");
 }
 
 
