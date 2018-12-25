@@ -51,18 +51,21 @@ void PlotPtDependence()
 
   // --> Plotting selection
   Bool_t bsys[]  = { 1, 1, 0, 0};
-  Bool_t bpid[]  = { 1, 0, 1, 0, 1, 0}; //p, d, t, n
+  Bool_t bpid[]  = { 0, 0, 0, 0, 1, 1}; //0:p, 1:d, 2:t, 3:n, 4:3He, 5:4He
   Bool_t bcnt[]  = { 1, 0, 0}; 
   UInt_t cntw = 3;
-  UInt_t bazm[]  = { 1, 0, 0}; // 1: pm, 10:m, 11:xsp, //1: <45, 2:>135, 3:45<&<135
+  UInt_t bazm[]  = { 12, 0, 0}; // 1: pm, 10:m, 11:xsp, //1: <45, 2:>135, 3:45<&<135
 
   UInt_t ngr = 0;
   std::vector< TString > fname;
   std::vector< std::vector< UInt_t >> index(5);
   TGraphErrors *g_slope[4][4];
   TGraphErrors *g_v2cm[4][4];
+  TGraphErrors *g_v2mid[4];
 
   for(UInt_t is = 0; is < 4; is++){
+    g_v2mid[is] = new TGraphErrors();
+    g_v2mid[is]->SetName( Form("g_v2mid%d",is));
 
     for(UInt_t ip = 0; ip < (UInt_t)sizeof(bpid)/sizeof(Bool_t); ip++){
 
@@ -124,15 +127,17 @@ void PlotPtDependence()
 
 
   // Rapidity dependence 
-  auto mrv1  = new TMultiGraph("mrv1",";Rapidity; v1");
-  auto mrv2  = new TMultiGraph("mrv2",";Rapidity; v2");
-  auto mv1sl = new TMultiGraph("mv1sl",";Centrality; v1 slope");
-  auto mv2cm = new TMultiGraph("mv2cm",";Centrality; v2 at Y_cm");
+  auto mrv1  = new TMultiGraph("mrv1"  ,";Rapidity; v1");
+  auto mrv2  = new TMultiGraph("mrv2"  ,";Rapidity; v2");
+  auto mv1sl = new TMultiGraph("mv1sl" ,";Centrality; v1 slope");
+  auto mv2cm = new TMultiGraph("mv2cm" ,";Centrality; v2 at Y_cm");
+  auto mv2mid= new TMultiGraph("mv2mid","; Particle ; v2 at Y_cm");
   auto lgr1 = new TLegend(0.54, 0.13, 0.87, 0.4,""); 
-  auto lgr2 = new TLegend(0.54, 0.14, 0.9, 0.34,"");
+  auto lgr2 = new TLegend(0.21, 0.68, 0.57, 0.9,"");
   auto lgr3 = new TLegend(0.35, 0.13, 0.7, 0.33,"");
   auto lgr4 = new TLegend(0.15, 0.63, 0.5, 0.85,"");
   auto lgr5 = new TLegend(0.15, 0.63, 0.5, 0.85,"");
+  auto lgr6 = new TLegend(0.72, 0.73, 0.9, 0.87,"");
 
 
   // Pt dependence
@@ -144,7 +149,7 @@ void PlotPtDependence()
 
   for(UInt_t k = 0; k < rbin2; k++) {
     mv2[k] = new TMultiGraph((TString)Form("mv2%d",k), rapRange2[k]+";Pt [MeV/c]; v2");
-    lg2[k] = new TLegend(0.17, 0.2, 0.62, 0.4,"");
+    lg2[k] = new TLegend(0.24, 0.7, 0.99, 0.9,"");
     lg2[k]->SetTextSize(0.05);
   }
 
@@ -154,6 +159,8 @@ void PlotPtDependence()
   //  ccv->Divide(2, ngr/2);
   UInt_t id = 1;
 
+  UInt_t iss = 9;
+  UInt_t ipp = 0;
   Color_t icolor = 100; 
   for(UInt_t igr = 0; igr < ngr; igr++ ) {
 
@@ -172,6 +179,12 @@ void PlotPtDependence()
     UInt_t it = index[2].at(igr);
     UInt_t ik = index[3].at(igr);
     UInt_t iz = index[4].at(igr);
+    
+    if( is != iss ) {
+      ipp = 0;
+      iss = is;
+    }
+
 
     if( igr < 7)
       icolor = icol[igr];
@@ -269,11 +282,14 @@ void PlotPtDependence()
     // --end of rapidity dependence
 
     Double_t v2x, v2y, v2xe;
-    yv2->GetPoint(2, v2x, v2y);
-    v2xe = yv2->GetErrorY(2);
+    yv2->GetPoint(1, v2x, v2y);
+    v2xe = yv2->GetErrorY(1);
     g_v2cm[is][ip]->SetPoint(it, (Double_t)it+1+0.05*is, v2y);
     g_v2cm[is][ip]->SetPointError(it, 0., v2xe);
+    g_v2mid[is]->SetPoint(ipp, ip, v2y);
+    g_v2mid[is]->SetPointError(ipp, 0., v2xe); ipp++;
 
+    cout << fsys[is] << " : " << fpid[ip] << " -> " << v2y << " +- " << v2xe << " @ " << ipp <<  endl;
 
     // Pt dependence 
     for(UInt_t k = 0; k < rbin; k++){
@@ -470,15 +486,24 @@ void PlotPtDependence()
 
 	lgr5->AddEntry(g_v2cm[is][ip], fsys[is]+":"+fpid[ip](0,4), "lp");
       }
+      
+
     }
 
+    if( g_v2mid[is]->GetN() > 0) {
+      g_v2mid[is]->SetMarkerStyle(imrk[is]);
+      g_v2mid[is]->SetMarkerColor(icol[is]);
+      g_v2mid[is]->SetLineColor(icol[is]);
+      mv2mid->Add(g_v2mid[is],"lp");      
+      
+      lgr6->AddEntry(g_v2mid[is], rsys[is]+"Sn", "lp");
+    }
   }
+
   // auto cc6 = new TCanvas("cc6","cc6");
   // mv1sl->Draw("ALP");
   // lgr4->Draw();
-  // auto cc7 = new TCanvas("cc7","cc7");
-  // mv2cm->Draw("ALP");
-  // lgr5->Draw();
+
 
 
   if( kFALSE ){  
@@ -510,6 +535,13 @@ void PlotPtDependence()
     mv2[2]->Draw("ALP");
     lg2[2]->Draw();
   }
+
+
+   auto cc7 = new TCanvas("cc7","cc7");
+   //   g_v2mid[0]->Draw("ALP");
+   mv2mid->Draw("ALP");
+   lgr6->Draw();
+
   
 }
 

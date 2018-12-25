@@ -14,8 +14,11 @@ source ../build/config.sh
 #export STTPCDIR=/cache/scr/spirit/recoData/20180719/
 #export STVERSION=1665.2e3712e
 
-export STTPCDIR=/xrootd/spdaq02/recoData/20181213/data/
-export STVERSION=HEAD.1766.ee70f52
+#export STTPCDIR=/xrootd/spdaq02/recoData/20181213/data/
+#export STVERSION=HEAD.1766.ee70f52
+
+export STTPCDIR=/xrootd/spdaq02/recoData/20181219/data/
+export STVERSION=HEAD.1769.ef17b59
 export ST132DIR=${STTPCDIR}
 export ST108DIR=${STTPCDIR}
 export ST124DIR=${STTPCDIR}
@@ -71,7 +74,7 @@ RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=("2273")
 #RUNNUMBER1=(${RNFTEMP})
 #RUNNUMBER1=(${RNF132r})
-VERSION=13
+VERSION=14
 
 
 function process1(){

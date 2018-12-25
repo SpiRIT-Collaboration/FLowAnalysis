@@ -122,6 +122,8 @@ UInt_t iaz = 0;
 void calcFlw(UInt_t isel = 0) 
 {
   gROOT->Reset();
+
+
   openFlw();
 
   for(UInt_t i = 0; i < 4; i++){
@@ -170,7 +172,7 @@ void calcFlw(UInt_t isel = 0)
     PlotCosPtDependence(isel);  
   else if ( isel == 5 )
     PlotNeuLANDCosv1v2(); 
-  else if ( isel > 5 && isel < 8)
+  else if ( isel > 5 && isel <=  13)
     PlotCosPtDependence(isel);  
     
 
@@ -185,6 +187,10 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   std::cout << "PlotCosPtDependence(" << selid << ")" << std::endl;
 
   gStyle->SetOptStat(0);
+
+  auto cutfile = new TFile("data/RegionCut.root");
+  TCutG *goodThetaPhi = (TCutG*)cutfile->Get("goodThetaPhi");
+  cutfile->Close();    
 
   gSystem->cd("data");
 
@@ -343,7 +349,7 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
       if( pid == partid[selid] ) { //&& 
 
 	if( iaz == 13 ){
-	  if( phi <= 
+	  if( !goodThetaPhi->IsInside(theta, phi) ) continue;
 	}
 	else if( iaz == 12){
 	  if( abs(phi) < 135.*TMath::DegToRad() &&  abs(phi) >  45.*TMath::DegToRad() ) continue;
@@ -410,7 +416,7 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 	cosv1pt[irapid][ipt] += cos(dphi);
 	sinv1pt[irapid][ipt] += sin(dphi);
 
-	  
+
 	irapid = ybin2 - 1;
 
 	for( UInt_t i = 0; i < ybin2; i++){
@@ -438,9 +444,6 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 	cosv2pt[irapid][ipt] += cos(2.*dphi);
 	sinv2pt[irapid][ipt] += sin(2.*dphi);
 
-	if( irapid == 
-	
-	
 
       }
     }

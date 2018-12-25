@@ -79,11 +79,10 @@ function azum() {
 #   AZ=31 RUN0={$RNF132} DB0=$DB root -b -q calcFlw.C\($SPID\)
 }
 
+
 function azum12() {
-#    AZ=12  RUN0={$RNF132} DB0=$DB root -b -q calcFlw.C\($SPID\)
-    AZ=1   RUN0={$RNF108} DB0=$DB root -b -q calcFlw.C\($SPID\)
-    AZ=10   RUN0={$RNF108} DB0=$DB root -b -q calcFlw.C\($SPID\)
-    AZ=11   RUN0={$RNF108} DB0=$DB root -b -q calcFlw.C\($SPID\)
+    AZ=13  RUN0={$RNF132} DB0=$DB root -b -q calcFlw.C\($SPID\)
+    AZ=13  RUN0={$RNF108} DB0=$DB root -b -q calcFlw.C\($SPID\)
 }
 
 
@@ -92,7 +91,7 @@ cat calcFlw.sh |grep function
 
 
 #PARTICLE=("2")
-PARTICLE=("2" "3" "4" "6" "7")
+PARTICLE=("3" "4" "6" "7")
 #PARTICLE=("5")
 function multipleexec(){
     typeset -i I=0;
