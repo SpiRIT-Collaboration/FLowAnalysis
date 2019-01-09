@@ -5,8 +5,8 @@ source setup.sh
 #export DB=_rf.v8.0.0.cv0
 #export DB=_f0.v11
 export DB=_rf.v11.0.1.cv2
-export DB=_f0.v12
 export DB=_rf.v12.0.0.cv0
+export DB=_f0.v14
 
 
 #RUN0={$RN132} DB0=$DB132 valgrind root calcFlw.C

@@ -83,6 +83,7 @@ void flw_process1(Int_t nevt = -1)
   Long64_t nEvtTPC = 0;
   if( STPC ) {
     SetTPC();
+    SetupDB();
 
     if(fChain) nEvtTPC = fChain -> GetEntries();
     std::cout << "Number of events in TPC: " << nEvtTPC << std::endl;
@@ -253,9 +254,11 @@ void flw_process1(Int_t nevt = -1)
       UInt_t mtrack = 0;
       tpcParticle->Clear();
 
-      TIter next(trackArray);
-      STRecoTrack *trackFromArray = NULL;
+      //      TIter next(trackArray);
+      TIter next(trackVAArray);
+      
 
+      STRecoTrack *trackFromArray = NULL;
     
       while( (trackFromArray = (STRecoTrack*)next()) ) {
       
@@ -263,10 +266,10 @@ void flw_process1(Int_t nevt = -1)
 
 	auto parentvid = trackFromArray->GetVertexID();
 
-
 	STVertex* vertex = NULL;
 	if (parentvid > -1) {
-	  vertex = (STVertex *) vertexArray -> At(parentvid);
+
+	  vertex = (STVertex *) vertexVAArray -> At(parentvid);
 	
 	  STParticle *aParticle = new STParticle();
 	  aParticle->SetRecoTrack(trackFromArray);
@@ -278,19 +281,23 @@ void flw_process1(Int_t nevt = -1)
 	  //--- Set BetheBloch mass 
 	  aParticle->SetBetheBlochMass(fitterPara);
 
-
 	  //--- check origin of the track ---;
 	  aParticle->SetVertex(vertex); 
+
+	  Int_t    Charge   = aParticle->GetCharge();
+	  TVector3 VMom     = aParticle->GetRotatedMomentum();
+	  Double_t clustNum = db->GetClusterNum(Charge, VMom);
+
+	  aParticle->SetExpectedClusterNumber(clustNum);
+
 
 	  if( aParticle->GetMomentumAtTarget().Mag() == 0)
 	    aParticle->SetMaxMomentumFlag(0);
 
 	  else if( CheckVertex(aParticle) )   {
 
-
 	    aParticle->SetBestTrackFlag(1);
 	    ntrack[2]++;
-
 
 	    //--- Set track quality flag ---;
 	    if( aParticle->GetDistanceAtVertex() > 20 )
@@ -437,7 +444,8 @@ void OutputTree(Int_t nmax)
   if(STPC) {
     tpcParticle = new TClonesArray("STParticle",120);
 
-    flw->Branch("STVertex",&vertexArray);  
+    flw->Branch("BDCVertex", &vertexBDCArray);  
+    flw->Branch("STVertex",  &vertexVAArray);  
     flw->Branch("STParticle",&tpcParticle);
     flw->Branch("ntrack",ntrack,"ntrack[7]/I");
   }
@@ -706,7 +714,7 @@ Bool_t CheckVertex(STParticle *aPart)
   auto vec = aPart->GetVertex(); 
 
   if( abs( vec.Z() + 12.9 ) <= 3. &&
-      abs( vec.X() ) <= 15.       &&
+      abs( vec.X() - 2.49 ) <= 15.       &&
       abs( vec.Y() + 226.06 ) <= 20. )
 
     aPart->SetVertexAtTargetFlag(1);
@@ -912,8 +920,25 @@ void SetTPC()
   }
 
   fChain -> SetBranchAddress("STRecoTrack", &trackArray);
+  fChain -> SetBranchAddress("VATracks",    &trackVAArray);
   fChain -> SetBranchAddress("STVertex"   , &vertexArray);
+  fChain -> SetBranchAddress("VAVertex"   , &vertexVAArray);
+  fChain -> SetBranchAddress("BDCVertex"  , &vertexBDCArray);
 }
+
+void SetupDB()
+{
+  string dir = gSystem->Getenv("SPIRITROOT");
+  string dir1 = "../../"+dir+"/ana/Momentum.config";
+  db->Initial_Config( dir1 );
+  dir1 = "../../"+dir+"/ana/f1_DB_ClusterNum.root";
+  db->ReadDB( dir1 );
+  double Momentum_Range_Plus[2] = {50,3000};
+  double Momentum_Range_Minus[2] = {50,1000};
+  db->Set_MomentumRange_Plus(Momentum_Range_Plus);
+  db->Set_MomentumRange_Minus(Momentum_Range_Minus);
+}
+
 
 Bool_t DefineVersion()
 {

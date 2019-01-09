@@ -8,6 +8,15 @@ ${BASE_INCLUDE_DIRECTORIES}
 ${CMAKE_SOURCE_DIR}/analysisformat
 ${SPIRITROOTPATH}/format
 ${SPIRITROOTPATH}/global
+${SPIRITROOTPATH}/reco
+${SPIRITROOTPATH}/reco/Task
+${SPIRITROOTPATH}/reco/Genfit
+${SPIRITROOTPATH}/reco/PID
+${SPIRITROOTPATH}/reco/CurveTracking
+${SPIRITROOTPATH}/reco/BDCMagneticProjection
+${SPIRITROOTPATH}/util
+${SPIRITROOTPATH}/par
+${SPIRITROOTPATH}/field
 )
 
 include_directories(${INCLUDE_DIRECTORIES})

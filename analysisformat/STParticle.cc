@@ -78,6 +78,9 @@ STParticle::STParticle(const STParticle &cp)
   rNDF             = cp.rNDF;
   rDist            = cp.rDist;
   rPOCAVertex      = cp.rPOCAVertex;
+  rClusterSize     = cp.rClusterSize;    
+  fclustex         = cp.fclustex;
+  fclustratio      = cp.fclustratio;
 
   Initialize();
 }
@@ -148,6 +151,8 @@ void STParticle::Clear(Option_t *option)
   fpipid       = 0;
   fPID         = 0;
   fNDF         = 0.;
+  fclustex     = -1.;
+  fclustratio  = -1.;
 
   // Track quality flag
   fgoodtrackf  = 0;
@@ -158,6 +163,7 @@ void STParticle::Clear(Option_t *option)
   fmaxmomentumf= 1;    
   fmaxthetaf   = 1;
   fmaxdedxf    = 1;
+  
 
   // for flow
   fdeltphi = -10.;
@@ -171,7 +177,7 @@ void STParticle::Clear(Option_t *option)
 
   rChi2   = 0.;
   fBBMass = 0.;
-
+  rClusterSize = 0;
 
 }
 
@@ -195,7 +201,17 @@ void STParticle::SetRecoTrack(STRecoTrack *atrack)
   rNDF           =  fRTrack -> GetNDF();
   rPOCAVertex    =  fRTrack -> GetPOCAVertex();
   rChi2          =  fRTrack -> GetChi2();
+  rClusterSize   = (fRTrack -> GetClusterIDArray()) -> size();
 
+}
+
+void STParticle::SetVATrack(STGenfitVATask *atrack)
+{
+  fVATrack = atrack;
+
+  SetRecoTrack( (STRecoTrack*)fVATrack );
+
+  std::cout << "SetVATrack " << std::endl;
 }
 
 

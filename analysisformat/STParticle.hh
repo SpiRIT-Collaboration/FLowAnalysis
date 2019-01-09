@@ -16,6 +16,7 @@
 #include "TLorentzVector.h"
 
 #include "STRecoTrack.hh"
+#include "STGenfitVATask.hh"
 #include "STPID.hh"
 #include "STVertex.hh"
 
@@ -54,6 +55,9 @@ private:
   //  Double_t ftheta;           // Polar angle without any correction     = forigP3.Theta()
   //  Double_t fphi;             // Azimuthal angle without any correction = forigP3.Phi()
   Double_t fNDF;             // STVertex::GetNDF()
+  Double_t fclustex;            // expected cluster number
+  Double_t fclustratio;      // rClusterSize/fclustex
+
 
   // for flow analysis 
   TVector3 fRotatedP3;       // Momentum vector rotated with respect to the beam angle.
@@ -94,6 +98,7 @@ private:
 
   //STRecoTrack parameters
   STRecoTrack *fRTrack; //!
+  STGenfitVATask *fVATrack; //!
   Int_t     rVertexID;  
   Int_t     rdEdxPointSize;
   Int_t     rdEdxPointSize_thr = 1;
@@ -101,6 +106,7 @@ private:
   Double_t  rDist;
   TVector3  rPOCAVertex;  
   Double_t  rChi2;
+  Int_t     rClusterSize;
 
   // BB mass parameters
   Double_t  fitterpara[6];   //!  BetheBloch fitter parameters //( mean, sigma , -factor, +factor)
@@ -110,7 +116,7 @@ private:
 				  { 925.6,  80.1, 3.,  3.3},     //p  685.3 to 1,165.9
 				  {1901.1, 174.4, 2.8, 3.3},     //d  1,552.3 to 
 				  {2880.2, 297.5, 1.4, 2.} };    //t 2463
-  UInt_t  nBBsize = 4;     //!
+  UInt_t    nBBsize = 4;     //!
   
   Double_t  maxdEdx     = 1000.;  //!
   Double_t  maxMomentum = 4000.;  //!
@@ -134,7 +140,7 @@ private:
 
 public:
   void     SetRecoTrack(STRecoTrack *atrack);
-
+  void     SetVATrack(STGenfitVATask *atrack);
 
   void     RotateAlongBeamDirection(Double_t valuex, Double_t valuey);
   void     SetP(Double_t value)          {fP = value;}
@@ -166,11 +172,17 @@ public:
 
 
   void     SetRotatedMomentum(TVector3 value)   {fRotatedP3 = value;}
-
   TVector3 GetRotatedMomentum()                 {return fRotatedP3;}
   TVector2 GetRotatedPt()                       {return fRotatedPt;}
   void     SetLorentzVector();
   TLorentzVector GetLorentzVector()             {return fLzvec;}
+
+  void     SetExpectedClusterNumber(Double_t val) 
+  {
+    fclustex = val; 
+    if( fclustex > 0 )
+      fclustratio = (Double_t)rClusterSize / fclustex;
+  }
 
   void  SetBeamonTargetFlag(Int_t value)        {fBeamonTargetf = value;}
   Int_t GetBeamonTargetFlag()                   {return fBeamonTargetf;}
@@ -272,7 +284,7 @@ public:
 
   void    SetBetheBlochMass(Double_t *para);
 
-  ClassDef(STParticle, 12)
+  ClassDef(STParticle, 13)
 
 };
 

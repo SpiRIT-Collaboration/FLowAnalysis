@@ -27,7 +27,7 @@ void flw_process2(Long64_t nmax = -1)
 
   SetNumberOfProcess(nmax);
 
-  //  auto bs_unitP = new STBootStrap(100);
+  auto bs_unitP = new STBootStrap(100);
 
   for(Long64_t ievt = 0; ievt < maxProc; ievt++){
 
@@ -38,7 +38,7 @@ void flw_process2(Long64_t nmax = -1)
     if(ievt == 0)
       DefineLorentzBoostVector();
 
-    //    bs_unitP->Clear();
+    bs_unitP->Clear();
     
     Long64_t nTrack = 0;
 
@@ -113,7 +113,7 @@ void flw_process2(Long64_t nmax = -1)
 	    unitP2_ave += aPart1->GetRotatedPt().Unit(); 
 	    unitP2_rot += aPart1->GetRPWeight() * aPart1->GetRotatedPt().Unit();
 
-	    //	    bs_unitP->Add(aPart1->GetRPWeight() * aPart1->GetRotatedPt().Unit());
+	    bs_unitP->Add(aPart1->GetRPWeight() * aPart1->GetRotatedPt().Unit());
 	  }
 
 	  if( aPart1->GetReactionPlaneFlag() == 20 )
@@ -127,10 +127,10 @@ void flw_process2(Long64_t nmax = -1)
 
     
     if(ntrack[4] > 0) {
-      // bs_unitP->BootStrapping();
-      // bsPhi[0] = bs_unitP->GetMean();
-      // bsPhi[1] = bs_unitP->GetStdDev();
-      // bsPhi[2] = bs_unitP->GetMod();
+       bs_unitP->BootStrapping();
+       bsPhi[0] = bs_unitP->GetMean();
+       bsPhi[1] = bs_unitP->GetStdDev();
+       bsPhi[2] = bs_unitP->GetMod();
 
       SetSubEvent(npar, ntrack[4]);
     }
@@ -167,7 +167,7 @@ void flw_process2(Long64_t nmax = -1)
     exit(0);
   }
 
-  //  delete bs_unitP;
+  delete bs_unitP;
   delete gRandom;
 }
 
@@ -220,18 +220,18 @@ void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
 
   //  std::cout << endl;
 
-  // if( mtrack_1 > 0 && mtrack_2 > 0 ) {
-  //   bs_unitP_1->BootStrapping();
-  //   bs_unitP_2->BootStrapping();
-    
-  //   bsPhi_1[0] = bs_unitP_1->GetMean();
-  //   bsPhi_1[1] = bs_unitP_1->GetStdDev();
-  //   bsPhi_1[2] = bs_unitP_1->GetMod();
-    
-  //   bsPhi_2[0] = bs_unitP_2->GetMean();
-  //   bsPhi_2[1] = bs_unitP_2->GetStdDev();
-  //   bsPhi_2[2] = bs_unitP_2->GetMod();
-  // }
+  if( mtrack_1 > 0 && mtrack_2 > 0 ) {
+    bs_unitP_1->BootStrapping();
+    bs_unitP_2->BootStrapping();
+  
+    bsPhi_1[0] = bs_unitP_1->GetMean();
+    bsPhi_1[1] = bs_unitP_1->GetStdDev();
+    bsPhi_1[2] = bs_unitP_1->GetMod();
+  
+    bsPhi_2[0] = bs_unitP_2->GetMean();
+    bsPhi_2[1] = bs_unitP_2->GetStdDev();
+    bsPhi_2[2] = bs_unitP_2->GetMod();
+  }
 
   delete bs_unitP_1;
   delete bs_unitP_2;

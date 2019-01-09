@@ -11,6 +11,8 @@
 #include "TROOT.h"
 #include "TClonesArray.h"
 #include "../analysisformat/STKatana.hh"
+//#include "ST_ClusterNum_DB"
+
 //#include "KatanaRoot/KatanaRoot_Load.h"
 //#include "KyotoRoot/STTriggerArray.hh"
 
@@ -98,8 +100,13 @@ Double_t         ProjA;
 Double_t         ProjB;
 
 
-TClonesArray *trackArray  = NULL;
-TClonesArray *vertexArray = NULL;
+TClonesArray *trackArray     = NULL;
+TClonesArray *trackVAArray   = NULL;
+TClonesArray *vertexArray    = NULL;
+TClonesArray *vertexVAArray  = NULL;
+TClonesArray *vertexBDCArray = NULL;
+TClonesArray *vArray         = NULL;
+
 STKatana     *katanaroot  = NULL;
 STTriggerBox *triggerbox  = NULL;
 TClonesArray *tpcParticle = NULL;
@@ -136,6 +143,7 @@ void      SetDataDirectory();
 void      SetKATANADirectory();
 void      SetBeamOnTarget(TVector2 vt);
 void      SetBeamOnTarget();
+void      SetupDB();
 
 Bool_t    CheckBeamPosition();
 Bool_t    CheckVertex(STParticle *aPart);
@@ -197,5 +205,7 @@ Int_t   KyotoRoot;
 Bool_t  NeuLAND;
 
 Double_t fitterPara[5];
+
+ST_ClusterNum_DB* db = new ST_ClusterNum_DB();
 
 #endif

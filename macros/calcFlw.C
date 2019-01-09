@@ -2,6 +2,7 @@
 #include "openFlw.C"
 #include "GetLorentzBoost.C"
 
+
 auto *fcos1 = new TF1("fcos1","[0]+2.*[1]*cos(x)"   ,-1.*TMath::Pi(),TMath::Pi());
 
 Int_t  seltrackID = 4;
@@ -47,9 +48,8 @@ const UInt_t ybin2 = sizeof(yrange2)/sizeof(Double_t);
 // ganglecut->SetPoint(2, 0.94, 2.8);
 // ganglecut->SetPoint(3, 1.26,2.44);
 
-TString  partname[] = {"pi-","pi+","proton","deuteron" ,"triton", "neutron", "3He", "4He"};
-UInt_t   partid[]   = {211,    211,    2212, 1000010020, 1000010030, 2112, 1000020030, 1000020040};
-Double_t partmass[] = {139.57018, 139.57018, 938.2720813, 1875.612762, 2808.921112, 939.565346, 3.0, 4.0};
+TString  partname[] = {"pi-","pi+","proton","deuteron" ,"triton", "3He", "4He", "neutron"};
+UInt_t   partid[]   = {211,    211,    2212, 1000010020, 1000010030, 1000020030, 1000020040, 2112};
 
 Double_t cutbmass[] = {191.1, 191.1, 1165.9, 2249.9, 3475.2};
 Double_t cutlmass[] = {0.,      0. ,    0.,     0. , 2500.};
@@ -492,6 +492,7 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
       
     if( cosv1x[kn].size() == 0 ) continue;
 
+    //v1 rapidity dependence
     Double_t rapm  = TMath::Mean(cosv1x[kn].begin(), cosv1x[kn].end());
     Double_t rape  = TMath::StdDev(cosv1x[kn].begin(), cosv1x[kn].end());
       
@@ -1626,50 +1627,148 @@ Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)            //%%
 }
 
 
-void PlotAcceptance(UInt_t m = 0, UInt_t selid = 2)         //
+void PlotT3He()         //
 {
+
+  // cluster ratio is in progress.
+
   gStyle->SetOptStat(0);
 
-  TVector3 boostVec = LorentzBoost(4);
+  //  TVector3 boostVec = LorentzBoost(4);
 
-  auto haccp    = new TH2D("haccp"   , partname[selid]+"; Rapidity ; Pt [MeV/c]",100, -0.4, 0.6, 100,  0.,600.);
+  auto haccpTri    = new TH2D("haccpTri"   , "Tri; Rapidity ; Pt [MeV/c]",100, -0.4, 0.6, 100,  0.,800.);
+  auto haccp3He    = new TH2D("haccp3He"   , "3He; Rapidity ; Pt [MeV/c]",100, -0.4, 0.6, 100,  0.,800.);
+  auto haccp4He    = new TH2D("haccp4He"   , "4He; Rapidity ; Pt [MeV/c]",100, -0.4, 0.6, 100,  0.,800.);
 
-  Int_t pcharge = 1;
-  if(selid == 0)  pcharge = -1;
+  auto hmT3He      = new TH2I("hmT3He"     , " Multiplicity; Number of Trition; Number of 3He",15, 0, 15, 15, 0, 15); 
 
-  Int_t RPflag = 0;
-  if(selid >= 2) RPflag = 10;
+  auto hphiDlt = new TH1D("hphiDlt",";#Delta( #phi_{tri} - #phi_{3He}",100,-3.2,3.2);
+  auto hphiTri = new TH1D("hphiTri","Triton ;#phi",100,-3.2,3.2);
+  auto hphi3He = new TH1D("hphi3He","3He ;#phi",100,-3.2,3.2);
+  auto hphiCll = new TH2D("hphiCll","; #phi_{tri}; #phi_{3He}",100,-3.2,3.2, 100,-3.2,3.2);
 
-  Int_t nevt = SetBranch(m);
+  std::vector< TVector3 > momTri;
+  std::vector< TVector3 > mom3He;
+  std::vector< TVector3 > mom4He;
+
+
+  Int_t nevt = SetBranch(0);
   for(Int_t i = 0; i < nevt; i++){
-    rChain[m]->GetEntry(i);
+    rChain[0]->GetEntry(i);
 
     TIter next(aArray);
     STParticle *aPart = NULL;
+    momTri.clear();
+    mom3He.clear();
+    mom4He.clear();
+
+
+    auto Psi = unitP_fc->Phi();
+    TVector2 momVTri(0.,0.);
+    TVector2 momV3He(0.,0.);
   
     while( (aPart = (STParticle*)next()) ) {
 
+      auto chr = aPart->GetCharge();
       auto rpf = aPart->GetReactionPlaneFlag();
       auto pid = aPart->GetPID();
+      auto mom = aPart->GetRotatedMomentum();
+      auto pt  = mom.Pt();
+      auto rapid = aPart->GetRapiditycm();
+      
+      mom.RotateY(-Psi);
+      //      TVector2 momPt = mom
 
-      if(pid == partid[selid] && aPart->GetCharge() == pcharge ){
+      // STRecoTrack *atrack = (STRecoTrack*)aPart->GetRecoTrack();
+      // Double_t nclst = (Double_t)atrack->GetClusterIDArray()->size();
+      // Double_t cclst = (Double_t)db->GetClusterNum(chr, mom.Theta(), mom.Phi(), mom.Mag());
+      // cout << " nnumber of cluster " << nclst
+      // 	   << " expected cluster " << cclst
+      // 	//	   << " ratio " << nclst/cclust
+      // 	   << endl;
 
-	if( pid > 2000 && (rpf == 110 || rpf == 210 ) ) continue;
+      
+      if( pid == partid[4]) {
+	haccpTri -> Fill(rapid, pt);
 
-	//	auto rapid = aPart-> GetRapidity();
-	//	rapid = (rapid - ycm[isys[m]])/ybeam_cm[isys[m]];
-
-	auto rapid = GetRapidity_cm(aPart->GetRotatedMomentum(), aPart->GetMass(), -boostVec);
-	auto pt    = aPart-> GetRotatedMomentum().Pt();
-
-	haccp -> Fill(rapid, pt);
+	if( rapid > 0 ) {
+	  hphiTri -> Fill(aPart->GetAzmAngle_wrt_RP());
+	  momVTri += mom.XYvector();
+	}
+	else {
+ 	  hphiTri -> Fill(TVector2::Phi_mpi_pi( aPart->GetAzmAngle_wrt_RP() - TMath::Pi() ) );
+	  momVTri += mom.XYvector().Rotate(TMath::Pi());; 
+	}
+	momTri.push_back(mom);
       }
+      else if( pid == partid[5]) {
+	haccp3He -> Fill(rapid, pt);
+
+	if( rapid > 0 ) {
+	  hphi3He -> Fill(aPart->GetAzmAngle_wrt_RP());
+	  momV3He += mom.XYvector();
+	}
+	else {
+ 	  hphi3He -> Fill(TVector2::Phi_mpi_pi( aPart->GetAzmAngle_wrt_RP() - TMath::Pi() ) );
+	  momV3He += mom.XYvector().Rotate(TMath::Pi());; 
+	}
+
+	mom3He.push_back(mom);
+      }
+      else if( pid == partid[6]) {
+	haccp4He -> Fill(rapid, pt);
+
+	mom4He.push_back(mom);
+      }
+    }
+
+    hmT3He->Fill( momTri.size(), mom3He.size() );
+
+    if( momTri.size() > 0 && mom3He.size() ) {
+      Double_t phitri = TVector2::Phi_mpi_pi(momVTri.Phi());
+      Double_t phi3he = TVector2::Phi_mpi_pi(momV3He.Phi()); 
+
+      hphiTri->Fill(phitri);
+      hphi3He->Fill(phi3he);
+      
+      auto dphi = momVTri.DeltaPhi(momV3He);
+      hphiDlt->Fill(dphi);
+      
+      hphiCll->Fill( Psi, dphi );
     }
   }
 
   ic++;
-  cc[ic] = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
-  haccp->Draw("colz");
+  auto ccv = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+  ccv->Divide(1,3);
+  ccv->cd(1);
+  haccpTri->Draw("colz");
+  ccv->cd(2);
+  haccp3He->Draw("colz");
+  ccv->cd(3);
+  haccp4He->Draw("colz");
+
+  ic++;
+  ccv = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+  ccv->Divide(2,2);
+  ccv->cd(1);
+  hmT3He->Draw("colz");
+
+  ccv->cd(2);
+  hphiDlt->Draw();
+
+  ccv->cd(3);
+  hphiTri->Draw();
+
+  ccv->cd(4);
+  hphi3He->Draw();
+
+  ic++;
+  ccv = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+  hphiCll->Draw("colz");
+
+  
+  gROOT->cd();
 }
 
 
@@ -2645,7 +2744,7 @@ void CentralityDependence()            //%% Executable :
   auto gv_mcos1 = new TGraphErrors();
   gv_mcos1->SetTitle(";Multiplicity; <cos(#Psi)>");
   auto gv_mcos2 = new TGraphErrors();
- gv_mcos2->SetTitle(";Multiplicity; <cos(2#Psi)>");
+  gv_mcos2->SetTitle(";Multiplicity; <cos(2#Psi)>");
 
 
   auto cc80 = new TCanvas("cc80","cc80",500,1000);
@@ -2740,7 +2839,6 @@ UInt_t SetBranch(UInt_t m=0)
   if(aArray != NULL)
     aArray->Clear();
 
-
   if(rChain[m] == NULL) {
     std::cout << " no file is loaded " << std::endl;
     return 0;
@@ -2766,7 +2864,7 @@ UInt_t SetBranch(UInt_t m=0)
   rChain[m]->SetBranchAddress("STNeuLANDCluster", &aNLClusterArray);
 
   
-
+  SetupDB();
 
   return rChain[m]->GetEntries();
 
