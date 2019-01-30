@@ -8,6 +8,10 @@
 //----------------------------------------------------------------------
 void Setup()
 {
+  gROOT->ProcessLine("gErrorIgnoreLevel = kBreak");
+  gROOT->ProcessLine("gErrorIgnoreLevel = kSysError");
+  gROOT->ProcessLine("gErrorIgnoreLevel = kFatal");
+
   sRun = gSystem -> Getenv("RUN");
   sVer = gSystem -> Getenv("VER");
 
@@ -59,6 +63,12 @@ void Setup()
 
     fitFile->Close();
     delete fitFile;
+
+
+    // Angle dependent BBMass and LVMass
+    Massfitter = new STMassFunction();
+    Massfitter->SetFunction("/cache/scr/spirit/mizuki/Bethe-Bloch_Fitter/mk_NewFitter_20190111/","LVBBFitter.root");
+
   }
 }
 
@@ -248,6 +258,7 @@ void flw_process1(Int_t nevt = -1)
 
     //------- TPC ------
     if(STPC) {
+
       Int_t numTracksFromArray = trackArray -> GetEntries();
       ntrack[0] = numTracksFromArray;
 
@@ -269,20 +280,34 @@ void flw_process1(Int_t nevt = -1)
 	STVertex* vertex = NULL;
 	if (parentvid > -1) {
 
-	  vertex = (STVertex *) vertexVAArray -> At(parentvid);
+	  ntrack[1]++;
+
+	  vertex = (STVertex *) vertexArray -> At(parentvid);
 	
 	  STParticle *aParticle = new STParticle();
 	  aParticle->SetRecoTrack(trackFromArray);
-	  
+
+	  //--- Set vertex of the track ---;
+	  aParticle->SetVertex(vertex); 
+
+	  if( aParticle->GetP() == 0 || aParticle->GetP() > 3100 )
+	    aParticle->SetMomentumFlag(0);
+
+	  if( aParticle->GetdEdx() <= 0. )
+	    aParticle->SetdEdxFlag(0);
+
+	  if( aParticle->GetGoodTrackFlag()%2 == 0) continue; 
+
+	  if( aParticle->GetDistanceAtVertex() > 20 ) 
+	    aParticle->SetDistanceAtVertexFlag(0);  
+
+	  if( abs( aParticle->GetVertex().Z() + 13.1 ) > 1.7*3. )
+	    aParticle->SetVertexAtTargetFlag(0);
+
 	  //--- Rotate tracks along beam direction ---;
 	  if(ProjA > -1000 && ProjB > -1000)
 	    aParticle->RotateAlongBeamDirection(ProjA/1000., ProjB/1000.);
 
-	  //--- Set BetheBloch mass 
-	  aParticle->SetBetheBlochMass(fitterPara);
-
-	  //--- check origin of the track ---;
-	  aParticle->SetVertex(vertex); 
 
 	  Int_t    Charge   = aParticle->GetCharge();
 	  TVector3 VMom     = aParticle->GetRotatedMomentum();
@@ -290,46 +315,39 @@ void flw_process1(Int_t nevt = -1)
 
 	  aParticle->SetExpectedClusterNumber(clustNum);
 
+	  //--- Set BetheBloch mass 
+	  aParticle->SetBetheBlochMass(fitterPara);
 
-	  if( aParticle->GetMomentumAtTarget().Mag() == 0)
-	    aParticle->SetMaxMomentumFlag(0);
+	  //--- Set MassFitter
+	  TF1* mfitter = Massfitter->GetBBFunction(VMom.Theta(), VMom.Phi());
+	  //	  TF1* mfitter = Massfitter->GetLVFunction(VMom.Theta(), VMom.Phi());
+	  aParticle->GetMasswithMassFitter(mfitter);
 
-	  else if( CheckVertex(aParticle) )   {
 
-	    aParticle->SetBestTrackFlag(1);
-	    ntrack[2]++;
-
-	    //--- Set track quality flag ---;
-	    if( aParticle->GetDistanceAtVertex() > 20 )
-	      aParticle->SetDistanceAtVertexFlag(0);
-
-	    if( aParticle->GetNDF() < 30)
-	      aParticle->SetNDFFlag(0);
-	    
-	    if( aParticle->GetP() > 2500 )
-	      aParticle->SetMaxMomentumFlag(0);
-	    
-	    if( aParticle->GetRotatedMomentum().Theta() >= 0.8 )
-	      aParticle->SetMaxThetaFlag(0);
-
-	    if( aParticle->GetdEdx() > 1000 )
-	      aParticle->SetMaxdEdxFlag(0);
-
+	  //--- Set extra quality flag ---;
+	  
+	  Bool_t gflag = kTRUE;
+	  if( aParticle->GetNDF() < 30) {
+	    aParticle->SetNDFFlag(0);
+	    gflag = kFALSE;
+	  }
+	    	    
+	  if( aParticle->GetClusterRatio() < 0.7 || aParticle->GetClusterRatio() > 2 ) {
+	    aParticle->SetClusterRatioFlag(0);
+	    gflag = kFALSE;
 	  }
 
-	  if( aParticle->GetBestTrackFlag() ) {
+	  if( aParticle->GetGoodTrackFlag() == 111 ) 
 	    ntrack[3]++;
-	  }
 
 
 	  aParticle->SetTrackID(mtrack);      
 	  new(ptpcParticle[mtrack]) STParticle(*aParticle);      
 	  mtrack++;
-
+	  
 	}
-    
       }
-      ntrack[1] = mtrack;
+      ntrack[2] = mtrack;
     }
     ////  ---- end of TPC  ----
 
@@ -445,7 +463,7 @@ void OutputTree(Int_t nmax)
     tpcParticle = new TClonesArray("STParticle",120);
 
     flw->Branch("BDCVertex", &vertexBDCArray);  
-    flw->Branch("STVertex",  &vertexVAArray);  
+    flw->Branch("STVertex",  &vertexArray);  
     flw->Branch("STParticle",&tpcParticle);
     flw->Branch("ntrack",ntrack,"ntrack[7]/I");
   }
@@ -709,22 +727,6 @@ Bool_t CheckBeamPosition()
     return kFALSE;
 }
 
-Bool_t CheckVertex(STParticle *aPart)
-{   
-  auto vec = aPart->GetVertex(); 
-
-  if( abs( vec.Z() + 12.9 ) <= 3. &&
-      abs( vec.X() - 2.49 ) <= 15.       &&
-      abs( vec.Y() + 226.06 ) <= 20. )
-
-    aPart->SetVertexAtTargetFlag(1);
-  else
-    aPart->SetVertexAtTargetFlag(0);
-  
-
-  return (Bool_t)aPart->GetVertexAtTargetFlag();
-}
-				   
 
 Bool_t CheckBDCvsVertexCorrelation(TVector2 vxy)
 {

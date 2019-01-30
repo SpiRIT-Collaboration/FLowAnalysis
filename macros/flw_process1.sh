@@ -66,14 +66,14 @@ source runList.sh
 # *****> <Edit Here>
 # Set RUNNUMBER1 
 
-#RUNNUMBER1=(${RNF132})
+RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RBF132} ${RNF108} ${RNF124} ${RNF112}) 
 #RUNNUMBER1=("2997")
 #RUNNUMBER1=(${RNFTEMP})
-RUNNUMBER1=(${RNF132r})
+#RUNNUMBER1=(${RNF132r})
 VERSION=15
 
 
@@ -119,7 +119,7 @@ function process1(){
 #RUN=${RUNNUMBER1[0]}
 #RUN=${RUN} VER=$VERSION root -b -q flw_process1.C\(1000\)
 
-process1 
+#process1 
 
 
 

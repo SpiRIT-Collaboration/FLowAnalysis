@@ -27,7 +27,9 @@ void flw_process2(Long64_t nmax = -1)
 
   SetNumberOfProcess(nmax);
 
-  auto bs_unitP = new STBootStrap(100);
+  STBootStrap *bs_unitP;
+  if( iBTS == 1 )
+    bs_unitP = new STBootStrap(100);
 
   for(Long64_t ievt = 0; ievt < maxProc; ievt++){
 
@@ -38,7 +40,8 @@ void flw_process2(Long64_t nmax = -1)
     if(ievt == 0)
       DefineLorentzBoostVector();
 
-    bs_unitP->Clear();
+    if( iBTS == 1 )
+      bs_unitP->Clear();
     
     Long64_t nTrack = 0;
 
@@ -59,6 +62,7 @@ void flw_process2(Long64_t nmax = -1)
     }
 
     TClonesArray &npar = *nParticleArray;
+
 
     if(ntrack[2] > 0 || bMix) {
      
@@ -113,24 +117,29 @@ void flw_process2(Long64_t nmax = -1)
 	    unitP2_ave += aPart1->GetRotatedPt().Unit(); 
 	    unitP2_rot += aPart1->GetRPWeight() * aPart1->GetRotatedPt().Unit();
 
-	    bs_unitP->Add(aPart1->GetRPWeight() * aPart1->GetRotatedPt().Unit());
+	    if( iBTS == 1 )
+	      bs_unitP->Add(aPart1->GetRPWeight() * aPart1->GetRotatedPt().Unit());
 	  }
 
 	  if( aPart1->GetReactionPlaneFlag() == 20 )
 	    ntrack[5]++;
 	}
 	nLoop++;
+
       }
 
       ntrack[4] = mtrack;
-    }
 
+    }
     
     if(ntrack[4] > 0) {
-       bs_unitP->BootStrapping();
-       bsPhi[0] = bs_unitP->GetMean();
-       bsPhi[1] = bs_unitP->GetStdDev();
-       bsPhi[2] = bs_unitP->GetMod();
+      
+      if( iBTS == 1 ) {
+	bs_unitP->BootStrapping();
+	bsPhi[0] = bs_unitP->GetMean();
+	bsPhi[1] = bs_unitP->GetStdDev();
+	bsPhi[2] = bs_unitP->GetMod();
+      }
 
       SetSubEvent(npar, ntrack[4]);
     }
@@ -141,6 +150,8 @@ void flw_process2(Long64_t nmax = -1)
       unitP2_rot.SetX(-999.); unitP2_rot.SetY(-999.);
     }
     ntrack[6] = trackID.size();
+
+
 
     if(ntrack[3] > 0) {
       mflw->Fill();
@@ -157,7 +168,6 @@ void flw_process2(Long64_t nmax = -1)
     hgtc->Write();
   }
 
-
   fout->cd();
   fout->Write();
   std::cout << fout->GetName() << std::endl;
@@ -167,14 +177,16 @@ void flw_process2(Long64_t nmax = -1)
     exit(0);
   }
 
-  delete bs_unitP;
+  if( iBTS == 1 )
+    delete bs_unitP;
   delete gRandom;
 }
 
 void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
 {
-  auto bs_unitP_1 = new STBootStrap(1000);
-  auto bs_unitP_2 = new STBootStrap(1000);
+  STBootStrap* bs_unitP_1 = new STBootStrap(1000);
+  STBootStrap* bs_unitP_2 = new STBootStrap(1000);
+
 
   UInt_t *rndArray = new UInt_t[npart];
   
@@ -196,7 +208,8 @@ void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
       if( rndArray[itrack] == 0 ) {
 
 	unitP_1r+= wt * ptr.Unit();
-	bs_unitP_1->Add(wt * ptr.Unit());
+	if( iBTS == 1 )
+	  bs_unitP_1->Add(wt * ptr.Unit());
 
 	TVector2 ptpt = wt * ptr.Unit();
 	//	std::cout << ptpt.Phi() << ", "; 
@@ -206,7 +219,8 @@ void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
       }
       else  {
         unitP_2r+= wt * ptr.Unit();
-	bs_unitP_2->Add(wt * ptr.Unit());
+	if( iBTS == 1 )
+	  bs_unitP_2->Add(wt * ptr.Unit());
 
 	aPart1->AddReactionPlaneFlag(200);
         mtrack_2++;
@@ -220,7 +234,7 @@ void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
 
   //  std::cout << endl;
 
-  if( mtrack_1 > 0 && mtrack_2 > 0 ) {
+  if( iBTS == 1 && mtrack_1 > 0 && mtrack_2 > 0 ) {
     bs_unitP_1->BootStrapping();
     bs_unitP_2->BootStrapping();
   
@@ -233,8 +247,10 @@ void SetSubEvent(TClonesArray &pararray, const UInt_t npart)
     bsPhi_2[2] = bs_unitP_2->GetMod();
   }
 
+
   delete bs_unitP_1;
   delete bs_unitP_2;
+
 }
 
 UInt_t *RanndomDivide2(UInt_t npart)
@@ -280,7 +296,7 @@ Bool_t CheckParticle(STParticle *apart)
   if( apart == NULL ) return bsel;
 
 
-  if( !apart->GetBestTrackFlag() ) return bsel;
+  if( !apart->GetGoodTrackFlag() ) return bsel;
 
   //  ResetPID(apart); // graphical cut PID
 
@@ -304,7 +320,7 @@ void SetFlowFlag(STParticle *apart)
     apart->SetReactionPlaneFlag(1);
   
   else if( pid > 2000 && 
-	   apart->GetBestTrackFlag()     > 0 &&
+	   apart->GetGoodTrackFlag()     > 0 &&
 	   apart->GetMaxdEdxFlag()       > 0 &&
 	   apart->GetMaxMomentumFlag()   > 0
 	   ) {
@@ -324,6 +340,14 @@ void SetEnvironment()
   sRun = gSystem -> Getenv("RUN");  // RUN number
   sVer = gSystem -> Getenv("VER");  // Version ID
   sMix = gSystem -> Getenv("MIX");
+  TString sBTS = gSystem -> Getenv("BTS");  // bootstrap
+  if( sBTS == "" )
+    iBTS = 0;
+  else
+    iBTS = 1;
+
+  std::cout << " BootStrap " << iBTS << std::endl;
+
 
 
   if(sRun =="" || sVer == "" ||sMix == "" ||!DefineVersion()) {
@@ -718,7 +742,7 @@ STParticle *GetMixedTrack(Long64_t *ival, Int_t *kval)
     if( imixTrack < nmixTrack ) {
       mixPart = (STParticle*)aParticleArray->At(imixTrack);	        
 
-      if( mixPart->GetBestTrackFlag()) {
+      if( mixPart->GetGoodTrackFlag()) {
 	mixPart->SetMixedNtrack(nmixTrack);
 	mixPart->SetMixTrackID(imixTrack);
 

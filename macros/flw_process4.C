@@ -588,7 +588,7 @@ void AzmAngleWRTReactionPlane()
       Double_t wt = aPart1->GetRPWeight();
       TVector2 pt = aPart1->GetRotatedPt();
 
-      if( aPart1->GetBestTrackFlag() ){
+      if( aPart1->GetGoodTrackFlag() ){
 	TLorentzVector lrnzVec( aPart1->GetMomentum(), aPart1->GetEtotal() );
 	lrnzVec.Boost(-boostVec);
       

@@ -8,7 +8,7 @@
 #pragma link C++ class STTriggerArray+;
 #pragma link C++ class STKatana+;
 #pragma link C++ class STTriggerBox+;
-#pragma link C++ class STKatanaSignal+;
+a#pragma link C++ class STKatanaSignal+;
 #pragma link C++ class STNeuLANDCluster+;
 #pragma link C++ class STNeuLANDHit+;
 //#pragma link C++ class AMDParticle+;

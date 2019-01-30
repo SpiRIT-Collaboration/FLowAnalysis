@@ -17,6 +17,7 @@ ${SPIRITROOTPATH}/reco/BDCMagneticProjection
 ${SPIRITROOTPATH}/util
 ${SPIRITROOTPATH}/par
 ${SPIRITROOTPATH}/field
+${MASSFITTER}/
 )
 
 include_directories(${INCLUDE_DIRECTORIES})
@@ -41,6 +42,7 @@ STNeuLANDCluster.cc
 STNeuLANDHit.cc
 STBetheBlochFittingFunction.cc
 KatanaRoot.cc
+STMassFunction.cc
 )
 
 CHANGE_FILE_EXTENSION(*.cc *.hh HEADERS "${SRCS}")

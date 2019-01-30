@@ -17,7 +17,7 @@ void RapidityShift()
   Double_t Etot = sqrt( p.Mag2() + mass_p*mass_p);
   TLorentzVector pp(p, Etot);
   
-  TVector3 boost = GetLorentzBoost(3);
+  TVector3 boost = GetLorentzBoost(4);
 
 
   UInt_t iy = 0;
@@ -62,6 +62,7 @@ void Kinema(UInt_t isel = 0)
 
   RapidityShift();
 
+
   return;
 }
 
@@ -98,11 +99,17 @@ TVector3 GetLorentzBoost(UInt_t isel = 4)
   eB_lb[2]  =  270.2;
   mT[2]     =  111.8773895;;
 
-  system[3] = "(112Sn + 124Sn)";
-  AB[3]     =  112.;
-  mB[3]     =  111.8773895; //amu
-  eB_lb[3]  =  270.2;
-  mT[3]     =  123.8773895;
+  // system[3] = "(112Sn + 124Sn)";
+  // AB[3]     =  112.;
+  // mB[3]     =  111.8773895; //amu
+  // eB_lb[3]  =  270.2;
+  // mT[3]     =  123.8773895;
+
+  system[3] = "(208Pb + 208Pb";
+  AB[3]     =  208.;
+  mB[3]     =  208; //amu
+  eB_lb[3]  =  158000.;
+  mT[3]     =  208;
 
   system[4] = "(p + p)";
   AB[4]     = 1.;
@@ -134,7 +141,6 @@ TVector3 GetLorentzBoost(UInt_t isel = 4)
 
   auto y_cm = 0.5 * log( (1+Beta_cm)/ (1-Beta_cm) );
 
-
   auto EB_cm = Gamm_cm * EB_lb - Gamm_cm*Beta_cm * PB_lb;
   auto PB_cm = -Gamm_cm* Beta_cm * EB_lb + Gamm_cm * PB_lb;
   auto YB_cm =  0.5 * log( (EB_cm + PB_cm) / (EB_cm - PB_cm) );
@@ -142,7 +148,6 @@ TVector3 GetLorentzBoost(UInt_t isel = 4)
   auto ET_cm = Gamm_cm * mT[isys];
   auto PT_cm = -Gamm_cm * Beta_cm * mT[isys];
   auto YT_cm =  0.5 * log( (ET_cm + PT_cm) / (ET_cm - PT_cm) );
-
 
   cout << " --- Reaction  " << system[isys] << endl
        << " Beam Mass   " << mB[isys]/amu << " [u] "

@@ -46,6 +46,7 @@ TString sMix;
 Bool_t  bMix;  // kTRUE mixing kFALSE real data
 TString sVer;
 TString sAsm;
+Int_t   iBTS;
 Int_t   iAsm;
 TString sbRun;
 TString sbVer;

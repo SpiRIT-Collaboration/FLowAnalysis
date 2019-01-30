@@ -123,7 +123,6 @@ void calcFlw(UInt_t isel = 0)
 {
   gROOT->Reset();
 
-
   openFlw();
 
   for(UInt_t i = 0; i < 4; i++){
@@ -188,7 +187,7 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 
   gStyle->SetOptStat(0);
 
-  auto cutfile = new TFile("data/RegionCut.root");
+  auto cutfile = new TFile("db/RegionCut.root");
   TCutG *goodThetaPhi = (TCutG*)cutfile->Get("goodThetaPhi");
   cutfile->Close();    
 
@@ -1589,6 +1588,123 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
   //  gROOT->cd();
 }
+void PlotAzimuthalDistribution(UInt_t selid = 2)       //%% Executable :
+{
+
+  std::cout << "----->  PlotPtDependence(" << selid << ")" << std::cout;
+
+  gStyle->SetOptStat(0);
+
+  gSystem->cd("data");
+
+  //  TString fName = Form("YPT_n%2dto%d_",cent[icent],cent[jcent]) + sysName[isys[0]] + "_" + partname[selid]+"_1.root";
+  TString fName = Form("AXM%2dto%d_",(UInt_t)isobin[icent]*10,(UInt_t)isobin[jcent]*10) + sysName[isys[0]] + "_" + partname[selid]+".root";
+  auto GraphSave = new TFile(fName,"recreate");
+  std::cout << "File " << fName << " is created. " << std::endl;
+
+  Int_t pcharge = 1;
+  if(selid == 0)  pcharge = -1;
+
+  Int_t RPflag = 0;
+  if(selid >= 2) RPflag = 10;
+
+  cout << " Particle " << partname[selid] << endl;
+
+  Double_t yrange[] = {-4,-0.06,0.06,4.};
+
+  std::cout << " Rapidity binning " << ybin1 << std::endl;
+  TH1D *hphi[3];
+
+  for(UInt_t i = 0; i < 3; i++ ){
+    TString rangeLabel = Form("%5.2f <= y < %5.2f",yrange[i],yrange[i+1]);
+    hphi[i]  = new TH1D(Form("hphi%d",i) ,rangeLabel+"; #Phi",80,-3.14,3.14);
+  }
+
+  
+  Int_t nevt = SetBranch();
+  cout << " Number of events " << nevt << endl;
+  
+  for(Int_t i = 0; i < nevt; i++){
+    rChain[0]->GetEntry(i);
+      
+    if(ntrack[2] == 0) continue;
+      
+    TIter next(aArray);
+    STParticle *aPart = NULL;
+
+    while( (aPart = (STParticle*)next()) ) {
+	
+      auto rpf   = aPart->GetReactionPlaneFlag();
+      auto pid   = aPart->GetPID();
+      auto bmass = aPart->GetBBMass();
+      
+      if( pid == partid[selid] ) { //&& 
+
+	auto pt    = aPart->GetRotatedMomentum().Pt();
+	auto dphi  = aPart->GetAzmAngle_wrt_RP();
+	auto rapid = aPart->GetRapiditycm();;
+
+
+	if( rapid >= yrange[0] && rapid < yrange[1] )
+	  hphi[0]->Fill( dphi );
+	else if( rapid >= yrange[1] && rapid < yrange[2] )
+	  hphi[1]->Fill( dphi );
+	else if( rapid >= yrange[2] && rapid < yrange[3] )
+	  hphi[2]->Fill( dphi );
+      }
+    }
+  }
+
+  for(UInt_t i = 0; i < 3; i++) 
+    hphi[i]->SetNormFactor(80);
+
+
+  
+
+    
+
+  ic++; 
+  cc[ic]   = new TCanvas("cc0","dphi1", 1000, 500);
+  cc[ic]->Divide(3,1);
+  cc[ic]->cd(1);
+
+  auto *fv1 = new TF1("fv1","[0]+2.*[1]*cos(x)"   ,-1.*TMath::Pi(),TMath::Pi());
+  hphi[0]->Fit("fv1","","",-3.1,3.1);
+  auto p0 = fv1->GetParameter(0);
+  auto p1 = fv1->GetParameter(1);
+  fv1->SetParameter(0, 1.);
+  fv1->SetParameter(1, p1/p0);
+  hphi[0]->Draw("e");
+  fv1->Draw("same");
+
+  //  ic++; 
+  //  cc[ic]   = new TCanvas("cc1","dphi1");
+
+  cc[ic]->cd(2);
+  auto *fv2 = new TF1("fv2","[0]+2.*[1]*cos(x) + 2.*[2]*cos(2.* x)"   ,-1.*TMath::Pi(),TMath::Pi());
+  hphi[1]->Fit("fv2","","",-3.1,3.1);
+  p0 = fv2->GetParameter(0);
+  p1 = fv2->GetParameter(1);
+  auto p2 = fv2->GetParameter(2);
+  fv2->SetParameter(0, 1.);
+  fv2->SetParameter(1, p1/p0);
+  fv2->SetParameter(2, p2/p0);
+  hphi[1]->Draw("e");
+  fv2->Draw("same");
+
+  //  ic++; 
+  //  cc[ic]   = new TCanvas("cc2","dphi1");
+  cc[ic]->cd(3);
+  auto *fv1p = new TF1("fv1p","[0]+2.*[1]*cos(x)"   ,-1.*TMath::Pi(),TMath::Pi());
+  hphi[2]->Fit("fv1p","","",-3.1,3.1);
+  p0 = fv1p->GetParameter(0);
+  p1 = fv1p->GetParameter(1);
+  fv1p->SetParameter(0, 1.);
+  fv1p->SetParameter(1, p1/p0);
+  hphi[2]->Draw("e");
+  fv1p->Draw("same");
+
+}
 
 //**************************************************
 //**************************************************
@@ -2862,9 +2978,6 @@ UInt_t SetBranch(UInt_t m=0)
   rChain[m]->SetBranchAddress("eisobm"    ,&eisobm);
   rChain[m]->SetBranchAddress("eisotg"    ,&eisotg);
   rChain[m]->SetBranchAddress("STNeuLANDCluster", &aNLClusterArray);
-
-  
-  SetupDB();
 
   return rChain[m]->GetEntries();
 

@@ -8,6 +8,7 @@
 #define STPARTICLE
 
 #include "STBetheBlochFittingFunction.hh"
+#include "MassEstimator.h"
 #include "TCutG.h"
 #include "TFile.h"
 
@@ -22,6 +23,8 @@
 
 #include <vector>
 #include <utility>
+
+//using namespace MassEstimator;
 
 class STParticle : public TObject {
 public:
@@ -42,6 +45,7 @@ private:
   Double_t fRapiditycm;
   Double_t fEtotal;
   Int_t    fChar;
+  Int_t    fGFChar;
   Double_t fMass;
   Double_t fBBMass;
 
@@ -56,8 +60,7 @@ private:
   //  Double_t fphi;             // Azimuthal angle without any correction = forigP3.Phi()
   Double_t fNDF;             // STVertex::GetNDF()
   Double_t fclustex;            // expected cluster number
-  Double_t fclustratio;      // rClusterSize/fclustex
-
+  Double_t fclusterratio;      // rClusterSize/fclustex
 
   // for flow analysis 
   TVector3 fRotatedP3;       // Momentum vector rotated with respect to the beam angle.
@@ -78,21 +81,21 @@ private:
   UInt_t   fBeamonTargetf   ; //flag for beam tracked by BDC goes on the target
   UInt_t   fVBDCCorf        ; //flag for reconstructed vertex is correated with BDC at the target
   UInt_t   fBDCCorf         ; //
-  UInt_t   fTargetXYf       ;
+  UInt_t   fTargetf         ;
   UInt_t   fgotoKatanaf     ;
   UInt_t   fgotoKyotof      ;
   UInt_t   frdEdxPointSizef ;  
 
   UInt_t   fVatTargetf      ; //flag for reconstructed vertex XY within the target
-  UInt_t   fVZatTargetf     ; //flag for reconstructed veretx Z comes from the target
   UInt_t   fdistanceatvertexf;
   UInt_t   fNDFf            ;
-  UInt_t   fmaxmomentumf    ;
-  UInt_t   fmaxthetaf       ;
-  UInt_t   fmaxdedxf        ;
+  UInt_t   fmomentumf    ;
+  UInt_t   fdedxf           ;
+  UInt_t   fclusterratiof   ; // cluster ratio flag
+  UInt_t   fmassf           ;
 
-  UInt_t   fgoodtrackf      ;
-  UInt_t   fReactionPlanef  ;  
+  UInt_t   fgoodtrackf      ; // good track flag
+  UInt_t   fReactionPlanef  ; // excellent track for flow
 
 
 
@@ -107,6 +110,7 @@ private:
   TVector3  rPOCAVertex;  
   Double_t  rChi2;
   Int_t     rClusterSize;
+  Double_t  fBLMass;
 
   // BB mass parameters
   Double_t  fitterpara[6];   //!  BetheBloch fitter parameters //( mean, sigma , -factor, +factor)
@@ -115,15 +119,23 @@ private:
   Double_t  BBmassRegion[4][4] = {{ 127.2,  21.3, 3.,  3.},      //pi
 				  { 925.6,  80.1, 3.,  3.3},     //p  685.3 to 1,165.9
 				  {1901.1, 174.4, 2.8, 3.3},     //d  1,552.3 to 
-				  {2880.2, 297.5, 1.4, 2.} };    //t 2463
+				  {2880.2, 297.5, 1.4, 2.} };//! //t 2463
   UInt_t    nBBsize = 4;     //!
+
+  Double_t  LVmassRegion[4][4] = {{ 130.8, 26.3,  3.,  3. },  //pi
+				  { 935.2, 65.1,  4.,  4.5},
+				  {1910.8,125.6,  4.,  4.},
+				  {2911.9,224.9,  2.,  2}}; //!
   
-  Double_t  maxdEdx     = 1000.;  //!
-  Double_t  maxMomentum = 4000.;  //!
-  Double_t  protonMaxMomentum = 1800.;  //!
+  
+  Double_t  maxdEdx     = 2000.;  //!
+  Double_t  maxMomentum = 3200.;  //!
+  Double_t  protonMaxMomentum = 2500.;  //!
 
   TCutG     *gcutHe3BBmass; //!
   TCutG     *gcutHe4BBmass; //!
+
+
 
 private:
   virtual void Clear(Option_t *option = "");
@@ -133,7 +145,6 @@ private:
   //private:
   void     SetProperty();
 
-  void     CheckTrackonTarget();
   void     CheckKATANAHit(){};
   void     CheckKYOTOHit(){};
 
@@ -152,7 +163,7 @@ public:
   Int_t    GetPID()                      {return fPID;}
   Double_t GetPIDProbability()           {return fPIDProbability;}
   void     SetBBPID();
-
+  void     SetBLPID();
   void     SetMass();
 
   Double_t GetRapidity()                 {return fRapidity;}
@@ -181,14 +192,14 @@ public:
   {
     fclustex = val; 
     if( fclustex > 0 )
-      fclustratio = (Double_t)rClusterSize / fclustex;
+      fclusterratio = (Double_t)rClusterSize / fclustex;
   }
+
+  Int_t  GetTrackID()                           {return   ftrackID;}
+  void   SetTrackID(Int_t ival)                 {ftrackID = ival;}
 
   void  SetBeamonTargetFlag(Int_t value)        {fBeamonTargetf = value;}
   Int_t GetBeamonTargetFlag()                   {return fBeamonTargetf;}
-
-  void  SetVertexAtTargetFlag(Int_t value)      {fVatTargetf = value; fgoodtrackf*=value;}
-  Int_t GetVertexAtTargetFlag()                 {return fVatTargetf;}
 
   void  SetVertexBDCCorrelationFlag(Int_t value){fVBDCCorf   = value;}
   Int_t GetVertexBDCCorrelationFlag()           {return fVBDCCorf;}
@@ -196,38 +207,43 @@ public:
   void  SetBDCCorrelationFlag(Int_t value)      {fBDCCorf     = value;}
   Int_t GetBDCCorrelationFlag()                 {return fBDCCorf;}
 
-  void  SetFromTargetFlag(Int_t value)          {fTargetXYf   = value;}
-  Int_t GetFromTargetFlag()                     {return fTargetXYf;}
-
   void  SetgotoKATANAFlag(Int_t value)          {fgotoKatanaf   = value;}
   Int_t GetgotoKATANAFlag()                     {return fgotoKatanaf;}
 
   void  SetgotoKYOTOFlag(Int_t value)           {fgotoKyotof   = value;}
   Int_t GetgotoKYOTOFlag()                      {return fgotoKyotof;}
 
+  // good track flag
+  void   SetGoodTrackFlag(Int_t value)          {fgoodtrackf  = value;}
+  Int_t  GetGoodTrackFlag() {
+    fgoodtrackf = fdedxf*fTargetf*fmomentumf + 10*fNDFf + 100*fclusterratiof;
+    return fgoodtrackf;}
 
-  void   SetDistanceAtVertexFlag(UInt_t value)  {fdistanceatvertexf = value; fgoodtrackf*=value;}
+
+  void   SetdEdxFlag(UInt_t value)              {fdedxf = value;}
+  UInt_t GetdEdxFlag()                          {return fdedxf;}
+
+  void   SetVertexAtTargetFlag(Int_t value)     {fVatTargetf = value; fTargetf = fVatTargetf*fdistanceatvertexf;}
+  Int_t  GetVertexAtTargetFlag()                {return fVatTargetf;}
+
+  void   SetDistanceAtVertexFlag(UInt_t value)  {fdistanceatvertexf = value; fTargetf = fVatTargetf*fdistanceatvertexf;}
   UInt_t GetDistanceAtVertexFlag()              {return fdistanceatvertexf;}
 
-  void   SetNDFFlag(UInt_t value)               {fNDFf = value; } //fgoodtrackf*=value;}
+  void   SetFromTargetFlag(Int_t value)         {fTargetf  = value;}
+  Int_t  GetFromTargetFlag()                    {return fTargetf;}
+
+  void   SetMomentumFlag(UInt_t value)          {fmomentumf = value;}
+  UInt_t GetMomentumFlag()                      {return fmomentumf; }
+
+  // --end
+
+  void   SetNDFFlag(UInt_t value)               {fNDFf = value;} 
   UInt_t GetNDFFlag()                           {return fNDFf;}
 
-  void   SetMaxMomentumFlag(UInt_t value)       {fmaxmomentumf = value;}
-  UInt_t GetMaxMomentumFlag()                   {return fmaxmomentumf; }
+  void   SetClusterRatioFlag(UInt_t value)      {fclusterratiof = value;}
+  UInt_t GetClusterRatioFlag()                  {return fclusterratiof;}
 
-  void   SetMaxThetaFlag(UInt_t value)          {fmaxthetaf = value;}
-  UInt_t GetMaxThetaFlag()                      {return fmaxthetaf;}
-
-  void   SetMaxdEdxFlag(UInt_t value)           {fmaxdedxf = value;}
-  UInt_t GetMaxdEdxFlag()                       {return fmaxdedxf;}
-
-
-  void  SetBestTrackFlag(Int_t value)           {fgoodtrackf  = value;}
-  Int_t GetBestTrackFlag()                      {return fgoodtrackf;}
-
-
-  Int_t    GetTrackID()                 {return   ftrackID;}
-  void     SetTrackID(Int_t ival)       {ftrackID = ival;}
+  UInt_t GetMassFlag()                          {return fmassf;}
 
   // for flow analysis
   void     SetMixedEventID(Int_t value) {fmxevt = value;}
@@ -254,6 +270,7 @@ public:
   TVector3 GetMomentumAtTarget()                {return forigP3;}
 
   Int_t    GetCharge()                          {return fChar;}
+  Int_t    GetGFCharge()                        {return fGFChar;}
 
   TVector3 GetMomentum()                        {return fRotatedP3;}
 
@@ -277,14 +294,19 @@ public:
   void         SetDistanceAtVertex(Double_t val)  {rDist = val;}
   Double_t     GetDistanceAtVertex()              {return rDist;}
 
+  Double_t     GetClusterRatio() {return fclusterratio;}
+
 
   void         SetVertex(TVector3 value);
   void         SetVertex(STVertex *value);
   TVector3     GetVertex()                      { return fvertex;}
+  TVector3     GetPOCAVertex()                  {return rPOCAVertex;}
 
   void    SetBetheBlochMass(Double_t *para);
 
-  ClassDef(STParticle, 13)
+  void GetMasswithMassFitter(TF1 *afunc);
+
+  ClassDef(STParticle, 17)
 
 };
 

@@ -205,6 +205,7 @@ Int_t   KyotoRoot;
 Bool_t  NeuLAND;
 
 Double_t fitterPara[5];
+STMassFunction *Massfitter;
 
 ST_ClusterNum_DB* db = new ST_ClusterNum_DB();
 
