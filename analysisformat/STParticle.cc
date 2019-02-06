@@ -60,7 +60,7 @@ STParticle::STParticle(const STParticle &cp)
   fmomentumf       = cp.fmomentumf;
   fdedxf           = cp.fdedxf;
   fclusterratiof   = cp.fclusterratiof;
-  fmassf           = cp.massf;
+  fmassf           = cp.fmassf;
   
   fgoodtrackf      = cp.fgoodtrackf;
   fReactionPlanef  = cp.fReactionPlanef;
@@ -381,12 +381,12 @@ void STParticle::SetBLPID()
     for(UInt_t i = 0; i < nBBsize; i++){
       
       Bool_t pcut = 1;
-      if( i == 3 && fLBMass > fP*1.1+2282. ) pcut = 0;
+      if( i == 3 && fBLMass > fP*1.1+2282. ) pcut = 0;
 
-      Double_t mass_low = LVmassRegin[i][0]-LBMassRegion[i][1]*LBMassRegion[i][2];
-      Double_t mass_up  = LVmassRegin[i][0]+LBMassRegion[i][1]*LBMassRegion[i][3];
+      Double_t mass_low = LVmassRegion[i][0]-LVmassRegion[i][1]*LVmassRegion[i][2];
+      Double_t mass_up  = LVmassRegion[i][0]+LVmassRegion[i][1]*LVmassRegion[i][3];
       
-      if( fLBMass >= mass_low && fLBMass <= mass_up && pcut ) {
+      if( fBLMass >= mass_low && fBLMass <= mass_up && pcut ) {
 
 	STPID::PID pid = static_cast<STPID::PID>(i);
 	fPID = STPID::GetPDG(pid);
@@ -395,10 +395,10 @@ void STParticle::SetBLPID()
 
     }
     
+      
 
-
-  } 
-
+    } 
+  }
 }
 
 
