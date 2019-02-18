@@ -19,20 +19,11 @@ STParticle::STParticle() : ftrackID(-1)
 
 STParticle::STParticle(const STParticle &cp)
 {
-
-  ftrackID       = cp.ftrackID;;
-  fvertex        = cp.fvertex;
-
-  forigP3       = cp.forigP3;
-  fRotatedP3    = cp.fRotatedP3;
-  fRotatedPt    = cp.fRotatedPt;
-  fP            = cp.fP;
-  fdEdx         = cp.fdEdx;
-  fwgt          = cp.fwgt;
+  bRotated      = cp.bRotated;
+  bFlatten      = cp.bFlatten;
+  
+  ftrackID      = cp.ftrackID;;
   fPID          = cp.fPID;
-  fPIDProbability = cp.fPIDProbability;  
-  fNDF          = cp.fNDF;
-
   fRapidity     = cp.fRapidity;
   fRapiditycm   = cp.fRapiditycm;
   fEtotal       = cp.fEtotal;
@@ -40,10 +31,24 @@ STParticle::STParticle(const STParticle &cp)
   fGFChar       = cp.fGFChar;
   fMass         = cp.fMass;
   fBBMass       = cp.fBBMass;
-  fBLMass       = cp.fBLMass;
+  fpipid        = cp.fpipid;
+  fvertex       = cp.fvertex;
+  fPIDProbability = cp.fPIDProbability;  
+  fNDF          = cp.fNDF;
   fLzvec        = cp.fLzvec;
 
-  fpipid        = cp.fpipid;
+  forigP3       = cp.forigP3;
+  fP            = cp.fP;
+  fdEdx         = cp.fdEdx;
+
+  fRotatedP3    = cp.fRotatedP3;
+  fRotatedPt    = cp.fRotatedPt;
+
+  frpphi        = cp.frpphi;
+  fdeltphi      = cp.fdeltphi;
+  fwgt          = cp.fwgt;
+
+  fBLMass       = cp.fBLMass;
 
   //flags
   fBeamonTargetf   = cp.fBeamonTargetf;
@@ -53,13 +58,13 @@ STParticle::STParticle(const STParticle &cp)
   fgotoKatanaf     = cp.fgotoKatanaf;
   fgotoKyotof      = cp.fgotoKyotof;
   frdEdxPointSizef = cp.frdEdxPointSizef;
-
+  fclusterratiof   = cp.fclusterratiof;
   fVatTargetf      = cp.fVatTargetf;
   fdistanceatvertexf = cp.fdistanceatvertexf;
   fNDFf            = cp.fNDFf;
   fmomentumf       = cp.fmomentumf;
   fdedxf           = cp.fdedxf;
-  fclusterratiof   = cp.fclusterratiof;
+
   fmassf           = cp.fmassf;
   
   fgoodtrackf      = cp.fgoodtrackf;
@@ -74,12 +79,14 @@ STParticle::STParticle(const STParticle &cp)
 
   //STRecoTrack parameters
   fRTrack          = cp.fRTrack;
+  fVATrack         = cp.fVATrack;
   rVertexID        = cp.rVertexID;  
   rdEdxPointSize   = cp.rdEdxPointSize;
   rdEdxPointSize_thr = cp.rdEdxPointSize_thr;
   rNDF             = cp.rNDF;
   rDist            = cp.rDist;
   rPOCAVertex      = cp.rPOCAVertex;
+  rChi2            = cp.rChi2;
   rClusterSize     = cp.rClusterSize;    
   fclustex         = cp.fclustex;
   fclusterratio    = cp.fclusterratio;

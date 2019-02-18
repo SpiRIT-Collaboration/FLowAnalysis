@@ -24,8 +24,6 @@
 #include <vector>
 #include <utility>
 
-//using namespace MassEstimator;
-
 class STParticle : public TObject {
 public:
   STParticle();
