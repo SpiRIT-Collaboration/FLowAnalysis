@@ -9,6 +9,8 @@ source ../build/config.sh
 
 # TPC data
 
+#export TPCDIR=/xrootd/spdaq02/recoData/20190206/data/
+#export RCVER=HEAD.1780.1e193e6
 export TPCDIR=/xrootd/spdaq02/recoData/20181219/data/
 export RCVER=HEAD.1769.ef17b59
 export ST132DIR=${STTPCDIR}
@@ -44,8 +46,6 @@ export KYOTOARRY=0;
 export KATANA=1;
 export NEULAND=1;
 
-
-
 #--------------
 
 source runList.sh
@@ -54,27 +54,35 @@ source runList.sh
 # *****> <Edit Here>
 # Set RUNNUMBER1 
 
+VERSION=18
+
+#RUNNUMBER1="2841 2843 2844"
+RUNNUMBER1="2841"
+MXEVT=10
+function exec() {
+    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT root run_analysis.C 
+}
+
+function execb() {
+    LOG=log/prc1_$RUNNUMBER1_v$VERSION.log
+    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT root -b -q run_analysis.C >& $LOG &
+}
+
 #RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RBF132} ${RNF108} ${RNF124} ${RNF112}) 
-RUNNUMBER1=("2997")
 #RUNNUMBER1=(${RNFTEMP})
 #RUNNUMBER1=(${RNF132r})
-VERSION=17
+RUNNUMBER1=(${RNF132p})
 
-function exec() {
-    RUN=2997 VER=$VERSION TPCDIR=$TPCDIR root -b -q run_analysis.C
-}
-
-
-function process1(){
+function process(){
     typeset -i I=0
     while(( $I < ${#RUNNUMBER1[@]} ))
     do
 	RUN=${RUNNUMBER1[I]} 
-	LOG=log/prc1_${RUN}_v${VERSION}.log
+	LOG=log/p1_${RUN}_v${VERSION}.log
 	echo RUN=${RUN} VER=$VERSION root -b -q run_analysis.C '>&' $LOG
 	RUN=${RUN} VER=$VERSION root -b -q run_analysis.C >& $LOG &
 	let I++
@@ -83,7 +91,7 @@ function process1(){
         fi
 
 	RUN=${RUNNUMBER1[I]} 
-	LOG=log/prc1_${RUN}_v${VERSION}.log
+	LOG=log/p1_${RUN}_v${VERSION}.log
         echo RUN=${RUN} VER=$VERSION root -b -q run_analysis.C '>&' $LOG
 	RUN=${RUN} VER=$VERSION root -b -q run_analysis.C >& $LOG &
 	let I++
@@ -92,7 +100,7 @@ function process1(){
         fi
 
 	RUN=${RUNNUMBER1[I]} 
-	LOG=log/prc1_${RUN}_v${VERSION}.log
+	LOG=log/p1_${RUN}_v${VERSION}.log
         echo RUN=${RUN} VER=$VERSION root -b -q run_analysis.C '>&' $LOG
 	RUN=${RUN} VER=$VERSION root -b -q run_analysis.C >& $LOG &
 	let I++
@@ -101,7 +109,7 @@ function process1(){
         fi
 
 	RUN=${RUNNUMBER1[I]} 
-	LOG=log/prc1_${RUN}_v${VERSION}.log
+	LOG=log/p1_${RUN}_v${VERSION}.log
         echo RUN=${RUN} VER=$VERSION root -b -q run_analysis.C '>&' $LOG
 	RUN=${RUN} VER=$VERSION root -b -q run_analysis.C >& $LOG 
 	let I++

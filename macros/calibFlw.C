@@ -75,11 +75,13 @@ void calibFlw()
   
   gROOT->ProcessLine(".! grep -i void calibFlw.C | grep '//%%'");
 
-  Flatten_Psi_ntrackthetabin(2);  //TVector3(unitP2_rot->X(), unitP2_rot->Y(), 0.);
-  Flatten_Psi_ntrackthetabin(4);  //TVector3(unitP_1r->X(),   unitP_1r->Y(),   0.);
+  //  Flatten_Psi_ntrackthetabin(2);  //TVector3(unitP2_rot->X(), unitP2_rot->Y(), 0.);
+  //  Flatten_Psi_ntrackthetabin(4);  //TVector3(unitP_1r->X(),   unitP_1r->Y(),   0.);
 
+  // later v17
+  Flatten_Psi_ntrackthetabin(10);  //TVector3(unitP->X(),   unitP->Y(),   0.);
+  Flatten_Psi_ntrackthetabin(11);  //TVector3(unitP_1->X(),   unitP_1->Y(),   0.);
 
-  //  Flatten_Psi_ntrackthetabin(6);  //TVector3(unitP_1r->Mod()*cos(bsPhi_1[0]), unitP_1r->Mod()*sin(bsPhi_1[0]), 0.);
 }
 
 
@@ -161,7 +163,7 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
   // bin setting for multiplicity
   Double_t ntrkbin[ntrknbin+1];
   Double_t ntrk_min = 0;
-  Double_t ntrk_max[] = {70, 70, 70, 70, 35, 35, 35, 35};
+  Double_t ntrk_max[] = {70, 70, 70, 70, 35, 35, 35, 35, 100, 70, 35};
   for(UInt_t n = 0; n < ntrknbin+2; n++)
     ntrkbin[n]   = ntrk_max[isel]/ntrknbin * n;
 
@@ -182,7 +184,11 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
     
   auto habiphi = new TH2D(Form("habiphi_%d",isel)," ;#Psi_rot; #Psi_fc",200,-3.2,3.2,200,-3.2,3.2);
 
-  auto unitP_ave  = new TVector3();
+  //--- retrivewed data
+  auto unitP    = new TVector2();
+  auto unitP_1  = new TVector2();
+  UInt_t mtrack4 = 0;
+
   auto unitP_rot  = new TVector3();
   auto unitP2_ave = new TVector2();
   auto unitP2_rot = new TVector2();
@@ -193,13 +199,14 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
   Double_t bsPhi_1[3];
   Double_t bsPhi_2[3];
 
-
-  rChain[0]->SetBranchAddress("ntrack",ntrack);
-  rChain[0]->SetBranchAddress("unitP_ave",&unitP_ave);
-  rChain[0]->SetBranchAddress("unitP_rot",&unitP_rot);
+  
 
 
   if( isel >= 2) {
+    rChain[0]->SetBranchAddress("ntrack",ntrack);
+    rChain[0]->SetBranchAddress("unitP_ave",&unitP_ave);
+    rChain[0]->SetBranchAddress("unitP_rot",&unitP_rot);
+
     rChain[0]->SetBranchAddress("unitP2_ave",&unitP2_ave);
     rChain[0]->SetBranchAddress("unitP2_rot",&unitP2_rot);
     rChain[0]->SetBranchAddress("unitP_1r"  ,&unitP_1r);
@@ -208,6 +215,12 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
     rChain[0]->SetBranchAddress("mtrack_2"  ,&mtrack_2);
     rChain[0]->SetBranchAddress("bsPhi_1"   ,bsPhi_1);
     rChain[0]->SetBranchAddress("bsPhi_2"   ,bsPhi_2);
+  }
+  else if( isel >= 10) {
+    rChain[0]->SetBranchAddress("mtrack4"  ,mtrack4);
+    rChain[0]->SetBranchAddress("mtrack_1" ,mtrack_1);
+    rChain[0]->SetBranchAddress("unitP"    ,&unitP);
+    rChain[0]->SetBranchAddress("unitP_1"  ,&unitP_1);
   }
 
   // Flattening with a shifting method
@@ -266,7 +279,8 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
     else if( isel == 5 )  seltrack = mtrack_2;
     else if( isel == 6 )  seltrack = mtrack_1;
     else if( isel == 7 )  seltrack = mtrack_2;
-
+    else if( isel ==10 )  seltrack = mtrack4;
+    else if( isel ==11 )  seltrack = mtrack_1;
 
     while(1){ 
       if( seltrack >= ntrkbin[j] ){
@@ -295,6 +309,8 @@ void Flatten_Psi_ntrackthetabin(UInt_t isel)
     else if(isel == 5) vec = TVector3(unitP_2r->X(),   unitP_2r->Y(),   0.); 
     else if(isel == 6) vec = TVector3(unitP_1r->Mod()*cos(bsPhi_1[0]), unitP_1r->Mod()*sin(bsPhi_1[0]), 0.);
     else if(isel == 7) vec = TVector3(unitP_2r->Mod()*cos(bsPhi_2[0]), unitP_2r->Mod()*sin(bsPhi_2[0]), 0.);
+    else if(isel ==10) vec = TVector3(unitP->X(),      unitP->Y(),      0.);
+    else if(isel ==11) vec = TVector3(unitP_1->X(),    unitP_1->Y(),    0.);
 
     hniphi->Fill(vec.Phi());
 
@@ -566,6 +582,16 @@ void SetPsiCorrectionFileHeader(UInt_t isel){
     unitpX = "unitP_2r.Mod()*cos(bsPhi_2[0])";
     unitpY = "unitP_2r.Mod()*sin(bsPhi_2[0])";
     fhead += "bs_2";
+    break;
+
+    // after v17
+  case 10: // total Psi
+    unitPX = "unitP.X()";
+    unitPY = "unitP.Y()";
+    break;
+  case 11:
+    unitPX = "unitP_1.X()";
+    unitPY = "unitP_2.Y()";
     break;
   }
 

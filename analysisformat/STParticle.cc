@@ -24,6 +24,7 @@ STParticle::STParticle(const STParticle &cp)
   
   ftrackID      = cp.ftrackID;;
   fPID          = cp.fPID;
+  fPID_loose    = cp.fPID_loose;
   fRapidity     = cp.fRapidity;
   fRapiditycm   = cp.fRapiditycm;
   fEtotal       = cp.fEtotal;
@@ -31,6 +32,7 @@ STParticle::STParticle(const STParticle &cp)
   fGFChar       = cp.fGFChar;
   fMass         = cp.fMass;
   fBBMass       = cp.fBBMass;
+  fBBMassHe     = cp.fBBMassHe;
   fpipid        = cp.fpipid;
   fvertex       = cp.fvertex;
   fPIDProbability = cp.fPIDProbability;  
@@ -43,12 +45,12 @@ STParticle::STParticle(const STParticle &cp)
 
   fRotatedP3    = cp.fRotatedP3;
   fRotatedPt    = cp.fRotatedPt;
+  fPxz          = cp.fPxz;
+  fPyz          = cp.fPyz;
 
   frpphi        = cp.frpphi;
   fdeltphi      = cp.fdeltphi;
   fwgt          = cp.fwgt;
-
-  fBLMass       = cp.fBLMass;
 
   //flags
   fBeamonTargetf   = cp.fBeamonTargetf;
@@ -106,27 +108,6 @@ STParticle &STParticle::operator=(const STParticle &cp)
 
 void STParticle::Initialize()
 {
-  gcutHe3BBmass = new TCutG("gHe3",6);
-  gcutHe3BBmass->SetVarX("fP");
-  gcutHe3BBmass->SetVarY("fBBMass");
-  gcutHe3BBmass->SetPoint(0,1657.52,  4754.8);
-  gcutHe3BBmass->SetPoint(1,1264.57,  3668.17);
-  gcutHe3BBmass->SetPoint(2,1037.6,   3248.5);
-  gcutHe3BBmass->SetPoint(3,140,      2550);
-  gcutHe3BBmass->SetPoint(4,155,      3130);
-  gcutHe3BBmass->SetPoint(5,1657.52,  4754.8);
-
-
-  gcutHe4BBmass = new TCutG("gHe4",7);
-  gcutHe4BBmass->SetVarX("fP");
-  gcutHe4BBmass->SetVarY("fBBMass");
-  gcutHe4BBmass->SetPoint(0,2165.65, 6965.53);
-  gcutHe4BBmass->SetPoint(1,1986.11, 5968.82);
-  gcutHe4BBmass->SetPoint(2,1654.13, 4762.29);
-  gcutHe4BBmass->SetPoint(3,153.455, 3136.09);
-  gcutHe4BBmass->SetPoint(4,248.306, 3825.54);
-  gcutHe4BBmass->SetPoint(5,1908.2,  6755.7);
-  gcutHe4BBmass->SetPoint(6,2162.26, 6973.02);
 }
 
 void STParticle::Clear(Option_t *option)
@@ -136,12 +117,17 @@ void STParticle::Clear(Option_t *option)
   forigP3    = TVector3(-9999,-9999,-9999);
   fvertex    = TVector3(-9999,-9999,-9999);
   fLzvec     = TLorentzVector(0.,0.,0.,0.);
+  
+  fRotatedPt = TVector2(0.,0.);
+  fPxz       = TVector2(0.,0.);
+  fPyz       = TVector2(0.,0.);
 
   fP            = -9999.;
   fdEdx         = -9999.;
 
   fpipid       = 0;
   fPID         = 0;
+  fPID_loose   = 0;
   fNDF         = 0.;
   fclustex     = -1.;
   fclusterratio= -1.;
@@ -170,7 +156,6 @@ void STParticle::Clear(Option_t *option)
 
   rChi2   = 0.;
   fBBMass = 0.;
-  fBLMass = 0.;
   rClusterSize = 0;
 
 }
@@ -182,6 +167,10 @@ void STParticle::SetRecoTrack(STRecoTrack *atrack)
 
   forigP3 = fRTrack->GetMomentumTargetPlane();
   fRotatedP3 = forigP3;
+
+  fRotatedPt = TVector2( fRotatedP3.X(),fRotatedP3.Y());
+  fPxz       = TVector2( fRotatedP3.Z(),-fRotatedP3.X());
+  fPyz       = TVector2( fRotatedP3.Z(), fRotatedP3.Y());
 
   fP    = forigP3.Mag();
   fdEdx = fRTrack->GetdEdxWithCut(0, 0.7);
@@ -237,17 +226,15 @@ void STParticle::SetVertex(TVector3 value)
   rDist = (rPOCAVertex - fvertex).Mag();
 }
 
-void STParticle::SetPID(Int_t value)
+void STParticle::SetPIDLoose(Int_t value)
 {
-  fPID = value;
-
-  SetMass();
-
+  fPID_loose = value;
+  SetMass(value);
 }
 
 
 
-void STParticle::SetMass()
+void STParticle::SetMass(Int_t val)
 {
   auto mpi  =    139.57018;
   auto mp   =    938.2720813;
@@ -259,7 +246,7 @@ void STParticle::SetMass()
 
 
   Double_t mass = 0;
-  switch (fPID) {
+  switch (val) {
   case 2212:
     mass = mp;
     break;
@@ -279,9 +266,11 @@ void STParticle::SetMass()
 
   case 1000020030:
     mass = mhe3;
+    fRotatedP3.SetMag(fP * 2.);
     break;
 
   case 1000020040:
+    fRotatedP3.SetMag(fP * 2.);
     mass = mhe4;
     break;
 
@@ -314,159 +303,14 @@ void  STParticle::SetLorentzVector()
 void  STParticle::RotateAlongBeamDirection(Double_t valuex, Double_t valuey)
 {
  
- fRotatedP3.RotateY(-valuex);
+  fRotatedP3.RotateY(-valuex);
   fRotatedP3.RotateX(-valuey);
 
-  fRotatedPt = TVector2(fRotatedP3.X(),fRotatedP3.Y());
+  fRotatedPt = TVector2( fRotatedP3.X(),fRotatedP3.Y());
+  fPxz       = TVector2( fRotatedP3.Z(),-fRotatedP3.X());
+  fPyz       = TVector2( fRotatedP3.Z(), fRotatedP3.Y());
 
   bRotated = kTRUE;
-}
-
-void STParticle::GetMasswithMassFitter(TF1 *afunc)
-{
-  if( afunc == NULL ) return;
-
-  TString f1name = ((TString)afunc->GetName())(2,2);
-
-  Double_t dx = 0.1;
-
-  if( f1name == "BB") {
-
-    Double_t *bbPar = new Double_t[6];
-    bbPar[0] = afunc->GetParameter(0);
-    bbPar[1] = afunc->GetParameter(1);
-    bbPar[2] = 1.; 
-    bbPar[3] = fP;
-    bbPar[4] = fdEdx;
-
-
-    auto funcBB  = [bbPar](double x)    { return MassEstimator::BBMassFinderEq(&x, bbPar);};
-    auto dfuncBB = [bbPar, dx](double x){ return MassEstimator::BBMassFinderDeriv(&x, bbPar, dx);};
-    ROOT::Math::RootFinder finder;  
-    ROOT::Math::GradFunctor1D gradfunc1dBB(funcBB, dfuncBB);
-    
-    finder.SetMethod(ROOT::Math::RootFinder::kGSL_SECANT);
-    finder.SetFunction(gradfunc1dBB, 1000.); 
-    finder.Solve();
-    fBLMass  = finder.Root();
-
-  }
-
-  else {
-
-    Double_t *lvPar = new Double_t[6];
-    lvPar[0] = afunc->GetParameter(0);
-    lvPar[1] = afunc->GetParameter(1);
-    lvPar[2] = afunc->GetParameter(2);
-    lvPar[3] = 1.; 
-    lvPar[4] = fP;
-    lvPar[5] = fdEdx;
-
-    auto funcLV  = [lvPar](double x)    { return MassEstimator::LVMassFinderEq(&x, lvPar);};
-    auto dfuncLV = [lvPar, dx](double x){ return MassEstimator::LVMassFinderDeriv(&x, lvPar, dx);};
-    ROOT::Math::RootFinder finder;  
-    ROOT::Math::GradFunctor1D gradfunc1dLV(funcLV, dfuncLV);
-    
-    finder.SetMethod(ROOT::Math::RootFinder::kGSL_SECANT);
-    finder.SetFunction(gradfunc1dLV, 1000.); 
-    finder.Solve();
-    fBLMass  = finder.Root();
-
-  }
-
-  if( fBLMass <= 0 || fBLMass > 6000) 
-    fmassf = 0;
-
-}
-
-void STParticle::SetBLPID()
-{
-  fPID = 0;
-
-  if( fmassf ) {
-
-    for(UInt_t i = 0; i < nBBsize; i++){
-      
-      Bool_t pcut = 1;
-      if( i == 3 && fBLMass > fP*1.1+2282. ) pcut = 0;
-
-      Double_t mass_low = LVmassRegion[i][0]-LVmassRegion[i][1]*LVmassRegion[i][2];
-      Double_t mass_up  = LVmassRegion[i][0]+LVmassRegion[i][1]*LVmassRegion[i][3];
-      
-      if( fBLMass >= mass_low && fBLMass <= mass_up && pcut ) {
-
-	STPID::PID pid = static_cast<STPID::PID>(i);
-	fPID = STPID::GetPDG(pid);
-
-	break;
-
-    }
-    
-      
-
-    } 
-  }
-}
-
-
-void STParticle::SetBetheBlochMass(Double_t *para)
-{
-  fitterpara[0] = para[0];
-  fitterpara[1] = para[1];
-  
-  fitterpara[2] = fGFChar * fP;
-  fitterpara[3] = fGFChar;
-  fitterpara[4] = fdEdx;
-  
-  fBBMass = BetheBlochFitter::CalcMass(fitterpara);
-
-  SetBBPID();
-}
-
-void STParticle::SetBBPID()
-{  
-  fPID  = 0;
-
-  if( fdEdx <= maxdEdx && fP <= maxMomentum ) { 
-
-    for(UInt_t i = 0; i < nBBsize; i++){
-
-      Bool_t pcut = 1;
-      if( i == 1 && fP > protonMaxMomentum ) pcut = 0;
-      else if( i == 3 && fBBMass > 0.8*fP+2400. ) pcut = 0;      
-
-      Double_t mass_low = BBmassRegion[i][0]-BBmassRegion[i][1]*BBmassRegion[i][2] ;
-      Double_t mass_up  = BBmassRegion[i][0]+BBmassRegion[i][1]*BBmassRegion[i][3] ;
-
-      if( fBBMass >= mass_low && fBBMass <= mass_up && pcut) {
-	
-	STPID::PID pid = static_cast<STPID::PID>(i);
-	fPID = STPID::GetPDG(pid);
-
-	break;
-      }
-    }
-      
-    if( gcutHe3BBmass != NULL && gcutHe4BBmass != NULL ) {
-
-      if( fPID == 0 && gcutHe3BBmass->IsInside(fP, fBBMass) ) {
-	STPID::PID pid = static_cast<STPID::PID>(4);
-	fPID = STPID::GetPDG(pid);
-
-	fRotatedP3.SetMag(fP * 2.);
-      }
-  
-      if( fPID == 0 && gcutHe4BBmass->IsInside(fP, fBBMass) ) {
-	STPID::PID pid = static_cast<STPID::PID>(5);
-	fPID = STPID::GetPDG(pid);
-
-	fRotatedP3.SetMag(fP * 2.);
-      }
-    }
-  }
-
-  SetMass();
-
 }
 
 

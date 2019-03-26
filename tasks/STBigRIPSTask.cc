@@ -125,7 +125,6 @@ void STBigRIPSTask::ProceedEvent()
 
   
   fBDC = new STBDC();
-  //  STBDC *aBDC = (STBDC*)fBDC->ConstructedAt(0);
   
   fBDC->SnA    = SnA;
   fBDC->aoq    = aoq ;
@@ -246,6 +245,7 @@ void STBigRIPSTask::Exec(Option_t *opt)
   LOG(DEBUG) << "STBigRIPSTask::Exec is called " << FairLogger::endl;
   fEventID++;
   
+
   ProceedEvent();
 
 

@@ -8,10 +8,10 @@
 #define STPARTICLE
 
 #include "STBetheBlochFittingFunction.hh"
-#include "MassEstimator.h"
 #include "TCutG.h"
 #include "TFile.h"
 
+#include "TVector2.h"
 #include "TVector3.h"
 #include "TRotation.h"
 #include "TLorentzVector.h"
@@ -39,6 +39,7 @@ private:
   Int_t    ftrackID;
 
   UInt_t   fPID;
+  UInt_t   fPID_loose;
   Double_t fRapidity;
   Double_t fRapiditycm;
   Double_t fEtotal;
@@ -46,6 +47,7 @@ private:
   Int_t    fGFChar;
   Double_t fMass;
   Double_t fBBMass;
+  Double_t fBBMassHe;
 
   Int_t    fpipid;
   TVector3 fvertex;
@@ -63,6 +65,8 @@ private:
   // for flow analysis 
   TVector3 fRotatedP3;       // Momentum vector rotated with respect to the beam angle.
   TVector2 fRotatedPt;       // Transverse momentum vector rotated with respect to the beam angle. 
+  TVector2 fPxz;             // TVector2( fRotatedP3.X(), fRotatedP3.Z() )
+  TVector2 fPyz;             // TVector2( fRotatedP3.Y(), fRotatedP3.Z() )
 
   TLorentzVector fLzvec;     // LorentzVector flzvec(fRotatedP3, Etotal);
 
@@ -108,31 +112,10 @@ private:
   TVector3  rPOCAVertex;  
   Double_t  rChi2;
   Int_t     rClusterSize;
-  Double_t  fBLMass;
 
-  // BB mass parameters
-  Double_t  fitterpara[6];   //!  BetheBloch fitter parameters //( mean, sigma , -factor, +factor)
-
-
-  Double_t  BBmassRegion[4][4] = {{ 127.2,  21.3, 3.,  3.},      //pi
-				  { 925.6,  80.1, 3.,  3.3},     //p  685.3 to 1,165.9
-				  {1901.1, 174.4, 2.8, 3.3},     //d  1,552.3 to 
-				  {2880.2, 297.5, 1.4, 2.} };//! //t 2463
-  UInt_t    nBBsize = 4;     //!
-
-  Double_t  LVmassRegion[4][4] = {{ 130.8, 26.3,  3.,  3. },  //pi
-				  { 935.2, 65.1,  4.,  4.5},
-				  {1910.8,125.6,  4.,  4.},
-				  {2911.9,224.9,  2.,  2}}; //!
-  
-  
   Double_t  maxdEdx     = 2000.;  //!
   Double_t  maxMomentum = 3200.;  //!
   Double_t  protonMaxMomentum = 2500.;  //!
-
-  TCutG     *gcutHe3BBmass; //!
-  TCutG     *gcutHe4BBmass; //!
-
 
 
 private:
@@ -157,12 +140,22 @@ public:
   Int_t    GetPiPID()                    {return fpipid;}
 
   void     SetPID();
-  void     SetPID(Int_t value);           
+  void     SetPID(Int_t value)           {fPID = value;} 
   Int_t    GetPID()                      {return fPID;}
+  void     SetPIDLoose(Int_t value);           
+  Int_t    GetPIDLoose()                 {return fPID_loose;}           
+
   Double_t GetPIDProbability()           {return fPIDProbability;}
-  void     SetBBPID();
-  void     SetBLPID();
-  void     SetMass();
+
+  void     SetMass(Int_t val);
+  void     SetMass(Double_t value)       {fMass = value;}
+  Double_t GetMass()                     {return fMass;}
+
+  void     SetBBMass(Double_t val)       {fBBMass   = val;}
+  Double_t GetBBMass()                   {return fBBMass;}
+
+  void     SetBBMassHe(Double_t val)     {fBBMassHe = val;}
+
 
   Double_t GetRapidity()                 {return fRapidity;}
 
@@ -175,16 +168,15 @@ public:
   void     SetdEdx(Double_t value)       {fdEdx = value;}
   Double_t GetdEdx()                     {return fdEdx;}
 
-  void     SetMass(Double_t value)       {fMass = value;}
-  Double_t GetMass()                     {return fMass;}
-  Double_t GetBBMass()                   {return fBBMass;}
-
 
   void     SetRotatedMomentum(TVector3 value)   {fRotatedP3 = value;}
   TVector3 GetRotatedMomentum()                 {return fRotatedP3;}
   TVector2 GetRotatedPt()                       {return fRotatedPt;}
   void     SetLorentzVector();
   TLorentzVector GetLorentzVector()             {return fLzvec;}
+
+  Double_t GetYawAngle()                        {return TVector2::Phi_mpi_pi(fPxz.Phi());}
+  Double_t GetPitchAngle()                      {return TVector2::Phi_mpi_pi(fPyz.Phi());}
 
   void     SetExpectedClusterNumber(Double_t val) 
   {
@@ -300,11 +292,8 @@ public:
   TVector3     GetVertex()                      { return fvertex;}
   TVector3     GetPOCAVertex()                  {return rPOCAVertex;}
 
-  void    SetBetheBlochMass(Double_t *para);
 
-  void GetMasswithMassFitter(TF1 *afunc);
-
-  ClassDef(STParticle, 17)
+  ClassDef(STParticle, 18)
 
 };
 

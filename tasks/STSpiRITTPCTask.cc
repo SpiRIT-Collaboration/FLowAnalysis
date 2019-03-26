@@ -5,25 +5,30 @@ ClassImp(STSpiRITTPCTask);
 STSpiRITTPCTask::STSpiRITTPCTask() 
   : fIsPersistence(kTRUE),
     fIsFlowAnalysis(kTRUE),
+    fIsFlowCorrection(kTRUE),
     fIsBootStrap(kFALSE),
     fIsSubeventAnalysis(kTRUE),
     selReactionPlanef(10),
-    fEventID(-1)
+    fEventID(-1),
+    fLink(new FairLink()),
+    massFitter(new STMassFunction())
 {
   fLogger = FairLogger::GetLogger();
   SetVerbose(1);
 
-  auto anaRun = FairRunAna::Instance();
-  iRun  = anaRun->getRunId();
+  fRunAna = FairRunAna::Instance();
+  iRun  = fRunAna->getRunId();
+
+  dtime.Set();
+  rnd.SetSeed(dtime.GetSecond());  
 
   //------------------------//
   // initial setup
   fChain = nullptr;
 
-  fflowinfo = new STFlowInfo();
+  // output tree file
 
-  LOG(INFO) << "STSpiRITTPCTask ==> " << " RUN : " << iRun
-	    << FairLogger::endl;
+  fflowinfo = new STFlowInfo();
 
 
   if( fIsBootStrap ) {
@@ -33,11 +38,38 @@ STSpiRITTPCTask::STSpiRITTPCTask()
 
 }
 
-// ~STSpiRITTPCTask::STSpiRITTPCTask()
-// {
-//   if( bs_unitP != NULL )
-//     delete bs_unitP;
-// }
+STSpiRITTPCTask::~STSpiRITTPCTask()
+{
+
+  delete db;
+  delete fLink;
+
+  delete fChain;  //!
+  delete eventHeader    ;  //!
+  delete trackArray     ;  //!
+  delete trackVAArray   ;  //!
+  delete vertexArray    ;  //!
+  delete vertexVAArray  ;  //!
+  delete vertexBDCArray ;  //!
+
+  delete tpcParticle;  //!
+
+  //--- mass fitter
+  delete massFitter;
+
+  delete flowAnalysis; //!
+  delete fflowinfo;    //!
+
+  for(UInt_t i = 0; i < 2; i++) {
+    if( aflowcorrArray[i] != nullptr )
+      delete aflowcorrArray[i];
+  }
+
+  if( bs_unitP != nullptr )
+    delete bs_unitP;
+
+
+}
 
 
 void STSpiRITTPCTask::SetPersistence(Bool_t value) { fIsPersistence = value; }
@@ -45,11 +77,9 @@ void STSpiRITTPCTask::SetPersistence(Bool_t value) { fIsPersistence = value; }
 
 InitStatus STSpiRITTPCTask::Init()
 {
-
-  fRootManager = FairRootManager::Instance();
-
   beginTime.Copy(dtime);
 
+  fRootManager = FairRootManager::Instance();
   if ( fRootManager == nullptr) {
     LOG(ERROR) << "Cannot find RootManager!" << FairLogger::endl;
     return kERROR;
@@ -60,6 +90,13 @@ InitStatus STSpiRITTPCTask::Init()
   auto fBDCArray = (TClonesArray *)fRootManager->GetObject("STBDC");
   if( fBDCArray == nullptr ) {
     LOG(ERROR) << "Register STBDC in advance! " << FairLogger::endl;
+    return kERROR;
+  }
+  else
+    LOG(INFO) << "STBDC is found. " << FairLogger::endl;
+
+  if( fRunAna == nullptr ) {
+    LOG(ERROR) << "STSpiRITTPCTask ==> Not defined. "  << FairLogger::endl;
     return kERROR;
   }
 
@@ -74,7 +111,7 @@ InitStatus STSpiRITTPCTask::Init()
   }
 
 
-  if( fIsFlowAnalysis ) {
+  if( fIsFlowAnalysis && fIsFlowCorrection) {
     if( !SetupFlowDataBase() ) {
       LOG(ERROR) << "STSpiRITTPCTask:: Flow database cannot be setup" << FairLogger::endl;
       return kERROR;
@@ -99,29 +136,79 @@ Bool_t STSpiRITTPCTask::SetupParameters()
 {
   Bool_t fstatus = kTRUE;
 
-  massFitter = new STMassFunction();
-  fstatus = massFitter->SetFunction("/cache/scr/spirit/mizuki/Bethe-Bloch_Fitter/mk_NewFitter_20190111/","LVBBFitter.root");
+  //--- angle dependent mass fitter // 2019/02/19
+  
 
-  // Load theoretical cluster number
+  //--- angle dependeing mass fitter //
+  //  fstatus = massFitter->SetFunction("/cache/scr/spirit/mizuki/Bethe-Bloch_Fitter/mk_NewFitter_20190111/","LVBBFitter.root");
+  // fstatus = massFitter->SetFunction("/cache/scr/spirit/mizuki/Bethe-Bloch_Fitter/mk_NewFitter_20190111/",
+  // 				    "IterBBFitter.root",
+  // 				    "f1IterBBProton_" + STRunToBeamA::GetBeamSnA(iRun) );
+  fstatus = massFitter->SetFunction("/cache/scr/spirit/mizuki/Bethe-Bloch_Fitter/mk_NewFitter_20190111/",
+				    "BBFitter.root",
+				    "f1IterBBProtonRotate_" + STRunToBeamA::GetBeamSnA(iRun) );
+  if( !fstatus ) LOG(ERROR) << " BB Mass fittter function was not loaded. " << FairLogger::endl;
+
+
+  // fstatus = massFitter->SetMassFitFunction("/cache/scr/spirit/mizuki/Bethe-Bloch_Fitter/mk_NewFitter_20190111/",
+  // 					   "MassFitter.root",
+  // 					   "f1MassFit_" + STRunToBeamA::GetBeamSnA(iRun) );
+  fstatus = massFitter->SetMassFitFunction("/cache/scr/spirit/mizuki/Bethe-Bloch_Fitter/mk_NewFitter_20190111/",
+					   "MassFitter.root",
+					   "f1IterMassFitRotate_" + STRunToBeamA::GetBeamSnA(iRun) );
+  if( ! fstatus ) LOG(ERROR) << " BB Mass gaus fit function was not loaded. " << FairLogger::endl;
+
+  //------------------------------
+
+  //--- Single mass fitter
+  TString bbfitter = gSystem->Getenv("STBBFITTER");
+  auto fitFile = new TFile(bbfitter);
+  auto fit = (TF1 *) fitFile -> Get("fit_proton");
+
+  Double_t fitterPara[2];    
+  if( fit ) {
+
+    fitterPara[0] = fit -> GetParameter(0);
+    fitterPara[1] = fit -> GetParameter(1);
+
+    LOG(INFO) << "single BetheBloch fitter is loaded from a file. "
+	      << " para 0 " << fitterPara[0]
+	      << " 1 " << fitterPara[1]
+	      << FairLogger::endl;
+  }
+  else {
+    fitterPara[0] = -0.0040786335;
+    fitterPara[1] = 10007.475;
+
+    LOG(INFO) << "single BetheBloch fitter is setup. "
+	      << " para 0 " << fitterPara[0]
+	      << " 1 " << fitterPara[1]
+	      << FairLogger::endl;
+  }
+
+  fitFile->Close();
+  delete fitFile;
+  //------------------------------
+
+  //--- Load theoretical cluster number
   string dir = gSystem->Getenv("SPIRITROOT");
-  string dir1 = "../../"+dir+"/ana/Momentum.config";
+  //  string dir1 = "../../"+dir+"/ana/Momentum.config";
+  string dir1 = "../../"+dir+"/ana/Momentum_tb_edge_ellipsoid_cut_clusternum_DB_4GeV_theta90_phi180.config";
 
   LOG(INFO) << "db file " << dir1 << endl;
 
   db = new ST_ClusterNum_DB();
   db->Initial_Config( dir1 );
-  dir1 = "../../"+dir+"/ana/f1_DB_ClusterNum.root";
+  //  dir1 = "../../"+dir+"/ana/f1_DB_ClusterNum.root";
+  dir1 ="../../"+ dir+"/ana/f1_tb_edge_ellipsoid_cut_clusternum_DB_theta90_phi180.root";
   db->ReadDB( dir1 );
 
-  double Momentum_Range_Plus[2]  = {50,3000};
-  double Momentum_Range_Minus[2] = {50,1000};
+  double Momentum_Range_Plus[2]  = {50,4000};
+  double Momentum_Range_Minus[2] = {50,4000};
   db->Set_MomentumRange_Plus(Momentum_Range_Plus);
   db->Set_MomentumRange_Minus(Momentum_Range_Minus);
+  //------------------------------
 
-
-  // flow correction parameters
-
-  
 
   return fstatus;
 }
@@ -129,22 +216,24 @@ Bool_t STSpiRITTPCTask::SetupParameters()
 Bool_t STSpiRITTPCTask::SetupInputDataFile() 
 {
   LOG(INFO) << "STSpiRITTPCTask::SetupInputDataFile() is called " << FairLogger::endl;
-  
+
   fChain = new TChain("cbmsim");
 
   UInt_t i = 0;
   while(kTRUE){
 
     TString recoFile = Form("run%04d_s%d.reco."+sVer+".root",iRun,i);
-    LOG(INFO) << " recoFile " << rootDir+recoFile << FairLogger::endl;
 
-    if(gSystem->FindFile(rootDir,recoFile)){
+
+    if(gSystem->FindFile(rootDir,recoFile))
       fChain -> Add(recoFile);
-    }
+
     else 
       break;
     
+    LOG(INFO) << i << " recoFile " << rootDir+recoFile << FairLogger::endl;
     i++;
+
   }
 
   if( i == 0 ) {
@@ -152,12 +241,17 @@ Bool_t STSpiRITTPCTask::SetupInputDataFile()
     return kFALSE;
   }
 
-  LOG(INFO) << i << " files were chained. " << endl;
+  nEntry = fChain->GetEntries();
+  LOG(INFO) << i << " files were chained. " << nEntry << " events" << FairLogger::endl;
+  
+  prcEntry = nEntry;
 
-  // fRootManager->SetInChain(fChain, 0);
-  // fRootManager->InitSource();
+  //  fRootManager->SetInChain(fChain);
 
-  nEntry = fChain->GetEntry();
+  fLink->SetLink(-1, -1, -1, 1, 1.);
+  auto tempclone = fRootManager->GetCloneOfTClonesArray(*fLink);
+  if( tempclone != nullptr)
+    tempclone->Print();
 
   fChain -> SetBranchAddress("STRecoTrack",   &trackArray);
   fChain -> SetBranchAddress("VATracks",      &trackVAArray);
@@ -167,36 +261,46 @@ Bool_t STSpiRITTPCTask::SetupInputDataFile()
 
   //  fChain->Print();
 
-  //  LOG(INFO) << "ntrack " << trackArray->GetEntries() << endl;
+
   
 
   return kTRUE;
 }
 
+
 void STSpiRITTPCTask::Exec(Option_t *opt)
 {
+
   LOG(DEBUG) << "STSpiRITTPCTask::Exec() is called " << opt << FairLogger::endl;  
   Clear();
 
+  //  prcEntry = 100;
+
   fEventID++;
   
-  if(fEventID%1000 == 0) {
+  UInt_t pdev = prcEntry/200;
+  if(prcEntry < 200) pdev = 1;
+
+  if(fEventID%pdev == 0) {
+    dtime.Set();
     Int_t ptime = dtime.Get() - beginTime.Get();
-    LOG(INFO) << "Process " << fEventID << "/"<< nEntry << " = "
-	      << ((Double_t)(fEventID)/(Double_t)nEntry)*100. << " % --->"
+    LOG(INFO) << "Process " 
+	      << setw(4) << ((Double_t)fEventID/(Double_t)prcEntry)*100. << " % = "
+	      << setw(8) << fEventID << "/"<< prcEntry 
+	      << "--->"
 	      << dtime.AsString() << " ---- "
 	      << (Int_t)ptime/60 << " [min] "
 	      << FairLogger::endl;
   }
 
-  if( fEventID < nEntry ) {
+  if( fEventID < prcEntry ) {
 
     SetupEventInfo();
     ProceedEvent();
     FinishEvent();
   }
   else {
-    LOG(INFO) << "STSpiRITTPC:: Full data set were loaded. " << FairLogger::endl;
+    LOG(INFO) << "STSpiRITTPC:: Finishing analysis. " << FairLogger::endl;
     Finish();
   }
 }
@@ -204,13 +308,6 @@ void STSpiRITTPCTask::Exec(Option_t *opt)
 void STSpiRITTPCTask::FinishEvent()
 {
   LOG(DEBUG) << "STSpiRITTPCTask::FinishEvent is called. " << FairLogger::endl;
-
-  auto anaRun = FairRunAna::Instance();
-  if( ntrack[2] == 0) 
-    anaRun->MarkFill(kFALSE);
-  else
-    anaRun->MarkFill(kTRUE);
-
 
   if( fIsFlowAnalysis && fflowinfo != nullptr) {
 
@@ -232,10 +329,10 @@ void STSpiRITTPCTask::FinishEvent()
     DoIndividualReactionPlaneAnalysis();
 
 
-    if( aflowcorrArray[0] != NULL ) {
+    if( fIsFlowCorrection && aflowcorrArray[0] != NULL ) {
 
-      fflowinfo->unitP_fc = Psi_FlatteningCorrection( 0, ntrack[2], TVector3(unitP.X(), unitP.Y(), 0.));
-      fflowinfo->unitP_rc = Psi_ReCenteringCorrection(0, ntrack[2], TVector3(unitP.X(), unitP.Y(), 0.));
+      fflowinfo->unitP_fc = Psi_FlatteningCorrection( 0, ntrack[4], TVector3(unitP.X(), unitP.Y(), 0.));
+      fflowinfo->unitP_rc = Psi_ReCenteringCorrection(0, ntrack[4], TVector3(unitP.X(), unitP.Y(), 0.));
 
     }
 
@@ -245,6 +342,12 @@ void STSpiRITTPCTask::FinishEvent()
 
 
   }
+
+  auto anaRun = FairRunAna::Instance();
+  if( ntrack[2] == 0) 
+    anaRun->MarkFill(kFALSE);
+  else
+    anaRun->MarkFill(kTRUE);
 
 }
 
@@ -259,7 +362,7 @@ void STSpiRITTPCTask::DoSubeventAnalysis()
   if(np%2 == 1) np++;
   const UInt_t npart = np;
   UInt_t *rndArray = new UInt_t[npart];
-  rndArray = RanndomDivide2(npart);
+  rndArray = RandomDivide2(npart);
 
   TIter next(tpcParticle);
   STParticle *apart = NULL;
@@ -274,6 +377,11 @@ void STSpiRITTPCTask::DoSubeventAnalysis()
       if( rndArray[itrack] == 0 ) {
 
         unitP_1+= wt * ptr.Unit();
+	LOG(DEBUG) << " sub 1 " << unitP_1.X()  
+		   << " + "     << wt * ptr.X()
+		   << " : "     << apart->GetReactionPlaneFlag()
+		   << FairLogger::endl;
+
         if( fIsBootStrap )
           bs_unitP_1->Add(wt * ptr.Unit());
 
@@ -283,6 +391,10 @@ void STSpiRITTPCTask::DoSubeventAnalysis()
       }
       else  {
         unitP_2+= wt * ptr.Unit();
+	LOG(DEBUG) << " sub 2    " << unitP_2.X()  
+		   << " + "     << wt * ptr.X()
+		   << " : "     << apart->GetReactionPlaneFlag()
+		   << FairLogger::endl;
         if( fIsBootStrap )
           bs_unitP_2->Add(wt * ptr.Unit());
 
@@ -314,11 +426,9 @@ void STSpiRITTPCTask::DoSubeventAnalysis()
   delete bs_unitP_2;
   
 }
-UInt_t *STSpiRITTPCTask::RanndomDivide2(const UInt_t npart)
+UInt_t *STSpiRITTPCTask::RandomDivide2(const UInt_t npart)
 {
   UInt_t  *rndarray = new UInt_t[npart];
-
-  TRandom3 rnd;
 
   UInt_t c1 = 0;
   UInt_t c2 = 0;
@@ -390,11 +500,11 @@ void STSpiRITTPCTask::SetupTrackQualityFlag(STParticle *apart)
 void STSpiRITTPCTask::SetupTrackExtraQualityFlag(STParticle *apart)
 {
 
-  if( apart->GetNDF() < 30) 
+  if( apart->GetNDF() < 20) 
     apart->SetNDFFlag(0);
 
-  if( apart->GetClusterRatio() < 0.7 || apart->GetClusterRatio() > 2 ) 
-    apart->SetClusterRatioFlag(0);
+  // if( apart->GetClusterRatio() < 0.7 || apart->GetClusterRatio() > 2 ) 
+  //   apart->SetClusterRatioFlag(0);
 }
 
 
@@ -402,7 +512,7 @@ void STSpiRITTPCTask::SetupFlow(STParticle &apart)
 {
   // Setup for flow analysis
 
-  auto pid    =  apart.GetPID();
+  auto pid    =  apart.GetPIDLoose();
   if( pid == 211 )
     apart.SetReactionPlaneFlag(1);
 
@@ -440,12 +550,14 @@ void STSpiRITTPCTask::SetupFlow(STParticle &apart)
 
 void STSpiRITTPCTask::DoFlowAnalysis(STParticle &apart)
 {
+  
   SetupFlow( apart );
 
   if( apart.GetReactionPlaneFlag() >= selReactionPlanef ){
     ntrack[4]++;
 
     unitP += apart.GetRPWeight() * apart.GetRotatedPt().Unit();
+
     if( fIsBootStrap )
       bs_unitP->Add(apart.GetRPWeight() * apart.GetRotatedPt().Unit());
   }
@@ -488,7 +600,7 @@ void STSpiRITTPCTask::DoIndividualReactionPlaneAnalysis()
 
     TVector3 rp_recv = TVector3(-999.,-999.,-999.);
     if(itraex > 0 && aflowcorrArray[0] != NULL) 
-      rp_recv = Psi_FlatteningCorrection(0, ntrack[2] , TVector3(mExcRP.X(), mExcRP.Y(), 0.));
+      rp_recv = Psi_FlatteningCorrection(0, ntrack[4] , TVector3(mExcRP.X(), mExcRP.Y(), 0.));
     else
       rp_recv =  TVector3(mExcRP.X(), mExcRP.Y(), 0.);
       
@@ -535,15 +647,7 @@ TVector3 STSpiRITTPCTask::Psi_FlatteningCorrection(UInt_t isel, Int_t ival, TVec
   if(iBIN >= 0 && aflowcorrArray[isel] != NULL){
     auto flowcorr = (STFlowCorrection*)(aflowcorrArray[isel]->At(iBIN));
     Psi_cf = flowcorr->ReCenteringFourierCorrection(Pvec);
-    //    Psi_cf.SetPhi(flowcorr->GetCorrection(Pvec.Phi()));                                                                                                         
-
-    if( isel == 3 && ival == 36 )  {
-      flowcorr->ShowBinInformation();
-      cout << "---##---> ntrack " << ival
-           << " iBIN " << iBIN << " Phi " << Pvec.Phi() << " -> " << Psi_cf.Phi()
-           << " X : Y : Z " << Pvec.X() << " " << Pvec.Y() << " " << Pvec.Z()
-           << endl;
-    }
+    //    Psi_cf.SetPhi(flowcorr->GetCorrection(Pvec.Phi())); 
   }
 
   return Psi_cf;
@@ -571,6 +675,30 @@ Int_t STSpiRITTPCTask::GetCorrectionIndex(UInt_t isel, UInt_t ival, Double_t fva
   return index;
 }
 
+Int_t STSpiRITTPCTask::GetMultiplicityCorretionIndex(UInt_t isel, UInt_t ival)
+{
+  std::vector< std::pair<Double_t, Double_t> >::iterator itr;
+
+  UInt_t ink = mtkbin[isel].size()-1;
+
+  for(itr = pbinmin[isel].end()-1; itr != pbinmin[isel].begin()-1; itr-= mtkbin[isel].at(ink), ink--){
+
+    if(isel == 0)
+      LOG(DEBUG) << "mult " << itr->first<< " : " << itr->second << " -- " << mtkbin[isel].at(ink) << " at " 
+		 << itr - pbinmin[isel].begin()   << FairLogger::endl;
+
+    if(ival >= itr->first) {
+
+      if(isel == 0)
+	LOG(DEBUG) << " ntrack  " << ival << " : " << itr - pbinmin[isel].begin() << FairLogger::endl;
+
+      return itr - pbinmin[isel].begin();
+    }
+  }
+
+  return -1;
+}
+
 Int_t STSpiRITTPCTask::GetThetaCorrectionIndex(UInt_t isel, Int_t ival, Double_t fval)
 {
   std::vector< std::pair<Double_t, Double_t> >::iterator itr;
@@ -587,16 +715,6 @@ Int_t STSpiRITTPCTask::GetThetaCorrectionIndex(UInt_t isel, Int_t ival, Double_t
 Bool_t STSpiRITTPCTask::SetupFlowDataBase()
 {
   UInt_t version = (UInt_t)atoi(gSystem -> Getenv("VER"));
-  UInt_t nbin = SetupFLowDatabaseFiles(version);
-
-  if( nbin == 0 ) return kFALSE;
-
-  return kTRUE;
-}
-
-
-UInt_t STSpiRITTPCTask::SetupFLowDatabaseFiles(UInt_t version)
-{
   Int_t ncount = 1;
   TString  fname[2];
 
@@ -604,17 +722,19 @@ UInt_t STSpiRITTPCTask::SetupFLowDatabaseFiles(UInt_t version)
   //  TString fname_subpsi = Form("db/132Sn.v%d.subpsi.m%dn%d.txt",version, imtk, ihmm);
 
   //  fname[0] = Form("db/%3dSn.v%d.psi.",fflowinfo->SnA,version);
-  fname[0] = "run3062_rf.v11.0.Psi2rtcv0.";;
+  //fname[0] = "run3062_rf.v11.0.Psi2rtcv0.";;
+  fname[0] = "132Sn.v18.psi.";
 
   if( fIsSubeventAnalysis ) {
     //    fname[1] = Form("db/%03Sn.v%d.subpsi.",fflowinfo->SnA,version);
-    fname[1] = "run3062_rf.v11.0.Psis1rcv0.";
+    //fname[1] = "run3062_rf.v11.0.Psis1rcv0.";
+    fname[1] = "132Sn.v18.subpsi1.";
     ncount++;
   }
 
 
   for(UInt_t i = 0; i < TMath::Min(ncount, 2); i++){
-    cout << " Database name is " << fname[i]  << endl;
+    LOG(INFO) << " Database name is " << fname[i]  << FairLogger::endl;
 
     UInt_t ihmsum = 0;
     UInt_t imtk = 0;
@@ -628,7 +748,7 @@ UInt_t STSpiRITTPCTask::SetupFLowDatabaseFiles(UInt_t version)
         if( gSystem->FindFile("db",ffname) ){
           vfname[i].push_back(ffname);
           ihm++;  ihmm++;
-	  std::cout << " Databse " << ffname << " is loaded. " << std::endl;
+	  LOG(INFO) << " Databse " << ffname << " is loaded. " << FairLogger::endl;
         }
         else
           break;
@@ -651,7 +771,7 @@ UInt_t STSpiRITTPCTask::SetupFLowDatabaseFiles(UInt_t version)
     aflowcorrArray[i] = new TClonesArray("STFlowCorrection",30);
     TClonesArray &arr = *aflowcorrArray[i];
 
-    cout << " nBin " << nBin << endl;
+    LOG(INFO) << " nBin " << nBin << FairLogger::endl;
 
     std::vector<TString>::iterator itb;
     pbinmin[i].clear();
@@ -669,38 +789,19 @@ UInt_t STSpiRITTPCTask::SetupFLowDatabaseFiles(UInt_t version)
       flowcorr->LoadCorrectionFactor();
 
       pbinmin[i].push_back(make_pair(flowcorr->GetBin_min(0),flowcorr->GetBin_min(1)));
-      cout << " $$$$$$$$$$$ ---->  nbin " << ihm  << " " << pbinmin[i].at(ihm).first << " : "<< pbinmin[i].at(ihm).second << endl;
+      LOG(INFO) << " $$$$$$$$$$$ ---->  nbin " << ihm  << " " << pbinmin[i].at(ihm).first << " : "<< pbinmin[i].at(ihm).second << FairLogger::endl;
     }
 
     //    binpara   = flowcorr->GetBinParameter(1);
   }
 
   auto nBin = (UInt_t)vfname[0].size();
-  return nBin;
+  
+  if( nBin == 0 ) return kFALSE;
+
+  return kTRUE;
 }
 
-Int_t STSpiRITTPCTask::GetMultiplicityCorretionIndex(UInt_t isel, UInt_t ival)
-{
-  std::vector< std::pair<Double_t, Double_t> >::iterator itr;
-
-  UInt_t ink = mtkbin[isel].size()-1;
-
-  for(itr = pbinmin[isel].end()-1; itr != pbinmin[isel].begin()-1; itr-= mtkbin[isel].at(ink), ink--){
-
-    if(isel == 9)
-      cout << "mult " << itr->first<< " : " << itr->second << " -- " << mtkbin[isel].at(ink) << " at " << itr - pbinmin[isel].begin()<< endl;
-
-    if(ival >= itr->first) {
-
-      if(isel == 9)
-	cout << " ntrack  " << ival << " : " << itr - pbinmin[isel].begin() << endl;
-
-      return itr - pbinmin[isel].begin();
-    }
-  }
-
-  return -1;
-}
 
 
 void STSpiRITTPCTask::ProceedEvent()
@@ -745,18 +846,28 @@ void STSpiRITTPCTask::ProceedEvent()
 
       Int_t    Charge   = aParticle->GetCharge();
       TVector3 VMom     = aParticle->GetRotatedMomentum();
-      Double_t clustNum = db->GetClusterNum(Charge, VMom);
+      Double_t dEdx     = aParticle->GetdEdx();
 
+      //--- Set MassFitter      
+      Double_t massH = 0.;
+      Double_t massHe = 0.;
+      Int_t    pid_tight  = 0;
+      Int_t    pid_loose  = 0;      
+      massFitter->GetBBMass(VMom, dEdx, Charge, massH, massHe, pid_tight, pid_loose); 
+      aParticle->SetBBMass(massH);      
+      aParticle->SetBBMassHe(massHe);
+      aParticle->SetPID(pid_tight);
+      aParticle->SetPIDLoose(pid_loose);
 
+      LOG(DEBUG) << " mass "  << massHe << " & pid " << pid_loose << FairLogger::endl;
+
+      //--- number cluster ratio
+      Double_t clustNum = VMom.Mag()>4000.?
+	db->GetClusterNum(Charge, VMom.Theta(), VMom.Phi(), 4000.):
+	db->GetClusterNum(Charge, VMom.Theta(), VMom.Phi(), VMom.Mag());
       //--- Set theoretical number of cluster
       aParticle->SetExpectedClusterNumber(clustNum);
 
-      //--- Set MassFitter                     
-      TF1* mfitter = massFitter->GetBBFunction(VMom.Theta(), VMom.Phi());
-      //      TF1* mfitter = massFitter->GetLVFunction(VMom.Theta(), VMom.Phi());                    
-      aParticle->GetMasswithMassFitter(mfitter);
-
-      aParticle->SetPID(2212); //temporal
       
       //--- Set extra quality flag ---; 
       SetupTrackExtraQualityFlag( aParticle );

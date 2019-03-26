@@ -5,7 +5,6 @@
 #include "FairTask.h"
 #include "FairRunAna.h"
 #include "FairRootManager.h"
-#include "STAnaTaskManager.hh"
 #include "STRecoTrack.hh"
 #include "STParticle.hh"
 #include "STMassFunction.hh"
@@ -20,35 +19,48 @@
 #include "STFlowCorrection.hh"
 #include <TMath.h>
 #include "STFlowCorrection.hh"
+#include "STRunToBeamA.hh"
+#include "TObject.h"
+#include "FairLink.h"
 
 class STSpiRITTPCTask : public FairTask
 {
 public:
   STSpiRITTPCTask();
 
-  ~STSpiRITTPCTask(){};
+  virtual ~STSpiRITTPCTask();
 
   InitStatus Init();
   void       Exec(Option_t *opt);
   void       FinishEvent();
-
+  void       Finish(){fActive = kFALSE;}
 
   void   SetPersistence(Bool_t value = kTRUE);
   void   SetRunInfo(TString vDir="", TString ver=""){rootDir = vDir, sVer = ver;}  
 
-  Long64_t GetEventID() {return fEventIDLast;}
+  Long64_t GetEventID()  {return fEventIDLast;}
+  Long64_t GetEntries() {return nEntry;}
+  void     SetProcessingNumberOfEvent(Long64_t val) { val < nEntry ? prcEntry = val : prcEntry = nEntry;
+    LOG(INFO) << " process number " << prcEntry << FairLogger::endl;
+  }
 
 private:
   Bool_t fIsPersistence;         ///< Persistence check variable
   Bool_t fIsFlowAnalysis;        ///< flow analysis flag
+  Bool_t fIsFlowCorrection;      ///< reaction plane flattening correction
   Bool_t fIsBootStrap;           ///< bootstrap analysis flag
   Bool_t fIsSubeventAnalysis;    ///< Subevent analysis flag  
   UInt_t selReactionPlanef;      // track quality for reaction plane 
 
-  FairLogger *fLogger;           //!
-  FairRootManager *fRootManager;  //!
 
-  ST_ClusterNum_DB* db;
+  FairRunAna      *fRunAna;       //!
+  FairLogger      *fLogger;       //!
+  FairRootManager *fRootManager;  //!
+  FairLink        *fLink;         //!
+  
+  
+
+  ST_ClusterNum_DB* db;    //!
   
   TString sVer;  //!
   UInt_t  iRun;
@@ -63,6 +75,8 @@ private:
   TClonesArray *vertexBDCArray = NULL;  //!
 
   TClonesArray   *tpcParticle;  //!
+
+  //--- mass fitter
   STMassFunction *massFitter;   //!
 
   TClonesArray *flowAnalysis; //!
@@ -80,8 +94,10 @@ private:
   Long64_t fEventID;      //! 
   Long64_t fEventIDLast;  //!
   Long64_t nEntry;
+  Long64_t prcEntry;      //!
   TDatime  dtime;         //! 
   TDatime  beginTime;     //!  
+  
 
   void   Clear();
   Bool_t SetupParameters();
@@ -92,7 +108,6 @@ private:
   void   SetupEventInfo();
   void   SetupTrackQualityFlag(STParticle *apart);
   void   SetupTrackExtraQualityFlag(STParticle *apart);
-  UInt_t SetupFLowDatabaseFiles(UInt_t version);
 
   // for flow analysis
   vector<UInt_t> mtkbin[2];		             //!
@@ -100,11 +115,12 @@ private:
   vector< vector<Double_t> >  binmax;	             //!
   vector< vector<Double_t> >  binmin;	             //!
   vector< pair<Double_t, Double_t> > pbinmin[2]; //!
+  TRandom3 rnd; //!
 
   void   SetupFlow(STParticle &apart);
   void   DoFlowAnalysis(STParticle &apart);
   void   DoSubeventAnalysis();
-  UInt_t *RanndomDivide2(const UInt_t npart);
+  UInt_t *RandomDivide2(const UInt_t npart);
   UInt_t SetFLowDatabaseFiles(UInt_t version);
   TVector3 Psi_FlatteningCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
   TVector3 Psi_ReCenteringCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
@@ -120,8 +136,9 @@ public:
   Bool_t GetSubEventAnalysisFlag()   {return fIsSubeventAnalysis;}
   void   SetBootStrap(Bool_t val)    {fIsBootStrap = val;}
   Bool_t GetBootStrapFlag()          {return fIsBootStrap;}
-  
 
+  // return input file chain
+  TChain* GetChain()                 {return fChain;}
 
   // Flow parameters
   TVector2 unitP;      // sum of unit pt vector

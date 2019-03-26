@@ -49,12 +49,18 @@ public:
 public:
 
   void Clear();
-  void SetRun(Int_t val){ run = val;}
-  void SetBeamA(Int_t val)  { SnA = val;}
-  void SetBeamPID(Int_t val){ beamPID = val;}
-  void SetEventID(Long64_t val){ evt = val;}
+  void SetRun(Int_t val){ run = val; }
+  void SetBeamA(Int_t val)  { SnA = val; }
+  void SetBeamPID(Int_t val){ beamPID = val; }
+  void SetEventID(Long64_t val){ evt = val; }
   void SetNTrack(UInt_t *nval);
   UInt_t *GetNTrack() { return ntrack; }
+  UInt_t GetNTrack(UInt_t ival) { 
+    if( ival < 7 )
+      return ntrack[ival];
+    else 
+      return 0;
+  }
 
   ClassDef(STFlowInfo,1);
 };
