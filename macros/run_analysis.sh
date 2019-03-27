@@ -53,19 +53,19 @@ source runList.sh
 ##--- for Process1 ------------------------------------
 # *****> <Edit Here>
 # Set RUNNUMBER1 
-
-VERSION=18
+DBVERSION=18
+VERSION=19
 
 #RUNNUMBER1="2841 2843 2844"
 RUNNUMBER1="2841"
-MXEVT=10
+MXEVT=
 function exec() {
-    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT root run_analysis.C 
+    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT DBVER=$DBVERSION root run_analysis.C 
 }
 
 function execb() {
     LOG=log/prc1_$RUNNUMBER1_v$VERSION.log
-    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT root -b -q run_analysis.C >& $LOG &
+    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
 }
 
 #RUNNUMBER1=(${RNF132})
@@ -74,8 +74,8 @@ function execb() {
 #RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RBF132} ${RNF108} ${RNF124} ${RNF112}) 
 #RUNNUMBER1=(${RNFTEMP})
-#RUNNUMBER1=(${RNF132r})
-RUNNUMBER1=(${RNF132p})
+RUNNUMBER1=(${RNF132r})
+#RUNNUMBER1=(${RNF132p})
 
 function process(){
     typeset -i I=0
@@ -83,8 +83,8 @@ function process(){
     do
 	RUN=${RUNNUMBER1[I]} 
 	LOG=log/p1_${RUN}_v${VERSION}.log
-	echo RUN=${RUN} VER=$VERSION root -b -q run_analysis.C '>&' $LOG
-	RUN=${RUN} VER=$VERSION root -b -q run_analysis.C >& $LOG &
+	echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
+	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
 	let I++
 	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
             break;
@@ -92,8 +92,8 @@ function process(){
 
 	RUN=${RUNNUMBER1[I]} 
 	LOG=log/p1_${RUN}_v${VERSION}.log
-        echo RUN=${RUN} VER=$VERSION root -b -q run_analysis.C '>&' $LOG
-	RUN=${RUN} VER=$VERSION root -b -q run_analysis.C >& $LOG &
+        echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
+	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
 	let I++
 	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
             break;
@@ -101,8 +101,8 @@ function process(){
 
 	RUN=${RUNNUMBER1[I]} 
 	LOG=log/p1_${RUN}_v${VERSION}.log
-        echo RUN=${RUN} VER=$VERSION root -b -q run_analysis.C '>&' $LOG
-	RUN=${RUN} VER=$VERSION root -b -q run_analysis.C >& $LOG &
+        echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
+	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
 	let I++
 	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
             break;
@@ -110,8 +110,8 @@ function process(){
 
 	RUN=${RUNNUMBER1[I]} 
 	LOG=log/p1_${RUN}_v${VERSION}.log
-        echo RUN=${RUN} VER=$VERSION root -b -q run_analysis.C '>&' $LOG
-	RUN=${RUN} VER=$VERSION root -b -q run_analysis.C >& $LOG 
+        echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
+	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG 
 	let I++
     done
 }

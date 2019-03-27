@@ -54,6 +54,7 @@ public:
   void SetBeamPID(Int_t val){ beamPID = val; }
   void SetEventID(Long64_t val){ evt = val; }
   void SetNTrack(UInt_t *nval);
+  void SetNTrack(UInt_t nval, UInt_t idx);
   UInt_t *GetNTrack() { return ntrack; }
   UInt_t GetNTrack(UInt_t ival) { 
     if( ival < 7 )

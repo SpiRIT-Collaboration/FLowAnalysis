@@ -37,6 +37,7 @@ set(SRCS
 STBigRIPSTask.cc
 STSpiRITTPCTask.cc
 STSource.cc
+STFlowTask.cc
 )
 
 CHANGE_FILE_EXTENSION(*.cc *.hh HEADERS "${SRCS}")

@@ -17,6 +17,7 @@ void run_analysis(Int_t nevt = -1)
 
   TString sRun = gSystem -> Getenv("RUN");
   TString sVer = gSystem -> Getenv("VER");
+  TString dVer = gSystem -> Getenv("DBVER");
   TString tDir = gSystem -> Getenv("TPCDIR");
   TString tVer = gSystem -> Getenv("RCVER");
   TString bDir = gSystem -> Getenv("BDCDIR");
@@ -35,12 +36,9 @@ void run_analysis(Int_t nevt = -1)
 
   TString foutname = "data/run"+sRun+"_BTt.v"+sVer+".root";
   anaRun->SetOutputFile(foutname);
-  
-  
+    
   FairRootManager* fman = FairRootManager::Instance();
   
-
-
   FairLogger *logger = FairLogger::GetLogger();
   logger ->SetLogToScreen(true);
 
@@ -50,7 +48,7 @@ void run_analysis(Int_t nevt = -1)
   auto TPCTask     = new STSpiRITTPCTask();
   anaRun->AddTask(TPCTask);
 
-  TPCTask->SetRunInfo(tDir, tVer);
+  TPCTask->SetRunInfo(tDir, tVer, dVer);
   TPCTask->SetFlowAnalysis(kTRUE);  // Flow analysis is activated.
 
   //  TChain* tpcChain = TPCTask->GetChain();

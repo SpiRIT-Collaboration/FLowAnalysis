@@ -16,7 +16,6 @@ namespace STLorentzBoostVector
 
   inline TVector3 GetBoostVector(UInt_t sysid);
 };
-#endif
 
 TVector3 STLorentzBoostVector::GetBoostVector(UInt_t sysid = 4)
 {
@@ -36,3 +35,4 @@ TVector3 STLorentzBoostVector::GetBoostVector(UInt_t sysid = 4)
 
 }
 
+#endif

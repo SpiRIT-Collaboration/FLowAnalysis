@@ -212,6 +212,7 @@ UInt_t STFlowCorrection::LoadCorrectionFactor(UInt_t val)
 
   if( val == 1 ) ShowParameters();
 
+  fin.close();
   return 0;
 }
 

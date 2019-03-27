@@ -7,6 +7,7 @@ STFlowInfo::STFlowInfo()
 
   Clear();
 }
+
 STFlowInfo::STFlowInfo(const STFlowInfo &cp)
 {
   Clear();
@@ -28,7 +29,6 @@ STFlowInfo::STFlowInfo(const STFlowInfo &cp)
   mtrack5   = cp.mtrack5;
   mtrack6   = cp.mtrack6;
 
-  
   unitP    = cp.unitP;
   unitP_fc = cp.unitP_fc;
   unitP_rc = cp.unitP_rc;
@@ -42,9 +42,6 @@ STFlowInfo::STFlowInfo(const STFlowInfo &cp)
     bsPhi_1[i] = cp.bsPhi_1[i];
     bsPhi_2[i] = cp.bsPhi_2[i];
   }
-
-
-
 }
 
 STFlowInfo &STFlowInfo::operator=(const STFlowInfo &cp)
@@ -70,6 +67,36 @@ void STFlowInfo::SetNTrack(UInt_t *nval) {
   mtrack6 = ntrack[6];
 
 }
+
+void STFlowInfo::SetNTrack(UInt_t nval, UInt_t idx) {
+
+  if(idx < 7) ntrack[idx] = nval;
+
+  switch( idx ){
+  case 0:
+    mtrack0 = nval;
+    break;
+  case 1:
+    mtrack1 = nval;
+    break;
+  case 2:
+    mtrack2 = nval;
+    break;
+  case 3:
+    mtrack3 = nval;
+    break;
+  case 4:
+    mtrack4 = nval;
+    break;
+  case 5:
+    mtrack5 = nval;
+    break;
+  case 6:
+    mtrack6 = nval;
+    break;
+  }
+}
+
 void STFlowInfo::Clear(){
   
   evt = 0;
