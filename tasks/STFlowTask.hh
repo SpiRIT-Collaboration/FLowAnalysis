@@ -55,14 +55,18 @@ private:
 
   UInt_t *RandomDivide2(const UInt_t npart);
   UInt_t SetFLowDatabaseFiles(UInt_t version);
-  Int_t  GetCorrectionIndex(UInt_t isel, UInt_t ival, Double_t fval);
   Int_t  GetMultiplicityCorretionIndex(UInt_t isel, UInt_t ival);
   Int_t  GetThetaCorrectionIndex(UInt_t isel, Int_t ival, Double_t fval);
 
 public:
   void   SetNTrack(UInt_t *nval);
   void   SetupFlow(STParticle &apart);
+  void   SetFlowInfo(STFlowInfo *aflowinfo);
   void   DoFlowAnalysis(STParticle &apart);
+
+  Bool_t DoFlattening();
+  Bool_t DoFlatteningSub();
+  Bool_t DoFlattening(STParticle &part);
   void   DoSubeventAnalysis();
   TVector3 Psi_FlatteningCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
   TVector3 Psi_ReCenteringCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
@@ -72,12 +76,12 @@ public:
   void   SetFlowTask( TClonesArray &tpcParticle );
   void   FinishEvent();
 
-  void   SetFlowCorrection(Bool_t val) {fIsFlowCorrection = val;}
-  Bool_t GetFlowCorrectionFlag()       {return fIsFlowCorrection;}
+  void   SetFlowCorrection(Bool_t val)   {fIsFlowCorrection = val;}
+  Bool_t GetFlowCorrectionFlag()         {return fIsFlowCorrection;}
   void   SetSubEventAnalysis(Bool_t val) {fIsSubeventAnalysis = val;}
-  Bool_t GetSubEventAnalysisFlag()   {return fIsSubeventAnalysis;}
-  void   SetBootStrap(Bool_t val)    {fIsBootStrap = val;}
-  Bool_t GetBootStrapFlag()          {return fIsBootStrap;}
+  Bool_t GetSubEventAnalysisFlag()       {return fIsSubeventAnalysis;}
+  void   SetBootStrap(Bool_t val)        {fIsBootStrap = val;}
+  Bool_t GetBootStrapFlag()              {return fIsBootStrap;}
 
 
   STFlowInfo  *GetFlowInfo() {return fflowinfo;}

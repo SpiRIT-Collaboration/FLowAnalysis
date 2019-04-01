@@ -56,8 +56,6 @@ private:
   TVector3 forigP3;;         // Momemtum vector without any correction.
   Double_t fP;               // Momentum/Q [MeV/c]
   Double_t fdEdx;            // dEdx
-  //  Double_t ftheta;           // Polar angle without any correction     = forigP3.Theta()
-  //  Double_t fphi;             // Azimuthal angle without any correction = forigP3.Phi()
   Double_t fNDF;             // STVertex::GetNDF()
   Double_t fclustex;            // expected cluster number
   Double_t fclusterratio;      // rClusterSize/fclustex
@@ -70,6 +68,7 @@ private:
 
   TLorentzVector fLzvec;     // LorentzVector flzvec(fRotatedP3, Etotal);
 
+  TVector3 frpv;             // Individual Reaction plane vector (IRPO) for each particle
   Double_t frpphi;           // Individual Reaction plane orientaion (IRPO) for each particle
   Double_t fdeltphi;         // Azimuthal opening angle with respect to IRPO
   Double_t fwgt;             // Summing up weight
@@ -169,6 +168,8 @@ public:
   Double_t GetdEdx()                     {return fdEdx;}
 
 
+  void     SetIndividualRPVector(TVector3 vec)  {frpv = vec;}
+  TVector3 GetIndividualRPVector()              {return frpv;}
   void     SetRotatedMomentum(TVector3 value)   {fRotatedP3 = value;}
   TVector3 GetRotatedMomentum()                 {return fRotatedP3;}
   TVector2 GetRotatedPt()                       {return fRotatedPt;}
@@ -293,7 +294,7 @@ public:
   TVector3     GetPOCAVertex()                  {return rPOCAVertex;}
 
 
-  ClassDef(STParticle, 18)
+  ClassDef(STParticle, 19)
 
 };
 

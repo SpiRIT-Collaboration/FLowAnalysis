@@ -33,12 +33,15 @@ public:
   UInt_t   mtrack6;
 
   
-  TVector2 unitP;
+  TVector3 unitP;
   TVector3 unitP_fc;
   TVector3 unitP_rc;
 
-  TVector2 unitP_1;
-  TVector2 unitP_2;
+  TVector3 unitP_1;
+  TVector3 unitP_2;
+  TVector3 unitP_1fc;
+  TVector3 unitP_2fc;
+
   UInt_t   mtrack_1;
   UInt_t   mtrack_2;
   
@@ -63,7 +66,7 @@ public:
       return 0;
   }
 
-  ClassDef(STFlowInfo,1);
+  ClassDef(STFlowInfo,2);
 };
 
 #endif

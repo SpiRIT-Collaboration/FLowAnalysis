@@ -50,8 +50,8 @@ void STFlowTask::SetFlowTask( TClonesArray &atpcParticle )
     DoFlowAnalysis( *aParticle );
 
   }
-
 }
+
 
 Bool_t STFlowTask::Init(UInt_t irun, TString sver)
 {
@@ -73,6 +73,19 @@ Bool_t STFlowTask::Init(UInt_t irun, TString sver)
   return kTRUE;
 }
 
+void STFlowTask::SetFlowInfo(STFlowInfo *aflowinfo) 
+{
+  fflowinfo = aflowinfo;
+
+  ntrack[0] = fflowinfo->mtrack0;
+  ntrack[1] = fflowinfo->mtrack1;
+  ntrack[2] = fflowinfo->mtrack2;
+  ntrack[3] = fflowinfo->mtrack3;
+  ntrack[4] = fflowinfo->mtrack4;
+  ntrack[5] = fflowinfo->mtrack5;
+  ntrack[6] = fflowinfo->mtrack6;
+}
+
 void   STFlowTask::SetNTrack(UInt_t *nval)
 {
   for(UInt_t i = 0; i < 7; i++) 
@@ -92,17 +105,56 @@ void STFlowTask::FinishEvent()
 
   fflowinfo->SetNTrack(ntrack);
 
+  DoIndividualReactionPlaneAnalysis();
+
   if( fIsSubeventAnalysis ) 
     DoSubeventAnalysis();
 
-  DoIndividualReactionPlaneAnalysis();
-
-  if( fIsFlowCorrection && aflowcorrArray[0] != NULL ) {
-
-    fflowinfo->unitP_fc = Psi_FlatteningCorrection( 0, ntrack[4], TVector3(fflowinfo->unitP.X(), fflowinfo->unitP.Y(), 0.));
-    fflowinfo->unitP_rc = Psi_ReCenteringCorrection(0, ntrack[4], TVector3(fflowinfo->unitP.X(), fflowinfo->unitP.Y(), 0.));
-
+  if( fIsFlowCorrection ) {
+    if( !DoFlattening() )
+      LOG(ERROR) << " Fail flatteing " << FairLogger::endl;
   }
+}
+
+Bool_t STFlowTask::DoFlattening()
+{
+  if( aflowcorrArray[0] != NULL ) {
+    
+    fflowinfo->unitP_fc = Psi_FlatteningCorrection( 0, ntrack[4], fflowinfo->unitP);
+    fflowinfo->unitP_rc = Psi_ReCenteringCorrection(0, ntrack[4], fflowinfo->unitP);
+    
+    return kTRUE;
+  }
+ 
+  return kFALSE;
+}
+
+Bool_t STFlowTask::DoFlatteningSub()
+{
+  if( aflowcorrArray[1] != NULL ) {
+
+    fflowinfo->unitP_1fc = Psi_FlatteningCorrection( 1, fflowinfo->mtrack_1, fflowinfo->unitP_1);
+    fflowinfo->unitP_2fc = Psi_FlatteningCorrection( 1, fflowinfo->mtrack_2, fflowinfo->unitP_2);
+    
+    return kTRUE;
+  }
+  
+  return kFALSE;
+}
+
+Bool_t STFlowTask::DoFlattening(STParticle &part)
+{
+  if( aflowcorrArray[0] != NULL ) {
+    
+    TVector3 rcvec =  Psi_FlatteningCorrection( 0, ntrack[4], part.GetIndividualRPVector() );
+
+    part.SetIndividualRPAngle( rcvec.Phi() );
+    part.SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( part.GetRotatedPt().Phi() - rcvec.Phi()));
+  
+    return kTRUE;
+  }
+
+  return kFALSE;
 }
 
 
@@ -127,31 +179,30 @@ void STFlowTask::DoSubeventAnalysis()
     
     if( apart->GetReactionPlaneFlag() >= selReactionPlanef ) {
       Double_t wt = apart->GetRPWeight();
-      TVector2 ptr= apart->GetRotatedPt();
+      TVector2 ptr= apart->GetRotatedPt().Unit();
 
       if( rndArray[itrack] == 0 ) {
 
-        fflowinfo->unitP_1 += wt * ptr.Unit();
+        fflowinfo->unitP_1 += wt * TVector3(ptr.X(), ptr.Y(), 0.);
 	LOG(DEBUG) << " sub 1 " << fflowinfo->unitP_1.X()  
 		   << " + "     << wt * ptr.X()
 		   << " : "     << apart->GetReactionPlaneFlag()
 		   << FairLogger::endl;
 
         if( fIsBootStrap )
-          bs_unitP_1->Add(wt * ptr.Unit());
+          bs_unitP_1->Add(wt * ptr);
 
-        TVector2 ptpt = wt * ptr.Unit();
         apart->AddReactionPlaneFlag(100);
         fflowinfo->mtrack_1++;
       }
       else  {
-        fflowinfo->unitP_2+= wt * ptr.Unit();
+        fflowinfo->unitP_2+= wt * TVector3(ptr.X(), ptr.Y(), 0.);
 	LOG(DEBUG) << " sub 2    " << fflowinfo->unitP_2.X()  
 		   << " + "     << wt * ptr.X()
 		   << " : "     << apart->GetReactionPlaneFlag()
 		   << FairLogger::endl;
         if( fIsBootStrap )
-          bs_unitP_2->Add(wt * ptr.Unit());
+          bs_unitP_2->Add(wt * ptr);
 
         apart->AddReactionPlaneFlag(200);
         fflowinfo->mtrack_2++;
@@ -167,6 +218,9 @@ void STFlowTask::DoSubeventAnalysis()
     bs_unitP_1->BootStrapping();
     bs_unitP_2->BootStrapping();
   }
+
+  DoFlatteningSub();
+
 
   delete bs_unitP_1;
   delete bs_unitP_2;
@@ -271,7 +325,8 @@ void STFlowTask::DoFlowAnalysis(STParticle &apart)
   if( apart.GetReactionPlaneFlag() >= selReactionPlanef ){
     ntrack[4]++;
 
-    fflowinfo->unitP += apart.GetRPWeight() * apart.GetRotatedPt().Unit();
+    TVector2 upt = apart.GetRotatedPt().Unit();
+    fflowinfo->unitP += apart.GetRPWeight() * TVector3( upt.X(), upt.Y(), 0.);
 
     if( fIsBootStrap )
       bs_unitP->Add(apart.GetRPWeight() * apart.GetRotatedPt().Unit());
@@ -295,7 +350,7 @@ void STFlowTask::DoIndividualReactionPlaneAnalysis()
 
    // individual reaction plane
     UInt_t itraex = 0;
-    TVector2 mExcRP(0.,0.);
+    TVector3 mExcRP(0.,0.,0.);
     TIter next(tpcParticle);
     STParticle *restpart = NULL;
 
@@ -304,26 +359,22 @@ void STFlowTask::DoIndividualReactionPlaneAnalysis()
 
       if( restpart->GetTrackID() != apart->GetTrackID() && restpart->GetReactionPlaneFlag() > 1000 ) {
 	Double_t wt_rp = restpart->GetRPWeight();
-	TVector2 pt_rp = restpart->GetRotatedPt();
+	TVector2 pt_rp = restpart->GetRotatedPt().Unit();
 
-	mExcRP += wt_rp * pt_rp.Unit();
+	mExcRP += wt_rp * TVector3( pt_rp.X(), pt_rp.Y(), 0.);
 	itraex++;
       }
       else 
 	LOG(DEBUG) << "rejected  track id @" << restpart << " " << restpart->GetTrackID() << FairLogger::endl; 
     }
 
-    TVector3 rp_recv = TVector3(-999.,-999.,-999.);
-    if(itraex > 0 && aflowcorrArray[0] != NULL) 
-      rp_recv = Psi_FlatteningCorrection(0, ntrack[4] , TVector3(mExcRP.X(), mExcRP.Y(), 0.));
-    else
-      rp_recv =  TVector3(mExcRP.X(), mExcRP.Y(), 0.);
+    apart->SetIndividualRPVector( mExcRP );
+
+    if(itraex > 0 )
+      DoFlattening( *apart );
       
-    apart->SetIndividualRPAngle( (Double_t)TVector2::Phi_mpi_pi( rp_recv.Phi() ));
-    apart->SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( apart->GetRotatedPt().Phi() - rp_recv.Phi()));
   }
 }
-
 
 void STFlowTask::Clear()
 {
@@ -335,21 +386,22 @@ void STFlowTask::Clear()
 
 TVector3 STFlowTask::Psi_FlatteningCorrection(UInt_t isel, Int_t ival, TVector3 Pvec)
 {
-  Int_t    iBIN = GetCorrectionIndex(isel, ival, Pvec.Theta());
+  Int_t    iBIN = GetMultiplicityCorretionIndex(isel, ival);
 
   TVector3 Psi_cf;
   if(iBIN >= 0 && aflowcorrArray[isel] != NULL){
     auto flowcorr = (STFlowCorrection*)(aflowcorrArray[isel]->At(iBIN));
     Psi_cf = flowcorr->ReCenteringFourierCorrection(Pvec);
-    //    Psi_cf.SetPhi(flowcorr->GetCorrection(Pvec.Phi())); 
   }
+
+  LOG(DEBUG) << Pvec.X() << " iBIN : " << iBIN << " pvec.theta " << Pvec.Theta() << " Psi_cf " << Psi_cf.X() << FairLogger::endl;
 
   return Psi_cf;
 }
 
 TVector3 STFlowTask::Psi_ReCenteringCorrection(UInt_t isel, Int_t ival, TVector3 Pvec)
 {
-  Int_t    iBIN = GetCorrectionIndex(isel, ival, Pvec.Theta());
+  Int_t    iBIN = GetMultiplicityCorretionIndex(isel, ival);
 
   TVector3 Psi_cf;
   if(iBIN >= 0 && aflowcorrArray[isel] != NULL) {
@@ -361,21 +413,15 @@ TVector3 STFlowTask::Psi_ReCenteringCorrection(UInt_t isel, Int_t ival, TVector3
   return Psi_cf;
 }
 
-
-Int_t STFlowTask::GetCorrectionIndex(UInt_t isel, UInt_t ival, Double_t fval)
-{
-  Int_t index = GetMultiplicityCorretionIndex(isel, ival);
-  index =  GetThetaCorrectionIndex(isel, index, fval);
-  return index;
-}
-
 Int_t STFlowTask::GetMultiplicityCorretionIndex(UInt_t isel, UInt_t ival)
 {
+  // isel : 0 full Psi
+  // isel : 1 Subevetn psi
   std::vector< std::pair<Double_t, Double_t> >::iterator itr;
 
   UInt_t ink = mtkbin[isel].size()-1;
 
-  for(itr = pbinmin[isel].end()-1; itr != pbinmin[isel].begin()-1; itr-= mtkbin[isel].at(ink), ink--){
+  for(itr = pbinmin[isel].end()-1; itr != pbinmin[isel].begin()-1; itr--, ink--){
 
     if(isel == 0)
       LOG(DEBUG) << "mult " << itr->first<< " : " << itr->second << " -- " << mtkbin[isel].at(ink) << " at " 
@@ -410,7 +456,7 @@ Int_t STFlowTask::GetThetaCorrectionIndex(UInt_t isel, Int_t ival, Double_t fval
 Bool_t STFlowTask::SetupFlowDataBase()
 {
   TString  fname[2];
-  Int_t    ncount = 0;
+  Int_t    ncount = 1;
   fname[0] = "132Sn.v"+sVer+".psi.";
 
   if( fIsSubeventAnalysis ) {
@@ -418,34 +464,24 @@ Bool_t STFlowTask::SetupFlowDataBase()
     ncount++;
   }
 
+  
 
   for(UInt_t i = 0; i < TMath::Min(ncount, 2); i++){
-    LOG(INFO) << " Database name is " << fname[i]  << FairLogger::endl;
+    LOG(INFO) << " Database name is " << fname[i]  << " / " << ncount << " ( " << fIsSubeventAnalysis << FairLogger::endl;
 
     UInt_t ihmsum = 0;
     UInt_t imtk = 0;
     while(1){
 
-      UInt_t ihm = 0;
-      UInt_t ihmm = 0;
-      while(1){
-
-        TString ffname = fname[i] +  Form("m%dn%d.txt",imtk,ihmm);
-        if( gSystem->FindFile("db",ffname) ){
-          vfname[i].push_back(ffname);
-          ihm++;  ihmm++;
-	  LOG(INFO) << " Databse " << ffname << " is loaded. " << FairLogger::endl;
-        }
-        else
-          break;
+      TString ffname = fname[i] +  Form("m%d.txt",imtk);
+      if( gSystem->FindFile("db",ffname) ){
+	vfname[i].push_back(ffname);
+	LOG(INFO) << " Databse " << ffname << " is loaded. " << FairLogger::endl;
       }
+      else
+	break;
 
-      if(ihm > 0 ) {
-        mtkbin[i].push_back(ihm);
-        ihmsum += ihm;
-      }
-      else if(ihm == 0)
-        break;
+      mtkbin[i].push_back(imtk);
 
       imtk++;
     }
@@ -470,15 +506,14 @@ Bool_t STFlowTask::SetupFlowDataBase()
 
       flowcorr = (STFlowCorrection*)arr.At(ihm);
       flowcorr->SetRealOrMix(1);
-      //      flowcorr->SetRealOrMix((UInt_t)bMix);
       flowcorr->SetFileName(vfname[i].at(ihm));
       flowcorr->LoadCorrectionFactor();
 
       pbinmin[i].push_back(make_pair(flowcorr->GetBin_min(0),flowcorr->GetBin_min(1)));
-      LOG(INFO) << " $$$$$$$$$$$ ---->  nbin " << ihm  << " " << pbinmin[i].at(ihm).first << " : "<< pbinmin[i].at(ihm).second << FairLogger::endl;
+      LOG(INFO) << " $$$$$$$$$$$ ---->  nbin " << ihm  << " " 
+		<< pbinmin[i].at(ihm).first << " : "
+		<< pbinmin[i].at(ihm).second << FairLogger::endl;
     }
-
-    //    binpara   = flowcorr->GetBinParameter(1);
   }
 
   auto nBin = (UInt_t)vfname[0].size();

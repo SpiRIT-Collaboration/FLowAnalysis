@@ -34,6 +34,8 @@ STFlowInfo::STFlowInfo(const STFlowInfo &cp)
   unitP_rc = cp.unitP_rc;
   unitP_1  = cp.unitP_1;
   unitP_2  = cp.unitP_2;
+  unitP_1fc= cp.unitP_1fc;
+  unitP_2fc= cp.unitP_2fc;
   mtrack_1 = cp.mtrack_1;
   mtrack_2 = cp.mtrack_1;
   
@@ -113,12 +115,14 @@ void STFlowInfo::Clear(){
   mtrack5   = 0;
   mtrack6   = 0;
 
-  unitP_fc = TVector3(0.,0.,0.);
-  unitP_rc = TVector3(0.,0.,0.);
+  unitP_fc   = TVector3(0.,0.,0.);
+  unitP_rc   = TVector3(0.,0.,0.);
 
-  unitP    = TVector2(0.,0.);
-  unitP_1  = TVector2(0.,0.);
-  unitP_2  = TVector2(0.,0.);
+  unitP      = TVector3(0.,0., 0.);
+  unitP_1    = TVector3(0.,0., 0.);
+  unitP_2    = TVector3(0.,0., 0.);
+  unitP_1fc  = TVector3(0.,0., 0.);
+  unitP_2fc  = TVector3(0.,0., 0.);
 
   mtrack_1 = 0;
   mtrack_2 = 0;

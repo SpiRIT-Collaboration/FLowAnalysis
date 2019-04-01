@@ -404,7 +404,6 @@ UInt_t STFlowCorrection::SaveCorrectionFactor(TString comm1, TString comm2)
   std::fstream fout;
 
   Ssiz_t ifnd = comm1.First(":");
-  //  fname += comm1(0,ifnd);
   fname = comm1(0,ifnd);
   fname += ".txt";
 

@@ -48,6 +48,7 @@ STParticle::STParticle(const STParticle &cp)
   fPxz          = cp.fPxz;
   fPyz          = cp.fPyz;
 
+  frpv          = cp.frpv;
   frpphi        = cp.frpphi;
   fdeltphi      = cp.fdeltphi;
   fwgt          = cp.fwgt;
@@ -145,6 +146,8 @@ void STParticle::Clear(Option_t *option)
   fmassf       = 1;
 
   // for flow
+  frpv     = TVector3(-9999,-9999,-9999);
+  frpphi   = -10.;
   fdeltphi = -10.;
   fwgt   = 0.;
   
