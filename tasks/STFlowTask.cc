@@ -21,19 +21,19 @@ STFlowTask::STFlowTask(Bool_t bfltn, Bool_t bsub, Bool_t bbst) :
 STFlowTask::~STFlowTask()
 {
 
-  delete tpcParticle;  //!
-  delete fflowinfo;    //!
+  //  delete tpcParticle;  //!
+  if( fflowinfo != nullptr )
+    delete fflowinfo;    //!
 
   for(UInt_t i = 0; i < 2; i++) {
     if( aflowcorrArray[i] != nullptr )
       delete aflowcorrArray[i];
   }
 
-  if( bs_unitP != nullptr )
-    delete bs_unitP;
+  // if( bs_unitP != nullptr )
+  //   delete bs_unitP;
 
 }
-
 
 void STFlowTask::SetFlowTask( TClonesArray &atpcParticle )
 {
@@ -146,9 +146,8 @@ Bool_t STFlowTask::DoFlattening(STParticle &part)
 {
   if( aflowcorrArray[0] != NULL ) {
     
-    TVector3 rcvec =  Psi_FlatteningCorrection( 0, ntrack[4], part.GetIndividualRPVector() );
-
-    part.SetIndividualRPAngle( rcvec.Phi() );
+    TVector3 rcvec =  Psi_FlatteningCorrection( 0, ntrack[4]-1, part.GetIndividualRPVector() );
+    part.SetIndividualRPVector( rcvec );
     part.SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( part.GetRotatedPt().Phi() - rcvec.Phi()));
   
     return kTRUE;
@@ -338,43 +337,45 @@ void STFlowTask::DoFlowAnalysis(STParticle &apart)
 
 
 
-void STFlowTask::DoIndividualReactionPlaneAnalysis()
+void STFlowTask::DoIndividualReactionPlaneAnalysis( )
 {
   TIter orgnext(tpcParticle);
   STParticle *apart = NULL;
 
-  while( (apart = (STParticle*)orgnext()) ) {
+  while( (apart = (STParticle*)orgnext()) ) 
 
-    Double_t wt = apart->GetRPWeight();
-    TVector2 pt = apart->GetRotatedPt();
+    SetIndividualReactionPlane( *apart );
 
-   // individual reaction plane
-    UInt_t itraex = 0;
-    TVector3 mExcRP(0.,0.,0.);
-    TIter next(tpcParticle);
-    STParticle *restpart = NULL;
 
-    while( (restpart = (STParticle*)next() ) ){
-      LOG(DEBUG) << " piched id " << apart->GetTrackID()  << " and " << restpart->GetTrackID() << " @" << restpart << FairLogger::endl;
-
-      if( restpart->GetTrackID() != apart->GetTrackID() && restpart->GetReactionPlaneFlag() > 1000 ) {
-	Double_t wt_rp = restpart->GetRPWeight();
-	TVector2 pt_rp = restpart->GetRotatedPt().Unit();
-
-	mExcRP += wt_rp * TVector3( pt_rp.X(), pt_rp.Y(), 0.);
-	itraex++;
-      }
-      else 
-	LOG(DEBUG) << "rejected  track id @" << restpart << " " << restpart->GetTrackID() << FairLogger::endl; 
-    }
-
-    apart->SetIndividualRPVector( mExcRP );
-
-    if(itraex > 0 )
-      DoFlattening( *apart );
-      
-  }
 }
+
+void STFlowTask::SetIndividualReactionPlane( STParticle &apart )
+{
+  UInt_t itraex = 0;
+  TVector3 mExcRP(0.,0.,0.);
+  TIter next(tpcParticle);
+  STParticle *restpart = NULL;
+
+  while( (restpart = (STParticle*)next() ) ){
+
+    if( restpart->GetTrackID() != apart.GetTrackID() && restpart->GetReactionPlaneFlag() > 1000 ) {
+      Double_t wt_rp = restpart->GetRPWeight();
+      TVector2 pt_rp = restpart->GetRotatedPt().Unit();
+      
+      mExcRP += wt_rp * TVector3( pt_rp.X(), pt_rp.Y(), 0.);
+      itraex++;
+    }
+    else 
+      LOG(DEBUG) << "rejected  track id @" << restpart << " " << restpart->GetTrackID() << FairLogger::endl; 
+  }
+  
+  apart.SetIndividualRPAngle( mExcRP.Phi() );
+  apart.SetIndividualRPVector( mExcRP );
+
+  if(itraex > 0 ) 
+    DoFlattening( apart );
+}
+
 
 void STFlowTask::Clear()
 {
@@ -438,20 +439,6 @@ Int_t STFlowTask::GetMultiplicityCorretionIndex(UInt_t isel, UInt_t ival)
 
   return -1;
 }
-
-Int_t STFlowTask::GetThetaCorrectionIndex(UInt_t isel, Int_t ival, Double_t fval)
-{
-  std::vector< std::pair<Double_t, Double_t> >::iterator itr;
-
-  for(itr = pbinmin[isel].begin()+ival; itr != pbinmin[isel].begin()-1; itr--){
-
-    if( fval >= itr->second) {
-      return itr - pbinmin[isel].begin();
-    }
-  }
-  return -1;
-}
-
 
 Bool_t STFlowTask::SetupFlowDataBase()
 {

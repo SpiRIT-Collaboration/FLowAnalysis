@@ -56,7 +56,6 @@ private:
   UInt_t *RandomDivide2(const UInt_t npart);
   UInt_t SetFLowDatabaseFiles(UInt_t version);
   Int_t  GetMultiplicityCorretionIndex(UInt_t isel, UInt_t ival);
-  Int_t  GetThetaCorrectionIndex(UInt_t isel, Int_t ival, Double_t fval);
 
 public:
   void   SetNTrack(UInt_t *nval);
@@ -70,10 +69,12 @@ public:
   void   DoSubeventAnalysis();
   TVector3 Psi_FlatteningCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
   TVector3 Psi_ReCenteringCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
-  void   DoIndividualReactionPlaneAnalysis();
+  void     DoIndividualReactionPlaneAnalysis();
+  void     SetIndividualReactionPlane( STParticle &apart );
 
   void   SetupEventInfo(Long64_t eventid, STBDC *aBDC);
-  void   SetFlowTask( TClonesArray &tpcParticle );
+  void   SetFlowTask( TClonesArray &atpcParticle );
+  void   SetParticleArray( TClonesArray &atpcParticle ){tpcParticle = &atpcParticle;}
   void   FinishEvent();
 
   void   SetFlowCorrection(Bool_t val)   {fIsFlowCorrection = val;}
