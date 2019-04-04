@@ -13,17 +13,20 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TVector3.h"
+#include "FairLogger.h"
 
 class STFlowCorrection : public TObject {
 
  public:
-  STFlowCorrection(){};
+  STFlowCorrection(){fLogger = FairLogger::GetLogger();}
   STFlowCorrection( TChain *chele, UInt_t ival1, UInt_t ival2) {Initialize(chele, ival1, ival2);}
   STFlowCorrection(UInt_t ival1, UInt_t ival2)                    {Initialize(ival1, ival2);}
   ~STFlowCorrection(){};
 
 
  private :
+  FairLogger *fLogger;      //!
+
   UInt_t     irm; // 1 = mix, otherwise real
   UInt_t     iver;
   UInt_t     harm;

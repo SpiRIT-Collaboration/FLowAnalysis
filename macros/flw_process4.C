@@ -691,7 +691,6 @@ TVector3 Psi_FlatteningCorrection(UInt_t isel, Int_t ival, TVector3 Pvec)
 {
   Int_t    iBIN = GetCorrectionIndex(isel, ival, Pvec.Theta());
 
-
   TVector3 Psi_cf;
   if(iBIN >= 0){
     flowcorr = (STFlowCorrection*)aflowcorrArray[isel]->At(iBIN);

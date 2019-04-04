@@ -1,4 +1,5 @@
 #include "STFlowCorrection.hh"
+
 void STFlowCorrection::Initialize(TChain *chele, UInt_t ival1, UInt_t ival2)
 {
   ChEle = chele;
@@ -79,7 +80,7 @@ void STFlowCorrection::SetFileName()
 void STFlowCorrection::SetFileName(TString sval)
 {
   fname = sval;
-  std::cout << fname << " in defined. " << std::endl;
+  LOG(INFO) << fname << " in defined. " << FairLogger::endl;
 }
 
 void STFlowCorrection::SetReCenteringParameter(TString cprm, Double_t *val)
@@ -95,21 +96,21 @@ void STFlowCorrection::SetReCenteringParameter(TString cprm, Double_t *val)
     sigY   = val[2];
   }
   else
-    std::cout << "Failed:  SetReCenteringParameter(X or Y, " << std::endl;
+    LOG(ERROR) << "Failed:  SetReCenteringParameter(X or Y, " << FairLogger::endl;
 }
 
 
 UInt_t STFlowCorrection::LoadCorrectionFactor(UInt_t val)
 {
 
-  std::cout << "STFlowCorrection::GetCorrectionFactor : "<< std::endl;
+  LOG(INFO) << "STFlowCorrection::GetCorrectionFactor : "<< FairLogger::endl;
 
   TString header = "->,";
 
   std::fstream fin;
   fin.open(fname, std::fstream::in);
   if(fin == NULL) {
-    std::cout << "A file " << fname << " was not found " << std::endl;
+    LOG(ERROR) << "A file " << fname << " was not found " << FairLogger::endl;
     exit(0);
   }
 
@@ -137,16 +138,16 @@ UInt_t STFlowCorrection::LoadCorrectionFactor(UInt_t val)
       fin >> sget; meanY  = atof(sget);
       fin >> sget; sigY   = atof(sget);
 
-      std::cout << " ReCentering correction factors > " ;
-      std::cout << " X: " 
-		<< constX << ", "
-		<< meanX  << ", "
-		<< sigX   << ", " ;
-      std::cout << " Y: " 
-		<< constY << ", "
-		<< meanY  << ", "
-		<< sigY   << ", "
-		<< std::endl;
+      LOG(DEBUG) << " ReCentering correction factors > " ;
+      LOG(DEBUG) << " X: " 
+		 << constX << ", "
+		 << meanX  << ", "
+		 << sigX   << ", " ;
+      LOG(DEBUG) << " Y: " 
+		 << constY << ", "
+		 << meanY  << ", "
+		 << sigY   << ", "
+		 << FairLogger::endl;
 
     }
     
@@ -211,14 +212,15 @@ UInt_t STFlowCorrection::LoadCorrectionFactor(UInt_t val)
 
   if( val == 1 ) ShowParameters();
 
+  fin.close();
   return 0;
 }
 
 void STFlowCorrection::ShowBinInformation()
 {
-  std::cout << binpara[0] << " > " << binmin[0] << " && < " << binmax[0] << std::endl; 
+  LOG(DEBUG) << binpara[0] << " > " << binmin[0] << " && < " << binmax[0] << FairLogger::endl; 
   if(binpara[1] != "")
-    std::cout << binpara[1] << " > " << binmin[1] << " && < " << binmax[1] << std::endl; 
+    LOG(DEBUG) << binpara[1] << " > " << binmin[1] << " && < " << binmax[1] << FairLogger::endl; 
 
 }
 
@@ -227,14 +229,14 @@ void STFlowCorrection::ShowParameters()
   ShowBinInformation();
 
   for(UInt_t k = 0; k < charm; k++){ 
-    std::cout << "->, " << std::setw(5) << indx[k] << ", "
-	      << std::scientific << std::setprecision(5) << std::right
-	      << std::setw(20) << Bn[k] << ", " << Bn_rms[k] << ", "
-	      << std::setw(20) << An[k] << ", " << An_rms[k]
-	      << std::endl;
+    LOG(DEBUG) << "->, " << std::setw(5) << indx[k] << ", "
+	       << std::scientific << std::setprecision(5) << std::right
+	       << std::setw(20) << Bn[k] << ", " << Bn_rms[k] << ", "
+	       << std::setw(20) << An[k] << ", " << An_rms[k]
+	       << FairLogger::endl;
   }
    
-  std::cout << fname << " was loaded." << std::endl;
+  LOG(INFO) << fname << " was loaded." << FairLogger::endl;
 }
 
 
@@ -304,7 +306,7 @@ UInt_t STFlowCorrection::FourierCorrection()
 
 void STFlowCorrection::FourierCorrection(std::vector<Double_t> &val)
 {
-  std::cout << " harm = " << charm <<  "val.size " << val.size() << std::endl;
+  LOG(DEBUG) << " harm = " << charm <<  "val.size " << val.size() << FairLogger::endl;
   std::vector<Double_t> fvCos;
   std::vector<Double_t> fvSin;
 
@@ -346,12 +348,12 @@ void STFlowCorrection::FourierCorrection(std::vector<Double_t> &val)
   for(UInt_t k = 0; k < charm; k++){
     Double_t findx = (Double_t)(k+1);
     
-    std::cout << std::setw(5) << std::noshowpos << k+1 
-	      << std::scientific << std::setprecision(5)  << std::right //<< showpos
-	      << std::setw(6) << " Bn<cos> : " <<  std::setw(15) << Bn[k]  << " rms " << Bn_rms[k]
-	      << "    " 
-	      << std::setw(6) << " An<sin> : " <<  std::setw(15) << An[k]  << " rms " << An_rms[k]
-	      << std::endl;
+    LOG(DEBUG) << std::setw(5) << std::noshowpos << k+1 
+	       << std::scientific << std::setprecision(5)  << std::right //<< showpos
+	       << std::setw(6) << " Bn<cos> : " <<  std::setw(15) << Bn[k]  << " rms " << Bn_rms[k]
+	       << "    " 
+	       << std::setw(6) << " An<sin> : " <<  std::setw(15) << An[k]  << " rms " << An_rms[k]
+	       << FairLogger::endl;
     
   }
   
@@ -402,7 +404,7 @@ UInt_t STFlowCorrection::SaveCorrectionFactor(TString comm1, TString comm2)
   std::fstream fout;
 
   Ssiz_t ifnd = comm1.First(":");
-  fname += comm1(0,ifnd);
+  fname = comm1(0,ifnd);
   fname += ".txt";
 
   fout.open(fname,std::fstream::out);
@@ -438,7 +440,7 @@ UInt_t STFlowCorrection::SaveCorrectionFactor(TString comm1, TString comm2)
   }  
 
   fout.close();
-  std::cout << fname << " is created."<< std::endl;
+  LOG(INFO) << fname << " is created."<< FairLogger::endl;
 
 
   gSystem->cd("..");
@@ -451,19 +453,19 @@ void STFlowCorrection::PrintContents()
   PrintRange();
 
   for(UInt_t i = 0; i < (UInt_t)vphi.size(); i++){
-    std::cout << " mtrack " << std::setw(5) << vmtrack.at(i) << " theta " << std::setw(8) << vtheta.at(i) 
-   	      << " phi " << vphi.at(i) << std::endl;
+    LOG(INFO) << " mtrack " << std::setw(5) << vmtrack.at(i) << " theta " << std::setw(8) << vtheta.at(i) 
+   	      << " phi " << vphi.at(i) << FairLogger::endl;
   } 
 }
 
 void STFlowCorrection::PrintRange()
 {
-  std::cout << fname << std::endl;
+  std::cout << fname << FairLogger::endl;
 
   if(binpara[0] != "")
-    std::cout << binmin[0] << " < " << binpara[0] << " < " << binmax[0] << std::endl; 
+    LOG(INFO) << binmin[0] << " < " << binpara[0] << " < " << binmax[0] << FairLogger::endl; 
   if(binpara[1] != "")
-    std::cout << binmin[1] << " < " << binpara[1] << " < " << binmax[1] << std::endl; 
+    LOG(INFO) << binmin[1] << " < " << binpara[1] << " < " << binmax[1] << FairLogger::endl; 
 }
 #if !defined(__CINT__)
 ClassImp(STFlowCorrection);

@@ -1,6 +1,6 @@
 #! /bin/bash
 #
-# flw_process1.sh
+# run_analysis.sh
 # (c) Mizuki Nishimura
 #
 # ----------------------
@@ -8,16 +8,11 @@
 source ../build/config.sh
 
 # TPC data
-#export STTPCDIR=/cache/scr/spirit/recoData/20180309/
-#export STVERSION=1523.dc416ee   ###@develop.1535.1915a48
-#export STTPCDIR=/cache/scr/spirit/recoData/20180719/
-#export STVERSION=1665.2e3712e
 
-#export STTPCDIR=/xrootd/spdaq02/recoData/20181213/data/
-#export STVERSION=HEAD.1766.ee70f52
-
-export STTPCDIR=/xrootd/spdaq02/recoData/20181219/data/
-export STVERSION=HEAD.1769.ef17b59
+#export TPCDIR=/xrootd/spdaq02/recoData/20190206/data/
+#export RCVER=HEAD.1780.1e193e6
+export TPCDIR=/xrootd/spdaq02/recoData/20181219/data/
+export RCVER=HEAD.1769.ef17b59
 export ST132DIR=${STTPCDIR}
 export ST108DIR=${STTPCDIR}
 export ST124DIR=${STTPCDIR}
@@ -43,9 +38,6 @@ export STKYMLTDIR=/cache/scr/spirit/kaneko/rootfile/kyoto_re/mult/
 
 #NeuLAND data
 export STNLDIR=/cache/scr/spirit/NeuLand/neuland_4sep2018
-#export STNLDIR=/cache/scr/spirit/NeuLand/neuland_23jul2018
-#export STNLDIR=/cache/scr/spirit/NeuLand/neuland_3jul2018
-#export STNLDIR=/cache/scr/spirit/NeuLand/neuland_18jun2018
 
 #Anlaysis Flag
 export STPC=1;
@@ -56,69 +48,78 @@ export NEULAND=1;
 
 #--------------
 
-#RUN=2900 VER=0 root -b -q flw_process1.C
-#RUN=2841 VER=6 root  flw_process1.C
-
 source runList.sh
 
 ##--- for Process1 ------------------------------------
 # *****> <Edit Here>
 # Set RUNNUMBER1 
+DBVERSION=19
+VERSION=20
+
+#RUNNUMBER1="2841 2843 2844"
+RUNNUMBER1="2841"
+MXEVT=100
+function exec() {
+    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT DBVER=$DBVERSION root run_analysis.C 
+}
+
+function execb() {
+    LOG=log/prc1_$RUNNUMBER1_v$VERSION.log
+    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
+}
 
 RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RBF132} ${RNF108} ${RNF124} ${RNF112}) 
-#RUNNUMBER1=("2997")
 #RUNNUMBER1=(${RNFTEMP})
 #RUNNUMBER1=(${RNF132r})
-VERSION=15
+#RUNNUMBER1=(${RNF132p})
 
-
-function process1(){
+function process(){
     typeset -i I=0
     while(( $I < ${#RUNNUMBER1[@]} ))
     do
 	RUN=${RUNNUMBER1[I]} 
-	LOG=log/prc1_${RUN}_v${VERSION}.log
-	echo RUN=${RUN} VER=$VERSION root -b -q flw_process1.C '>&' $LOG
-	RUN=${RUN} VER=$VERSION root -b -q flw_process1.C >& $LOG &
+	LOG=log/p1_${RUN}_v${VERSION}.log
+	echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
+	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
 	let I++
 	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
             break;
         fi
 
 	RUN=${RUNNUMBER1[I]} 
-	LOG=log/prc1_${RUN}_v${VERSION}.log
-        echo RUN=${RUN} VER=$VERSION root -b -q flw_process1.C '>&' $LOG
-	RUN=${RUN} VER=$VERSION root -b -q flw_process1.C >& $LOG &
+	LOG=log/p1_${RUN}_v${VERSION}.log
+        echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
+	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
 	let I++
 	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
             break;
         fi
 
 	RUN=${RUNNUMBER1[I]} 
-	LOG=log/prc1_${RUN}_v${VERSION}.log
-        echo RUN=${RUN} VER=$VERSION root -b -q flw_process1.C '>&' $LOG
-	RUN=${RUN} VER=$VERSION root -b -q flw_process1.C >& $LOG &
+	LOG=log/p1_${RUN}_v${VERSION}.log
+        echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
+	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
 	let I++
 	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
             break;
         fi
 
 	RUN=${RUNNUMBER1[I]} 
-	LOG=log/prc1_${RUN}_v${VERSION}.log
-        echo RUN=${RUN} VER=$VERSION root -b -q flw_process1.C '>&' $LOG
-	RUN=${RUN} VER=$VERSION root -b -q flw_process1.C >& $LOG 
+	LOG=log/p1_${RUN}_v${VERSION}.log
+        echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
+	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG 
 	let I++
     done
 }
 
 #RUN=${RUNNUMBER1[0]}
-#RUN=${RUN} VER=$VERSION root -b -q flw_process1.C\(1000\)
+#RUN=${RUN} VER=$VERSION root -b -q run_analysis.C\(1000\)
 
-#process1 
+
 
 
 

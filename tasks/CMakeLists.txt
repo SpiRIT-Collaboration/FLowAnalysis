@@ -26,35 +26,37 @@ ${FAIRROOT_LIBRARY_DIR}
 ${SPIRITROOTPATH}/build/lib
 ${CMAKE_SOURCE_DIR}/analysisformat
 ${CMAKE_SOURCE_DIR}/flowformat
+${CMAKE_SOURCE_DIR}/tasks
 ) 
 
 link_directories(${LINK_DIRECTORIES})
+MESSAGE(STATUS "SpiRITAnalysis LINK_DIRECTORIES -> ${LINK_DIRECTORIES} <--")
 
 set(SRCS
 # Add all the source files below this line. Those must have cc for their extension.
-STKatana.cc
-STParticle.cc
-STTriggerArray.cc
-STNeuLANDCluster.cc
-STNeuLANDHit.cc
-STBetheBlochFittingFunction.cc
-KatanaRoot.cc
-STMassFunction.cc
-STBDC.cc
+STBigRIPSTask.cc
+STSpiRITTPCTask.cc
+STSource.cc
+STFlowTask.cc
 )
 
 CHANGE_FILE_EXTENSION(*.cc *.hh HEADERS "${SRCS}")
 
 set(HEADERS ${HEADERS})
-Set(LINKDEF STAnalysisFormatLinkDef.h)
-Set(LIBRARY_NAME STAnalysisFormat)
-
+Set(LINKDEF STAnalysisTaskLinkDef.h)
+Set(LIBRARY_NAME STAnalysisTasks)
 Set(DEPENDENCIES
   Base
   Stack
 # Add all library names your code depending on.
 # Basically those are the libraries in the header files' directory
-  STFormat
+  STGlobal
+  STAna
+  STAnalysisFormat
+  STFlowAnalysis
 )
+
+#target_link_libraries(${LIBRARY_NAME} ${SpiRIT_MODULES})
+
 
 GENERATE_LIBRARY()

@@ -37,25 +37,27 @@ IF(NOT DEFINED ENV{SIMPATH})
    MESSAGE(FATAL_ERROR "You did not define the environment variable SIMPATH which is nedded to find the external packages. Please set this variable and execute cmake again.") 
 ENDIF(NOT DEFINED ENV{SIMPATH})
 
-SET(SIMPATH $ENV{SIMPATH})
-SET(FAIRROOTPATH $ENV{FAIRROOTPATH})
+IF(NOT DEFINED ENV{SPIRITROOTPATH})
+   MESSAGE(FATAL_ERROR "You did not define the environment variable SPIRITROOTPATH which is nedded to find the external packages. Please set this variable and execute cmake again.") 
+ENDIF(NOT DEFINED ENV{SPIRITROOTPATH})
+
+SET(SIMPATH        $ENV{SIMPATH})
+SET(FAIRROOTPATH   $ENV{FAIRROOTPATH})
 SET(SPIRITROOTPATH $ENV{SPIRITROOTPATH})
-SET(SPIRITANAPATH $ENV{SPIRITANAPATH})
+SET(SPIRITANAPATH  $ENV{SPIRITANAPATH})
 
 # where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ 
 # is checked
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
+set(CMAKE_MODULE_PATH "${SPIRITROOTPATH}/cmake/modules")
 set(CMAKE_MODULE_PATH "${FAIRROOTPATH}/share/fairbase/cmake/modules"  ${CMAKE_MODULE_PATH})
 set(CMAKE_MODULE_PATH "${FAIRROOTPATH}/share/fairbase/cmake/modules_old"  ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules" ${CMAKE_MODULE_PATH})
 
 execute_process(COMMAND echo ${CMAKE_MODULE_PATH})
 
 Set(CheckSrcDir "${FAIRROOTPATH}/share/fairbase/cmake/checks")
-
-Set(SpiRIT_MODULES STFormat STGlobal)
-
-
 find_package(FairRoot)
+
 
 
 # Load some basic macros which are needed later on
@@ -75,7 +77,7 @@ Check_Compiler()
 
 set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/lib")
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
-set(INCLUDE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/include")
+set(INCLUDE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/include")
 Set(VMCWORKDIR ${CMAKE_SOURCE_DIR})
 Option(USE_PATH_INFO "Information from PATH and LD_LIBRARY_PATH are used." ON)
 If(USE_PATH_INFO)
@@ -108,13 +110,16 @@ CHECK_EXTERNAL_PACKAGE_INSTALL_DIR()
 # mandatory
 
 find_package(ROOT 5.32.00 REQUIRED)
+find_package(GEANT3 REQUIRED)
+find_package(GEANT4 REQUIRED)
+find_package(GEANT4VMC)
+find_package(CLHEP)
+find_package(Eigen3 REQUIRED)
+find_package(GENFIT2 REQUIRED)
+find_package(ANAROOT REQUIRED)
+find_package(RAVE REQUIRED)
 find_package(OpenMP)
 find_package(PythonInterp 2.7 REQUIRED)
-find_package(ANAROOT)
-find_package(CLHEP)
-find_package(GENFIT2 REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(SpiRITROOT REQUIRED)
 
 If(NOT APPLE)
   set(PYTHON_LIBRARY ${PYTHON_EXECUTABLE})
@@ -171,9 +176,14 @@ Else()
   )
 EndIf()
 
+Set(SpiRIT_MODULES STFormat STGlobal STAna STUtil)
+find_package(SpiRITROOT REQUIRED)
+
 Generate_Version_Info()
 
+
 SET(_LIBDIR ${CMAKE_BINARY_DIR}/lib)
+SET(LD_LIBRARY_PATH $ENV{LD_LIBRARY_PATH})
 SET(LD_LIBRARY_PATH  ${_LIBDIR} ${LD_LIBRARY_PATH} ${PYTHON_LIBRARY})
 
 # OpenMP configuration
@@ -201,7 +211,7 @@ ENDIF(HAS_CXX11_SHAREDPOINTER)
 
 add_subdirectory(analysisformat)
 add_subdirectory(flowformat)
-
+add_subdirectory(tasks)
 
 WRITE_CONFIG_FILE(config.sh)
  
