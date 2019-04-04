@@ -20,7 +20,7 @@ Double_t ymean[4];
 Double_t ysig[4];
 
 
-const UInt_t  nbin = 20;
+const UInt_t  nbin = 25;
   
 UInt_t ic = -1;
 Int_t ntrack[7];
@@ -128,7 +128,7 @@ void Flatten_Psi_ntrack(UInt_t isel)
   SetPsiCorrectionFileHeader(isel);
   
   const UInt_t harm      = 5;
-  const UInt_t ntrknbin  = 10;
+  const UInt_t ntrknbin  = 20;
 
   // bin setting for multiplicity
   Double_t ntrkbin[ntrknbin+1];

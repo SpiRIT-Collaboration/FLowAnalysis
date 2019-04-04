@@ -31,6 +31,8 @@ void DoFlowAnalysis(Long64_t nmax = -1)
 
     fflowtask->SetFlowInfo( aFlowInfo );
     fflowtask->DoFlattening();
+    fflowtask->DoFlatteningSub();
+
     aFlowInfo = fflowtask->GetFlowInfo();
       
     TClonesArray &aflow = *anewFlow;
@@ -44,14 +46,7 @@ void DoFlowAnalysis(Long64_t nmax = -1)
     while( (apart = (STParticle*)next()) ) {
 
       fflowtask->SetIndividualReactionPlane( *apart );
-
-      fflowtask->DoFlattening( *apart );
       TVector3 rpvec = apart->GetIndividualRPVector();
-
-      // TVector3 aftrpvec = fflowtask->DoIndividualReactionPlaneFlattening(0, aFlowInfo->mtrack4-1, rpvec);
-      //      apart->SetIndividualRPVector( rpvec );
-
-      //	cout << "aft0 ->" << apart->GetIndividualRPVector().Phi() << endl;
       apart->SetAzmAngle_wrt_RP( TVector2::Phi_mpi_pi( apart->GetRotatedMomentum().Phi() - rpvec.Phi() ) );
 
       TClonesArray &arr = *aParticleArray;

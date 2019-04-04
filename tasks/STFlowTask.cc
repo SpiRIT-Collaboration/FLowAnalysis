@@ -22,13 +22,13 @@ STFlowTask::~STFlowTask()
 {
 
   //  delete tpcParticle;  //!
-  if( fflowinfo != nullptr )
-    delete fflowinfo;    //!
+  // if( fflowinfo != nullptr )
+  //   delete fflowinfo;    //!
 
-  for(UInt_t i = 0; i < 2; i++) {
-    if( aflowcorrArray[i] != nullptr )
-      delete aflowcorrArray[i];
-  }
+  // for(UInt_t i = 0; i < 2; i++) {
+  //   if( aflowcorrArray[i] != nullptr )
+  //     delete aflowcorrArray[i];
+  // }
 
   // if( bs_unitP != nullptr )
   //   delete bs_unitP;
@@ -342,11 +342,11 @@ void STFlowTask::DoIndividualReactionPlaneAnalysis( )
   TIter orgnext(tpcParticle);
   STParticle *apart = NULL;
 
-  while( (apart = (STParticle*)orgnext()) ) 
+  while( (apart = (STParticle*)orgnext()) ) {
 
     SetIndividualReactionPlane( *apart );
 
-
+  }
 }
 
 void STFlowTask::SetIndividualReactionPlane( STParticle &apart )
@@ -356,19 +356,27 @@ void STFlowTask::SetIndividualReactionPlane( STParticle &apart )
   TIter next(tpcParticle);
   STParticle *restpart = NULL;
 
+  auto befv = apart.GetIndividualRPAngle();
+
   while( (restpart = (STParticle*)next() ) ){
 
-    if( restpart->GetTrackID() != apart.GetTrackID() && restpart->GetReactionPlaneFlag() > 1000 ) {
+    //if( restpart->GetTrackID() != apart.GetTrackID() && restpart->GetReactionPlaneFlag() >= 2000 ) {
+    if( restpart->GetTrackID() != apart.GetTrackID() && restpart->GetReactionPlaneFlag() > 10 ) {
       Double_t wt_rp = restpart->GetRPWeight();
       TVector2 pt_rp = restpart->GetRotatedPt().Unit();
       
       mExcRP += wt_rp * TVector3( pt_rp.X(), pt_rp.Y(), 0.);
+
+      LOG(DEBUG) << itraex << " x " << wt_rp*pt_rp.X() << " y " << wt_rp*pt_rp.Y() << " flag " << restpart->GetReactionPlaneFlag() << FairLogger::endl;
+
       itraex++;
     }
     else 
       LOG(DEBUG) << "rejected  track id @" << restpart << " " << restpart->GetTrackID() << FairLogger::endl; 
   }
   
+  LOG(DEBUG) << " RP x " << mExcRP.X() << " <<- " << befv  << " num " << tpcParticle->GetEntries() << FairLogger::endl;
+
   apart.SetIndividualRPAngle( mExcRP.Phi() );
   apart.SetIndividualRPVector( mExcRP );
 
