@@ -16,4 +16,7 @@
 #pragma link C++ class KatanaRoot+;
 #pragma link C++ class Signal+;
 #pragma link C++ class TriggerBox+;
+#pragma link C++ class STBBFunction+;
+#pragma link C++ class STMassCalculator+;
+#pragma link C++ class STMassFunction+;
 #endif

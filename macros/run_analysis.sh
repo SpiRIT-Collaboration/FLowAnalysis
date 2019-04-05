@@ -53,8 +53,8 @@ source runList.sh
 ##--- for Process1 ------------------------------------
 # *****> <Edit Here>
 # Set RUNNUMBER1 
-DBVERSION=19
-VERSION=20
+DBVERSION=20
+VERSION=21
 
 #RUNNUMBER1="2841 2843 2844"
 RUNNUMBER1="2841"

@@ -235,11 +235,16 @@ void STMassFunction::SetMassRegion()
     MassRegion[i][0] =  fBBMassGaussFit[i-1]->GetParameter(1);
     MassRegion[i][1] =  fBBMassGaussFit[i-1]->GetParameter(2);
 
-    LOG(INFO) << " MassRegion is loaded " << i << " " << MassRegion[i][0] 
-	      << " - " <<  MassRegion[i][0]-MassRegion[i][1]*MassRegion[i][2] 
-	      << " + " <<  MassRegion[i][0]+MassRegion[i][1]*MassRegion[i][3] 
-	      << "("<<MassRegion[i][1] <<")"
-	      << FairLogger::endl;
+    // LOG(INFO) << " MassRegion is loaded " << i << " " << MassRegion[i][0] 
+    // 	      << " - " <<  MassRegion[i][0]-MassRegion[i][1]*MassRegion[i][2] 
+    // 	      << " + " <<  MassRegion[i][0]+MassRegion[i][1]*MassRegion[i][3] 
+    // 	      << "("<<MassRegion[i][1] <<")"
+    // 	      << FairLogger::endl;
+
+
+    LOG(INFO) << MassRegion[i][0] << ", " << MassRegion[i][1] << FairLogger::endl;
+
+
   }
 
 }

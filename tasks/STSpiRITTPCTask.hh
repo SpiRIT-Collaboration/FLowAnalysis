@@ -8,6 +8,7 @@
 #include "STRecoTrack.hh"
 #include "STParticle.hh"
 #include "STMassFunction.hh"
+#include "STMassCalculator.hh"
 #include "ST_ClusterNum_DB.hh"
 #include "STBDC.hh"
 #include "STFlowInfo.hh"
@@ -77,7 +78,8 @@ private:
   TClonesArray   *tpcParticle;  //!
 
   //--- mass fitter
-  STMassFunction *massFitter;   //!
+  //  STMassFunction *massFitter;   //!
+  STMassCalculator* massCal;    //!
 
   TClonesArray *flowAnalysis; //!
   STFlowInfo   *fflowinfo;    //!
@@ -98,7 +100,22 @@ private:
   Long64_t prcEntry;      //!
   TDatime  dtime;         //! 
   TDatime  beginTime;     //!  
-  
+
+  Double_t MassRegion[7][4] ={{ 127.2,   21.3,      2.,  2.},            //pi  
+			      { 911.044, 68.4656,   2.,  2.},            //p  685.3 to 1,165.9
+			      { 1874.76, 129.962,   1.5, 1.5},           //d  1,552.3 to 
+			      { 2870.62, 212.896,   1.,  1.},            //t 2463
+			      { 2760.47, 196.659,   1.,  1.},            //He3 
+			      { 3720.77, 255.71,    1.,  1.},            //He4 
+			      { 5751.97, 673.339,   0.5, 0.5}};      //! //He6  // read from fitted function
+ 
+  Double_t MassRegionLU[7][2] = { {  50.0,  200.0},     // pi
+				  { 500.0, 1137.0},     // p
+				  {1137.0, 2200.0},     // d
+				  {2200.0, 3200.0},     // t
+				  {2430.0, 2950.0},     // fBBMassHe  3He
+				  {2950.0, 4000.0},     // fBBMassHe  4He
+				  {4000.0, 7000.0}};    //!           6He
 
   void   Clear();
   Bool_t SetupParameters();
@@ -108,26 +125,8 @@ private:
   void   ProceedEvent();
   void   SetupEventInfo();
   void   SetupTrackQualityFlag(STParticle *apart);
-
-  // for flow analysis
-  // vector<UInt_t> mtkbin[2];		             //!
-  // vector< TString > vfname[2];	                     //!
-  // vector< vector<Double_t> >  binmax;	             //!
-  // vector< vector<Double_t> >  binmin;	             //!
-  // vector< pair<Double_t, Double_t> > pbinmin[2]; //!
-  // TRandom3 rnd; //!
-
-  //  void   SetupFlow(STParticle &apart);
-  //  void   DoFlowAnalysis(STParticle &apart);
-  //  void   DoSubeventAnalysis();
-  //  UInt_t *RandomDivide2(const UInt_t npart);
-  //  UInt_t SetFLowDatabaseFiles(UInt_t version);
-  //  TVector3 Psi_FlatteningCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
-  //  TVector3 Psi_ReCenteringCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
-  //  Int_t  GetCorrectionIndex(UInt_t isel, UInt_t ival, Double_t fval);
-  //  Int_t  GetMultiplicityCorretionIndex(UInt_t isel, UInt_t ival);
-  //  Int_t  GetThetaCorrectionIndex(UInt_t isel, Int_t ival, Double_t fval);
-  //  void   DoIndividualReactionPlaneAnalysis();
+  Int_t  GetPID(Double_t mass[2], Double_t dedx);
+  Int_t  GetPIDLoose(Double_t mass[2], Double_t dedx);
 
 public:
   void   SetFlowAnalysis(Bool_t val) {fIsFlowAnalysis = val;}
@@ -139,22 +138,6 @@ public:
 
   // return input file chain
   TChain* GetChain()                 {return fChain;}
-
-  // // Flow parameters
-  // TVector2 unitP;      // sum of unit pt vector
-  // TVector3 unitP_fc;
-  // TVector3 unitP_rc;
-
-  // TVector2 unitP_1;
-  // TVector2 unitP_2;
-  // UInt_t   mtrack_1;
-  // UInt_t   mtrack_2;
-
-  // STBootStrap *bs_unitP; // = new STBootStrap(100);
-  // Double_t bsPhi[3];
-  // Double_t bsPhi_1[3];
-  // Double_t bsPhi_2[3];
-
 
   ClassDef(STSpiRITTPCTask, 0);
 
