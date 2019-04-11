@@ -41,6 +41,8 @@ STBetheBlochFittingFunction.cc
 KatanaRoot.cc
 STMassFunction.cc
 STBDC.cc
+STBBFunction.cc
+STMassCalculator.cc
 )
 
 CHANGE_FILE_EXTENSION(*.cc *.hh HEADERS "${SRCS}")

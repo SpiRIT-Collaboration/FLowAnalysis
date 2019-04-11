@@ -1,4 +1,4 @@
-#include "DoFlowAnalysis.h"
+#include "DoRPAnalysis.h"
 //----------------------------------------------------------------------
 // DoFlowAnalysis.C 
 // input: 
@@ -8,7 +8,7 @@
 
 //
 //----------------------------------------------------------------------
-void DoFlowAnalysis(Long64_t nmax = -1)
+void DoRPAnalysis(Long64_t nmax = -1)
 {
   SetEnvironment();
 
@@ -27,7 +27,11 @@ void DoFlowAnalysis(Long64_t nmax = -1)
 
     rChain->GetEntry(ievt);
 
+    auto abeamInfo = (STBDC*)aBDC->At(0);
+    if( !abeamInfo->GetBeamPID() ) continue;
+
     auto aFlowInfo = (STFlowInfo*)aFlowArray->At(0);
+    
 
     fflowtask->SetFlowInfo( aFlowInfo );
     fflowtask->DoFlattening();

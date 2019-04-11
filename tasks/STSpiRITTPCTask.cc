@@ -8,9 +8,9 @@ STSpiRITTPCTask::STSpiRITTPCTask()
     fIsFlowCorrection(kTRUE),
     fIsBootStrap(kFALSE),
     fIsSubeventAnalysis(kTRUE),
-    selReactionPlanef(10),
+    selReactionPlanef(100),
     fEventID(-1),
-    massFitter(new STMassFunction())
+    massCal(new STMassCalculator())
 {
 
   fLogger = FairLogger::GetLogger();
@@ -40,7 +40,8 @@ STSpiRITTPCTask::~STSpiRITTPCTask()
   delete tpcParticle;  //!
 
   //--- mass fitter
-  delete massFitter;
+  //  delete massFitter;
+  delete massCal;
 
   delete flowAnalysis; //!
   delete fflowinfo;    //!
@@ -114,15 +115,18 @@ Bool_t STSpiRITTPCTask::SetupParameters()
   
 
   //--- angle dependeing mass fitter //
-  fstatus = massFitter->SetFunction("/cache/scr/spirit/mizuki/Bethe-Bloch_Fitter/mk_NewFitter_20190111/",
-				    "BBFitter.root",
-				    "f1IterBBProtonRotate_" + STRunToBeamA::GetBeamSnA(iRun) );
-  if( !fstatus ) LOG(ERROR) << " BB Mass fittter function was not loaded. " << FairLogger::endl;
+  massCal->SetParameter("db/BBFitter.root");
 
-  fstatus = massFitter->SetMassFitFunction("/cache/scr/spirit/mizuki/Bethe-Bloch_Fitter/mk_NewFitter_20190111/",
-					   "MassFitter.root",
-					   "f1IterMassFitRotate_" + STRunToBeamA::GetBeamSnA(iRun) );
-  if( ! fstatus ) LOG(ERROR) << " BB Mass gaus fit function was not loaded. " << FairLogger::endl;
+  // fstatus = massFitter->SetFunction("/cache/scr/spirit/mizuki/Bethe-Bloch_Fitter/mk_NewFitter_20190111/",
+  // 				    "BBFitter.root",
+  // 				    "f1IterBBProtonRotate_" + STRunToBeamA::GetBeamSnA(iRun) );
+  // if( !fstatus ) LOG(ERROR) << " BB Mass fittter function was not loaded. " << FairLogger::endl;
+
+  // fstatus = massFitter->SetMassFitFunction("/cache/scr/spirit/mizuki/Bethe-Bloch_Fitter/mk_NewFitter_20190111/",
+  // 					   "MassFitter.root",
+  // 					   "f1IterMassFitRotate_" + STRunToBeamA::GetBeamSnA(iRun) );
+
+  //  if( ! fstatus ) LOG(ERROR) << " BB Mass gaus fit function was not loaded. " << FairLogger::endl;
 
   //------------------------------
 
@@ -251,6 +255,8 @@ void STSpiRITTPCTask::Exec(Option_t *opt)
 
   if( fEventID < prcEntry ) {
 
+    fChain -> GetEntry(fEventID);  
+
     SetupEventInfo();
     ProceedEvent();
     FinishEvent();
@@ -265,6 +271,13 @@ void STSpiRITTPCTask::FinishEvent()
 {
   LOG(DEBUG) << "STSpiRITTPCTask::FinishEvent is called. " << FairLogger::endl;
 
+  auto anaRun = FairRunAna::Instance();  
+  if( ntrack[2] == 0 || BeamPID == 0) {
+    anaRun->MarkFill(kFALSE);
+    return;
+  }
+
+
   if( fIsFlowAnalysis ) {
 
     fflowtask->FinishEvent();
@@ -274,11 +287,7 @@ void STSpiRITTPCTask::FinishEvent()
     new( aflow[0] ) STFlowInfo( *fflowinfo );
   }
 
-  auto anaRun = FairRunAna::Instance();
-  if( ntrack[2] == 0) 
-    anaRun->MarkFill(kFALSE);
-  else
-    anaRun->MarkFill(kTRUE);
+  anaRun->MarkFill(kTRUE);
 
 }
 
@@ -288,6 +297,7 @@ void STSpiRITTPCTask::SetupEventInfo()
   auto fBDCArray = (TClonesArray *)fRootManager->GetObject("STBDC");
   auto fBDC = (STBDC*)fBDCArray->At(0);
   
+  BeamPID = fBDC->GetBeamPID();
   ProjA   = fBDC->GetProjA();
   ProjB   = fBDC->GetProjB();  
 
@@ -323,6 +333,10 @@ void STSpiRITTPCTask::SetupTrackQualityFlag(STParticle *apart)
 
 void STSpiRITTPCTask::Clear()
 {
+  BeamPID = 0;
+  ProjA = 0.;
+  ProjB = 0;
+
   for (Int_t m = 0; m < 7; m++) ntrack[m] = 0;
 
   tpcParticle->Clear();
@@ -336,8 +350,10 @@ void STSpiRITTPCTask::Clear()
 void STSpiRITTPCTask::ProceedEvent()
 {
 
-  fChain -> GetEntry(fEventID);  
+  if( BeamPID == 0) 
+    return;
 
+  
   ntrack[0] = trackArray -> GetEntries();
 
   LOG(DEBUG) << "nttack[0] -------------------- > " << ntrack[0] << FairLogger::endl;
@@ -376,18 +392,30 @@ void STSpiRITTPCTask::ProceedEvent()
       TVector3 VMom     = aParticle->GetRotatedMomentum();
       Double_t dEdx     = aParticle->GetdEdx();
 
+
       //--- Set MassFitter      
-      Double_t massH = 0.;
-      Double_t massHe = 0.;
-      Int_t    pid_tight  = 0;
-      Int_t    pid_loose  = 0;      
-      massFitter->GetBBMass(VMom, dEdx, Charge, massH, massHe, pid_tight, pid_loose); 
-      aParticle->SetBBMass(massH);      
-      aParticle->SetBBMassHe(massHe);
+      Double_t mass[2];
+      if( dEdx > -1 ){
+	mass[0]  = massCal->CalcMass(1., VMom, dEdx);
+	mass[1]  = massCal->CalcMass(2., VMom, dEdx);
+      }
+      else {
+	mass[0] = 0.;
+	mass[1] = 0.;
+      }
+
+      aParticle->SetBBMass(mass[0]);      
+      aParticle->SetBBMassHe(mass[1]);
+
+      Int_t    pid_tight  = GetPID(mass, dEdx);
+      Int_t    pid_loose  = GetPIDLoose(mass, dEdx);
+      
+      //      massFitter->GetBBMass(VMom, dEdx, Charge, massH, massHe, pid_tight, pid_loose); 
       aParticle->SetPID(pid_tight);
       aParticle->SetPIDLoose(pid_loose);
 
-      LOG(DEBUG) << " mass "  << massHe << " & pid " << pid_loose << FairLogger::endl;
+      LOG(DEBUG) << " mass H "  << mass[0]  << " & pid " << pid_loose << " : " << pid_tight << ": " << dEdx << FairLogger::endl;
+      LOG(DEBUG) << " mass He"  << mass[1] << " & pid " << pid_loose << " : " << pid_tight  << ": " << dEdx << FairLogger::endl;
 
       //--- number cluster ratio
       if( kFALSE ) {
@@ -414,4 +442,64 @@ void STSpiRITTPCTask::ProceedEvent()
     fflowtask->SetNTrack(ntrack);
     fflowtask->SetFlowTask( ptpcParticle  );
   }
+}
+
+Int_t STSpiRITTPCTask::GetPID(Double_t mass[2], Double_t dedx)
+{
+  // p, d, t                                                                                                                               
+  if( mass[0] == 0 )
+    return 0;
+
+  else if( mass[1] < 2500 && mass[0] > 0 ) {
+
+    for(UInt_t i = 0; i < 4; i++) {
+      Double_t mass_low = MassRegion[i][0]-MassRegion[i][1]*MassRegion[i][2] ;
+      Double_t mass_up  = MassRegion[i][0]+MassRegion[i][1]*MassRegion[i][3] ;
+
+      if( mass[0] >= mass_low && mass[0] <= mass_up ) {
+	STPID::PID pid = static_cast<STPID::PID>(i);
+        return STPID::GetPDG(pid);
+      }
+    }
+  }
+
+  // He3, He4, He6                                                                                                                          
+  else if( mass[0] >= 3100 && dedx <= 700) {
+    for( UInt_t i = 4; i < 7; i++ ){
+      Double_t mass_low = MassRegion[i][0]-MassRegion[i][1]*MassRegion[i][2] ;
+      Double_t mass_up  = MassRegion[i][0]+MassRegion[i][1]*MassRegion[i][3] ;
+
+      if( mass[1] >= mass_low && mass[1] <= mass_up ) {
+	STPID::PID pid = static_cast<STPID::PID>(i);
+        return STPID::GetPDG(pid);
+      }
+    }
+  }
+  return 0;
+}
+
+Int_t STSpiRITTPCTask::GetPIDLoose(Double_t mass[2], Double_t dedx)
+{
+  if( mass[0] == 0 )
+    return 0;
+
+  // p, d, t   
+  else if( mass[1] < MassRegionLU[4][0] && mass[0] > 0 ) {
+    for(UInt_t i = 0; i < 4; i++) {
+      if( mass[0] >= MassRegionLU[i][0] && mass[0] < MassRegionLU[i][1] ) {
+	STPID::PID pid = static_cast<STPID::PID>(i);
+        return STPID::GetPDG(pid);
+      }
+    }
+  }
+  // He3, He4, He6
+  else if( mass[0] >= 3100 && dedx <= 700) {
+    for( UInt_t i = 4; i < 7; i++ ){
+      if( mass[1] >= MassRegionLU[i][0] && mass[1] < MassRegionLU[i][1] ) {
+	STPID::PID pid = static_cast<STPID::PID>(i);
+        return STPID::GetPDG(pid);
+      }
+    }
+  }
+  return 0;
 }

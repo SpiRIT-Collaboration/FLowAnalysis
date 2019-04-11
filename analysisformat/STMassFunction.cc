@@ -87,7 +87,7 @@ Int_t STMassFunction::GetPIDLU(Double_t fmassH, Double_t fmassHe, Double_t dedx)
   // p, d, t
   if( fmassHe < MassRegionLU[4][0] && fmassH > 0 ) { 
 
-    for(UInt_t i = 1; i < 4; i++) {
+    for(UInt_t i = 0; i < 4; i++) {
 
       if( fmassH >= MassRegionLU[i][0] && fmassH < MassRegionLU[i][1] ) {
 	STPID::PID pid = static_cast<STPID::PID>(i);
@@ -235,11 +235,16 @@ void STMassFunction::SetMassRegion()
     MassRegion[i][0] =  fBBMassGaussFit[i-1]->GetParameter(1);
     MassRegion[i][1] =  fBBMassGaussFit[i-1]->GetParameter(2);
 
-    LOG(INFO) << " MassRegion is loaded " << i << " " << MassRegion[i][0] 
-	      << " - " <<  MassRegion[i][0]-MassRegion[i][1]*MassRegion[i][2] 
-	      << " + " <<  MassRegion[i][0]+MassRegion[i][1]*MassRegion[i][3] 
-	      << "("<<MassRegion[i][1] <<")"
-	      << FairLogger::endl;
+    // LOG(INFO) << " MassRegion is loaded " << i << " " << MassRegion[i][0] 
+    // 	      << " - " <<  MassRegion[i][0]-MassRegion[i][1]*MassRegion[i][2] 
+    // 	      << " + " <<  MassRegion[i][0]+MassRegion[i][1]*MassRegion[i][3] 
+    // 	      << "("<<MassRegion[i][1] <<")"
+    // 	      << FairLogger::endl;
+
+
+    LOG(INFO) << MassRegion[i][0] << ", " << MassRegion[i][1] << FairLogger::endl;
+
+
   }
 
 }

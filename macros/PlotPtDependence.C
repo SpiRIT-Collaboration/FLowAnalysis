@@ -1,5 +1,17 @@
-TCanvas *cv[20];
-TCanvas *ccv;
+#include "DoFlowAnalysis.h"
+
+  // --> Plotting selection
+Bool_t bsys[]  = { 1, 0, 0, 0};
+Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n
+Bool_t bcnt[]  = { 1, 0, 0}; 
+UInt_t cntw = 3;
+
+UInt_t bver[]  = { 1, 1, 1, 1, 1, 1};
+TString sVer[] = {".v23.1.7",".v23.1.10", ".v23.1.11", ".v23.1.12", ".v23.1.13"};
+TString sName = "cosYPt_132Sn_";
+
+
+
 UInt_t   ccvid = 0;
 TF1 *lslope = new TF1("lslope","[0]+[1]*x",-0.1,0.2);
 
@@ -8,26 +20,14 @@ TString fsys[] = {"132Sn+124Sn","108Sn+112Sn","124Sn+112Sn","112Sn+124Sn"};
 TString rsys[] = {"132",        "108",        "124",        "112"};
 TString fpid[] = {"proton","deuteron","triton","3He","4He","neutron"};  
 
-
-UInt_t  imrk[] = {20, 21, 22, 23, 25, 26, 24};
 Size_t  imsz[] = {1, 1, 1.3, 1.3, 1.3, 1.3, 1.3};
 Color_t icol[] = { kRed, kBlue, kSpring, kMagenta, kOrange, kViolet};
 Color_t icolnn[]={ kPink, kBlue+1, kGreen+2, kViolet-1};
 
-Double_t yrange[] =  {-0.25, -0.15, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45};
-const UInt_t rbin = sizeof(yrange)/sizeof(Double_t);
-
-Double_t yrange2[] = {-0.25, -0.1,  0.1, 0.25, 0.45};
-const UInt_t rbin2 = sizeof(yrange2)/sizeof(Double_t);
-
-//UInt_t  cent[] = {70, 40, 35, 20, 0};
-UInt_t   cent[]  = {70, 35, 28, 0};
-UInt_t  isobin[] = {1000000, 25, 10, 1, 0};
-
-TMultiGraph  *mv1[rbin];
-TMultiGraph  *mv2[rbin2];
-TLegend      *lg1[rbin];
-TLegend      *lg2[rbin2];
+TMultiGraph  *mv1[ybin1];
+TMultiGraph  *mv2[ybin2];
+TLegend      *lg1[ybin1];
+TLegend      *lg2[ybin2];
 
 void RemovePoints(TString fn, TGraphErrors &gr);
 void RemoveYPoint(TGraphErrors *gv);
@@ -50,12 +50,6 @@ void PlotPtDependence()
 {
   gStyle->SetOptStat(0);
 
-  // --> Plotting selection
-  Bool_t bsys[]  = { 1, 1, 0, 0};
-  Bool_t bpid[]  = { 0, 0, 1, 1, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n
-  Bool_t bcnt[]  = { 1, 0, 0}; 
-  UInt_t cntw = 3;
-  UInt_t bazm[]  = { 13, 0, 0}; // 1: pm, 10:m, 11:xsp, //1: <45, 2:>135, 3:45<&<135
 
   Bool_t bplot = 0;
   TString ltitle;
@@ -93,21 +87,14 @@ void PlotPtDependence()
 	
 	if( !bcnt[it] ) continue;
 
-	for(UInt_t iz = 0; iz < (UInt_t)sizeof(bazm)/sizeof(UInt_t); iz++){
+	for(UInt_t iz = 0; iz < (UInt_t)sizeof(bver)/sizeof(UInt_t); iz++){
 	  
-	  if( bazm[iz] == 0 ) continue;
+	  if( bver[iz] == 0 ) continue;
 
-	
-	  //	  fname.push_back( Form("data/cosYPT_n%dto%d_",cent[it],cent[it+cntw]) + rsys[is]+"Snyoff_"+fpid[ip]+".root" );
-	  //	fname.push_back( Form("data/cosYPT_n%dto%d_",cent[it],cent[it+cntw]) + rsys[is]+"Snyoffp_"+fpid[ip]+".root" );
-
-	  fname.push_back( Form("data/cosYPT_n%dto%d_",cent[it],cent[it+cntw]) + rsys[is]+"Snyoffp_"+Form("az%d",bazm[iz]) + fpid[ip]+".root" );
-
-	  // fname.push_back( Form("data/cosYPT_n%dto%d_",cent[it],cent[it+cntw]) + rsys[is]+"Sn_"+fpid[ip]+".root" );
-	  //	  fname.push_back( Form("data/cosYPT_iso%dto%d_",isobin[it],isobin[ik+1]) + rsys[is]+"Sn_"+fpid[ip]+".root" );
+	  fname.push_back( "data/"+ sName + fpid[ip] + sVer[iz] + ".root" );
 
 	  std::cout << fname.at(ngr) << std::endl;
-	  ltitle = Form("mult %d ~ %d; azm%d",cent[it],cent[it+cntw],bazm[iz]);
+	  ltitle = Form("mult %d ~ %d; azm%d",cent[it],cent[it+cntw],bver[iz]);
 	  std::cout << " label title " << ltitle << std::endl;
 
 	  index[0].push_back(is); // system
@@ -125,17 +112,17 @@ void PlotPtDependence()
   cout << fname.size() << endl;
   
 
-  TString rapRange[rbin];
-  for(UInt_t i = 1; i < rbin - 1; i++)
-    rapRange[i] = Form(" %f <= Y_cm < %f", yrange[i-1],yrange[i]);
-  rapRange[0] = Form(" Y_cm < %f", yrange[0]);
-  rapRange[rbin-1] = Form(" %f <= Y_cm", yrange[rbin-2]);
+  TString rapRange[ybin1];
+  for(UInt_t i = 1; i < ybin1 - 1; i++)
+    rapRange[i] = Form(" %f <= Y_cm < %f", yrange1[i-1],yrange1[i]);
+  rapRange[0] = Form(" Y_cm < %f", yrange1[0]);
+  rapRange[ybin1-1] = Form(" %f <= Y_cm", yrange1[ybin1-2]);
 
-  TString rapRange2[rbin2];
-  for(UInt_t i = 1; i < rbin2 - 1; i++)
+  TString rapRange2[ybin2];
+  for(UInt_t i = 1; i < ybin2 - 1; i++)
     rapRange2[i] = Form(" %f <= Y_cm < %f", yrange2[i-1],yrange2[i]);
   rapRange2[0] = Form(" Y_cm < %f", yrange2[0]);
-  rapRange2[rbin2-1] = Form(" %f <= Y_cm", yrange2[rbin2-2]);
+  rapRange2[ybin2-1] = Form(" %f <= Y_cm", yrange2[ybin2-2]);
 
 
   TFile *fOpen;
@@ -160,13 +147,13 @@ void PlotPtDependence()
 
 
   // Pt dependence
-  for(UInt_t k = 0; k < rbin; k++){
+  for(UInt_t k = 0; k < ybin1; k++){
     mv1[k] = new TMultiGraph((TString)Form("mv1%d",k), rapRange[k]+";Pt [MeV/c]; v1");
     lg1[k] = new TLegend(0.57, 0.64, 0.95, 0.92); 
     lg1[k]->SetTextSize(0.05);
   }
 
-  for(UInt_t k = 0; k < rbin2; k++) {
+  for(UInt_t k = 0; k < ybin2; k++) {
     mv2[k] = new TMultiGraph((TString)Form("mv2%d",k), rapRange2[k]+";Pt [MeV/c]; v2");
     lg2[k] = new TLegend(0.5, 0.64, 0.95, 0.92); 
     lg2[k]->SetTextSize(0.05);
@@ -214,7 +201,7 @@ void PlotPtDependence()
     TH2D *ff = (TH2D*)fOpen->Get("hyptacp");
     ff->SetName(Form("hyptacp_%d",igr));
 
-    TString otitle = rsys[is]+"Sn "+fpid[ip];
+    TString otitle = rsys[is]+"Sn "+fpid[ip]+sVer[iz];
     ff->SetTitle(otitle);
     ff->SetDirectory(gROOT);
 
@@ -239,14 +226,14 @@ void PlotPtDependence()
     // rapidity dependence
     TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gv_v1");
     
-    RemoveYPoint(yv1);
+    //    RemoveYPoint(yv1);
 
     yv1->SetMarkerColor(icolor);
 
-    cout << "imark[" << is << "] " << imrk[is] << endl;
-    yv1->SetMarkerStyle(imrk[is]);
+    cout << "imark[" << is << "] " << imark[is] << endl;
+    yv1->SetMarkerStyle(imark[is]);
     if( ip == 5 )
-      yv1->SetMarkerStyle(imrk[is]+4);
+      yv1->SetMarkerStyle(imark[is]+4);
     yv1->SetMarkerSize(imsz[is]);
     yv1->SetLineColor(icolor);
 	  
@@ -268,12 +255,12 @@ void PlotPtDependence()
     g_v1slp[is]->SetPointError(ipp,  0, slopee);
     
     TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gv_v2");
-    RemoveYPoint(yv2);
+    //    RemoveYPoint(yv2);
 
     yv2->SetMarkerColor(icolor);
-    yv2->SetMarkerStyle(imrk[is]);
+    yv2->SetMarkerStyle(imark[is]);
     if( ip == 5 )
-      yv2->SetMarkerStyle(imrk[is]+4);
+      yv2->SetMarkerStyle(imark[is]+4);
     yv2->SetMarkerSize(imsz[is]);
     yv2->SetLineColor(icolor);
 
@@ -293,17 +280,17 @@ void PlotPtDependence()
     cout << fsys[is] << " : " << fpid[ip] << " -> " << v2y << " +- " << v2xe << " @ " << ipp <<  endl;
 
     // Pt dependence 
-    for(UInt_t k = 0; k < rbin; k++){
+    for(UInt_t k = 0; k < ybin1; k++){
 
       TGraphErrors *gr_v1 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v1%d",k));
       
-      RemovePtPoint(ip, gr_v1);
+      //      RemovePtPoint(ip, gr_v1);
       
       if( gr_v1 == NULL ) continue;
-      gr_v1->SetMarkerStyle(imrk[is]);
+      gr_v1->SetMarkerStyle(imark[is]);
 
       if( ip == 5 )
-	gr_v1->SetMarkerStyle(imrk[is]+4);
+	gr_v1->SetMarkerStyle(imark[is]+4);
       gr_v1->SetMarkerColor(icolor);
       gr_v1->SetMarkerSize(imsz[is]);
       gr_v1->SetLineColor(icolor);
@@ -316,17 +303,17 @@ void PlotPtDependence()
     
     cout << " ==== " << endl;
 
-    for(UInt_t k = 0; k < rbin2; k++){
+    for(UInt_t k = 0; k < ybin2; k++){
 
       TGraphErrors *gr_v2 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v2%d",k));
       if( gr_v2 == NULL ) continue;
 
-      RemovePtPoint(ip,gr_v2);
+      //      RemovePtPoint(ip,gr_v2);
 
       
-      gr_v2->SetMarkerStyle(imrk[is]);
+      gr_v2->SetMarkerStyle(imark[is]);
       if( ip == 5 )
-	gr_v2->SetMarkerStyle(imrk[is]+4);
+	gr_v2->SetMarkerStyle(imark[is]+4);
       gr_v2->SetMarkerColor(icolor);
       gr_v2->SetMarkerSize(imsz[is]);
       gr_v2->SetLineColor(icolor);
@@ -339,16 +326,16 @@ void PlotPtDependence()
   }
 
   if( bplot || kFALSE ) {
-    ccv = new TCanvas("cc4","aceptance", 700, 1000);
-    ccv->Divide(1,ngr);
+    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
+    cc->Divide(1,ngr);
     for(UInt_t i = 0; i < ngr; i++){
-      ccv->cd(i+1);
+      cc->cd(i+1);
       TH2D* ff = (TH2D*)gROOT->Get(Form("hyptacp_%d",i));
       ff->Draw("colz");
     }
   
-
-    ccv = new TCanvas("cc5","cc5");
+ 
+    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
     Double_t ymax = 0;
     UInt_t   imax = 0;
     for(Int_t i = 0; i < ngr; i++){
@@ -366,36 +353,38 @@ void PlotPtDependence()
     lgr3->Draw();
   }
 
-  if( bplot || kFALSE ) {
-    ccv = new TCanvas("cc0","v1",1600,700);
-    ccv->Divide(rbin/2,2);
-    for(UInt_t k = 0; k < rbin; k++){
-      ccv->cd(k+1);
+  if( bplot || kTRUE ) { // gothered plots
+    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
+    cc->Divide(ybin1/2,2);
+    for(UInt_t k = 0; k < ybin1; k++){
+      cc->cd(k+1);
       mv1[k]->Draw("ALP");
-      if( k == rbin-2 )
+      if( k == ybin1-2 )
 	lg1[k]->Draw();
     }
 
-    ccv = new TCanvas("cc1","v2",1600,500);
-    ccv->Divide(rbin2,1);
-    for(UInt_t k = 0; k < rbin2; k++){
-      ccv->cd(k+1);
+    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
+    cc->Divide(ybin2,1);
+    for(UInt_t k = 0; k < ybin2; k++){
+      cc->cd(k+1);
       //    mv2[k]->SetMaximum( 0.2);
       //    mv2[k]->SetMinimum(-0.2);
       mv2[k]->Draw("ALP");
-      if( k == rbin2-2 ) lg2[k]->Draw();
+      if( k == ybin2-2 ) lg2[k]->Draw();
     }
   }
 
 
   if( bplot || kFALSE ) {
-    ccv = new TCanvas("cc10","v1 t");
+    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
     mv1[2]->Draw("ALP");
     lg1[2]->Draw();
-    ccv = new TCanvas("cc11","v1 mid");
+    
+    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
     mv1[3]->Draw("ALP");
     lg1[3]->Draw();
-    ccv = new TCanvas("cc12","v1 b");
+
+    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
     mv1[4]->Draw("ALP");
     lg1[4]->Draw();
   }
@@ -404,7 +393,7 @@ void PlotPtDependence()
 
 
   if( bplot || kTRUE ) {
-    ccv = new TCanvas("cc2","cc2");
+    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
     mrv1->Draw("ALP");
     lgr1->Draw();
 
@@ -423,8 +412,7 @@ void PlotPtDependence()
     aLineY1->SetLineStyle(3);
     aLineY1->Draw();
   
-   
-    ccv = new TCanvas("cc3","cc3");
+    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
     mrv2->Draw("ALP");
     lgr2->Draw();
 
@@ -447,7 +435,7 @@ void PlotPtDependence()
 
       UInt_t icolor = (icol[is] + 4*ip);
       if( g_slope[is][ip]->GetN() > 0 ) {
-	g_slope[is][ip]->SetMarkerStyle(imrk[is]);
+	g_slope[is][ip]->SetMarkerStyle(imark[is]);
 	g_slope[is][ip]->SetMarkerColor(icol[is]+2*ip);
 	g_slope[is][ip]->SetLineColor(icol[is]+2*ip);
 	mv1sl->Add(g_slope[is][ip],"lp");      
@@ -456,7 +444,7 @@ void PlotPtDependence()
       }
 
       if( g_v2cm[is][ip]->GetN() > 0) {
-	g_v2cm[is][ip]->SetMarkerStyle(imrk[is]);
+	g_v2cm[is][ip]->SetMarkerStyle(imark[is]);
 	g_v2cm[is][ip]->SetMarkerColor(icol[is]+2*ip);
 	g_v2cm[is][ip]->SetLineColor(icol[is]+2*ip);
 	mv2cm->Add(g_v2cm[is][ip],"lp");      
@@ -466,7 +454,7 @@ void PlotPtDependence()
     }
     
     if( g_v1slp[is]->GetN() > 0 ){
-      g_v1slp[is]->SetMarkerStyle(imrk[is]);
+      g_v1slp[is]->SetMarkerStyle(imark[is]);
       g_v1slp[is]->SetMarkerColor(icol[is]);
       g_v1slp[is]->SetLineColor(icol[is]);
       mv1slp->Add(g_v1slp[is], "lp");
@@ -474,7 +462,7 @@ void PlotPtDependence()
     }
 
     if( g_v2mid[is]->GetN() > 0) {
-      g_v2mid[is]->SetMarkerStyle(imrk[is]);
+      g_v2mid[is]->SetMarkerStyle(imark[is]);
       g_v2mid[is]->SetMarkerColor(icol[is]);
       g_v2mid[is]->SetLineColor(icol[is]);
       mv2mid->Add(g_v2mid[is],"lp");      
@@ -502,12 +490,12 @@ void PlotPtDependence()
     gStyle->SetTitleYSize(0.04);
     gStyle->SetTitleYOffset(1.1);
 
-    ccv = new TCanvas("cc7","cc7");
+    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
     mv2mid->GetYaxis()->SetRangeUser(-0.06, -0.01);
     mv2mid->Draw("ALP");
     lgr6->Draw();
 
-    ccv = new TCanvas("cc6","cc6");
+    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
     mv1slp->Draw("ALP");
 
     lgr7->SetX1NDC(0.15);
@@ -517,12 +505,12 @@ void PlotPtDependence()
     lgr7->Draw();
   }
 
-  if( bplot || kTRUE ) {  
+  if( bplot || kFALSE ) {  // individual pt plots  
     for(UInt_t i = 0; i < 8; i++) {
-      cv[i] = new TCanvas(Form("cv%d",i),Form("cv%d",i),400,450);
-      cv[i]->SetRightMargin(0.02);
-      cv[i]->SetLeftMargin(0.12);
-      cv[i]->SetTopMargin(0.05);
+      cc = new TCanvas(Form("cv%d",i),Form("cv%d",i),400,450);
+      cc->SetRightMargin(0.02);
+      cc->SetLeftMargin(0.12);
+      cc->SetTopMargin(0.05);
       mv1[i]->GetXaxis()->SetLabelSize(0.04);
       mv1[i]->GetYaxis()->SetLabelSize(0.04);
       mv1[i]->GetXaxis()->SetTitleSize(0.05);
@@ -546,10 +534,10 @@ void PlotPtDependence()
     }
 
     for(UInt_t i = 0; i < 5; i++) {
-      cv[i] = new TCanvas(Form("cv%d",i+10),Form("cv%d",i+10),400,450);
-      cv[i]->SetRightMargin(0.02);
-      cv[i]->SetLeftMargin(0.12);
-      cv[i]->SetTopMargin(0.05);
+      cc = new TCanvas(Form("cv%d",i+10),Form("cv%d",i+10),400,450);
+      cc->SetRightMargin(0.02);
+      cc->SetLeftMargin(0.12);
+      cc->SetTopMargin(0.05);
       mv2[i]->GetXaxis()->SetLabelSize(0.04);
       mv2[i]->GetYaxis()->SetLabelSize(0.04);
       mv2[i]->GetXaxis()->SetTitleSize(0.05);
@@ -565,15 +553,15 @@ void PlotPtDependence()
   }
 
   if( bplot || kFALSE ){  
-    ccv = new TCanvas("cc20","v1_target",500,500);
+    ic++; cc = new TCanvas(Form("cc%d",ic),"v1_target",500,500);
     mv1[1]->SetMaximum(0.);
     mv1[1]->SetMinimum(-0.27);
     mv1[1]->Draw("ALP");
 
-    ccv = new TCanvas("cc21","v1_mid",500,500);
+    ic++; cc = new TCanvas(Form("cc%d",ic),"v1_mid",500,500);
     mv1[3]->Draw("ALP");
 
-    ccv = new TCanvas("cc22","v1_beam",500,500);
+    ic++; cc = new TCanvas(Form("cc%d",ic),"v1_beam",500,500);
     mv1[5]->Draw("ALP");
     lg1[5]->SetX1NDC(0.5);
     lg1[5]->SetY1NDC(0.16);
