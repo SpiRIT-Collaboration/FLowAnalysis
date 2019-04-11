@@ -7,7 +7,6 @@
 #include "FairRootManager.h"
 #include "STRecoTrack.hh"
 #include "STParticle.hh"
-#include "STMassFunction.hh"
 #include "STMassCalculator.hh"
 #include "ST_ClusterNum_DB.hh"
 #include "STBDC.hh"
@@ -78,7 +77,6 @@ private:
   TClonesArray   *tpcParticle;  //!
 
   //--- mass fitter
-  //  STMassFunction *massFitter;   //!
   STMassCalculator* massCal;    //!
 
   TClonesArray *flowAnalysis; //!
@@ -89,6 +87,7 @@ private:
 
   UInt_t  ntrack[7]; //!
   
+  Int_t    BeamPID;//!
   Double_t ProjA;  //!
   Double_t ProjB;  //!
 
@@ -101,7 +100,7 @@ private:
   TDatime  dtime;         //! 
   TDatime  beginTime;     //!  
 
-  Double_t MassRegion[7][4] ={{ 127.2,   21.3,      2.,  2.},            //pi  
+  Double_t MassRegion[7][4] ={{ 127.2,   21.3,      4.,  4.},            //pi  
 			      { 911.044, 68.4656,   2.,  2.},            //p  685.3 to 1,165.9
 			      { 1874.76, 129.962,   1.5, 1.5},           //d  1,552.3 to 
 			      { 2870.62, 212.896,   1.,  1.},            //t 2463
@@ -109,7 +108,7 @@ private:
 			      { 3720.77, 255.71,    1.,  1.},            //He4 
 			      { 5751.97, 673.339,   0.5, 0.5}};      //! //He6  // read from fitted function
  
-  Double_t MassRegionLU[7][2] = { {  50.0,  200.0},     // pi
+  Double_t MassRegionLU[7][2] = { {   0.0,  250.0},     // pi
 				  { 500.0, 1137.0},     // p
 				  {1137.0, 2200.0},     // d
 				  {2200.0, 3200.0},     // t

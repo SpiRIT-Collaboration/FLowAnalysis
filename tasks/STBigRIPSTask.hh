@@ -82,6 +82,7 @@ private:
   Bool_t  SetupBeamCut();
   void    SetupBeamA(UInt_t vRun);
 
+public:
   Int_t   GetBeamPID();
 
   ClassDef(STBigRIPSTask, 0);

@@ -60,6 +60,7 @@ private:
 public:
   void   SetNTrack(UInt_t *nval);
   void   SetupFlow(STParticle &apart);
+  void   SetSelectionOfReactionPlaneFlag(UInt_t val) {selReactionPlanef = val;}
   void   SetFlowInfo(STFlowInfo *aflowinfo);
   void   DoFlowAnalysis(STParticle &apart);
 

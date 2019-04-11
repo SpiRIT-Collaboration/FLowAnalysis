@@ -8,7 +8,7 @@ STSpiRITTPCTask::STSpiRITTPCTask()
     fIsFlowCorrection(kTRUE),
     fIsBootStrap(kFALSE),
     fIsSubeventAnalysis(kTRUE),
-    selReactionPlanef(10),
+    selReactionPlanef(100),
     fEventID(-1),
     massCal(new STMassCalculator())
 {
@@ -255,6 +255,8 @@ void STSpiRITTPCTask::Exec(Option_t *opt)
 
   if( fEventID < prcEntry ) {
 
+    fChain -> GetEntry(fEventID);  
+
     SetupEventInfo();
     ProceedEvent();
     FinishEvent();
@@ -269,6 +271,13 @@ void STSpiRITTPCTask::FinishEvent()
 {
   LOG(DEBUG) << "STSpiRITTPCTask::FinishEvent is called. " << FairLogger::endl;
 
+  auto anaRun = FairRunAna::Instance();  
+  if( ntrack[2] == 0 || BeamPID == 0) {
+    anaRun->MarkFill(kFALSE);
+    return;
+  }
+
+
   if( fIsFlowAnalysis ) {
 
     fflowtask->FinishEvent();
@@ -278,11 +287,7 @@ void STSpiRITTPCTask::FinishEvent()
     new( aflow[0] ) STFlowInfo( *fflowinfo );
   }
 
-  auto anaRun = FairRunAna::Instance();
-  if( ntrack[2] == 0) 
-    anaRun->MarkFill(kFALSE);
-  else
-    anaRun->MarkFill(kTRUE);
+  anaRun->MarkFill(kTRUE);
 
 }
 
@@ -292,6 +297,7 @@ void STSpiRITTPCTask::SetupEventInfo()
   auto fBDCArray = (TClonesArray *)fRootManager->GetObject("STBDC");
   auto fBDC = (STBDC*)fBDCArray->At(0);
   
+  BeamPID = fBDC->GetBeamPID();
   ProjA   = fBDC->GetProjA();
   ProjB   = fBDC->GetProjB();  
 
@@ -327,6 +333,10 @@ void STSpiRITTPCTask::SetupTrackQualityFlag(STParticle *apart)
 
 void STSpiRITTPCTask::Clear()
 {
+  BeamPID = 0;
+  ProjA = 0.;
+  ProjB = 0;
+
   for (Int_t m = 0; m < 7; m++) ntrack[m] = 0;
 
   tpcParticle->Clear();
@@ -340,8 +350,10 @@ void STSpiRITTPCTask::Clear()
 void STSpiRITTPCTask::ProceedEvent()
 {
 
-  fChain -> GetEntry(fEventID);  
+  if( BeamPID == 0) 
+    return;
 
+  
   ntrack[0] = trackArray -> GetEntries();
 
   LOG(DEBUG) << "nttack[0] -------------------- > " << ntrack[0] << FairLogger::endl;
@@ -440,7 +452,7 @@ Int_t STSpiRITTPCTask::GetPID(Double_t mass[2], Double_t dedx)
 
   else if( mass[1] < 2500 && mass[0] > 0 ) {
 
-    for(UInt_t i = 1; i < 4; i++) {
+    for(UInt_t i = 0; i < 4; i++) {
       Double_t mass_low = MassRegion[i][0]-MassRegion[i][1]*MassRegion[i][2] ;
       Double_t mass_up  = MassRegion[i][0]+MassRegion[i][1]*MassRegion[i][3] ;
 
@@ -473,7 +485,7 @@ Int_t STSpiRITTPCTask::GetPIDLoose(Double_t mass[2], Double_t dedx)
 
   // p, d, t   
   else if( mass[1] < MassRegionLU[4][0] && mass[0] > 0 ) {
-    for(UInt_t i = 1; i < 4; i++) {
+    for(UInt_t i = 0; i < 4; i++) {
       if( mass[0] >= MassRegionLU[i][0] && mass[0] < MassRegionLU[i][1] ) {
 	STPID::PID pid = static_cast<STPID::PID>(i);
         return STPID::GetPDG(pid);

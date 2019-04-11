@@ -54,6 +54,7 @@ void run_analysis(Int_t nevt = -1)
   //  TChain* tpcChain = TPCTask->GetChain();
 
   anaRun->Init();
+  
   Long64_t maxevt = TPCTask->GetEntries();    
 
   TString sMAX = gSystem->Getenv("MXEVT");

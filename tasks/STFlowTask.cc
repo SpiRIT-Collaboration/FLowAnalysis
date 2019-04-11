@@ -3,7 +3,8 @@
 STFlowTask::STFlowTask(Bool_t bfltn, Bool_t bsub, Bool_t bbst) :
   fIsFlowCorrection(bfltn),
   fIsSubeventAnalysis(bsub),
-  fIsBootStrap(bbst)
+  fIsBootStrap(bbst),
+  selReactionPlanef(1000)
 {
 
   TDatime dtime;
@@ -176,7 +177,7 @@ void STFlowTask::DoSubeventAnalysis()
   UInt_t itrack = 0;
   while( (apart = (STParticle*)next() ) ) {
     
-    if( apart->GetReactionPlaneFlag() >= selReactionPlanef ) {
+    if( apart->GetReactionPlaneFlag() %2 == 1 ) {
       Double_t wt = apart->GetRPWeight();
       TVector2 ptr= apart->GetRotatedPt().Unit();
 
@@ -282,7 +283,7 @@ void STFlowTask::SetupFlow(STParticle &apart)
 
   auto pid    =  apart.GetPIDLoose();
   if( pid == 211 )
-    apart.SetReactionPlaneFlag(1);
+    apart.SetReactionPlaneFlag(10);
 
   else if( pid > 2000 &&
            apart.GetGoodTrackFlag()     > 0 &&
@@ -292,7 +293,7 @@ void STFlowTask::SetupFlow(STParticle &apart)
     apart.SetReactionPlaneFlag(1000);
 
     if(apart.GetNDFFlag())
-      apart.SetReactionPlaneFlag(2000);
+      apart.AddReactionPlaneFlag(10000);
   }
   else
     apart.SetReactionPlaneFlag(0);
@@ -324,6 +325,8 @@ void STFlowTask::DoFlowAnalysis(STParticle &apart)
   if( apart.GetReactionPlaneFlag() >= selReactionPlanef ){
     ntrack[4]++;
 
+    apart.AddReactionPlaneFlag(1);
+
     TVector2 upt = apart.GetRotatedPt().Unit();
     fflowinfo->unitP += apart.GetRPWeight() * TVector3( upt.X(), upt.Y(), 0.);
 
@@ -331,7 +334,7 @@ void STFlowTask::DoFlowAnalysis(STParticle &apart)
       bs_unitP->Add(apart.GetRPWeight() * apart.GetRotatedPt().Unit());
   }
 
-  if( apart.GetReactionPlaneFlag() == 20 )
+  if( apart.GetReactionPlaneFlag() >= selReactionPlanef && apart.GetReactionPlaneFlag()%2==1 )
     ntrack[5]++;  
 }
 
@@ -360,8 +363,7 @@ void STFlowTask::SetIndividualReactionPlane( STParticle &apart )
 
   while( (restpart = (STParticle*)next() ) ){
 
-    //if( restpart->GetTrackID() != apart.GetTrackID() && restpart->GetReactionPlaneFlag() >= 2000 ) {
-    if( restpart->GetTrackID() != apart.GetTrackID() && restpart->GetReactionPlaneFlag() > 10 ) {
+    if( restpart->GetTrackID() != apart.GetTrackID() && restpart->GetReactionPlaneFlag()%2 == 1 ) {
       Double_t wt_rp = restpart->GetRPWeight();
       TVector2 pt_rp = restpart->GetRotatedPt().Unit();
       

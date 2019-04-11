@@ -95,8 +95,8 @@ void ReCentering(UInt_t isel = 10, Int_t nmin=0, Int_t nmax=100) //%% Executable
 
   TCut multcut = TCut(cutdef);
 
-  rChain->Project(Form("hQx%d_%d",nmin,isel), unitpX, multcut&&"ProjA>-999");
-  rChain->Project(Form("hQy%d_%d",nmin,isel), unitpY, multcut&&"ProjA>-999");
+  rChain->Project(Form("hQx%d_%d",nmin,isel), unitpX, multcut&&"beamPID>0");
+  rChain->Project(Form("hQy%d_%d",nmin,isel), unitpY, multcut&&"beamPID>0");
 
   multcut.Print();
 
@@ -133,8 +133,8 @@ void Flatten_Psi_ntrack(UInt_t isel)
   // bin setting for multiplicity
   Double_t ntrkbin[ntrknbin+1];
   Double_t ntrk_min = 0;
-  //                      0  1  2     3   4   5  6   7    8   9   10  11  12
-  Double_t ntrk_max[] = {70, 70, 70, 70, 35, 35, 35, 35, 100, 70, 70, 35, 35};
+  //                      0  1  2     3   4   5  6   7    8   9    10  11  12
+  Double_t ntrk_max[] = {70, 70, 70, 70, 35, 35, 35, 35, 100, 70, 100, 50, 35};
   for(UInt_t n = 0; n < ntrknbin+2; n++)
     ntrkbin[n]   = ntrk_max[isel]/ntrknbin * n;
 
