@@ -22,7 +22,10 @@ public:
   void   SetParameter(TString fileName);
 
   Double_t CalcMass(UInt_t fpid, Double_t z,TVector3 mom,Double_t dEdx);
+  Double_t CalcMass(Double_t z,TVector3 mom,Double_t dEdx);
+
   Double_t CalibdEdx(UInt_t fpid, TVector3 mom,Double_t dEdx);
+  Double_t CalibdEdx(TVector3 mom,Double_t dEdx);
 
 private:
   void   SetTGraph2D(UInt_t fpid);

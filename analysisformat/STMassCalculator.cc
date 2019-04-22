@@ -99,6 +99,11 @@ void STMassCalculator::SetTGraph2D(UInt_t fpid)
 Double_t STMassCalculator::CalcMass(UInt_t fpid, Double_t z, TVector3 mom, Double_t dEdx)
 {
   SetTGraph2D(fpid);
+  return CalcMass(z, mom, dEdx);
+}
+
+Double_t STMassCalculator::CalcMass(Double_t z, TVector3 mom, Double_t dEdx)
+{
 
   if(!(z==1.||z==2.)||!isLoadParameter) return -1.;
   Double_t mass  = -1.;
@@ -119,7 +124,11 @@ Double_t STMassCalculator::CalcMass(UInt_t fpid, Double_t z, TVector3 mom, Doubl
 Double_t STMassCalculator::CalibdEdx(UInt_t fpid, TVector3 mom,Double_t dEdx)
 {  
   SetTGraph2D(fpid);
+  return CalibdEdx(mom, dEdx);
+}
 
+Double_t STMassCalculator::CalibdEdx(TVector3 mom,Double_t dEdx)
+{  
   if(!isLoadParameter) return -1;
   Double_t pitch = TMath::RadToDeg()*TMath::ATan(mom.Py()/mom.Pz());
   Double_t yaw   = TMath::RadToDeg()*TMath::ATan(mom.Px()/mom.Pz());
