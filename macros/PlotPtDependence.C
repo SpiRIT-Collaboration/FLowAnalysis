@@ -1,14 +1,20 @@
-#include "DoFlowAnalysis.h"
+#include "DoFlow.h"
 
+//==================================================
+//-- plot configuration
+//--------------------------------------------------
   // --> Plotting selection
 Bool_t bsys[]  = { 1, 0, 0, 0};
-Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n
+Bool_t bpid[]  = { 1, 1, 1, 1, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 3;
 
-UInt_t bver[]  = { 1, 1, 1, 1, 1, 1};
-TString sVer[] = {".v23.1.7",".v23.1.10", ".v23.1.11", ".v23.1.12", ".v23.1.13"};
-TString sName = "cosYPt_132Sn_";
+UInt_t  bver[]  = { 1, 0, 0, 0};
+TString sVer[] = {".v24.0.1",".v24.0.0", ".v23.1.21", ".v23.1.22", ".v23.1.13"};
+TString sName = "cosYPt_"; //"cosYPt_132Sn_";
+TString bName[] = {"132Sn_","108Sn_","124Sn_","112Sn_"};
+
+//==================================================
 
 
 
@@ -33,6 +39,7 @@ void RemovePoints(TString fn, TGraphErrors &gr);
 void RemoveYPoint(TGraphErrors *gv);
 void RemovePtPoint(UInt_t ip, TGraphErrors *gv);
 void RapidityShift(TGraphErrors *gv);
+void ShiftX(TGraphErrors *gv, Double_t off);
 
 Double_t FittingAndIntegral(TGraphErrors *gr)
 {
@@ -91,7 +98,7 @@ void PlotPtDependence()
 	  
 	  if( bver[iz] == 0 ) continue;
 
-	  fname.push_back( "data/"+ sName + fpid[ip] + sVer[iz] + ".root" );
+	  fname.push_back( "data/"+ sName + bName[is] + fpid[ip] + sVer[iz] + ".root" );
 
 	  std::cout << fname.at(ngr) << std::endl;
 	  ltitle = Form("mult %d ~ %d; azm%d",cent[it],cent[it+cntw],bver[iz]);
@@ -127,6 +134,7 @@ void PlotPtDependence()
 
   TFile *fOpen;
 
+
   // Rapidity dependence 
   auto mrv1  = new TMultiGraph("mrv1"  ,";Rapidity; v1");
   auto mrv2  = new TMultiGraph("mrv2"  ,";Rapidity; v2");
@@ -135,6 +143,7 @@ void PlotPtDependence()
   //  mv1slp->GetXaxis()->SetAlphanumeric(kTRUE);
   auto mv2cm = new TMultiGraph("mv2cm" ,";Centrality; v2 at Y_cm");
   auto mv2mid= new TMultiGraph("mv2mid","; Particle ; v2 at Y_cm");
+
 
 
   auto lgr1 = new TLegend(0.54, 0.13, 0.87, 0.4, ltitle); 
@@ -254,7 +263,9 @@ void PlotPtDependence()
     g_v1slp[is]->SetPoint(ipp, ip+1, slope);
     g_v1slp[is]->SetPointError(ipp,  0, slopee);
     
+    //--- y vs v2 ---
     TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gv_v2");
+    //    ShiftX(yv2, 0.01*iz);
     //    RemoveYPoint(yv2);
 
     yv2->SetMarkerColor(icolor);
@@ -299,6 +310,7 @@ void PlotPtDependence()
 
       mv1[k]->Add(gr_v1,"lp");
       lg1[k]->AddEntry(gr_v1,  otitle,"lp");
+
     }
     
     cout << " ==== " << endl;
@@ -320,6 +332,7 @@ void PlotPtDependence()
 
       mv2[k]->Add(gr_v2,"lp");
       lg2[k]->AddEntry(gr_v2, otitle ,"lp");
+
     }
 	
     fOpen->Close();
@@ -392,6 +405,8 @@ void PlotPtDependence()
 
 
 
+  //--------------------
+  //--- 
   if( bplot || kTRUE ) {
     ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
     mrv1->Draw("ALP");
@@ -680,6 +695,17 @@ void RapidityShift(TGraphErrors *gv)
   for(UInt_t k = 0; k < (UInt_t)gv->GetN(); k++) {
     gv->GetPoint(k, xx, yy);
     xx += 0.018;
+    gv->SetPoint(k, xx, yy);
+  }
+}
+
+void ShiftX(TGraphErrors *gv, Double_t off)
+{
+  Double_t xx, yy;
+  for(Int_t k = (Int_t)gv->GetN()-1; k > -1; k--) {
+
+    gv->GetPoint(k, xx, yy);
+    xx += off;
     gv->SetPoint(k, xx, yy);
   }
 }

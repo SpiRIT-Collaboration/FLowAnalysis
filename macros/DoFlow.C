@@ -37,7 +37,7 @@ UInt_t   npb = 30;
 UInt_t  icent = 0;
 UInt_t  jcent = 3;
 
-//--------- main ----------//
+//-------------------//
 void DoFlow(UInt_t isel = 2) 
 {
   gROOT->Reset();
@@ -51,7 +51,7 @@ void DoFlow(UInt_t isel = 2)
     exit(0);
 
 
-  gROOT->ProcessLine(".! grep -i void DoFlowAnalysis.C ");
+  gROOT->ProcessLine(".! grep -i void DoFlow.C ");
 
 
   // Multiplicity cut ================================
@@ -122,13 +122,13 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
     if( !gROOT->IsBatch() && gSystem->FindFile(".",checkName) ) {
       std::cout << checkName << " is existing. Do you recreate? (y/n)" << std::endl;
       TString sAns;
-      cin >> sAns;
-      if(sAns != "y" || sAns != "Y") {
+      std::cin >> sAns;
+      if(sAns == "N" || sAns == "n") {
 	std::cout << " Retry" << std::endl;
 	exit(0);
       }
     }
-    fName = checkName;
+    fName += ".root";
   }
 
   std::cout << "File " << fName << " is created. " << std::endl;  
@@ -182,6 +182,8 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   TH1D *hyphi2[ybin2];
   TH1D *hyptphi1[ybin1][nbin1];
   TH1D *hyptphi2[ybin2][nbin2];
+  TH1D *hypt1[ybin1];
+  TH1D *hypt2[ybin1];
   //------------------------------
 
   std::vector< std::vector< Double_t > > cosv1x(ybin1);
@@ -191,6 +193,8 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   Double_t  sinv1[ybin1];
   Double_t  sinv2[ybin2];
 
+
+  //---> v1 vs rapidity
   std::vector< std::vector< std::vector< Double_t> > > cosv1ptx(ybin1);
   Double_t  cosv1pt[ybin1][nbin1];
   Double_t  sinv1pt[ybin1][nbin1];
@@ -201,6 +205,7 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
     cosv1ptx[i].resize(nbin1);
 
     hyphi1[i] = new TH1D( Form("hyphi1_%d",i),rangeLabel1[i]+"#De #Phi"   , npb, -3.15, 3.15);
+    hypt1[i] = new TH1D( Form("hypt1_%d",i), rangeLabel1[i]+"; Pt", 100, 0., 800.);
 
     for( UInt_t j = 0; j < nbin1; j++ ){
       cosv1pt[i][j] = 0.;
@@ -211,6 +216,7 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
     }
   }
 
+  //---> v2 vs rapidity
   std::vector< std::vector< std::vector< Double_t> > > cosv2ptx(ybin2);
   Double_t  cosv2pt[ybin2][nbin2];
   Double_t  sinv2pt[ybin2][nbin2];
@@ -220,6 +226,7 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
     cosv2x[i].clear();
     cosv2ptx[i].resize(nbin2);
     hyphi2[i] = new TH1D( Form("hyphi2_%d",i),rangeLabel2[i]+"2x #Delta #phi", npb, -3.15, 3.15);
+    hypt2[i]  = new TH1D( Form("hypt2_%d",i), rangeLabel2[i]+"; Pt", 100, 0., 800.);
 
     for( UInt_t j = 0; j < nbin2; j++ ){
       cosv2pt[i][j] = 0.;
@@ -230,25 +237,26 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   }
     
   
+
+
   Int_t nevt = SetBranch();
   cout << " Number of events " << nevt << endl;
   
+  //--------------------------------------------------
+  //--- Event Loop
+  //--------------------------------------------------
   for(Int_t i = 0; i < nevt; i++){
 
     rChain->GetEntry(i);
     STFlowInfo *aflow = (STFlowInfo*)aFlowArray->At(0);
 
+    /// for reaction plane resolution
+    Bool_t bFill = kFALSE;
+
+
     /// centrality selection
     if(aflow->mtrack4 > cent[icent] || aflow->mtrack4 <= cent[jcent] ) continue;
 
-    hntrack->Fill( aflow->mtrack4 );
-
-    Double_t subevt_phi = abs(TVector2::Phi_mpi_pi((aflow->unitP_1fc).Phi()-
-						   (aflow->unitP_2fc).Phi())); 
-
-    hphi0_180->Fill( subevt_phi );
-    if( subevt_phi > TMath::Pi()/2. )
-      hphi90_180->Fill( subevt_phi );
 
     TIter next(aArray);
     STParticle *aPart = NULL;
@@ -267,10 +275,10 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 
       //------------------------------
       //----- Particle Selection -----
-      if( pid == partid[selid] && rpf > 10000 &&
-	  pitch < 0  )
-	  { //&& 
-
+      if( pid == partid[selid] && rpf > 10000 ){ //&& yaw < 0 && pitch < 0) {
+      
+	bFill = kTRUE;
+      
 	auto pt    = aPart->GetRotatedMomentum().Pt();
 	auto dphi  = aPart->GetAzmAngle_wrt_RP();
 	auto rapid = aPart->GetRapiditycm();;	
@@ -298,6 +306,7 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 	}
 	
 	hyphi1[irapid]->Fill(dphi);
+	hypt1[irapid] ->Fill(aPart->GetRotatedMomentum().Pt());
 	cosv1x[irapid].push_back( rapid );
 	cosv1[irapid] += cos(dphi);
 	sinv1[irapid] += sin(dphi);
@@ -325,6 +334,7 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 	}
 
 	hyphi2[irapid]->Fill(TVector2::Phi_mpi_pi(2.*dphi));
+	hypt2[irapid] ->Fill(aPart->GetRotatedMomentum().Pt());
 	cosv2x[irapid].push_back( rapid );
 	cosv2[irapid] += cos(2.*dphi);
 	sinv2[irapid] += sin(2.*dphi);
@@ -343,9 +353,23 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 	sinv2pt[irapid][ipt] += sin(2.*dphi);
       }
     }
+
+    if( bFill ) {
+      hntrack->Fill( aflow->mtrack4 );
+
+      Double_t subevt_phi = abs(TVector2::Phi_mpi_pi((aflow->unitP_1fc).Phi()-
+						     (aflow->unitP_2fc).Phi())); 
+
+      hphi0_180->Fill( subevt_phi );
+      if( subevt_phi > TMath::Pi()/2. )
+	hphi90_180->Fill( subevt_phi );
+    }
   }
   //--------------------------------------------------
+  //--- Enf of event Loop
+  //--------------------------------------------------
     
+
   TGraphErrors *gv_v1 = new TGraphErrors();
   gv_v1->SetName("gv_v1");
   TGraphErrors *gv_v2 = new TGraphErrors();
@@ -434,6 +458,7 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
       }
     }
     gPt_v1[kn]->Write();
+    hypt1[kn]->Write();
   }
 
   kl = 0;
@@ -480,15 +505,17 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
       }
     }
     gPt_v2[kn]->Write();
+    hypt2[kn]->Write();
   }
 
   gv_v1->Write();
   gv_v2->Write();
 
 
-  //====================
-  //plotting
-  ic++; id=1;
+  //--------------------------------------------------
+  //--- Ploting
+  //--------------------------------------------------
+  id=1;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
   cc->Divide(2,2);
 
@@ -507,7 +534,7 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   cc->cd(id); id++;
   hazm->Draw();
   
-  ic++; id = 1;
+  id = 1;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
   cc->Divide(2,2);
   cc->cd(id); id++; id++;
@@ -518,31 +545,35 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   hpitch->Draw();
 
   
-
-  ic++;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
   hyptacp->Draw("colz");
   
 
 
-  ic++; id = 1;
+  id = 1;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),2000,500);
-  cc->Divide(ybin1,1);
+  cc->Divide(ybin1,2);
   for(UInt_t kn = 0; kn < ybin1; kn++){
     cc->cd(id); id++;
     gPt_v1[kn]->Draw("ALP");
+
+    cc->cd(id+ybin1-1);
+    hypt1[kn]->Draw();
   }
 
-  ic++; id = 1;
+  id = 1;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1600,500);
-  cc->Divide(ybin2,1);
+  cc->Divide(ybin2,2);
   for(UInt_t kn = 0; kn < ybin2; kn++){
     cc->cd(id); id++;
     gPt_v2[kn]->Draw("ALP");
+
+    cc->cd(id+ybin2-1);
+    hypt2[kn]->Draw();
+    
   }
 
 
-  ic++; id = 1;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
   gv_v1->Draw("ALP");
 
@@ -553,14 +584,13 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   LineV->Draw();
   LineH->Draw();
 
-  ic++; id = 1;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
   gv_v2->Draw("ALP");
 
-  ic++; 
   ic++; cc   = new TCanvas("dyphi","dphi1 y bin",500,1200);
   cc->Divide(2, ybin1);
 
+  //--- y-bin and pt-bin
   auto cc1   = new TCanvas("dphi1","dphi1 y bin and pt bin",2000,1200);
   cc1->Divide(nbin1, ybin1);
 
@@ -569,13 +599,12 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 
   id = 1;
   for(UInt_t i = 0; i < ybin1; i++) {
-    cc1->cd(2*(i+1)-1);
+    cc->cd(2*(i+1)-1);
     hyphi1[i]->SetNormFactor(npb);
     hyphi1[i]->Draw("e");
 
     for(UInt_t j = 0; j < nbin1; j++){
-      cc2->cd(id);    id++;
-
+      cc1->cd(id);    id++;
       
       if(hyptphi1[i][j]->GetEntries() == 0) continue;
       
@@ -600,7 +629,6 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 
     }
   } 
-  ic += 3;
 
   hphi0_180->Write();
   hyptacp->Write();

@@ -115,18 +115,10 @@ Bool_t STSpiRITTPCTask::SetupParameters()
   
 
   //--- angle dependeing mass fitter //
-  massCal->SetParameter("db/BBFitter.root");
+  //  massCal->SetParameter("db/BBFitter.root");
 
-  // fstatus = massFitter->SetFunction("/cache/scr/spirit/mizuki/Bethe-Bloch_Fitter/mk_NewFitter_20190111/",
-  // 				    "BBFitter.root",
-  // 				    "f1IterBBProtonRotate_" + STRunToBeamA::GetBeamSnA(iRun) );
-  // if( !fstatus ) LOG(ERROR) << " BB Mass fittter function was not loaded. " << FairLogger::endl;
 
-  // fstatus = massFitter->SetMassFitFunction("/cache/scr/spirit/mizuki/Bethe-Bloch_Fitter/mk_NewFitter_20190111/",
-  // 					   "MassFitter.root",
-  // 					   "f1IterMassFitRotate_" + STRunToBeamA::GetBeamSnA(iRun) );
-
-  //  if( ! fstatus ) LOG(ERROR) << " BB Mass gaus fit function was not loaded. " << FairLogger::endl;
+  massCal->LoadCalibrationParameters("db/PIDCalib.root",STRunToBeamA::GetBeamA(iRun));
 
   //------------------------------
 
@@ -394,14 +386,14 @@ void STSpiRITTPCTask::ProceedEvent()
 
 
       //--- Set MassFitter      
-      Double_t mass[2];
+      Double_t mass[2] = {0.,0.};
       if( dEdx > -1 ){
-	mass[0]  = massCal->CalcMass(1., VMom, dEdx);
-	mass[1]  = massCal->CalcMass(2., VMom, dEdx);
-      }
-      else {
-	mass[0] = 0.;
-	mass[1] = 0.;
+	mass[0]  = massCal->CalcMass(0, 1., VMom, dEdx);  // proton fitted
+
+	if( mass[0] > 1500. )  // deuteron fitted
+	  mass[0]  = massCal->CalcMass(1, 1., VMom, dEdx);  
+
+	mass[1]  = massCal->CalcMass(1, 2., VMom, dEdx);
       }
 
       aParticle->SetBBMass(mass[0]);      

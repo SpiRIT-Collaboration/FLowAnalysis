@@ -49,7 +49,7 @@ private:
   vector< TString > vfname[2];	                     //!
   vector< vector<Double_t> >  binmax;	             //!
   vector< vector<Double_t> >  binmin;	             //!
-  vector< pair<Double_t, Double_t> > pbinmin[2]; //!
+  vector< pair<Double_t, Double_t> > pbinmin[2];     //!
   TRandom3 rnd; //!
   STBootStrap *bs_unitP; //!
 

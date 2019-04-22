@@ -10,9 +10,10 @@ source ../build/config.sh
 source runList.sh
 RUNNUMBER1=(${RNF132r})
 RUNNUMBER1=(${RNF132p})
+RUNNUMBER1=(${RNF108})
 
-DBVERSION=23
-VERSION=23.1
+DBVERSION=24
+VERSION=24.0
 SUFX=BTt
 
 ##RUN=2841 SUFX=BTt VER=18.0 DBVER=18 root DoFlow_Analysis.C

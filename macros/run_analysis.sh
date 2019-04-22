@@ -9,10 +9,10 @@ source ../build/config.sh
 
 # TPC data
 
-#export TPCDIR=/xrootd/spdaq02/recoData/20190206/data/
-#export RCVER=HEAD.1780.1e193e6
-export TPCDIR=/xrootd/spdaq02/recoData/20181219/data/
-export RCVER=HEAD.1769.ef17b59
+export TPCDIR=/xrootd/spdaq02/recoData/20190206/data/
+export RCVER=HEAD.1780.1e193e6
+#export TPCDIR=/xrootd/spdaq02/recoData/20181219/data/
+#export RCVER=HEAD.1769.ef17b59
 export ST132DIR=${STTPCDIR}
 export ST108DIR=${STTPCDIR}
 export ST124DIR=${STTPCDIR}
@@ -54,12 +54,13 @@ source runList.sh
 # *****> <Edit Here>
 # Set RUNNUMBER1 
 DBVERSION=25
-VERSION=23
-MEVT=1000
+VERSION=25
+MEVT=100
 #RUNNUMBER1="2841 2843 2844"
-RUNNUMBER1="2841"
+
 
 function exec() {
+    RUNNUMBER1="2841"
     MXEVT=$MEVT
     RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT DBVER=$DBVERSION root run_analysis.C 
 }
@@ -70,8 +71,8 @@ function execb() {
     RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
 }
 
-RUNNUMBER1=(${RNF132})
-#RUNNUMBER1=(${RNF108})
+#RUNNUMBER1=(${RNF132})
+RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RBF132} ${RNF108} ${RNF124} ${RNF112}) 

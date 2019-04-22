@@ -454,10 +454,12 @@ Bool_t STFlowTask::SetupFlowDataBase()
 {
   TString  fname[2];
   Int_t    ncount = 1;
-  fname[0] = "132Sn.v"+sVer+".psi.";
+  //  fname[0] = "132Sn.v"+sVer+".psi.";
+  fname[0] = "108Sn.v"+sVer+".psi.";
 
   if( fIsSubeventAnalysis ) {
-    fname[1] = "132Sn.v"+sVer+".subpsi1.";;
+    //    fname[1] = "132Sn.v"+sVer+".subpsi1.";;
+    fname[1] = "108Sn.v"+sVer+".subpsi1.";;
     ncount++;
   }
 
