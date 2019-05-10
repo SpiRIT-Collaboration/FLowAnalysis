@@ -2,7 +2,7 @@ source runList.sh
 source setup.sh
 
 DB=BTt
-VERSION=24.0
+VERSION=25.0
 OVER=
 export SPID=2
 export runOne='RUN={"2841"} SUFX=$DB  VER=$VERSION root DoFlow.C'
@@ -49,14 +49,17 @@ function exec4()
     UC=1 LC=2 RUN={$RNF112} SUFX=$DB  VER=$VERSION root -b -q DoFlow.C\($SPID\) 
 }
 
+export RNF={$RNF112}
+export SPID=8
+exprot OVER=25.0.2
 function runonebyonebatch() 
 {
-    RUN={$RNF132} SUFX=$DB  VER=$VERSION OUTVER=$OVER root -b -q DoFlow.C\($SPID\)
+    RUN=$RNF SUFX=$DB  VER=$VERSION OUTVER=$OVER root -b -q DoFlow.C\($SPID\)
 }
 
 function runonebyone() 
 {
-    RUN={$RNF132} SUFX=$DB  VER=$VERSION root DoFlow.C\($SPID\)
+    RUN=$RNF SUFX=$DB  VER=$VERSION OUTVER=$OVER root DoFlow.C\($SPID\)
 }
 
 function runonebyoneshort() 
@@ -66,8 +69,7 @@ function runonebyoneshort()
 
 
 
-export RNF={$RNF108}
-PARTICLE=("3" "4" "6" "5") #"7")
+PARTICLE=("2" "3" "4" "6" "5") #"7")
 function multipleexec()
 {
     typeset -i I=0;

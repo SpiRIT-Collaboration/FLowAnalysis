@@ -117,8 +117,14 @@ Bool_t STSpiRITTPCTask::SetupParameters()
   //--- angle dependeing mass fitter //
   //  massCal->SetParameter("db/BBFitter.root");
 
+  UInt_t bmA = STRunToBeamA::GetBeamA(iRun);
 
-  massCal->LoadCalibrationParameters("db/PIDCalib.root",STRunToBeamA::GetBeamA(iRun));
+  if( bmA == 124 )
+    bmA = 132;  
+  else if( bmA == 112 )
+    bmA = 108;
+
+  massCal->LoadCalibrationParameters("db/PIDCalib.root",bmA);
 
   //------------------------------
 
@@ -194,7 +200,7 @@ Bool_t STSpiRITTPCTask::SetupInputDataFile()
     else 
       break;
     
-    LOG(INFO) << i << " recoFile " << rootDir+recoFile << FairLogger::endl;
+    LOG(INFO) << i << " recoFile " << recoFile << FairLogger::endl;
     i++;
 
   }

@@ -15,7 +15,9 @@ const UInt_t ybin1 = sizeof(yrange1)/sizeof(Double_t);
 Double_t yrange2[] = {-0.2, -0.05,  0.05, 0.2, 0.35, 0.5};
 const UInt_t ybin2 = sizeof(yrange2)/sizeof(Double_t);
 
-TString  partname[] = {"pi-","pi+","proton","deuteron" ,"triton", "3He", "4He", "neutron"};
-UInt_t   partid[]   = {211,    211,    2212, 1000010020, 1000010030, 1000020030, 1000020040, 2112};
+TString  partname[] = {"pi-","pi+","proton","deuteron" ,"triton", "3He", "4He", "neutron", "H"};
+UInt_t   partid[]   = {211,    211,    2212, 1000010020, 1000010030, 1000020030, 1000020040, 2112, 1000010040};
 
 UInt_t   cent[]  = {75, 35, 28, 0};
+
+TString amdpartname[] = {"prt","deut","trit","3He","4He","neut","H"};

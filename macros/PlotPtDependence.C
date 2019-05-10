@@ -4,19 +4,23 @@
 //-- plot configuration
 //--------------------------------------------------
   // --> Plotting selection
-Bool_t bsys[]  = { 1, 0, 0, 0};
-Bool_t bpid[]  = { 1, 1, 1, 1, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n
+Bool_t bsys[]  = { 1, 1, 1, 1};
+Bool_t bpid[]  = { 0, 0, 0, 0, 0, 0, 1}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 3;
 
 UInt_t  bver[]  = { 1, 0, 0, 0};
-TString sVer[] = {".v24.0.1",".v24.0.0", ".v23.1.21", ".v23.1.22", ".v23.1.13"};
-TString sName = "cosYPt_"; //"cosYPt_132Sn_";
+TString sVer[]  = {".v25.0.2",".v25.0.1", ".v25.0.3", ".v25.0.4", ".v23.1.13",".AMD:"};
+TString sName   = "cosYPt_"; //"cosYPt_132Sn_";
 TString bName[] = {"132Sn_","108Sn_","124Sn_","112Sn_"};
 
+Bool_t amdEOS[]= {0, 0};
+TString amdName[] = {"SLy4",
+		     "SLy4-L108"};
+
+TString amdHeader[] = {"amd_132Sn124Sn270AMeV_cluster_",
+		       "amd_108Sn112Sn270AMeV_cluster_"};
 //==================================================
-
-
 
 UInt_t   ccvid = 0;
 TF1 *lslope = new TF1("lslope","[0]+[1]*x",-0.1,0.2);
@@ -24,11 +28,12 @@ TF1 *lslope = new TF1("lslope","[0]+[1]*x",-0.1,0.2);
 // --> configuration
 TString fsys[] = {"132Sn+124Sn","108Sn+112Sn","124Sn+112Sn","112Sn+124Sn"};
 TString rsys[] = {"132",        "108",        "124",        "112"};
-TString fpid[] = {"proton","deuteron","triton","3He","4He","neutron"};  
+TString fpid[] = {"proton","deuteron","triton","3He","4He","neutron","H"};  
 
 Size_t  imsz[] = {1, 1, 1.3, 1.3, 1.3, 1.3, 1.3};
 Color_t icol[] = { kRed, kBlue, kSpring, kMagenta, kOrange, kViolet};
 Color_t icolnn[]={ kPink, kBlue+1, kGreen+2, kViolet-1};
+
 
 TMultiGraph  *mv1[ybin1];
 TMultiGraph  *mv2[ybin2];
@@ -117,6 +122,31 @@ void PlotPtDependence()
   }
 
   cout << fname.size() << endl;
+
+  //---- amd
+  UInt_t kgr = 0;
+  for(UInt_t ls = 0; ls < 2; ls++){
+    if( !bsys[ls] ) continue;
+
+    for(UInt_t lp = 0; lp < (UInt_t)sizeof(bpid)/sizeof(Bool_t); lp++){
+      if( !bpid[lp] ) continue;
+
+      for(UInt_t lo = 0; lo < (UInt_t)sizeof(amdEOS)/sizeof(Bool_t); lo++) { 
+	if( !amdEOS[lo] ) continue;
+
+	fname.push_back( "data/"+ amdHeader[ls]+amdName[lo]+"_"+amdpartname[lp]+".root" );
+	std::cout << fname.at(ngr+kgr) << std::endl;
+
+	index[0].push_back(ls);
+	index[1].push_back(lp);
+	index[2].push_back(lo);
+	index[3].push_back(3);
+	index[4].push_back((UInt_t)sizeof(bver)/sizeof(UInt_t)+1);
+
+	kgr++;
+      }
+    }
+  }
   
 
   TString rapRange[ybin1];
@@ -147,7 +177,7 @@ void PlotPtDependence()
 
 
   auto lgr1 = new TLegend(0.54, 0.13, 0.87, 0.4, ltitle); 
-  auto lgr2 = new TLegend(0.21, 0.68, 0.57, 0.9, ltitle);
+  auto lgr2 = new TLegend(0.38, 0.68, 0.75, 0.9, ltitle);
   auto lgr3 = new TLegend(0.35, 0.13, 0.7, 0.33, ltitle);
   auto lgr4 = new TLegend(0.15, 0.63, 0.5, 0.85, ltitle);
   auto lgr5 = new TLegend(0.15, 0.63, 0.5, 0.85, ltitle);
@@ -157,13 +187,13 @@ void PlotPtDependence()
 
   // Pt dependence
   for(UInt_t k = 0; k < ybin1; k++){
-    mv1[k] = new TMultiGraph((TString)Form("mv1%d",k), rapRange[k]+";Pt [MeV/c]; v1");
+    mv1[k]  = new TMultiGraph((TString)Form("mv1%d",k),  rapRange[k]+";Pt [MeV/c]; v1");
     lg1[k] = new TLegend(0.57, 0.64, 0.95, 0.92); 
     lg1[k]->SetTextSize(0.05);
   }
 
   for(UInt_t k = 0; k < ybin2; k++) {
-    mv2[k] = new TMultiGraph((TString)Form("mv2%d",k), rapRange2[k]+";Pt [MeV/c]; v2");
+    mv2[k]  = new TMultiGraph((TString)Form("mv2%d",k),  rapRange2[k]+";Pt [MeV/c]; v2");
     lg2[k] = new TLegend(0.5, 0.64, 0.95, 0.92); 
     lg2[k]->SetTextSize(0.05);
   }
@@ -175,17 +205,13 @@ void PlotPtDependence()
   UInt_t iss = 9;
   UInt_t ipp = 0;
   Color_t icolor = 100; 
-  for(UInt_t igr = 0; igr < ngr; igr++ ) {
+  for(UInt_t igr = 0; igr < ngr+kgr; igr++ ) {
 
     fOpen = TFile::Open(fname.at(igr)); 
 
     if( fOpen == NULL ) continue;
     else
       std::cout << fname.at(igr) << " is opened. " << std::endl;
-
-
-    TH1D *fevt = (TH1D*)fOpen->Get("hphi0_180");
-    UInt_t tevt = fevt->GetEntries();
 
     UInt_t is = index[0].at(igr);
     UInt_t ip = index[1].at(igr);
@@ -204,31 +230,38 @@ void PlotPtDependence()
       icolor -= 2;
 
     cout << igr  << " " << ip << " color " << icolor << endl;
+    TString otitle = rsys[is]+"Sn "+fpid[ip]+sVer[iz];
+
+    if( igr >= ngr )
+      otitle += amdHeader[is](4,5) + amdName[it];
 
 
     //acceptance
-    TH2D *ff = (TH2D*)fOpen->Get("hyptacp");
-    ff->SetName(Form("hyptacp_%d",igr));
+    if( igr < ngr ) {
+      TH1D *fevt = (TH1D*)fOpen->Get("hphi0_180");
+      UInt_t tevt = fevt->GetEntries();
 
-    TString otitle = rsys[is]+"Sn "+fpid[ip]+sVer[iz];
-    ff->SetTitle(otitle);
-    ff->SetDirectory(gROOT);
+      TH2D *ff = (TH2D*)fOpen->Get("hyptacp");
+      ff->SetName(Form("hyptacp_%d",igr));
 
-    gROOT->cd();
-    ff->ProjectionX("_px");
-    TH1D* ff1 = (TH1D*)gROOT->Get((TString)ff->GetName()+"_px");
-    
-    Double_t xwd = (Double_t)ff1->GetXaxis()->GetNbins()/(ff1->GetXaxis()->GetXmax() - ff1->GetXaxis()->GetXmin());
-    
-    if( fpid[ip] == "neutron" )
-      ff1->Scale( xwd / tevt /0.26);
-    else
-      ff1->Scale(xwd / tevt);
+      ff->SetTitle(otitle);
+      ff->SetDirectory(gROOT);
 
-    ff1->SetTitle("; Y_{cm}; dN/dy");
-    ff1->SetLineColor(icolor);
-    lgr3->AddEntry(ff1, otitle );
+      gROOT->cd();
+      ff->ProjectionX("_px");
+      TH1D* ff1 = (TH1D*)gROOT->Get((TString)ff->GetName()+"_px");
     
+      Double_t xwd = (Double_t)ff1->GetXaxis()->GetNbins()/(ff1->GetXaxis()->GetXmax() - ff1->GetXaxis()->GetXmin());
+    
+      if( fpid[ip] == "neutron" )
+	ff1->Scale( xwd / tevt /0.26);
+      else
+	ff1->Scale(xwd / tevt);
+
+      ff1->SetTitle("; Y_{cm}; dN/dy");
+      ff1->SetLineColor(icolor);
+      lgr3->AddEntry(ff1, otitle );
+    }
 
     fOpen->cd();
     
@@ -294,11 +327,11 @@ void PlotPtDependence()
     for(UInt_t k = 0; k < ybin1; k++){
 
       TGraphErrors *gr_v1 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v1%d",k));
-      
       //      RemovePtPoint(ip, gr_v1);
       
       if( gr_v1 == NULL ) continue;
       gr_v1->SetMarkerStyle(imark[is]);
+
 
       if( ip == 5 )
 	gr_v1->SetMarkerStyle(imark[is]+4);
@@ -367,7 +400,7 @@ void PlotPtDependence()
   }
 
   if( bplot || kTRUE ) { // gothered plots
-    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
+    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6",1400,900);
     cc->Divide(ybin1/2,2);
     for(UInt_t k = 0; k < ybin1; k++){
       cc->cd(k+1);
@@ -376,7 +409,7 @@ void PlotPtDependence()
 	lg1[k]->Draw();
     }
 
-    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
+    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6",1400,500);
     cc->Divide(ybin2,1);
     for(UInt_t k = 0; k < ybin2; k++){
       cc->cd(k+1);

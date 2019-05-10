@@ -11,6 +11,7 @@
 #include "STFlowCorrection.hh"
 #include "STFlowCorrection.hh"
 #include "STLorentzBoostVector.hh"
+#include "STRunToBeamA.hh"
 
 class STFlowTask
 {
@@ -22,10 +23,11 @@ public:
   Bool_t Init(UInt_t irun, TString aver);
 
 private:
-  Bool_t fIsFlowCorrection;      ///< reaction plane flattening correction
-  Bool_t fIsBootStrap;           ///< bootstrap analysis flag
-  Bool_t fIsSubeventAnalysis;    ///< Subevent analysis flag  
-  UInt_t selReactionPlanef;      // track quality for reaction plane 
+  UInt_t iRun;                   //!
+  Bool_t fIsFlowCorrection;      //!< reaction plane flattening correction
+  Bool_t fIsBootStrap;           //!< bootstrap analysis flag
+  Bool_t fIsSubeventAnalysis;    //!< Subevent analysis flag  
+  UInt_t selReactionPlanef;      //! track quality for reaction plane 
   
   TString sVer; //!
 

@@ -57,6 +57,7 @@ void STFlowTask::SetFlowTask( TClonesArray &atpcParticle )
 Bool_t STFlowTask::Init(UInt_t irun, TString sver)
 {
   sVer = sver;
+  iRun = irun;
 
   fflowinfo->SetRun( irun );  
   
@@ -454,12 +455,13 @@ Bool_t STFlowTask::SetupFlowDataBase()
 {
   TString  fname[2];
   Int_t    ncount = 1;
+  TString  SNA = STRunToBeamA::GetBeamSnA(iRun);
   //  fname[0] = "132Sn.v"+sVer+".psi.";
-  fname[0] = "108Sn.v"+sVer+".psi.";
+  fname[0] = SNA + ".v"+sVer+".psi.";
 
   if( fIsSubeventAnalysis ) {
     //    fname[1] = "132Sn.v"+sVer+".subpsi1.";;
-    fname[1] = "108Sn.v"+sVer+".subpsi1.";;
+    fname[1] = SNA + ".v"+sVer+".subpsi1.";;
     ncount++;
   }
 

@@ -22,6 +22,7 @@ UInt_t   SetBranch();
 void     PlotPtDependence(UInt_t selid);     
 Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180);
 void     PlotCosPtDependence(UInt_t selid);
+TString  SetupOutputFile(TString fopt);
 
 Double_t  GetError(Double_t x, Double_t y, Double_t xe, Double_t ye)
 {
@@ -74,7 +75,9 @@ void DoFlow(UInt_t isel = 2)
 
   //==================================================
 
-  PlotCosPtDependence(isel);  
+  //  PlotCosPtDependence(isel);  
+
+
 }
 
 
@@ -96,47 +99,11 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   cutfile->Close();    
 
 
-  //--------------------------------------------------
-  //----- SETUP OUTPUT FILE --------------------------
-  //--------------------------------------------------
-  gSystem->cd("data");
-  TString oVer = gSystem->Getenv("OUTVER");
-  TString fName = "cosYPt_"+ sysName + "_" + partname[selid]+".v"+sVer+"."+oVer;
-
-  if( oVer == "" ) {
-    UInt_t kVer = 0; 
-    TString checkName;
-
-    while( kTRUE ) {
-      checkName = Form(fName + "%d.root", kVer);
-      if( !gSystem->FindFile(".",checkName) ) {
-	break;
-      }
-      else
-	kVer++;
-    }
-    fName = Form(fName + "%d.root", kVer);
-  }
-  else {
-    TString checkName = fName + ".root";;
-    if( !gROOT->IsBatch() && gSystem->FindFile(".",checkName) ) {
-      std::cout << checkName << " is existing. Do you recreate? (y/n)" << std::endl;
-      TString sAns;
-      std::cin >> sAns;
-      if(sAns == "N" || sAns == "n") {
-	std::cout << " Retry" << std::endl;
-	exit(0);
-      }
-    }
-    fName += ".root";
-  }
-
-  std::cout << "File " << fName << " is created. " << std::endl;  
-
-  //--------------------------------------------------
+  TString fHeader = "cosYPt_"+ sysName + "_" + partname[selid]+".v"+sVer+".";
+  auto fName = SetupOutputFile( fHeader );
 
 
-  auto GraphSave = new TFile(fName,"recreate");
+  auto GraphSave  = new TFile(fName,"recreate");
   auto hphi0_180  = new TH1D("hphi0_180" ,"#Phi from  0 to 180; #Phi",100,0.,3.2);
   auto hphi90_180 = new TH1D("hphi90_180","#Phi from 90 to 180; #Phi",100,0.,3.2);
 
@@ -275,7 +242,9 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 
       //------------------------------
       //----- Particle Selection -----
-      if( pid == partid[selid] && rpf > 10000 ){ //&& yaw < 0 && pitch < 0) {
+      //      if( pid == partid[selid] && rpf > 10000 ){ //&& yaw < 0 && pitch < 0) {
+      if( selid == 8 && (pid == partid[2] || pid == partid[3] || pid == partid[4]) &&
+	  yaw > 0 ) {
       
 	bFill = kTRUE;
       
@@ -1002,19 +971,26 @@ void DetectorBias()
 
 void CentralityDependence()            //%% Executable :
 {
-  //  UInt_t mrange[] = {70, 50, 45, 40, 35, 25, 20, 0};
-  UInt_t mrange[] = {70, 35, 28, 0};
+  UInt_t mrange[] = {70, 50, 45, 40, 35, 25, 20, 0};
+   // UInt_t mrange[] = {70, 35, 28, 0};
 
   const UInt_t mbin = sizeof(mrange)/sizeof(UInt_t) - 1;
   TH1D *hphi0_180;
   TH1D *hphi90_180;
   TH1I *hmult;
 
-  auto gv_mcos1 = new TGraphErrors();
-  gv_mcos1->SetTitle(";Multiplicity; <cos(#Psi)>");
-  auto gv_mcos2 = new TGraphErrors();
-  gv_mcos2->SetTitle(";Multiplicity; <cos(2#Psi)>");
+  TString fHeader = "mlt_"+ sysName + ".v"+sVer+".";
+  auto fName = SetupOutputFile( fHeader );
 
+  auto GraphSave = new TFile(fName,"recreate");
+
+  auto gv_mcos1 = new TGraphErrors();
+  gv_mcos1->SetName("gv_mcos1");
+  gv_mcos1->SetTitle(";Multiplicity; <cos(#Psi)>");
+
+  auto gv_mcos2 = new TGraphErrors();
+  gv_mcos2->SetName("gv_mcos2");
+  gv_mcos2->SetTitle(";Multiplicity; <cos(2#Psi)>");
 
   auto cc80 = new TCanvas("cc80","cc80",500,1000);
   cc80->Divide(2,7);
@@ -1026,13 +1002,13 @@ void CentralityDependence()            //%% Executable :
 
     TString htitle = Form("hphi0_%d",i);
     hphi0_180  = new TH1D(htitle, "",100,0.,3.2);
-    rChain->Project(htitle,"abs(TVector2::Phi_mpi_pi(unitP_1->Phi()-unitP_2->Phi()))",hcut);
+    rChain->Project(htitle,"abs(TVector2::Phi_mpi_pi(unitP_1fc->Phi()-unitP_2fc->Phi()))",hcut);
     hphi0_180->Draw();
 
     htitle = Form("hphi90_%d",i);
     hphi90_180 = new TH1D(htitle,"",100,0.,3.2);
-    TCut phicut = "abs(TVector2::Phi_mpi_pi(unitP_1->Phi()-unitP_2->Phi()))>1.5707963";
-    rChain->Project(htitle,"abs(TVector2::Phi_mpi_pi(unitP_1->Phi()-unitP_2->Phi()))",hcut&&phicut);
+    TCut phicut = "abs(TVector2::Phi_mpi_pi(unitP_1fc->Phi()-unitP_2fc->Phi()))>1.5707963";
+    rChain->Project(htitle,"abs(TVector2::Phi_mpi_pi(unitP_1fc->Phi()-unitP_2fc->Phi()))",hcut&&phicut);
     hphi90_180->Draw("same");
 
     hmult = new TH1I(Form("hmult_%u",i),"",70,0.,70.);
@@ -1057,7 +1033,7 @@ void CentralityDependence()            //%% Executable :
      gv_mcos2->SetPointError(i, hmult->GetStdDev(), rpres[3]);
   }
 
-  hmult = new TH1I("hmult",";Multiplicity",70,0,70);
+  hmult = new TH1I("hmult",";Multiplicity",80,0,80);
   rChain->Project("hmult","mtrack4");
 
   auto cc79 = new TCanvas("cc79","cc79");
@@ -1068,6 +1044,11 @@ void CentralityDependence()            //%% Executable :
 
   auto cc82 = new TCanvas("cc82","cc82");
   gv_mcos2->Draw("ALP");
+
+  gv_mcos1->Write();
+  gv_mcos2->Write();  
+  GraphSave->Write();
+
 }
 
 
@@ -1089,3 +1070,46 @@ UInt_t SetBranch()
   return rChain->GetEntries();
 }
 
+
+TString SetupOutputFile(TString fopt)
+{
+  //--------------------------------------------------
+  //----- SETUP OUTPUT FILE --------------------------
+  //--------------------------------------------------
+  gSystem->cd("data");
+  TString oVer = gSystem->Getenv("OUTVER");
+  TString fName = fopt + oVer;
+
+  if( oVer == "" ) {
+    UInt_t kVer = 0; 
+    TString checkName;
+
+    while( kTRUE ) {
+      checkName = Form(fName + "%d.root", kVer);
+      if( !gSystem->FindFile(".",checkName) ) {
+	break;
+      }
+      else
+	kVer++;
+    }
+    fName = Form(fName + "%d.root", kVer);
+  }
+  else {
+    TString checkName = fName + ".root";;
+    if( !gROOT->IsBatch() && gSystem->FindFile(".",checkName) ) {
+      std::cout << checkName << " is existing. Do you recreate? (y/n)" << std::endl;
+      TString sAns;
+      std::cin >> sAns;
+      if(sAns == "N" || sAns == "n") {
+	std::cout << " Retry" << std::endl;
+	exit(0);
+      }
+    }
+    fName += ".root";
+  }
+
+  std::cout << "File " << fName << " is created. " << std::endl;  
+
+  return fName;
+  //--------------------------------------------------
+}
