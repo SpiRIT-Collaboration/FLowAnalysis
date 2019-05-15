@@ -243,8 +243,9 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
       //------------------------------
       //----- Particle Selection -----
       //      if( pid == partid[selid] && rpf > 10000 ){ //&& yaw < 0 && pitch < 0) {
-      if( selid == 8 && (pid == partid[2] || pid == partid[3] || pid == partid[4]) &&
-	  yaw > 0 ) {
+      if( (selid == 8 && (pid == partid[2] || pid == partid[3] || pid == partid[4]) &&
+	   yaw > 0) ||
+	  (pid == partid[selid]  && yaw > 0 ) ) {
       
 	bFill = kTRUE;
       
@@ -388,7 +389,7 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
     Double_t yv1  = cosv1[kn] / (Double_t)cosv1x[kn].size();
     Double_t yv1e = sinv1[kn] / (Double_t)cosv1x[kn].size();
 
-    Double_t yv1c  = yv1/rpres[0];
+    Double_t yv1c  = yv1/rpres[0];//*sqrt((Double_t)cosv1x[kn].size());
     Double_t yv1ce = GetError(yv1, rpres[0], yv1e, rpres[1]);
 
     if( !std::isnan(rapm) ) {
@@ -734,7 +735,6 @@ void PlotAzimuthalDistribution(UInt_t selid = 2)       //%% Executable :
 
 //**************************************************
 //**************************************************
-
 Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)            //%% Executable : 
 {
   hphi90_180->SetLineColor(2);
@@ -742,17 +742,39 @@ Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)            //%%
   Double_t m0 = hphi0_180->GetEntries();
   Double_t m1 = hphi90_180->GetEntries();
 
-  Double_t chi = sqrt(-2.* log(2.* m1/m0));
-  
-  Double_t m01e = m1/m0*sqrt(1./m1+1./m0);
-  Double_t chie = chi - sqrt(-2.* log(2. * (m1/m0+m01e)));
+  if( m0 == 0 ) {
+    std::cout << " No entry in hphi0_180 " << endl;
+    return 0;
+  }
+
+  //  Double_t chi = sqrt(-2.* log(2.* m1/m0));
+  Double_t mr    = m1/m0;
+  Double_t mre2  = m1/m0 * (1./m0 + 1./m1);
+  Double_t chi   = sqrt(-4.* log(2.* mr));
+  Double_t chie2 = -4.*log(2.*mr)/pow(mr,2)* mre2;
 
   Double_t *rpres = new Double_t[4];
+  //v1
+  rpres[0] = 0.626657*chi    - 0.09694*pow(chi,3) + 0.02754 * pow(chi,4) - 0.002283*pow(chi,5);
+  
+  Double_t err2 = pow(0.626657,2) * chie2;
+  err2 += pow(0.09694,2) *  6.* pow(chi,4) * chie2;
+  err2 += pow(0.02754,2) * 16.* pow(chi,6) * chie2;
+  err2 += pow(0.002283,2)* 25.* pow(chi,8) * chie2;
+  rpres[1] = sqrt( err2 );
 
-  rpres[0] = sqrt(TMath::Pi())/(2.*TMath::Gamma(1))*chi;
-  rpres[1] = sqrt(TMath::Pi())/(2.*TMath::Gamma(1))*(chi+chie) - rpres[0];
-  rpres[2] = sqrt(TMath::Pi())/(2.*2.*TMath::Gamma(1.5))*pow(chi,2);
-  rpres[3] = sqrt(TMath::Pi())/(2.*2.*TMath::Gamma(1.5))*pow(chi+chie,2) - rpres[2];
+  //v2
+  rpres[2] = 0.25*pow(chi,2) - 0.011414*pow(chi,3) - 0.034726*pow(chi,4) + 0.006815*pow(chi,5);
+  err2  = pow(0.25,2) * chie2;
+  err2 += pow(0.011414,2) *  9.* pow(chi,4) * chie2;
+  err2 += pow(0.034726,2) * 16.* pow(chi,6) * chie2;
+  err2 += pow(0.006815,2) * 25.* pow(chi,5) * chie2;
+  rpres[3] = sqrt( err2 );
+
+  // rpres[0] = sqrt(TMath::Pi())/(2.*TMath::Gamma(1))*chi;
+  // rpres[1] = sqrt(TMath::Pi())/(2.*TMath::Gamma(1))*(chi+chie) - rpres[0];
+  // rpres[2] = sqrt(TMath::Pi())/(2.*2.*TMath::Gamma(1.5))*pow(chi,2);
+  // rpres[3] = sqrt(TMath::Pi())/(2.*2.*TMath::Gamma(1.5))*pow(chi+chie,2) - rpres[2];
 
   // ic++;
   // cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);

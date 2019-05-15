@@ -7,10 +7,11 @@
 Bool_t bsys[]  = { 1, 1, 1, 1};
 Bool_t bpid[]  = { 0, 0, 0, 0, 0, 0, 1}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
-UInt_t cntw = 3;
+UInt_t cntw = 1;
 
 UInt_t  bver[]  = { 1, 0, 0, 0};
-TString sVer[]  = {".v25.0.2",".v25.0.1", ".v25.0.3", ".v25.0.4", ".v23.1.13",".AMD:"};
+TString sVer[]  = {".v25.0.6",".v26.2", ".v26.3", ".v25.0.6", ".v23.1.13",".AMD:"};
+TString cmnt[]  = {"","m75-0","m75-28","m75-35",""};
 TString sName   = "cosYPt_"; //"cosYPt_132Sn_";
 TString bName[] = {"132Sn_","108Sn_","124Sn_","112Sn_"};
 
@@ -40,9 +41,6 @@ TMultiGraph  *mv2[ybin2];
 TLegend      *lg1[ybin1];
 TLegend      *lg2[ybin2];
 
-void RemovePoints(TString fn, TGraphErrors &gr);
-void RemoveYPoint(TGraphErrors *gv);
-void RemovePtPoint(UInt_t ip, TGraphErrors *gv);
 void RapidityShift(TGraphErrors *gv);
 void ShiftX(TGraphErrors *gv, Double_t off);
 
@@ -106,8 +104,9 @@ void PlotPtDependence()
 	  fname.push_back( "data/"+ sName + bName[is] + fpid[ip] + sVer[iz] + ".root" );
 
 	  std::cout << fname.at(ngr) << std::endl;
-	  ltitle = Form("mult %d ~ %d; azm%d",cent[it],cent[it+cntw],bver[iz]);
-	  std::cout << " label title " << ltitle << std::endl;
+	  ltitle = "";
+	  //	  ltitle = Form("mult %d ~ %d",cent[it],cent[it+cntw]);
+	  //	  std::cout << " label title " << ltitle << std::endl;
 
 	  index[0].push_back(is); // system
 	  index[1].push_back(ip); // pid
@@ -230,7 +229,7 @@ void PlotPtDependence()
       icolor -= 2;
 
     cout << igr  << " " << ip << " color " << icolor << endl;
-    TString otitle = rsys[is]+"Sn "+fpid[ip]+sVer[iz];
+    TString otitle = rsys[is]+"Sn "+fpid[ip]+sVer[iz]+";"+cmnt[iz];
 
     if( igr >= ngr )
       otitle += amdHeader[is](4,5) + amdName[it];
@@ -621,105 +620,6 @@ void PlotPtDependence()
 }
 
 
-void SaveCanvas(TString cnt = "", Int_t isel=-1)
-{
-  if(isel > -1)
-    gROOT->GetListOfCanvases()->At(isel)->SaveAs("ypt_"+cnt+Form("_%d",isel)+".png");
-
-  else {
-    TString mdir = "ypt_"+cnt;
-    gSystem->mkdir(mdir);
-    gSystem->cd(mdir);
-      
-    Int_t iCanvas = gROOT->GetListOfCanvases()->GetEntries();  
-    for(Int_t i = 0; i < iCanvas; i++)
-      gROOT->GetListOfCanvases()->At(i)->SaveAs(mdir+Form("_%d",i)+".png");
-
-    gSystem->cd("..");
-    std::cout << "Figures in " + mdir << std::endl;
-  }
-}
-
-void RemovePoints(TString fn, TGraphErrors &gr)
-{
-
-  if( fn == "data/NL132Sn_neutron.root" ) {
-
-
-    if( (TString)gr.GetName() == "gPt_v11") 
-      gr.RemovePoint(1);
-    else if( (TString)gr.GetName() == "gPt_v12") 
-      gr.RemovePoint(2);
-    else if( (TString)gr.GetName() == "gPt_v13") 
-      gr.RemovePoint(3);
-    else if( (TString)gr.GetName() == "gPt_v15") { 
-      gr.RemovePoint(4);
-
-    }    
-    else if( (TString)gr.GetName() == "gPt_v16" ) {
-      for(UInt_t i = 0; i < 2; i++)
-	gr.RemovePoint(4);
-    }
-    else if( (TString)gr.GetName() =="gPt_v17" ) {
-      for(UInt_t i = 0; i < 6; i++)
-	gr.RemovePoint(1);
-      //      gr.RemovePoint(0);
-    }
-
-
-    if( (TString)gr.GetName() == "gPt_v21" ) 
-      gr.RemovePoint(2);
-    else if( (TString)gr.GetName() == "gPt_v23") {
-      for(UInt_t i = 0; i < 3; i++)
-	gr.RemovePoint(3);
-      gr.RemovePoint(0);
-    }
-    else if( (TString)gr.GetName() == "gPt_v24")
-      gr.RemovePoint(3);
-
-  }
-
-  if( fn == "data/NL108Sn_neutron.root" ) {
-
-    cout << gr.GetName() << endl;
-    gr.Print();
-
-    if( (TString)gr.GetName() == "gPt_v10" ) 
-      gr.RemovePoint(1);
-    if( (TString)gr.GetName() == "gPt_v11" ) 
-      gr.RemovePoint(2);
-    if( (TString)gr.GetName() == "gPt_v13" ) 
-      gr.RemovePoint(3);
-    if( (TString)gr.GetName() == "gPt_v14" ) 
-      gr.RemovePoint(3);
-    if( (TString)gr.GetName() == "gPt_v15" ) { 
-      for(UInt_t i = 0; i < 2; i++)
-	gr.RemovePoint(3);
-    }
-    else if( (TString)gr.GetName() == "gPt_v16" ) { 
-      for(UInt_t i = 0; i < 3; i++)
-	gr.RemovePoint(3);
-    }
-    else if( (TString)gr.GetName() == "gPt_v17" ) { 
-      for(UInt_t i = 0; i < 5; i++)
-	gr.RemovePoint(1);
-    }
-    else if( (TString)gr.GetName() == "gPt_v22" ) 
-      gr.RemovePoint(2);
-    else if( (TString)gr.GetName() == "gPt_v23" ) {
-      for(UInt_t i = 0; i < 2; i++)
-	gr.RemovePoint(3);
-      gr.RemovePoint(0);
-    }
-    else if( (TString)gr.GetName() == "gPt_v24" ) {
-      for(UInt_t i = 0; i < 2; i++)
-	gr.RemovePoint(4);
-      gr.RemovePoint(0);
-    }
-  }
-}
-
-
 void RapidityShift(TGraphErrors *gv) 
 {
   // shifting artificially
@@ -743,57 +643,6 @@ void ShiftX(TGraphErrors *gv, Double_t off)
   }
 }
 
-void RemoveYPoint(TGraphErrors *gv)
-{
-  cout << " removey " << gv->GetN() <<endl;
-  Double_t xx, yy;
-  for(Int_t k = (Int_t)gv->GetN()-1; k > -1; k--) {
-
-    gv->GetPoint(k, xx, yy);
-    if( xx < -0.2 ) {
-      gv->RemovePoint(k);
-      //      std::cout << "===> REMOVEPOINT in Y (" << xx << "," << yy << ")" << std::endl;    
-    }
-    if( xx > 0.37 ) {
-      gv->RemovePoint(k);
-      //      std::cout << "===> REMOVEPOINT in Y (" << xx << "," << yy << ")" << std::endl;    
-    }
-  }
-
-  for(Int_t k = (Int_t)gv->GetN()-1; k > -1; k--) {
-    yy = gv->GetErrorY(k);
-    if( yy > 0.15 )
-      gv->RemovePoint(k);
-
-  }  
-}
-
-void RemovePtPoint(UInt_t ip, TGraphErrors *gv)
-{
-  if( gv == NULL ) return;
-
-  //  cout << "removept " << gv->GetN() <<  endl;
-  Double_t ptcut = 700.;
-  if( ip == 5 ) ptcut = 400.;
-
-  Double_t xx, yy;
-  for(Int_t k = (Int_t)gv->GetN()-1; k > -1; k--) {
-    gv->GetPoint(k, xx, yy);
-    if( xx > ptcut ) {
-      gv->RemovePoint(k);
-      //      std::cout << "===> REMOVEPOINT in Pt (" << xx << "," << yy << ")" <<  std::endl;
-    }
-  }  
-  for(Int_t k = (Int_t)gv->GetN()-1; k > -1; k--) {
-    yy = gv->GetErrorY(k);
-    if( yy > 0.12 )
-      gv->RemovePoint(k);
-
-  }  
-}
-
-
-
 void integ()
 {
   UInt_t idx = 0;
@@ -812,3 +661,4 @@ void integ()
   }
 }
   
+

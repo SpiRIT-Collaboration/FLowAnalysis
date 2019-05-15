@@ -51,6 +51,12 @@ void STFlowTask::SetFlowTask( TClonesArray &atpcParticle )
     DoFlowAnalysis( *aParticle );
 
   }
+  
+  Double_t N = (Double_t)(ntrack[4]-1);
+  Double_t rpsigma = 1./(2.* N) * (sum_omg2/N / pow(sum_omg/N,2) );
+  if( std::isinf( rpsigma ) ) rpsigma = 0;
+
+  fflowinfo->SetRPSigma( sqrt(rpsigma) );
 }
 
 
@@ -331,6 +337,11 @@ void STFlowTask::DoFlowAnalysis(STParticle &apart)
     TVector2 upt = apart.GetRotatedPt().Unit();
     fflowinfo->unitP += apart.GetRPWeight() * TVector3( upt.X(), upt.Y(), 0.);
 
+
+    sum_omg2 += pow(apart.GetRPWeight(), 2);
+    sum_omg  += apart.GetRPWeight();
+
+
     if( fIsBootStrap )
       bs_unitP->Add(apart.GetRPWeight() * apart.GetRotatedPt().Unit());
   }
@@ -394,6 +405,9 @@ void STFlowTask::Clear()
   ntrack[5] = 0;
 
   fflowinfo->Clear();
+
+  sum_omg2 = 0;
+  sum_omg  = 0;
 }
 
 TVector3 STFlowTask::Psi_FlatteningCorrection(UInt_t isel, Int_t ival, TVector3 Pvec)

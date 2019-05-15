@@ -54,6 +54,10 @@ private:
   vector< pair<Double_t, Double_t> > pbinmin[2];     //!
   TRandom3 rnd; //!
   STBootStrap *bs_unitP; //!
+  
+  Double_t sum_omg2;  //!
+  Double_t sum_omg;   //!
+
 
   UInt_t *RandomDivide2(const UInt_t npart);
   UInt_t SetFLowDatabaseFiles(UInt_t version);

@@ -44,6 +44,10 @@ STFlowInfo::STFlowInfo(const STFlowInfo &cp)
     bsPhi_1[i] = cp.bsPhi_1[i];
     bsPhi_2[i] = cp.bsPhi_2[i];
   }
+
+  rpSigma   = cp.rpSigma;
+  rpChi[0]  = rpChi[0];
+  rpChi[1]  = rpChi[1];
 }
 
 STFlowInfo &STFlowInfo::operator=(const STFlowInfo &cp)
@@ -133,9 +137,10 @@ void STFlowInfo::Clear(){
     bsPhi_2[i] = 0.;
   }
 
-
+  rpSigma  = 0.;
+  rpChi[0] = 0.;
+  rpChi[1] = 0.;
   
-
 }
 
 ClassImp(STFlowInfo);

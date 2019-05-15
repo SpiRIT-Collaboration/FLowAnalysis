@@ -54,7 +54,7 @@ source runList.sh
 # *****> <Edit Here>
 # Set RUNNUMBER1 
 DBVERSION=25
-VERSION=25
+VERSION=26
 MEVT=100
 
 
@@ -65,22 +65,22 @@ function exec() {
     RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT DBVER=$DBVERSION root run_analysis.C 
 }
 
-function execb() {
-#    MXEVT=$MEVT
-    LOG=log/prc1_$RUNNUMBER1_v$VERSION.log
-    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
-}
 
 #RUNNUMBER1=(${RNF132})
-#RUNNUMBER1=(${RNF108})
+RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
-RUNNUMBER1=(${RNF112})
+#RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RBF132} ${RNF108} ${RNF124} ${RNF112}) 
 #RUNNUMBER1=(${RNFTEMP})
 #RUNNUMBER1=(${RNF132r})
 #RUNNUMBER1=(${RNF132p})
 
 MXEVT=
+function execb() {
+    LOG=log/p1_${RUN}_v${VERSION}.log
+    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
+}
+
 function process(){
     typeset -i I=1
     while(( $I < ${#RUNNUMBER1[@]} ))

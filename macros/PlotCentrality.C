@@ -10,7 +10,7 @@ Bool_t bcnt[]  = { 1, 0, 0};
 UInt_t cntw = 3;
 
 UInt_t  bver[]  = { 1, 0, 0, 0};
-TString sVer[]  = {".v25.0.0",".v25.0.1", ".v25.0.3", ".v25.0.4", ".v23.1.13",".AMD:"};
+TString sVer[]  = {".v25.0.1",".v25.0.2", ".v25.0.3", ".v25.0.4", ".v23.1.13",".AMD:"};
 TString sName   = "mlt_"; //"cosYPt_132Sn_";
 TString bName[] = {"132Sn","108Sn","124Sn","112Sn"};
 
@@ -41,8 +41,8 @@ void PlotCentrality()
   gStyle->SetOptStat(0);
 
   TFile *fOpen;
-  TMultiGraph *mcos1 = new TMultiGraph("mcos1","");
-  TMultiGraph *mcos2 = new TMultiGraph("mcos2","");
+  TMultiGraph *mcos1 = new TMultiGraph("mcos1",";Multiplicity; <cos( #Delta #Psi)>");
+  TMultiGraph *mcos2 = new TMultiGraph("mcos2",";Multiplicity; <cos( 2#Delta #Psi)>");
 
   auto  lgr0 = new TLegend(0.65, 0.7 , 0.90, 0.9);
   auto  lgr1 = new TLegend(0.54, 0.13, 0.87, 0.4);
@@ -106,8 +106,9 @@ void PlotCentrality()
   mcos1->Draw("ALP");
   lgr1 ->Draw();
 
-  // cc = new TCanvas(Form("cc%d",icc),Form("cc%d",icc)); icc++;
-  // mcos2->Draw("ALP");
+  cc = new TCanvas(Form("cc%d",icc),Form("cc%d",icc)); icc++;
+  mcos2->Draw("ALP");
+  lgr2 ->Draw();
 
   
 }
