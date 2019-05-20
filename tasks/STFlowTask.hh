@@ -64,6 +64,7 @@ private:
   Int_t  GetMultiplicityCorretionIndex(UInt_t isel, UInt_t ival);
 
 public:
+  UInt_t *RandumPickUp(const UInt_t val, const UInt_t npart);
   void   SetNTrack(UInt_t *nval);
   void   SetupFlow(STParticle &apart);
   void   SetSelectionOfReactionPlaneFlag(UInt_t val) {selReactionPlanef = val;}
@@ -74,6 +75,8 @@ public:
   Bool_t DoFlatteningSub();
   Bool_t DoFlattening(STParticle &part);
   void   DoSubeventAnalysis();
+  void   DoSubeventAnalysisFixedMultiplicity(UInt_t val);
+
   TVector3 Psi_FlatteningCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
   TVector3 Psi_ReCenteringCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
   void     DoIndividualReactionPlaneAnalysis();
@@ -90,6 +93,7 @@ public:
   Bool_t GetSubEventAnalysisFlag()       {return fIsSubeventAnalysis;}
   void   SetBootStrap(Bool_t val)        {fIsBootStrap = val;}
   Bool_t GetBootStrapFlag()              {return fIsBootStrap;}
+
 
 
   STFlowInfo  *GetFlowInfo() {return fflowinfo;}

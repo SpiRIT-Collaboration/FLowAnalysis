@@ -116,7 +116,8 @@ void STFlowTask::FinishEvent()
   DoIndividualReactionPlaneAnalysis();
 
   if( fIsSubeventAnalysis ) 
-    DoSubeventAnalysis();
+    //    DoSubeventAnalysis();
+    DoSubeventAnalysisFixedMultiplicity(20);
 
   if( fIsFlowCorrection ) {
     if( !DoFlattening() )
@@ -169,8 +170,8 @@ void STFlowTask::DoSubeventAnalysis()
 {
   if( ntrack[4] == 0 ) return;
   
-  STBootStrap* bs_unitP_1 = new STBootStrap(1000);
-  STBootStrap* bs_unitP_2 = new STBootStrap(1000);
+  STBootStrap* bs_unitP_1 = new STBootStrap(1);
+  STBootStrap* bs_unitP_2 = new STBootStrap(1);
 
   UInt_t np = ntrack[4];
   if(np%2 == 1) np++;
@@ -233,6 +234,107 @@ void STFlowTask::DoSubeventAnalysis()
   delete bs_unitP_2;
   
 }
+
+void STFlowTask::DoSubeventAnalysisFixedMultiplicity(UInt_t val)
+{
+  if( ntrack[4] < val+5 ) return;
+  
+  STBootStrap* bs_unitP_1 = new STBootStrap(1);
+  STBootStrap* bs_unitP_2 = new STBootStrap(1);
+
+
+  UInt_t totaltrack = tpcParticle->GetEntries();
+  const UInt_t npart = val;
+
+  UInt_t *index = RandumPickUp(val, totaltrack);
+
+  UInt_t *rndArray = new UInt_t[npart];
+  rndArray = RandomDivide2(npart);
+
+  STParticle *apart = NULL;
+
+  UInt_t itrack = 0;
+  
+  for( UInt_t i = 0; i < (UInt_t)totaltrack; i++ ) {
+  
+    apart = (STParticle*)tpcParticle->At( *(index+i) );
+    
+    if( apart->GetReactionPlaneFlag() %2 == 1 ) {
+
+      Double_t wt = apart->GetRPWeight();
+      TVector2 ptr= apart->GetRotatedPt().Unit();
+      
+      if( rndArray[itrack] == 0 ) {
+
+	fflowinfo->unitP_1 += wt * TVector3(ptr.X(), ptr.Y(), 0.);
+	LOG(DEBUG) << " sub 1 " << fflowinfo->unitP_1.X()  
+		   << " + "     << wt * ptr.X()
+		   << " : "     << apart->GetReactionPlaneFlag()
+		   << FairLogger::endl;
+
+	if( fIsBootStrap )
+	  bs_unitP_1->Add(wt * ptr);
+	
+	apart->AddReactionPlaneFlag(100);
+	fflowinfo->mtrack_1++;
+      }
+      else  {
+	fflowinfo->unitP_2+= wt * TVector3(ptr.X(), ptr.Y(), 0.);
+	LOG(DEBUG) << " sub 2    " << fflowinfo->unitP_2.X()  
+		   << " + "     << wt * ptr.X()
+		   << " : "     << apart->GetReactionPlaneFlag()
+		   << FairLogger::endl;
+	if( fIsBootStrap )
+	  bs_unitP_2->Add(wt * ptr);
+	
+	apart->AddReactionPlaneFlag(200);
+	fflowinfo->mtrack_2++;
+      }
+
+      itrack++;
+      if( itrack > npart ) break;
+    }
+  }
+
+  if(fIsBootStrap && fflowinfo->mtrack_1 > 0 && fflowinfo->mtrack_2 > 0 ) {
+    bs_unitP_1->BootStrapping();
+    bs_unitP_2->BootStrapping();
+  }
+
+  DoFlatteningSub();
+
+
+  delete bs_unitP_1;
+  delete bs_unitP_2;
+  
+}
+
+UInt_t *STFlowTask::RandumPickUp(const UInt_t val, const UInt_t npart)
+{
+  Float_t vsort[npart];
+  
+  rnd.RndmArray(npart, vsort);
+  
+  std::vector< std::pair< Float_t, UInt_t > > psort;
+
+  for( UInt_t i = 0; i < npart; i++ )    
+    psort.push_back( std::make_pair(vsort[i], i) );
+
+  std::sort( psort.begin(), psort.end() );
+
+  std::vector< UInt_t > idxsort;
+  for( UInt_t i = 0; i < npart; i++ ) 
+    idxsort.push_back( psort[i].second ); 
+
+  std::sort( idxsort.begin(), idxsort.end() );
+
+  UInt_t *index = new UInt_t[npart];
+  for( UInt_t i = 0; i < npart; i++ ) 
+    *(index + i) = idxsort[i];
+  
+  return index;
+}
+
 UInt_t *STFlowTask::RandomDivide2(const UInt_t npart)
 {
   UInt_t  *rndarray = new UInt_t[npart];

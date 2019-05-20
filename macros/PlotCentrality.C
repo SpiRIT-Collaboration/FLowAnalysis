@@ -4,13 +4,13 @@
 //-- plot configuration
 //--------------------------------------------------
   // --> Plotting selection
-Bool_t bsys[]  = { 1, 1, 1, 1};
+Bool_t bsys[]  = { 1, 0, 0, 0};
 Bool_t bpid[]  = { 0, 0, 0, 0, 0, 0, 1}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 3;
 
-UInt_t  bver[]  = { 1, 0, 0, 0};
-TString sVer[]  = {".v25.0.1",".v25.0.2", ".v25.0.3", ".v25.0.4", ".v23.1.13",".AMD:"};
+UInt_t  bver[]  = { 1, 1, 1, 0};
+TString sVer[]  = {".v25.0.5",".v27.0", ".v27.1.0", ".v25.0.4", ".v23.1.13",".AMD:"};
 TString sName   = "mlt_"; //"cosYPt_132Sn_";
 TString bName[] = {"132Sn","108Sn","124Sn","112Sn"};
 
@@ -95,6 +95,13 @@ void PlotCentrality()
 
       mcos2->Add( hgv_mcos2 );      
       lgr2 ->AddEntry( hgv_mcos2, label, "lp");
+
+
+      if( fname == "data/mlt_132Sn.v27.0.root" ||
+	  fname == "data/mlt_132Sn.v27.1.0.root") {
+	hgv_mcos1->RemovePoint(9);
+	hgv_mcos2->RemovePoint(9);
+      }
       
       //      fOpen->Close();
       ip++;
