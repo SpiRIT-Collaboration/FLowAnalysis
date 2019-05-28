@@ -1,21 +1,42 @@
 #include "DoFlow.h"
 
+struct gplot{
+  TString Version;
+  TString fileHeader;
+  TString comment;
+};
+
+
 //==================================================
 //-- plot configuration
 //--------------------------------------------------
   // --> Plotting selection
-Bool_t bsys[]  = { 1, 1, 1, 1};
+Bool_t bsys[]  = { 1, 0, 0, 0};
 Bool_t bpid[]  = { 0, 0, 0, 0, 0, 0, 1}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
-
-UInt_t  bver[]  = { 1, 0, 0, 0};
-TString sVer[]  = {".v25.0.6",".v26.2", ".v26.3", ".v25.0.6", ".v23.1.13",".AMD:"};
-TString cmnt[]  = {"","m75-0","m75-28","m75-35",""};
-TString sName   = "cosYPt_"; //"cosYPt_132Sn_";
 TString bName[] = {"132Sn_","108Sn_","124Sn_","112Sn_"};
 
-Bool_t amdEOS[]= {0, 0};
+UInt_t  bver[]  = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
+gplot gnames[] = { 
+  {".v25.0.8"  ,"cosYPt_","all"} ,
+  {".v25.0.9"  ,"cosYPt_","m55-80"} ,
+  {".v25.0.10" ,"cosYPt_","m45-55"} ,
+  {".v25.0.11" ,"cosYPt_","m30-45"} ,
+  {".v25.0.12" ,"cosYPt_","m20-30"} ,
+  {".v25.0.13" ,"cosYPt_","m0-20"} ,
+  {".v26.8"    ,"advYPt_","adv m75-45"} ,
+  {".v26.9"    ,"advYPt_","adv m45-30"} ,
+  {".v26.10"   ,"advYPt_","adv m30-20"} 
+};
+
+
+TString sVer[nmax];
+TString sName[nmax];
+TString cmnt[nmax];
+
+Bool_t  amdEOS[]= {0, 0};
 TString amdName[] = {"SLy4",
 		     "SLy4-L108"};
 
@@ -60,6 +81,13 @@ void PlotPtDependence()
 {
   gStyle->SetOptStat(0);
 
+  for(UInt_t i = 0; i < nmax; i++){
+    if( bver[i] ) {
+      sVer[i]  = gnames[i].Version;
+      sName[i] = gnames[i].fileHeader;
+      cmnt[i]  = gnames[i].comment;
+    }
+  }
 
   Bool_t bplot = 0;
   TString ltitle;
@@ -70,27 +98,37 @@ void PlotPtDependence()
   std::vector< std::vector< UInt_t >> index(5);
 
 
-  TGraphErrors *g_slope[4][6];
-  TGraphErrors *g_v2cm[4][6];
-  TGraphErrors *g_v1slp[4];
-  TGraphErrors *g_v2mid[4];
+  TGraphErrors *g_v1slp = new TGraphErrors();
+  g_v1slp->SetName("g_v1slp");
+  g_v1slp->SetTitle("; Multiplicity; slope of v1");
+
+
+  TGraphErrors *g_v2max = new TGraphErrors();
+  g_v2max->SetName("g_v2max");
+  g_v2max->SetTitle(";multiplicity; v2_max");
+
+
+  // Rapidity dependence 
+  auto mrv1  = new TMultiGraph("mrv1"  ,";Rapidity; v1");
+  auto mrv2  = new TMultiGraph("mrv2"  ,";Rapidity; v2");
+  auto mv1sl = new TMultiGraph("mv1sl" ,";Centrality; v1 slope");
+  auto mv1slp= new TMultiGraph("mv1slp","; Particle ; v1 slope");
+  //  mv1slp->GetXaxis()->SetAlphanumeric(kTRUE);
+
+  auto lgr1 = new TLegend(0.54, 0.13, 0.87, 0.4, ""); 
+  auto lgr2 = new TLegend(0.38, 0.68, 0.75, 0.9, "");
+  auto lgr3 = new TLegend(0.35, 0.13, 0.7, 0.33, "");
+  auto lgr4 = new TLegend(0.15, 0.63, 0.5, 0.85, "");
+  auto lgr5 = new TLegend(0.15, 0.63, 0.5, 0.85, "");
+  auto lgr6 = new TLegend(0.72, 0.72, 0.94, 0.88,"");
+  auto lgr7 = new TLegend(0.16, 0.70, 0.46, 0.85,"");
+  auto lgr8 = new TLegend(0.16, 0.70, 0.46, 0.85,"");
   
 
   for(UInt_t is = 0; is < 4; is++){
-    g_v1slp[is] = new TGraphErrors();
-    g_v1slp[is]->SetName( Form("g_v1slp%d",is) );
-
-    g_v2mid[is] = new TGraphErrors();
-    g_v2mid[is]->SetName( Form("g_v2mid%d",is) );
 
     for(UInt_t ip = 0; ip < (UInt_t)sizeof(bpid)/sizeof(Bool_t); ip++){
 
-      g_slope[is][ip] = new TGraphErrors();
-      g_slope[is][ip] ->SetName( Form("g_slope_%d%d",is,ip) );
-      g_v2cm[is][ip]  = new TGraphErrors();
-      g_v2cm[is][ip]  ->SetName( Form("g_v2cm_%d%d",is,ip) );
-      
-      
       if( !bsys[is] || !bpid[ip] ) continue;
 
       for(UInt_t it = 0; it < (UInt_t)sizeof(bcnt)/sizeof(Bool_t); it++){
@@ -101,7 +139,7 @@ void PlotPtDependence()
 	  
 	  if( bver[iz] == 0 ) continue;
 
-	  fname.push_back( "data/"+ sName + bName[is] + fpid[ip] + sVer[iz] + ".root" );
+	  fname.push_back( "data/"+ sName[iz] + bName[is] + fpid[ip] + sVer[iz] + ".root" );
 
 	  std::cout << fname.at(ngr) << std::endl;
 	  ltitle = "";
@@ -164,26 +202,6 @@ void PlotPtDependence()
   TFile *fOpen;
 
 
-  // Rapidity dependence 
-  auto mrv1  = new TMultiGraph("mrv1"  ,";Rapidity; v1");
-  auto mrv2  = new TMultiGraph("mrv2"  ,";Rapidity; v2");
-  auto mv1sl = new TMultiGraph("mv1sl" ,";Centrality; v1 slope");
-  auto mv1slp= new TMultiGraph("mv1slp","; Particle ; v1 slope");
-  //  mv1slp->GetXaxis()->SetAlphanumeric(kTRUE);
-  auto mv2cm = new TMultiGraph("mv2cm" ,";Centrality; v2 at Y_cm");
-  auto mv2mid= new TMultiGraph("mv2mid","; Particle ; v2 at Y_cm");
-
-
-
-  auto lgr1 = new TLegend(0.54, 0.13, 0.87, 0.4, ltitle); 
-  auto lgr2 = new TLegend(0.38, 0.68, 0.75, 0.9, ltitle);
-  auto lgr3 = new TLegend(0.35, 0.13, 0.7, 0.33, ltitle);
-  auto lgr4 = new TLegend(0.15, 0.63, 0.5, 0.85, ltitle);
-  auto lgr5 = new TLegend(0.15, 0.63, 0.5, 0.85, ltitle);
-  auto lgr6 = new TLegend(0.72, 0.72, 0.94, 0.88,ltitle);
-  auto lgr7 = new TLegend(0.16, 0.70, 0.46, 0.85,ltitle);
-
-
   // Pt dependence
   for(UInt_t k = 0; k < ybin1; k++){
     mv1[k]  = new TMultiGraph((TString)Form("mv1%d",k),  rapRange[k]+";Pt [MeV/c]; v1");
@@ -200,7 +218,8 @@ void PlotPtDependence()
 
 
   //  UInt_t id = 1;
-
+  UInt_t islp = 0;
+  UInt_t isp = 0;
   UInt_t iss = 9;
   UInt_t ipp = 0;
   Color_t icolor = 100; 
@@ -229,7 +248,7 @@ void PlotPtDependence()
       icolor -= 2;
 
     cout << igr  << " " << ip << " color " << icolor << endl;
-    TString otitle = rsys[is]+"Sn "+fpid[ip]+sVer[iz]+";"+cmnt[iz];
+    TString otitle = rsys[is]+"Sn "+fpid[ip]+sName[iz]+sVer[iz]+";"+cmnt[iz];
 
     if( igr >= ngr )
       otitle += amdHeader[is](4,5) + amdName[it];
@@ -238,90 +257,114 @@ void PlotPtDependence()
     //acceptance
     if( igr < ngr ) {
       TH1D *fevt = (TH1D*)fOpen->Get("hphi0_180");
-      UInt_t tevt = fevt->GetEntries();
+      
+      if( fevt != NULL ) {
+	UInt_t tevt = fevt->GetEntries();
 
-      TH2D *ff = (TH2D*)fOpen->Get("hyptacp");
-      ff->SetName(Form("hyptacp_%d",igr));
-
-      ff->SetTitle(otitle);
-      ff->SetDirectory(gROOT);
-
-      gROOT->cd();
-      ff->ProjectionX("_px");
-      TH1D* ff1 = (TH1D*)gROOT->Get((TString)ff->GetName()+"_px");
-    
-      Double_t xwd = (Double_t)ff1->GetXaxis()->GetNbins()/(ff1->GetXaxis()->GetXmax() - ff1->GetXaxis()->GetXmin());
-    
-      if( fpid[ip] == "neutron" )
-	ff1->Scale( xwd / tevt /0.26);
-      else
-	ff1->Scale(xwd / tevt);
-
-      ff1->SetTitle("; Y_{cm}; dN/dy");
-      ff1->SetLineColor(icolor);
-      lgr3->AddEntry(ff1, otitle );
+	TH2D *ff = (TH2D*)fOpen->Get("hyptacp");
+	ff->SetName(Form("hyptacp_%d",igr));
+	
+	ff->SetTitle(otitle);
+	ff->SetDirectory(gROOT);
+	
+	gROOT->cd();
+	ff->ProjectionX("_px");
+	TH1D* ff1 = (TH1D*)gROOT->Get((TString)ff->GetName()+"_px");
+	
+	Double_t xwd = (Double_t)ff1->GetXaxis()->GetNbins()/(ff1->GetXaxis()->GetXmax() - ff1->GetXaxis()->GetXmin());
+	
+	if( fpid[ip] == "neutron" )
+	  ff1->Scale( xwd / tevt /0.26);
+	else
+	  ff1->Scale(xwd / tevt);
+	
+	ff1->SetTitle("; Y_{cm}; dN/dy");
+	ff1->SetLineColor(icolor);
+	lgr3->AddEntry(ff1, otitle );
+      }
     }
 
     fOpen->cd();
-    
+
+    //------------------------------    
     // rapidity dependence
+    TH1I *hmult = (TH1I*)fOpen->Get("hmult");
+
     TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gv_v1");
     
-    //    RemoveYPoint(yv1);
+    if( yv1 != NULL ) {
+    
+      //    RemoveYPoint(yv1);
 
-    yv1->SetMarkerColor(icolor);
+      yv1->SetMarkerColor(icolor);
 
-    cout << "imark[" << is << "] " << imark[is] << endl;
-    yv1->SetMarkerStyle(imark[is]);
-    if( ip == 5 )
-      yv1->SetMarkerStyle(imark[is]+4);
-    yv1->SetMarkerSize(imsz[is]);
-    yv1->SetLineColor(icolor);
+      cout << "imark[" << is << "] " << imark[is] << endl;
+      yv1->SetMarkerStyle(imark[is]);
+      if( ip == 5 )
+	yv1->SetMarkerStyle(imark[is]+4);
+      yv1->SetMarkerSize(imsz[is]);
+      yv1->SetLineColor(icolor);
 	  
     
-    mrv1->Add(yv1,"lp");
-    lgr1->AddEntry(yv1,  otitle ,"lp");
+      mrv1->Add(yv1,"lp");
+      lgr1->AddEntry(yv1,  otitle ,"lp");
 
 
-    //slope
-    yv1->Fit("lslope","Q0","",-0.11,0.2);
-    Double_t constlslope = lslope->GetParameter(0);
-    Double_t slope = lslope->GetParameter(1);
-    Double_t slopee= lslope->GetParError(1);
+      //slope
+      if( hmult != NULL ) {
+	Double_t mmean = hmult->GetMean();
+	Double_t mstd  = hmult->GetStdDev();
 
-    g_slope[is][ip]->SetPoint(it, (Double_t)it+1+0.05*is, slope);
-    g_slope[is][ip]->SetPointError(it, 0., slopee);
+	yv1->Fit("lslope","Q0","",-0.11,0.2);
+	Double_t constlslope = lslope->GetParameter(0);
+	Double_t slope = lslope->GetParameter(1);
+	Double_t slopee= lslope->GetParError(1);
 
-    g_v1slp[is]->SetPoint(ipp, ip+1, slope);
-    g_v1slp[is]->SetPointError(ipp,  0, slopee);
-    
+	g_v1slp -> SetPoint(islp, mmean, slope);
+	g_v1slp -> SetPointError(islp, mstd, slopee);
+	
+	islp++;
+      }
+    }
+
     //--- y vs v2 ---
     TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gv_v2");
-    //    ShiftX(yv2, 0.01*iz);
-    //    RemoveYPoint(yv2);
 
-    yv2->SetMarkerColor(icolor);
-    yv2->SetMarkerStyle(imark[is]);
-    if( ip == 5 )
-      yv2->SetMarkerStyle(imark[is]+4);
-    yv2->SetMarkerSize(imsz[is]);
-    yv2->SetLineColor(icolor);
+    if( yv2 != NULL ) {
+      //    ShiftX(yv2, 0.01*iz);
+      //    RemoveYPoint(yv2);
 
-    mrv2->Add(yv2,"lp");
-    lgr2->AddEntry(yv2,  otitle ,"lp");
-    // --end of rapidity dependence
+      yv2->SetMarkerColor(icolor);
+      yv2->SetMarkerStyle(imark[is]);
+      if( ip == 5 )
+	yv2->SetMarkerStyle(imark[is]+4);
+      yv2->SetMarkerSize(imsz[is]);
+      yv2->SetLineColor(icolor);
 
-    Double_t v2x, v2y, v2xe;
-    yv2->GetPoint(1, v2x, v2y);
-    v2xe = yv2->GetErrorY(1);
-    g_v2cm[is][ip]->SetPoint(it, (Double_t)it+1+0.05*is, v2y);
-    g_v2cm[is][ip]->SetPointError(it, 0., v2xe);
+      mrv2->Add(yv2,"lp");
+      lgr2->AddEntry(yv2,  otitle ,"lp");
+      // --end of rapidity dependence
 
-    g_v2mid[is]->SetPoint(ipp, ip+1, v2y);
-    g_v2mid[is]->SetPointError(ipp, 0., v2xe); ipp++;
 
-    cout << fsys[is] << " : " << fpid[ip] << " -> " << v2y << " +- " << v2xe << " @ " << ipp <<  endl;
+      
+      if( hmult != NULL ) {
+	Double_t mmean = hmult->GetMean();
+	Double_t mstd  = hmult->GetStdDev();
 
+	Double_t v2x, v2y, v2xe;
+	UInt_t imx = 3;
+	yv2->GetPoint(imx, v2x, v2y);
+	Double_t v2ye = yv2->GetErrorY(imx);
+
+	g_v2max->SetPoint(isp , mmean, v2y);
+	g_v2max->SetPointError(isp, mstd, v2ye);
+	isp++;
+      }
+    }
+
+    //--------------------------------------------------
+    // plotting
+    //--------------------------------------------------
     // Pt dependence 
     for(UInt_t k = 0; k < ybin1; k++){
 
@@ -369,6 +412,9 @@ void PlotPtDependence()
 	
     fOpen->Close();
   }
+
+
+
 
   if( bplot || kFALSE ) {
     ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
@@ -475,60 +521,6 @@ void PlotPtDependence()
   }
 
 
-  for(UInt_t is = 0; is < 4; is++){
-
-    for(UInt_t ip = 0; ip < 4; ip++){
-      TString otitle = rsys[is]+"Sn "+fpid[ip];
-
-      UInt_t icolor = (icol[is] + 4*ip);
-      if( g_slope[is][ip]->GetN() > 0 ) {
-	g_slope[is][ip]->SetMarkerStyle(imark[is]);
-	g_slope[is][ip]->SetMarkerColor(icol[is]+2*ip);
-	g_slope[is][ip]->SetLineColor(icol[is]+2*ip);
-	mv1sl->Add(g_slope[is][ip],"lp");      
-	
-	lgr4->AddEntry(g_slope[is][ip], otitle, "lp");
-      }
-
-      if( g_v2cm[is][ip]->GetN() > 0) {
-	g_v2cm[is][ip]->SetMarkerStyle(imark[is]);
-	g_v2cm[is][ip]->SetMarkerColor(icol[is]+2*ip);
-	g_v2cm[is][ip]->SetLineColor(icol[is]+2*ip);
-	mv2cm->Add(g_v2cm[is][ip],"lp");      
-
-	lgr5->AddEntry(g_v2cm[is][ip], otitle, "lp");
-      }
-    }
-    
-    if( g_v1slp[is]->GetN() > 0 ){
-      g_v1slp[is]->SetMarkerStyle(imark[is]);
-      g_v1slp[is]->SetMarkerColor(icol[is]);
-      g_v1slp[is]->SetLineColor(icol[is]);
-      mv1slp->Add(g_v1slp[is], "lp");
-      lgr7->AddEntry(g_v1slp[is], rsys[is]+"Sn","lp");
-    }
-
-    if( g_v2mid[is]->GetN() > 0) {
-      g_v2mid[is]->SetMarkerStyle(imark[is]);
-      g_v2mid[is]->SetMarkerColor(icol[is]);
-      g_v2mid[is]->SetLineColor(icol[is]);
-      mv2mid->Add(g_v2mid[is],"lp");      
-      lgr6->AddEntry(g_v2mid[is], rsys[is]+"Sn", "lp");
-    }
-
-
-    mv1slp->GetXaxis()->SetLimits(0.5, 5.5);
-    mv2mid->GetXaxis()->SetLimits(0.5, 5.5);
-    for( UInt_t ippp = 0; ippp < 5; ippp++ ) {
-      mv1slp->GetXaxis()->SetBinLabel(mv1slp->GetXaxis()->FindBin(ippp+1.), fpid[ippp]);
-      mv2mid->GetXaxis()->SetBinLabel(mv2mid->GetXaxis()->FindBin(ippp+1.), fpid[ippp]);
-    }
-    mv1slp->GetXaxis()->LabelsOption("h");
-    mv2mid->GetXaxis()->LabelsOption("h");
-
-  }
-
-
   if( bplot || kFALSE) {
     //for NN v1-pt
     gStyle->SetPadRightMargin(0.05);
@@ -537,10 +529,6 @@ void PlotPtDependence()
     gStyle->SetTitleYSize(0.04);
     gStyle->SetTitleYOffset(1.1);
 
-    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
-    mv2mid->GetYaxis()->SetRangeUser(-0.06, -0.01);
-    mv2mid->Draw("ALP");
-    lgr6->Draw();
 
     ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
     mv1slp->Draw("ALP");
@@ -616,6 +604,16 @@ void PlotPtDependence()
     lg1[5]->SetY2NDC(0.40);
     lg1[5]->Draw();
   }
+
+  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+  g_v2max->SetMarkerStyle(20);
+  g_v2max->SetMarkerColor(2);
+  g_v2max->Draw("AP");
+
+  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+  g_v1slp->SetMarkerStyle(20);
+  g_v1slp->SetMarkerColor(2);
+  g_v1slp->Draw("AP");
   
 }
 

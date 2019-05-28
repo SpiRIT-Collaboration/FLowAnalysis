@@ -3,7 +3,6 @@ source setup.sh
 
 DB=BTt
 VERSION=25.0
-OVER=
 export SPID=2
 export runOne='RUN={"2841"} SUFX=$DB  VER=$VERSION root DoFlow.C'
 
@@ -40,13 +39,13 @@ function exec112()
     UC=2 LC=3 RUN={$RNF112} SUFX=$DB  VER=$VERSION root -b -q DoFlow.C\($SPID\) 
 }
 
-export SPID=2
+export SPID=8
 function exec4() 
 {
-    UC=1 LC=2 RUN={$RNF132} SUFX=$DB  VER=$VERSION root -b -q DoFlow.C\($SPID\) 
-    UC=1 LC=2 RUN={$RNF108} SUFX=$DB  VER=$VERSION root -b -q DoFlow.C\($SPID\) 
-    UC=1 LC=2 RUN={$RNF124} SUFX=$DB  VER=$VERSION root -b -q DoFlow.C\($SPID\) 
-    UC=1 LC=2 RUN={$RNF112} SUFX=$DB  VER=$VERSION root -b -q DoFlow.C\($SPID\) 
+#    UC=0 LC=80 RUN={$RNF132} SUFX=$DB  VER=$VERSION OUTVER=8 root -b -q DoFlow.C\($SPID\) 
+    LC=0 UC=80 RUN={$RNF108} SUFX=$DB  VER=$VERSION OUTVER=8 root -b -q DoFlow.C\($SPID\) 
+    LC=0 UC=80 RUN={$RNF124} SUFX=$DB  VER=$VERSION OUTVER=8 root -b -q DoFlow.C\($SPID\) 
+    LC=0 UC=80 RUN={$RNF112} SUFX=$DB  VER=$VERSION OUTVER=8 root -b -q DoFlow.C\($SPID\) 
 }
 
 export RNF={$RNF112}

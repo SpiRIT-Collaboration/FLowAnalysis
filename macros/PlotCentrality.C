@@ -9,9 +9,9 @@ Bool_t bpid[]  = { 0, 0, 0, 0, 0, 0, 1}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 3;
 
-UInt_t  bver[]  = { 1, 1, 1, 0};
-TString sVer[]  = {".v25.0.5",".v27.0", ".v27.1.0", ".v25.0.4", ".v23.1.13",".AMD:"};
-TString sName   = "mlt_"; //"cosYPt_132Sn_";
+UInt_t  bver[]  = { 1, 1, 0, 0};
+TString sVer[]  = {".v25.0.5",".v26.5", ".v27.1.0", ".v25.0.4", ".v23.1.13",".AMD:"};
+TString sName[] = {"mlt_"    ,"mlt_"  ,  "mlt"    ,  "mlt"    ,  "mlt"     ,"mlt"}; //"cosYPt_132Sn_";
 TString bName[] = {"132Sn","108Sn","124Sn","112Sn"};
 
 Bool_t amdEOS[]= {0, 0};
@@ -61,7 +61,7 @@ void PlotCentrality()
       if( !bver[iz] ) continue;
 
       TString label = bName[is] + sVer[iz];
-      TString fname = "data/"+ sName + label + ".root";
+      TString fname = "data/"+ sName[iz] + label + ".root";
 
       fOpen = TFile::Open(fname);
     

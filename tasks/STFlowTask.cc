@@ -116,8 +116,8 @@ void STFlowTask::FinishEvent()
   DoIndividualReactionPlaneAnalysis();
 
   if( fIsSubeventAnalysis ) 
-    //    DoSubeventAnalysis();
-    DoSubeventAnalysisFixedMultiplicity(20);
+    DoSubeventAnalysis();
+  //DoSubeventAnalysisFixedMultiplicity(20);
 
   if( fIsFlowCorrection ) {
     if( !DoFlattening() )
