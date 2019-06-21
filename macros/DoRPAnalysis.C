@@ -31,6 +31,10 @@ void DoRPAnalysis(Long64_t nmax = -1)
     if( !abeamInfo->GetBeamPID() ) continue;
 
     auto aFlowInfo = (STFlowInfo*)aFlowArray->At(0);
+
+    if( aFlowInfo->beamPID == 124 ){
+      if( (aFlowInfo->mtrack1*0.8-20) > aFlowInfo->mtrack4 || aFlowInfo->mtrack4 < 5) continue;
+    }
     
 
     fflowtask->SetFlowInfo( aFlowInfo );

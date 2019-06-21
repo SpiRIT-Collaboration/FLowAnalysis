@@ -37,7 +37,7 @@ STFlowInfo::STFlowInfo(const STFlowInfo &cp)
   unitP_1fc= cp.unitP_1fc;
   unitP_2fc= cp.unitP_2fc;
   mtrack_1 = cp.mtrack_1;
-  mtrack_2 = cp.mtrack_1;
+  mtrack_2 = cp.mtrack_2;
   
   for(UInt_t i = 0; i < 3; i++) {
     bsPhi[i]   = cp.bsPhi[i];

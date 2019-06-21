@@ -183,6 +183,9 @@ void STFlowTask::DoSubeventAnalysis()
   STParticle *apart = NULL;
 
   UInt_t itrack = 0;
+
+  LOG(DEBUG) << " ntrack[4] " << ntrack[4] << FairLogger::endl;
+
   while( (apart = (STParticle*)next() ) ) {
     
     if( apart->GetReactionPlaneFlag() %2 == 1 ) {
@@ -190,6 +193,7 @@ void STFlowTask::DoSubeventAnalysis()
       TVector2 ptr= apart->GetRotatedPt().Unit();
 
       if( rndArray[itrack] == 0 ) {
+        apart->AddReactionPlaneFlag(100);
 
         fflowinfo->unitP_1 += wt * TVector3(ptr.X(), ptr.Y(), 0.);
 	LOG(DEBUG) << " sub 1 " << fflowinfo->unitP_1.X()  
@@ -200,10 +204,11 @@ void STFlowTask::DoSubeventAnalysis()
         if( fIsBootStrap )
           bs_unitP_1->Add(wt * ptr);
 
-        apart->AddReactionPlaneFlag(100);
         fflowinfo->mtrack_1++;
       }
       else  {
+        apart->AddReactionPlaneFlag(500);
+
         fflowinfo->unitP_2+= wt * TVector3(ptr.X(), ptr.Y(), 0.);
 	LOG(DEBUG) << " sub 2    " << fflowinfo->unitP_2.X()  
 		   << " + "     << wt * ptr.X()
@@ -212,7 +217,6 @@ void STFlowTask::DoSubeventAnalysis()
         if( fIsBootStrap )
           bs_unitP_2->Add(wt * ptr);
 
-        apart->AddReactionPlaneFlag(200);
         fflowinfo->mtrack_2++;
       }
 
@@ -221,6 +225,7 @@ void STFlowTask::DoSubeventAnalysis()
 
     }
   }
+
 
   if(fIsBootStrap && fflowinfo->mtrack_1 > 0 && fflowinfo->mtrack_2 > 0 ) {
     bs_unitP_1->BootStrapping();
@@ -338,11 +343,17 @@ UInt_t *STFlowTask::RandumPickUp(const UInt_t val, const UInt_t npart)
 UInt_t *STFlowTask::RandomDivide2(const UInt_t npart)
 {
   UInt_t  *rndarray = new UInt_t[npart];
+  UInt_t nmax = npart;
+
+  if( npart%2 == 1 ) {
+    nmax = npart -1 ;
+    rndarray[npart-1] = 0;
+  }
 
   UInt_t c1 = 0;
   UInt_t c2 = 0;
   UInt_t count = 0;
-  while( count < npart ){
+  while( count < nmax ){
 
     Float_t rrd = rnd.Rndm() ;
 
@@ -394,11 +405,7 @@ void STFlowTask::SetupFlow(STParticle &apart)
   if( pid == 211 )
     apart.SetReactionPlaneFlag(10);
 
-  else if( pid > 2000 &&
-           apart.GetGoodTrackFlag()     > 0 &&
-           apart.GetdEdxFlag()          > 0 &&
-           apart.GetMomentumFlag()      > 0
-           ) {
+  else if( pid > 2000 &&  apart.GetFromTargetFlag() ) { //fTargetf = fVatTargetf*fdistanceatvertexf;
     apart.SetReactionPlaneFlag(1000);
 
     if(apart.GetNDFFlag())
@@ -580,9 +587,7 @@ Bool_t STFlowTask::SetupFlowDataBase()
     fname[1] = SNA + ".v"+sVer+".subpsi1.";;
     ncount++;
   }
-
   
-
   for(UInt_t i = 0; i < TMath::Min(ncount, 2); i++){
     LOG(INFO) << " Database name is " << fname[i]  << " / " << ncount << " ( " << fIsSubeventAnalysis << FairLogger::endl;
 

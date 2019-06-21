@@ -299,6 +299,25 @@ void STSpiRITTPCTask::SetupEventInfo()
   ProjA   = fBDC->GetProjA();
   ProjB   = fBDC->GetProjB();  
 
+  BeamIndex = 5;
+  if( BeamPID > 0 ){
+    switch(BeamPID) {
+    case 132:
+      BeamIndex = 0;
+      break;
+    case 108:
+      BeamIndex = 1;
+      break;
+    case 124:
+      BeamIndex = 2;
+      break;
+    case 112:
+      BeamIndex = 3;
+      break;
+    }
+  }
+
+
   if( fIsFlowAnalysis && fflowinfo != nullptr) 
     fflowtask->SetupEventInfo(fEventID, fBDC);
 
@@ -308,23 +327,34 @@ void STSpiRITTPCTask::SetupEventInfo()
 
 void STSpiRITTPCTask::SetupTrackQualityFlag(STParticle *apart) 
 {
-  if( apart->GetP() == 0 || apart->GetP() > 3100 )
-    apart->SetMomentumFlag(0);
+  // if( apart->GetP() == 0 || apart->GetP() > 3100 )
+  //   apart->SetMomentumFlag(0);
 
-  if( apart->GetdEdx() <= 0. )
-    apart->SetdEdxFlag(0);
+  // if( apart->GetdEdx() <= 0. )
+  //   apart->SetdEdxFlag(0);
+
+  // if( apart->GetDistanceAtVertex() > 20 )
+  //   apart->SetDistanceAtVertexFlag(0);
+
+  // if( abs( apart->GetVertex().Z() + 13.1 ) > 1.7*3. )
+  //   apart->SetVertexAtTargetFlag(0);
+
+  // if( apart->GetNDF() < 20) 
+  //   apart->SetNDFFlag(0);
 
 
-  if( apart->GetDistanceAtVertex() > 20 )
+  // Kaneko-kun's Definition since 30 May 2019
+  if(BeamIndex < 4) {
+    if( abs( apart->GetVertex().Z() - VtxMean[BeamIndex].Z() ) > 2.*VtxSigm[BeamIndex] ||
+	abs( apart->GetVertex().X() - VtxMean[BeamIndex].X() ) > 15. ||
+	abs( apart->GetVertex().Y() - VtxMean[BeamIndex].Y() ) > 20. )
+      apart->SetVertexAtTargetFlag(0); 
+  }
+	
+  if( apart->GetDistanceAtVertex() > 10 )
     apart->SetDistanceAtVertexFlag(0);
 
-  if( apart->GetDistanceAtVertex() > 20 )
-    apart->SetDistanceAtVertexFlag(0);
-
-  if( abs( apart->GetVertex().Z() + 13.1 ) > 1.7*3. )
-    apart->SetVertexAtTargetFlag(0);
-
-  if( apart->GetNDF() < 20) 
+  if( apart->GetNDF() < 15) 
     apart->SetNDFFlag(0);
 
 }
@@ -405,12 +435,16 @@ void STSpiRITTPCTask::ProceedEvent()
       aParticle->SetBBMass(mass[0]);      
       aParticle->SetBBMassHe(mass[1]);
 
-      Int_t    pid_tight  = GetPID(mass, dEdx);
+      Int_t    pid_tight  = GetPIDTight(mass, dEdx);
+      Int_t    pid_normal = GetPIDNorm(mass, dEdx);
       Int_t    pid_loose  = GetPIDLoose(mass, dEdx);
       
       //      massFitter->GetBBMass(VMom, dEdx, Charge, massH, massHe, pid_tight, pid_loose); 
       aParticle->SetPID(pid_tight);
+      aParticle->SetPIDTight(pid_tight);
+      aParticle->SetPIDNorm(pid_normal);
       aParticle->SetPIDLoose(pid_loose);
+      
 
       LOG(DEBUG) << " mass H "  << mass[0]  << " & pid " << pid_loose << " : " << pid_tight << ": " << dEdx << FairLogger::endl;
       LOG(DEBUG) << " mass He"  << mass[1] << " & pid " << pid_loose << " : " << pid_tight  << ": " << dEdx << FairLogger::endl;
@@ -482,9 +516,9 @@ Int_t STSpiRITTPCTask::GetPIDLoose(Double_t mass[2], Double_t dedx)
     return 0;
 
   // p, d, t   
-  else if( mass[1] < MassRegionLU[4][0] && mass[0] > 0 ) {
+  else if( mass[1] < MassRegionLU_L[4][0] ) {
     for(UInt_t i = 0; i < 4; i++) {
-      if( mass[0] >= MassRegionLU[i][0] && mass[0] < MassRegionLU[i][1] ) {
+      if( mass[0] >= MassRegionLU_L[i][0] && mass[0] < MassRegionLU_L[i][1] ) {
 	STPID::PID pid = static_cast<STPID::PID>(i);
         return STPID::GetPDG(pid);
       }
@@ -493,7 +527,57 @@ Int_t STSpiRITTPCTask::GetPIDLoose(Double_t mass[2], Double_t dedx)
   // He3, He4, He6
   else if( mass[0] >= 3100 && dedx <= 700) {
     for( UInt_t i = 4; i < 7; i++ ){
-      if( mass[1] >= MassRegionLU[i][0] && mass[1] < MassRegionLU[i][1] ) {
+      if( mass[1] >= MassRegionLU_L[i][0] && mass[1] < MassRegionLU_L[i][1] ) {
+	STPID::PID pid = static_cast<STPID::PID>(i);
+        return STPID::GetPDG(pid);
+      }
+    }
+  }
+  return 0;
+}
+Int_t STSpiRITTPCTask::GetPIDTight(Double_t mass[2], Double_t dedx)
+{
+  if( mass[0] == 0 )
+    return 0;
+
+  // p, d, t   
+  else if( mass[1] < MassRegionLU_T[4][0]  ) {
+    for(UInt_t i = 0; i < 4; i++) {
+      if( mass[0] >= MassRegionLU_T[i][0] && mass[0] < MassRegionLU_T[i][1] ) {
+	STPID::PID pid = static_cast<STPID::PID>(i);
+        return STPID::GetPDG(pid);
+      }
+    }
+  }
+  // He3, He4, He6
+  else if( mass[0] >= 3100 && dedx <= 700) {
+    for( UInt_t i = 4; i < 7; i++ ){
+      if( mass[1] >= MassRegionLU_T[i][0] && mass[1] < MassRegionLU_T[i][1] ) {
+	STPID::PID pid = static_cast<STPID::PID>(i);
+        return STPID::GetPDG(pid);
+      }
+    }
+  }
+  return 0;
+}
+Int_t STSpiRITTPCTask::GetPIDNorm(Double_t mass[2], Double_t dedx)
+{
+  if( mass[0] == 0 )
+    return 0;
+
+  // p, d, t   
+  else if( mass[1] < MassRegionLU_N[4][0] ) {
+    for(UInt_t i = 0; i < 4; i++) {
+      if( mass[0] >= MassRegionLU_N[i][0] && mass[0] < MassRegionLU_N[i][1] ) {
+	STPID::PID pid = static_cast<STPID::PID>(i);
+        return STPID::GetPDG(pid);
+      }
+    }
+  }
+  // He3, He4, He6
+  else if( mass[0] >= 3100 && dedx <= 700) {
+    for( UInt_t i = 4; i < 7; i++ ){
+      if( mass[1] >= MassRegionLU_N[i][0] && mass[1] < MassRegionLU_N[i][1] ) {
 	STPID::PID pid = static_cast<STPID::PID>(i);
         return STPID::GetPDG(pid);
       }

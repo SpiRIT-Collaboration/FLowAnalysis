@@ -4,13 +4,13 @@
 //-- plot configuration
 //--------------------------------------------------
   // --> Plotting selection
-Bool_t bsys[]  = { 1, 0, 0, 0};
+Bool_t bsys[]  = { 1, 1, 1, 1};
 Bool_t bpid[]  = { 0, 0, 0, 0, 0, 0, 1}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 3;
 
-UInt_t  bver[]  = { 1, 1, 0, 0};
-TString sVer[]  = {".v25.0.5",".v26.5", ".v27.1.0", ".v25.0.4", ".v23.1.13",".AMD:"};
+UInt_t  bver[]  = { 1, 0, 0, 0};
+TString sVer[]  = {".v29.1",".v26.5", ".v27.1.0", ".v25.0.4", ".v23.1.13",".AMD:"};
 TString sName[] = {"mlt_"    ,"mlt_"  ,  "mlt"    ,  "mlt"    ,  "mlt"     ,"mlt"}; //"cosYPt_132Sn_";
 TString bName[] = {"132Sn","108Sn","124Sn","112Sn"};
 
@@ -79,6 +79,7 @@ void PlotCentrality()
 
       auto hgv_mcos1 = (TGraphErrors*)fOpen->Get("gv_mcos1");
       auto hgv_mcos2 = (TGraphErrors*)fOpen->Get("gv_mcos2");
+      
 
       hgv_mcos1 -> SetName(Form("hgv_mcos1_%d",is));
       hgv_mcos1 -> SetMarkerStyle(20);

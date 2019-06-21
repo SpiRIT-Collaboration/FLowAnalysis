@@ -53,35 +53,33 @@ source runList.sh
 ##--- for Process1 ------------------------------------
 # *****> <Edit Here>
 # Set RUNNUMBER1 
-DBVERSION=25
-VERSION=27
-MEVT=100
+DBVERSION=29
+VERSION=29
 
 
-
-function execa() {
+function execa() { ## Job for the 2841 with maximum event number =MEVT
     RUNNUMBER1="2841"
-    MXEVT=$MEVT
-    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT DBVER=$DBVERSION root run_analysis.C 
+    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MEVT DBVER=$DBVERSION root run_analysis.C 
 }
 
 
-RUNNUMBER1=(${RNF132})
+#RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
-#RUNNUMBER1=(${RNF124})
+RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RBF132} ${RNF108} ${RNF124} ${RNF112}) 
 #RUNNUMBER1=(${RNFTEMP})
 #RUNNUMBER1=(${RNF132r})
 #RUNNUMBER1=(${RNF132p})
 
-MXEVT=
-function execb() {
+MEVT=
+function execb() {  ## batch job for the first run with maxium event number = MEVT
+    echo $MEVT
     LOG=log/p1_${RUN}_v${VERSION}.log
-    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
+    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MEVT DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
 }
 
-function exec(){
+function execc(){   ## batch job from the second to the end.
     typeset -i I=1
     while(( $I < ${#RUNNUMBER1[@]} ))
     do
@@ -122,6 +120,11 @@ function exec(){
 
 #RUN=${RUNNUMBER1[0]}
 #RUN=${RUN} VER=$VERSION root -b -q run_analysis.C\(1000\)
+
+grep function run_analysis.sh
+
+#execb
+#execc
 
 
 

@@ -8,25 +8,25 @@
 source ../build/config.sh
 
 source runList.sh
-RUNNUMBER1=(${RNF132p})
-RUNNUMBER1=(${RNF132r})
-RUNNUMBER1=(${RNF108})
+#RUNNUMBER1=(${RNF132p})
+#RUNNUMBER1=(${RNF132r})
 RUNNUMBER1=(${RNF124})
-RUNNUMBER1=(${RNF112})
-RUNNUMBER1=(${RNF132})
+#RUNNUMBER1=(${RNF108})
+#RUNNUMBER1=(${RNF132})
+#RUNNUMBER1=(${RNF112})
 
-DBVERSION=27
-VERSION=27.1
+DBVERSION=29
+VERSION=29.1
 SUFX=BTt
 
 ##RUN=2841 SUFX=BTt VER=18.0 DBVER=18 root DoFlow_Analysis.C
 
-function flowcorr(){
+function flowcorr(){    ## only the first run
     RUN=${RUNNUMBER1[0]} VER=$VERSION SUFX=$SUFX DBVER=$DBVERSION root DoRPAnalysis.C\($MXEVT\)
 }
 
 
-function allflowcorr(){
+function allflowcorr(){ ## Go through from the second to the last
     typeset -i I=1
     while(( $I < ${#RUNNUMBER1[@]} ))
     do
@@ -63,3 +63,6 @@ function allflowcorr(){
 	let I++
     done
 }
+
+echo ${RUNNUMBER1[0]}
+grep function DoRPAnalysis.sh

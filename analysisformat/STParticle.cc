@@ -24,6 +24,8 @@ STParticle::STParticle(const STParticle &cp)
   
   ftrackID      = cp.ftrackID;;
   fPID          = cp.fPID;
+  fPID_tight    = cp.fPID_tight;
+  fPID_norm     = cp.fPID_norm;
   fPID_loose    = cp.fPID_loose;
   fRapidity     = cp.fRapidity;
   fRapiditycm   = cp.fRapiditycm;
@@ -128,6 +130,8 @@ void STParticle::Clear(Option_t *option)
 
   fpipid       = 0;
   fPID         = 0;
+  fPID_tight   = 0;
+  fPID_norm    = 0;
   fPID_loose   = 0;
   fNDF         = 0.;
   fclustex     = -1.;

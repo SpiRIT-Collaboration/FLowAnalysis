@@ -30,7 +30,7 @@ void     GetFittingParameters(TH1D &h1, Double_t pp[6]);
 void     GetFittingParameters(TH1D &h1, Double_t pp[6], Double_t corr[2]);
 Double_t GetRapidity_cm(TVector3 p, Double_t mass, TVector3 bvec);
 UInt_t   SetBranch();
-void     PlotCosPtDependence(UInt_t selid);
+void     PlotPtDependence(UInt_t selid);
 TString  SetupOutputFile(TString fopt);
 
 Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180);
@@ -85,18 +85,18 @@ void DoFlow(UInt_t isel = 2)
 
   //==================================================
 
-  PlotCosPtDependence(isel);  
+  PlotPtDependence(isel);  
 
 }
 
 
 //pdt
-void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
+void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 {
   gStyle->SetOptStat(0);
 
 
-  std::cout << "PlotCosPtDependence(" << selid << ")" << std::endl;
+  std::cout << "PlotPtDependence(" << selid << ")" << std::endl;
   // PT binning
   Double_t pt_max = 800.;
   UInt_t   nbin1  = 10; //16
@@ -167,8 +167,6 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   std::vector< std::vector< Double_t > > cosv1x(ybin1);
   std::vector< std::vector< Double_t > > dphiv2(ybin2);
   std::vector< std::vector< Double_t > > cosv2x(ybin2);
-  Double_t  cosv1[ybin1];
-  Double_t  cosv2[ybin2];
   Double_t  sinv1[ybin1];
   Double_t  sinv2[ybin2];
 
@@ -178,14 +176,12 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   Double_t  cosv1pt[ybin1][nbin1];
   Double_t  sinv1pt[ybin1][nbin1];
   for( UInt_t i = 0; i < ybin1; i++) {
-    cosv1[i]   = 0.;
-    sinv1[i]   = 0.;
     cosv1x[i].clear();
     dphiv1[i].clear();
     cosv1ptx[i].resize(nbin1);
 
     hyphi1[i] = new TH1D( Form("hyphi1_%d",i),rangeLabel1[i]+"#De #Phi"   , npb, -3.15, 3.15);
-    hypt1[i] = new TH1D( Form("hypt1_%d",i), rangeLabel1[i]+"; Pt", 100, 0., 800.);
+    hypt1[i]  = new TH1D( Form("hypt1_%d",i), rangeLabel1[i]+"; Pt", 100, 0., 800.);
 
     for( UInt_t j = 0; j < nbin1; j++ ){
       cosv1pt[i][j] = 0.;
@@ -201,8 +197,6 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   Double_t  cosv2pt[ybin2][nbin2];
   Double_t  sinv2pt[ybin2][nbin2];
   for( UInt_t i = 0; i < ybin2; i++) {
-    cosv2[i]   = 0.;
-    sinv2[i]   = 0.;
     cosv2x[i].clear();
     dphiv2[i].clear();
     cosv2ptx[i].resize(nbin2);
@@ -272,6 +266,8 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 	auto phi   = aPart->GetRotatedMomentum().Phi();
 	auto theta = aPart->GetRotatedMomentum().Theta();
 
+	if( pt < 120. ) continue;
+
 	hazm     ->Fill( phi );	
 	hmass    ->Fill( aPart->GetRotatedMomentum().Mag(), bmass);
 	
@@ -293,11 +289,8 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 	
 	hyphi1[irapid]->Fill(dphi);
 	hypt1[irapid] ->Fill(aPart->GetRotatedMomentum().Pt());
-	cosv1x[irapid].push_back( rapid );
+	cosv1x[irapid].push_back( rapid/y_cm[isys] );
 	dphiv1[irapid].push_back( cos(dphi) );
-
-	cosv1[irapid] += cos(dphi);
-	sinv1[irapid] += sin(dphi);
 
 	UInt_t ipt = nbin1 - 1;
 	for(UInt_t i = 0; i < nbin1; i++){
@@ -313,7 +306,6 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 	sinv1pt[irapid][ipt] += sin(dphi);
 
 	irapid = ybin2 - 1;
-
 	for( UInt_t i = 0; i < ybin2; i++){
 	  if(rapid < yrange2[i]){
 	    irapid = i;
@@ -323,11 +315,8 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 
 	hyphi2[irapid]->Fill(TVector2::Phi_mpi_pi(2.*dphi));
 	hypt2[irapid] ->Fill(aPart->GetRotatedMomentum().Pt());
-	cosv2x[irapid].push_back( rapid );
+	cosv2x[irapid].push_back( rapid/y_cm[isys] );
 	dphiv2[irapid].push_back( cos(2.*dphi) );
-
-	cosv2[irapid] += cos(2.*dphi);
-	sinv2[irapid] += sin(2.*dphi);
 
 	ipt = nbin2 - 1;
 	for(UInt_t i = 0; i < nbin2; i++){
@@ -366,7 +355,7 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   gv_v2->SetName("gv_v2");
   
   TGraphErrors *gPt_v1[ybin1];
-  TGraphErrors *gPt_v2[ybin1];
+  TGraphErrors *gPt_v2[ybin2];
     
   for(UInt_t kn = 0; kn < ybin1 ; kn++){      
     gPt_v1[kn] = new TGraphErrors();
@@ -406,17 +395,13 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
     Double_t rapm  = TMath::Mean(  cosv1x[kn].begin(), cosv1x[kn].end());
     Double_t rape  = TMath::StdDev(cosv1x[kn].begin(), cosv1x[kn].end());
 
-    Double_t n0   = (Double_t)cosv1x[kn].size();
 
-    //    Double_t yv1  = cosv1[kn]/n0;
-    //    Double_t yv1e = sinv1[kn]/n0;
-      
     Double_t yv1  = TMath::Mean(dphiv1[kn].begin(), dphiv1[kn].end());
     Double_t yv1e = TMath::StdDev(dphiv1[kn].begin(), dphiv1[kn].end());
-    if( n0 > 0 )
-      yv1e /= sqrt( n0 );
-    
 
+    Double_t n0   = (Double_t)cosv1x[kn].size();
+    if( n0 > 0 )
+      yv1e /= sqrt( n0 );    
 
     Double_t yv1c  = yv1/rpres[0];//*sqrt((Double_t)cosv1x[kn].size());
     Double_t yv1ce = GetError(yv1, rpres[0], yv1e, rpres[1]);
@@ -466,20 +451,21 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 
     if( cosv2x[kn].size() == 0 ) continue;
 
-    Double_t rapm  = TMath::Mean(cosv2x[kn].begin(), cosv2x[kn].end());
+    Double_t rapm  = TMath::Mean(  cosv2x[kn].begin(), cosv2x[kn].end());
     Double_t rape  = TMath::StdDev(cosv2x[kn].begin(), cosv2x[kn].end());
 
-    Double_t n0   = (Double_t)cosv2x[kn].size();
-    // Double_t yv2  = cosv2[kn] / n0;
-    // Double_t yv2e = sinv2[kn] / n0;
     
-    Double_t yv2  = TMath::Mean(dphiv2[kn].begin(), dphiv2[kn].end());
+    Double_t yv2  = TMath::Mean(  dphiv2[kn].begin(), dphiv2[kn].end());
     Double_t yv2e = TMath::StdDev(dphiv2[kn].begin(), dphiv2[kn].end());
+
+    Double_t n0   = (Double_t)cosv2x[kn].size();
     if( n0 > 0 )
       yv2e /= sqrt( n0 );
 
     Double_t yv2c  = yv2 / rpres[2];
     Double_t yv2ce = GetError(yv2, rpres[2], yv2e, rpres[3]);
+
+    cout << " v2 " << yv2 << " / " << rpres[2] << " = " << yv2c << endl;
 
     if( !std::isnan(rapm) ) {
       gv_v2->SetPoint( kl,    rapm, yv2c);
