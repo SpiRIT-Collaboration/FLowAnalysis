@@ -1,4 +1,10 @@
 
+TString fsys[] = {"^{132}Sn+^{124}Sn","^{108}Sn+^{112}Sn","^{124}Sn+^{112}Sn","^{112}Sn+^{124}Sn"};
+TString lsys[] = {"^{132}Sn",        "^{108}Sn",            "^{124}Sn",           "^{112}Sn"};
+TString rsys[] = {"132",        "108",        "124",        "112"};
+TString tsys[] = {"124",        "112",        "112",        "124"};
+TString fpid[] = {"proton","deuteron","triton","3He","4He","neutron","H"};  
+
 const UInt_t nsys = 4;
 const UInt_t nprt = 5;
 TString  iopt[]     = {"","same","same","same","same", "same"};
@@ -9,12 +15,11 @@ TCanvas *cc;
 const Int_t nbinx = 30;
 UInt_t id = 0;
 
-Double_t yrange1[] = { -0.25, -0.15, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45, 0.5};
-const UInt_t ybin1 = sizeof(yrange1)/sizeof(Double_t)+1;
 
-Double_t yrange2[] = { -0.2, -0.05,  0.05, 0.2, 0.35, 0.5};
-//Double_t yrange2[] = { -0.2, -0.13, -0.06,  0.0, 0.08, 0.15, 0.22, 0.29, 0.36};
-const UInt_t ybin2 = sizeof(yrange2)/sizeof(Double_t)+1;
+Double_t yrange1[] = { -0.8, -0.25, -0.15, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45, 0.5, 0.8};
+const UInt_t ybin1 = sizeof(yrange1)/sizeof(Double_t);
+Double_t yrange2[] = { -0.8, -0.2, -0.05,  0.05, 0.2, 0.35, 0.5, 0.8};
+const UInt_t ybin2 = sizeof(yrange2)/sizeof(Double_t);
 
 Double_t y_cm[]  = { 0.382453, 0.364873, 0.390302, 0.354066};
 Double_t y_bm[]  = { 0.360199, 0.377779, 0.354065, 0.390301};

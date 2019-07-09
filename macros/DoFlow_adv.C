@@ -24,7 +24,7 @@ std::vector< Double_t > v2y;
 std::vector< Double_t > v2xe;
 std::vector< Double_t > v2ye;
 
-
+TFile* fefffile;
 
 // functions
 void     GetFittingParameters(TH1D &h1, Double_t pp[6]);
@@ -33,13 +33,14 @@ Double_t GetRapidity_cm(TVector3 p, Double_t mass, TVector3 bvec);
 UInt_t   SetBranch();
 void     PlotPtDependence(UInt_t selid);
 TString  SetupOutputFile(TString fopt);
+Bool_t   SetupEffCorrection();
 
 Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180);
 Bool_t   SetPsiRPResolution();
 Bool_t   SetRPResolution();
 Double_t *GetRPResolution(UInt_t vn, UInt_t mult);
-UInt_t   GetV1RapidityIndex(Double_t val);
-UInt_t   GetV2RapidityIndex(Double_t val);
+UInt_t   GetV1RapidityIndex(Double_t y);
+UInt_t   GetV2RapidityIndex(Double_t y);
 UInt_t   GetV1PtIndex(Double_t val);
 UInt_t   GetV2PtIndex(Double_t val);
 UInt_t   GetRPCorrIndex(Double_t mult);
@@ -130,30 +131,21 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   TString fHeader = "advYPt_"+ sysName + "_" + partname[selid]+".v"+sVer+".";
   auto fName = SetupOutputFile( fHeader );
 
+  
+
+  Bool_t bEffCorr = kFALSE;
+  if( selid == 2 || selid == 4 )
+    auto bEffCorr = SetupEffCorrection();
+
+  if( bEffCorr )
+    std::cout << "correctedPt.phi60.nomultcut.root is opened." << std::endl;
+
   auto GraphSave  = new TFile(fName,"recreate");
 
   Int_t pcharge = 1;
   if(selid == 0)  pcharge = -1;
 
   std::cout << " Rapidity binning " << ybin1 << std::endl;
-  TString rangeLabel1[ybin1];
-  for(UInt_t i = 0; i < ybin1; i++ ){
-    if( i == 0 )
-      rangeLabel1[0] = Form(" y < %5.2f ",yrange1[0]);
-    else if ( i == ybin1 - 2 )
-      rangeLabel1[i] = Form("%5.2f <= y "    ,yrange1[i]);
-    else 
-      rangeLabel1[i] = Form("%5.2f <= y < %5.2f",yrange1[i-1],yrange1[i]);
-  }
-  TString rangeLabel2[ybin2];
-  for(UInt_t i = 0; i < ybin2; i++ ){
-    if( i == 0 )
-      rangeLabel2[0] = Form(" y < %5.2f ",yrange2[0]);
-    else if ( i == ybin2 - 2 )
-      rangeLabel2[i] = Form("%5.2f <= y "    ,yrange2[i]);
-    else 
-      rangeLabel2[i] = Form("%5.2f <= y < %5.2f",yrange2[i-1],yrange2[i]);
-  }
 
   //------------------------------
   std::cout << " v1 BIN y " << ybin1 << " pt " << ptbin1 << " mult " << mbin << std::endl;
@@ -161,7 +153,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
 
   auto hyawpitch  = new TH2D("hyawpitch","; Yaw angle; Pitch angle",200,-1.5,1.5,200,-1.5,1.5);
-  auto hmass   = new TH2D("hmass",   ";P/Q; Mass [MeV/c^2]"     ,200,  0.,2500., 200, 0.,7000);
+  auto hmass      = new TH2D("hmass",   ";P/Q; Mass [MeV/c^2]"     ,200,  0.,2500., 200, 0.,7000);
   TString hlabel  = (TString)Form("mtrack1 %2d to %2d ; Y_{cm}; Pt [MeV/c]",Lcent,Ucent);
   auto hyptacp    = new TH2D("hyptacp", hlabel ,200, -1., 1.4, 200, 0., 1100);
 
@@ -177,11 +169,17 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   TH1D *hphi0_180  = new TH1D("hphi0_180" , "0to180",100,0.,3.2);
   TH1D *hphi90_180 = new TH1D("hphi90_180","90to180",100,0.,3.2);
   TH1D *h2phi = new TH1D("h2phi","2x(#Delta #phi) at mid-rapidity",100,-1.*TMath::Pi(), TMath::Pi());
-  
+
+  TH2D *hirap1 = new TH2D("hirap1",";Rapidity; irap1",100,-1.0,1.5, 12,0,12);  
+  TH2D *hirap2 = new TH2D("hirap2",";Rapidity; irap1",100,-1.0,1.5, 12,0,12);  
 
   //-----  booking
+  TString rangeLabel1[ybin1];
+  TString rangeLabel2[ybin2];
+
   for( UInt_t iy = 0; iy < ybin1; iy++ ) {
-    hdy1[iy] = new TH1D(Form("hdy1_y%d",iy),rangeLabel1[iy]+";Rapidity", 500,-1.0,1.5);
+    rangeLabel1[iy] = Form("%5.2f <= y < %5.2f",yrange1[iy],yrange1[iy+1]);
+    hdy1[iy] = new TH1D(Form("hdy1_y%d",iy),rangeLabel1[iy]+";Rapidity", 500,-2.5,2.5);
     hdympt1[iy] = new TH1D(Form("hdympt1%d",iy),rangeLabel1[iy]+";Rapidity; <Pt>/A", 500,-1000.,1000.);
 
     for( UInt_t ipt = 0; ipt < ptbin1; ipt++ ) {
@@ -193,7 +191,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   }
 
   for( UInt_t iy = 0; iy < ybin2; iy++ ) {
-    hdy2[iy] = new TH1D(Form("hdy2_y%d",iy),rangeLabel2[iy]+";Rapidity", 500,-1.0,1.5);
+    rangeLabel2[iy] = Form("%5.2f <= y < %5.2f",yrange2[iy],yrange2[iy+1]);
+    hdy2[iy] = new TH1D(Form("hdy2_y%d",iy),rangeLabel2[iy]+";Rapidity", 500,-2.5,2.5);
 
     for( UInt_t ipt = 0; ipt < ptbin2; ipt++ ) {
       hdydpt2[iy][ipt] = new TH1D(Form("hdydpt2_y%dpt%d",iy,ipt),rangeLabel2[iy]+"; Pt", 500,0., 1300);
@@ -223,16 +222,16 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
     beginTime.Copy(dtime);
     if(i%(UInt_t)(nevt/50) == 0) {
-    dtime.Set();
-    Int_t ptime = dtime.Get() - beginTime.Get();
+      dtime.Set();
+      Int_t ptime = dtime.Get() - beginTime.Get();
 
-    std::cout << "Processing .... " 
-	      << setw(4) << ((Double_t)i/(Double_t)nevt)*100. << " % = "
-	      << setw(8) << i << "/"<< nevt
-	      << "--->"
-	      << dtime.AsString() << " ---- "
-	      << std::endl;
-  }
+      std::cout << "Processing .... " 
+		<< setw(4) << ((Double_t)i/(Double_t)nevt)*100. << " % = "
+		<< setw(8) << i << "/"<< nevt
+		<< "--->"
+		<< dtime.AsString() << " ---- "
+		<< std::endl;
+    }
 
     /// centrality selection
     if(aflow->mtrack1 > Ucent || aflow->mtrack1 <= Lcent || aflow->mtrack4 < 6) continue;
@@ -338,7 +337,10 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       hdy1[irapid1]->Fill( rapid/y_cm[isys] );
       hdy2[irapid2]->Fill( rapid/y_cm[isys] );
 
-      if(irapid2 == 3 )
+      hirap1 -> Fill( rapid/y_cm[isys] , (Double_t)irapid1 );
+      hirap2 -> Fill( rapid/y_cm[isys] , (Double_t)irapid2 );
+
+      if(irapid1 == 0 )
 	h2phi->Fill(TVector2::Phi_mpi_pi(2.*dphi));
 
       hdympt1[irapid1]->Fill( pt*cos(dphi)/MassNumber );
@@ -371,11 +373,15 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   TGraphErrors *gPt_v1[ybin1];
   TGraphErrors *gPt_v2[ybin2];
 
+  TH1D *corrPt_v1[ybin1];
+  TH1D *corrPt_v2[ybin2];
+
   for(UInt_t kn = 0; kn < ybin1 ; kn++){
     gPt_v1[kn] = new TGraphErrors();
     gPt_v1[kn]->SetName((TString)Form("gPt_v1%d",kn));
     TString sname = partname[selid]+" "+rangeLabel1[kn]+"; Pt [MeV/c]; v1";
     gPt_v1[kn]->SetTitle(sname);
+
   }
 
   for(UInt_t kn = 0; kn < ybin2 ; kn++){
@@ -383,13 +389,16 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     gPt_v2[kn]->SetName((TString)Form("gPt_v2%d",kn));
     TString sname = partname[selid]+" "+rangeLabel2[kn]+"; Pt [MeV/c]; v2";
     gPt_v2[kn]->SetTitle(sname);
+
   }
 
   TGraphErrors *gmpx = new TGraphErrors();
   gmpx->SetName("gmpx");
   gmpx->SetTitle("; Rapidity/y_{cm}; <px>");
 
-  //-------------------- v1
+
+  //-------------------- 
+  //--- v1
   UInt_t iyv = 0;
   UInt_t impx = 0;
   for( UInt_t iy = 0; iy < ybin1; iy++ ) {
@@ -440,15 +449,16 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
       }
     }
+
     
     Double_t yn    = (Double_t)hdy1[iy]->GetEntries();
-    Double_t v1_y  = v_y / yn;
-    Double_t v1_ye = sqrt(v_ye2)/yn;
-    
     Double_t ymean = hdy1[iy]->GetMean() ;
-    Double_t ystdv = hdy1[iy]->GetStdDev()/sqrt( (Double_t) hdy1[iy]->GetEntries() ) ;
+    Double_t ystdv = hdy1[iy]->GetStdDev();
 
-    if( !std::isnan(v1_y) && !std::isnan(v1_ye) ) {
+    if( yn > 0) {
+      Double_t v1_y  = v_y / yn;
+      Double_t v1_ye = sqrt(v_ye2)/yn;
+
       gv_v1->SetPoint( iyv, ymean, v1_y);
       gv_v1->SetPointError( iyv, ystdv, v1_ye);
       iyv++;
@@ -458,25 +468,26 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     Double_t *rpres = new Double_t[4];
     rpres = GetRPResolutionwChi(hphi0_180, hphi90_180);
     if( !std::isnan(rpres[0]) ){
-	Double_t mpxn = (Double_t)hdympt1[iy]->GetEntries();
-	Double_t mpxc = hdympt1[iy]->GetMean() / rpres[0] ;
-	Double_t mpxe = hdympt1[iy]->GetStdDev()/sqrt(mpxn);
-	//    Double_t mp;
+      Double_t mpxn = (Double_t)hdympt1[iy]->GetEntries();
+      Double_t mpxc = hdympt1[iy]->GetMean() / rpres[0] ;
+      Double_t mpxe = hdympt1[iy]->GetStdDev()/sqrt(mpxn);
+      //    Double_t mp;
 
-	Double_t mpxee = GetError(mpxc, rpres[0], mpxe, rpres[1]);
-	if( mpxn > 0 ) {
-	  gmpx->SetPoint( impx, ymean, mpxc ); 
-	  gmpx->SetPointError( impx, ystdv, mpxe ); 
-	  impx++;
-	}      
-      }
+      Double_t mpxee = GetError(mpxc, rpres[0], mpxe, rpres[1]);
+      if( mpxn > 0 ) {
+	gmpx->SetPoint( impx, ymean, mpxc ); 
+	gmpx->SetPointError( impx, ystdv, mpxe ); 
+	impx++;
+      }      
+    }
     //@@@
 
 
     gPt_v1[iy]->Write();
   }
 
-  //--------------------v2
+  //--------------------
+  //--- v2
   iyv = 0;
   for( UInt_t iy = 0; iy < ybin2; iy++ ) {
     Double_t v_y   = 0.;
@@ -500,6 +511,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	rpres = GetRPResolution(2, im);
 	
 	Double_t vn = (Double_t)hdydptcos2[iy][ipt][im]->GetEntries();
+
 	Double_t vm = hdydptcos2[iy][ipt][im]->GetMean();
 	Double_t ve = hdydptcos2[iy][ipt][im]->GetStdDev()/sqrt(vn);
 	
@@ -533,19 +545,20 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     }
 
     Double_t yn    = (Double_t)hdy2[iy]->GetEntries();
-    Double_t v2_y  = v_y / yn;
-    Double_t v2_ye = sqrt(v_ye2)/yn;
+    Double_t ymean = hdy2[iy]->GetMean();
+    Double_t ystdv = hdy2[iy]->GetStdDev();
 
+    if( yn > 0 ) {
+      Double_t v2_y  = v_y / yn;
+      Double_t v2_ye = sqrt(v_ye2)/yn;
 
-    if( !std::isnan(v2_y) && !std::isnan(v2_ye) ) {
-      Double_t ymean = hdy2[iy]->GetMean();
-      Double_t ystdv = hdy2[iy]->GetStdDev();
       
       gv_v2->SetPoint( iyv, ymean, v2_y);
       gv_v2->SetPointError( iyv, ystdv, v2_ye);
       iyv++;
     }
 
+    gPt_v2[iy]->Write();
     gPt_v2[iy]->Write();
   }
 
@@ -556,39 +569,57 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   hyawpitch->Write();
   hmass    ->Write();
   hyptacp  ->Write();
-      
+  hirap1   ->Write();
+  hirap2   ->Write();
+
   //--------------------------------------------------
   //--- Ploting
   //--------------------------------------------------
   id=1;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),2000,500);
   cc->Divide(10);
+  for( UInt_t iy = 0; iy < ybin1-1; iy++ ) {
+    cc->cd(id); id++;
+    gPt_v1[iy] -> SetMarkerStyle(20);
+    gPt_v1[iy] -> SetMarkerColor(4);
+    gPt_v1[iy] -> Draw("ALP");
 
-  for( UInt_t iy = 0; iy < 10; iy++ ) {
-    //    for( UInt_t ipt = 0; ipt < ptbin1; ipt++ ) {
+    cout << "pt v1 " << iy << " " << ybin1 << endl;
+  }
 
+  if( bEffCorr && corrPt_v1[0] != NULL ){
+    id=1;
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),2000,500);
+    cc->Divide(10);
+    for( UInt_t iy = 0; iy < ybin1-1; iy++ ) {
       cc->cd(id); id++;
-      gPt_v1[iy] -> SetMarkerStyle(20);
-      gPt_v1[iy] -> SetMarkerColor(4);
-      gPt_v1[iy] -> Draw("ALP");
-
-      //    }
+      corrPt_v1[iy] -> SetMarkerStyle(20);
+      corrPt_v1[iy] -> SetMarkerColor(4);
+      corrPt_v1[iy] -> Draw();
+    }
   }
 
   id=1;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),2000,500);
   cc->Divide(7);
-
-  for( UInt_t iy = 0; iy < 7; iy++ ) {
-    //    for( UInt_t ipt = 0; ipt < ptbin1; ipt++ ) {
-      cc->cd(id); id++;
-      gPt_v2[iy] -> SetMarkerStyle(20);
-      gPt_v2[iy] -> SetMarkerColor(4);
-      gPt_v2[iy] -> Draw("ALP");
-
-      //    }
+  for( UInt_t iy = 0; iy < ybin2-1; iy++ ) {
+    cc->cd(id); id++;
+    gPt_v2[iy] -> SetMarkerStyle(20);
+    gPt_v2[iy] -> SetMarkerColor(4);
+    gPt_v2[iy] -> Draw("ALP");
   }
 
+  if( bEffCorr && corrPt_v2[0] != NULL ){
+    id=1;
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),2000,500);
+    cc->Divide(7);
+    for( UInt_t iy = 0; iy < ybin2-1; iy++ ) {
+      cc->cd(id); id++;
+      corrPt_v2[iy] -> SetMarkerStyle(20);
+      corrPt_v2[iy] -> SetMarkerColor(4);
+      corrPt_v2[iy] -> Draw();
+    }
+  }
 
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
   gv_v1->Draw("ALP");
@@ -610,28 +641,28 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 }
 
 
-UInt_t GetV1RapidityIndex(Double_t val)
+UInt_t GetV1RapidityIndex(Double_t y)
 {
-  UInt_t irapid = ybin1 - 2;
-  for( UInt_t i = 0; i < ybin1; i++){
-    if( val < yrange1[i]){
-      irapid = i;
+  UInt_t irapid1 = ybin1-1;
+  for( UInt_t i = 1; i < ybin1; i++){
+    if( y < yrange1[i]){
+      irapid1 = i-1;
       break;
     }
   }
-  return irapid;
+  return irapid1;
 }
 
-UInt_t GetV2RapidityIndex(Double_t val)
+UInt_t GetV2RapidityIndex(Double_t y)
 {
-  UInt_t irapid = ybin2 - 2;
-  for( UInt_t i = 0; i < ybin2; i++){
-    if( val < yrange2[i]){
-      irapid = i;
+  UInt_t irapid2 = ybin2-1;
+  for( UInt_t i = 1; i < ybin2; i++){
+    if( y < yrange2[i]){
+      irapid2 = i-1;
       break;
     }
   }
-  return irapid;
+  return irapid2;
 }
 
 UInt_t GetV1PtIndex(Double_t val)
@@ -1196,6 +1227,9 @@ void AzimuthalAngleDependence()            //%% Executable :
   hmult->Write();
   hiphi->Write();
   gv_phi1->Write();
+
+
+  std::cout << " FILE output is " << fName << std::endl;
 }
 
 void PsiAngleDependence()            //%% Executable :
@@ -1481,4 +1515,13 @@ TString SetupOutputFile(TString fopt)
 
   return fName;
   //--------------------------------------------------
+}
+
+Bool_t SetupEffCorrection()
+{
+  fefffile = TFile::Open("correctedPt.phi60.nomultcut.root");
+
+  if( fefffile != NULL ) return kTRUE;
+  else
+    return kFALSE;
 }

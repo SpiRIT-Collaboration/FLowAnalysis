@@ -34,9 +34,9 @@ function runonebyoneshort()
 }
 
 
-export MNRNF={$RNF132}
-PARTICLE=("2" "3" "4" "5")
-export MNOVER=3
+export MNRNF={$RNF108}
+PARTICLE=("2" "3" "4" "5" "8")
+export MNOVER=24
 function multipleexec()
 {
     typeset -i I=0;
@@ -54,7 +54,7 @@ function multipleexec()
 
 function runbatch() 
 {
-    RUN=$MNRNF VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($MNSPID\)
+    LC=0 UC=55 RUN=$MNRNF VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($MNSPID\)
 }
 
 echo $MNVERSION to $MNOVER

@@ -60,8 +60,13 @@ void Kinema(UInt_t isel = 0)
 {
   
 
-  RapidityShift();
+  //  RapidityShift();
 
+  GetLorentzBoost(0);
+  GetLorentzBoost(1);
+  GetLorentzBoost(2);
+  GetLorentzBoost(3);
+  GetLorentzBoost(4);
 
   return;
 }
@@ -99,17 +104,17 @@ TVector3 GetLorentzBoost(UInt_t isel = 4)
   eB_lb[2]  =  270.2;
   mT[2]     =  111.8773895;;
 
-  // system[3] = "(112Sn + 124Sn)";
-  // AB[3]     =  112.;
-  // mB[3]     =  111.8773895; //amu
-  // eB_lb[3]  =  270.2;
-  // mT[3]     =  123.8773895;
+  system[3] = "(112Sn + 124Sn)";
+  AB[3]     =  112.;
+  mB[3]     =  111.8773895; //amu
+  eB_lb[3]  =  270.2;
+  mT[3]     =  123.8773895;
 
-  system[3] = "(208Pb + 208Pb";
-  AB[3]     =  208.;
-  mB[3]     =  208; //amu
-  eB_lb[3]  =  158000.;
-  mT[3]     =  208;
+  // system[3] = "(208Pb + 208Pb";
+  // AB[3]     =  208.;
+  // mB[3]     =  208; //amu
+  // eB_lb[3]  =  158000.;
+  // mT[3]     =  208;
 
   system[4] = "(p + p)";
   AB[4]     = 1.;
@@ -136,8 +141,13 @@ TVector3 GetLorentzBoost(UInt_t isel = 4)
 
   // CM system     
   auto E_cm    = sqrt( mB[isys]*mB[isys] + mT[isys]*mT[isys] + 2.* mT[isys] * EB_lb);
-  auto Beta_cm = PB_lb/(EB_lb + mT[isys]);
-  auto Gamm_cm = (EB_lb + mT[isys]) / E_cm;
+  // Jon's 
+  auto Gamm_cm = E_cm/(mB[isys] + mT[isys]);
+  auto Beta_cm = TMath::Sqrt(1. -1./Gamm_cm/Gamm_cm);
+  
+  // be out since 27 June 2019
+  // auto Beta_cm = PB_lb/(EB_lb + mT[isys]);
+  // auto Gamm_cm = (EB_lb + mT[isys]) / E_cm;  
 
   auto y_cm = 0.5 * log( (1+Beta_cm)/ (1-Beta_cm) );
 
@@ -149,19 +159,21 @@ TVector3 GetLorentzBoost(UInt_t isel = 4)
   auto PT_cm = -Gamm_cm * Beta_cm * mT[isys];
   auto YT_cm =  0.5 * log( (ET_cm + PT_cm) / (ET_cm - PT_cm) );
 
-  cout << " --- Reaction  " << system[isys] << endl
-       << " Beam Mass   " << mB[isys]/amu << " [u] "
-       << " Beam Enery  " << eB_lb[isys] << " [MeV/u] "
-       << " Target Mass " << mT[isys]/amu
-       << " --- "
-       << endl;
+  cout << " ------------------------ " << endl;
 
-  cout << " Beam --- " 
-       << " Ekine  " << EkB_lb << " [MeV] "
-       << " Energy " << EB_lb  << " [MeV] "
-       << " P      " << PB_lb  << " [MeV/c] "
-       << " Y      " << YB_lb  
-       << endl;
+  cout << " --- Reaction  " << system[isys] << endl;
+   //      << " Beam Mass   " << mB[isys]/amu << " [u] "
+   //      << " Beam Enery  " << eB_lb[isys] << " [MeV/u] "
+   //      << " Target Mass " << mT[isys]/amu
+   //      << " --- "
+   //      << endl;
+
+   // cout << " Beam --- " 
+   //      << " Ekine  " << EkB_lb << " [MeV] "
+   //      << " Energy " << EB_lb  << " [MeV] "
+   //      << " P      " << PB_lb  << " [MeV/c] "
+   //      << " Y      " << YB_lb  
+   //      << endl;
 
   cout << " Ecm  --- " << E_cm << " [MeV] "
        << " Beta_cm " << Beta_cm 
@@ -171,55 +183,64 @@ TVector3 GetLorentzBoost(UInt_t isel = 4)
 
 
   cout << " E_beam   " << EB_cm
-       << " P_beam   " << PB_cm
+    //      << " P_beam   " << PB_cm
        << " Y_beam   " << YB_cm
        << endl;
   cout << " E_target " << ET_cm
-       << " P_target " << PT_cm
+   //      << " P_target " << PT_cm
        << " Y_target " << YT_cm 
        << endl;
 
-  cout << " dY " << YB_cm - YT_cm << endl;
+  // cout << " dY " << YB_cm - YT_cm << endl;
 
-  cout << " ------------------------ " << endl;
   auto bmVec = new TLorentzVector( TVector3(0., 0., PB_lb), EB_lb );
   auto tgVec = new TLorentzVector( TVector3(0., 0., 0.), mT[isys] );
+
   auto totalVec = *bmVec + *tgVec;
   TVector3 boostVec = totalVec.BoostVector();
 
-  cout << " before " << endl;
-  cout << " beam g : " << bmVec->Gamma()
-       << "      Y : " << bmVec->Y()
-       << "      Z : " << bmVec->Z()
-       << "      E : " << bmVec->E()
-       << endl;
+  cout << " Beta_cm "     << totalVec.Beta(); 
+  cout << " Gamma_cm "    << totalVec.Gamma(); 
+  cout << " Rapidity_cm " << totalVec.Rapidity(); 
+  cout << " boostVec Z "     << boostVec.Z(); 
+  cout << endl;
 
-  cout << " Targ g : " << tgVec->Gamma()
-       << "      Y : " << tgVec->Y()
-       << "      Z : " << tgVec->Z()
-       << "      E : " << tgVec->E()
-       << endl;
+  // cout << " ---> before " << endl;
+  // cout << " beam g : " << bmVec->Gamma()
+  //      << "      Y : " << bmVec->Y()
+  //      << "      Z : " << bmVec->Z()
+  //      << "      E : " << bmVec->E()
+  //      << endl;
+
+  // cout << " Targ g : " << tgVec->Gamma()
+  //      << "      Y : " << tgVec->Y()
+  //      << "      Z : " << tgVec->Z()
+  //      << "      E : " << tgVec->E()
+  //      << endl;
 
   bmVec->Boost(-boostVec);
   tgVec->Boost(-boostVec);
 
-  cout << " after " << endl;
-  cout << " beam g : " << bmVec->Gamma()
-       << "      Y : " << bmVec->Y()
-       << "      Z : " << bmVec->Z()
-       << "      E : " << bmVec->E()
-       << endl;
+  // cout << " ---> after " << endl;
+  // cout << " beam g : " << bmVec->Gamma()
+  //      << "      Y : " << bmVec->Y()
+  //      << "      Z : " << bmVec->Z()
+  //      << "      E : " << bmVec->E()
+  //      << endl;
 
-  cout << " Targ g : " << tgVec->Gamma()
-       << "      Y : " << tgVec->Y()
-       << "      Z : " << tgVec->Z()
-       << "      E : " << tgVec->E()
-       << endl;
+  // cout << " Targ g : " << tgVec->Gamma()
+  //      << "      Y : " << tgVec->Y()
+  //      << "      Z : " << tgVec->Z()
+  //      << "      E : " << tgVec->E()
+  //      << endl;
 
-  cout << " Ecm " << (*bmVec + *tgVec).E() << endl;
+  //  cout << " Ecm " << (*bmVec + *tgVec).E() << endl;
 
-  cout << " Beam   Rapidity " << 0.5 * log( ( bmVec->E() + bmVec->Z())/(bmVec->E() - bmVec->Z()) )  << endl;
-  cout << " Target Rapidity " << 0.5 * log( ( tgVec->E() + tgVec->Z())/(tgVec->E() - tgVec->Z()) )  << endl;
+  // cout << " Beam   Rapidity " << 0.5 * log( ( bmVec->E() + bmVec->Z())/(bmVec->E() - bmVec->Z()) ) ;
+  // cout << " Target Rapidity " << 0.5 * log( ( tgVec->E() + tgVec->Z())/(tgVec->E() - tgVec->Z()) );
+
+  cout << " y_beam   = " << bmVec->Rapidity()<< endl;
+  cout << " y_target = " << tgVec->Rapidity()<<endl;
 
 
 
