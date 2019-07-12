@@ -153,6 +153,8 @@ TVector3 LorentzBoost(UInt_t m)
   cout << " Beam   Rapidity " << 0.5 * log( ( bmVec->E() + bmVec->Z())/(bmVec->E() - bmVec->Z()) )  << endl;
   cout << " Target Rapidity " << 0.5 * log( ( tgVec->E() + tgVec->Z())/(tgVec->E() - tgVec->Z()) )  << endl;
 
+  cout << " beam   Beta " << bmVec->Beta() << " gammma " << bmVec->Gamma() << endl;
+  cout << " target Beta " << tgVec->Beta() << " gammma " << tgVec->Gamma() << endl;
 
   cout << " =====-------=====---------- " << endl;
 

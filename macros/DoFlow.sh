@@ -34,9 +34,9 @@ function runonebyoneshort()
 }
 
 
-export MNRNF={$RNF108}
+export MNRNF={$RNF132}
 PARTICLE=("2" "3" "4" "5" "8")
-export MNOVER=24
+export MNOVER=27
 function multipleexec()
 {
     typeset -i I=0;

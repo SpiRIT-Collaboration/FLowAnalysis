@@ -15,7 +15,19 @@ Double_t sysA[]    = {256.,    220.,      236.,   236};
 //==================================================
 //-- plot configuration
 //--------------------------------------------------
-  // --> Plotting selection
+Bool_t bplot[] = 
+  { 0, // 0 data   It should be set to 1 in the code.
+    0, // 1 model  It should be set to 1 in the code.
+    0, // 2 v1 and v2 rapidity 
+    0, // 3 v1 and v2 on pt in one window
+    1, // 4 v1 and v2 in individual windows
+    0, // 5 Acceptance ypt
+    0, // 6 <px>/A
+    0, // 7 
+  };
+//==================================================
+
+// --> Plotting selection
 //--- Data
 Bool_t bsys[]  = { 1, 0, 0, 0};
 Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
@@ -24,9 +36,11 @@ UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {0, 0, 0, 0, 0, 0, 0, 0};
+UInt_t  bver[]  = {1, 1, 0, 0, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
+  {".v29.1.26" ,"advYPt_","m5-55"} ,
+  {".v29.1.25" ,"advYPt_","m5-55"} ,
   {".v29.1.24" ,"advYPt_","m5-55"} ,
   {".v29.1.22" ,"advYPt_","m5-55"} ,
   {".v29.1.21" ,"advYPt_","yaw<0"} , //"m5-80"} ,
@@ -51,7 +65,7 @@ TString sName[nmax];
 TString cmnt[nmax];
 
 //-- pBUU
-Bool_t  bpBUUConfig[]  = {1, 0, 0, 0};
+Bool_t  bpBUUConfig[]  = {0, 0, 0, 0};
 //-----------
 gplot pBUUConfig[] = {
   {"_energy270_gamma0.50_b5_withCluster.","pBUU2","pBUU b5g0.5"},
@@ -76,7 +90,7 @@ Double_t pBUU_v2[4][4] = { //v2 b2 g0.5, b2 g1.75, b4 g0.5, b4 g1.75
 };
 
 //-- AMD
-Bool_t  amdEOS[]= {1, 0};
+Bool_t  amdEOS[]= {0, 0};
 //-----------
 TString amdName[] = {"SLy4",
 		     "SLy4-L108"};
@@ -84,19 +98,8 @@ TString amdName[] = {"SLy4",
 TString amdHeader[] = {"amd_132Sn124Sn270AMeV_cluster_",
 		       "amd_108Sn112Sn270AMeV_cluster_"};
 
-//==================================================
-Bool_t bplot[] = 
-  { 0, // 0 data   It should be set to 1 in the code.
-    0, // 1 model  It should be set to 1 in the code.
-    0, // 2 v1 and v2 rapidity 
-    1, // 3 v1 and v2 on pt in one window
-    0, // 4 v1 and v2 in individual windows
-    0, // 5 Acceptance ypt
-    0, // 6 v1 on pt special
-    0, // 7 <px>/A
-  };
-//==================================================
 
+//==================================================
 UInt_t   ccvid = 0;
 TF1 *lslope = new TF1("lslope","[0]+[1]*x",-1., 1.);
 
@@ -208,7 +211,7 @@ void PlotPtDependence()
   auto lgr0 = new TLegend(0.16, 0.70, 0.46, 0.85,"");
   auto lgr10= new TLegend(0.16, 0.70, 0.46, 0.85,"");
   
-
+  TString fOutName = "";
   for(UInt_t is = 0; is < 4; is++){
 
     for(UInt_t ip = 0; ip < (UInt_t)sizeof(bpid)/sizeof(Bool_t); ip++){
@@ -224,6 +227,9 @@ void PlotPtDependence()
 	  if( bver[iz] == 0 ) continue;
 
 	  fname.push_back( "data/"+ sName[iz] + bName[is] + fpid[ip] + sVer[iz] + ".root" );
+
+	  if( fOutName == "" )
+	    fOutName = bName[is] + fpid[ip] + sVer[iz] + "_plt.root";
 
 	  std::cout << fname.at(ngr) << std::endl;
 	  ltitle = "";
@@ -323,18 +329,7 @@ void PlotPtDependence()
   }  
 
 
-  // TString rapRange[ybin1];
-  // for(UInt_t i = 1; i < ybin1 - 1; i++)
-  //   rapRange[i] = Form(" %f <= Y_cm < %f", yrange1[i-1],yrange1[i]);
-  // rapRange[0] = Form(" Y_cm < %f", yrange1[0]);
-  // rapRange[ybin1-1] = Form(" %f <= Y_cm", yrange1[ybin1-2]);
-
-  // TString rapRange2[ybin2];
-  // for(UInt_t i = 1; i < ybin2 - 1; i++)
-  //   rapRange2[i] = Form(" %f <= Y_cm < %f", yrange2[i-1],yrange2[i]);
-  // rapRange2[0] = Form(" Y_cm < %f", yrange2[0]);
-  // rapRange2[ybin2-1] = Form(" %f <= Y_cm", yrange2[ybin2-2]);
-
+  TFile *fOutput = new TFile(fOutName,"recreate");
 
   TFile *fOpen;
 
@@ -431,7 +426,10 @@ void PlotPtDependence()
     // rapidity dependence
     TH1I *hmult  = (TH1I*)fOpen->Get("hmult");
 
-    TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gv_v1");
+    TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gu_v1");
+    if( yv1 == NULL ) 
+      yv1 = (TGraphErrors*)fOpen->Get("gv_v1");
+
     if( yv1 != NULL ) {
       yv1->SetMarkerColor(icolor);
 
@@ -491,7 +489,9 @@ void PlotPtDependence()
     }
 
     //--- y vs v2 ---
-    TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gv_v2");
+    TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gu_v2");
+    if( yv2 == NULL )
+      yv2 = (TGraphErrors*)fOpen->Get("gv_v2");
 
     if( yv2 != NULL ) {
       //    ShiftX(yv2, 0.01*iz);
@@ -546,11 +546,14 @@ void PlotPtDependence()
 
     for(UInt_t k = 0; k < ybin1; k++){
 
-      TGraphErrors *gr_v1 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v1%d",k));
+      TGraphErrors *gr_v1 = (TGraphErrors*)fOpen->Get((TString)Form("gUt_v1%d",k));
+      if( gr_v1 == NULL )
+	gr_v1 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v1%d",k));
+
       if( gr_v1 == NULL ) continue;
       if( igr == 0 ) {
 	mv1[k]->SetTitle(gr_v1->GetTitle());
-	mv1[k]->GetXaxis()->SetTitle("Pt/A {MeV/c]");
+	mv1[k]->GetXaxis()->SetTitle(gr_v1->GetXaxis()->GetTitle());
 	mv1[k]->GetYaxis()->SetTitle("v1/A");
       }
 
@@ -558,7 +561,7 @@ void PlotPtDependence()
       for(UInt_t j = 0; j < (UInt_t)gr_v1->GetN(); j++ ){
 	Double_t x, y;
 	gr_v1->GetPoint(j, x, y);
-	x /= partA[ip+2];
+	//x /= partA[ip+2];
 	y /= partA[ip+2];
 	auto xe = gr_v1->GetErrorX(j);
 	auto ye = gr_v1->GetErrorY(j);
@@ -590,12 +593,16 @@ void PlotPtDependence()
 
     for(UInt_t k = 0; k < ybin2; k++){
 
-      TGraphErrors *gr_v2 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v2%d",k));
+      TGraphErrors *gr_v2 = (TGraphErrors*)fOpen->Get((TString)Form("gUt_v2%d",k));
+
+      if( gr_v2 == NULL )
+	gr_v2 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v2%d",k));
+
       if( gr_v2 == NULL ) continue;
 
       if( igr == 0 ) {
 	mv2[k]->SetTitle(gr_v2->GetTitle());
-	mv2[k]->GetXaxis()->SetTitle("Pt/A {MeV/c]");
+	mv2[k]->GetXaxis()->SetTitle(gr_v2->GetXaxis()->GetTitle());
 	mv2[k]->GetYaxis()->SetTitle("v2/A");
       }
 
@@ -603,7 +610,7 @@ void PlotPtDependence()
       for(UInt_t j = 0; j < (UInt_t)gr_v2->GetN(); j++ ){
 	Double_t x, y;
 	gr_v2->GetPoint(j, x, y);
-	x /= partA[ip+2];
+	//x /= partA[ip+2];
 	y /= partA[ip+2];
 	auto xe = gr_v2->GetErrorX(j);
 	auto ye = gr_v2->GetErrorY(j);
@@ -657,6 +664,8 @@ void PlotPtDependence()
       mv1[k]->Draw("ALP");
       if( k == ybin1-2 )
 	lg1[k]->Draw();
+      fOutput->cd();
+      mv1[k]->Write();
     }
 
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1400,500);
@@ -665,23 +674,11 @@ void PlotPtDependence()
       cc->cd(k+1);
       mv2[k]->Draw("ALP");
       if( k == ybin2-2 ) lg2[k]->Draw();
+      fOutput->cd();
+      mv2[k]->Write();
     }
   }
 
-
-  if( bplot[0] && bplot[6] ) {
-    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
-    mv1[2]->Draw("ALP");
-    lg1[2]->Draw();
-    
-    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
-    mv1[3]->Draw("ALP");
-    lg1[3]->Draw();
-
-    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
-    mv1[4]->Draw("ALP");
-    lg1[4]->Draw();
-  }
 
   //--------------------
   //--- 
@@ -728,7 +725,7 @@ void PlotPtDependence()
     for(UInt_t i : ichoise) {
       cc = new TCanvas(Form("cv%d",i),Form("cv%d",i),500,550);
       cc->SetRightMargin(0.02);
-      cc->SetLeftMargin(0.2);
+      cc->SetLeftMargin(0.25);
       cc->SetTopMargin(0.08);
       cc->SetBottomMargin(0.15);
 
@@ -739,19 +736,19 @@ void PlotPtDependence()
       mv1[i]->GetYaxis()->SetTitleSize(0.04);
       mv1[i]->GetYaxis()->SetTitleOffset(2.5);
 
-      mv1[i]->GetXaxis()->SetRangeUser(0.,550.);
+      mv1[i]->GetXaxis()->SetRangeUser(0.,1.5);
       mv1[i]->Draw("ALP");
+      lg1[i]->Draw();
 
-      if( ngr > 1 )
-	lg1[i]->Draw();
-
+      fOutput->cd();
+      mv1[i]->Write();
     }
 
     UInt_t ichoise2[] = {2};
     for(UInt_t i : ichoise2) {
       cc = new TCanvas(Form("cv%d",i+10),Form("cv%d",i+10),500,550);
       cc->SetRightMargin(0.02);
-      cc->SetLeftMargin(0.2);
+      cc->SetLeftMargin(0.25);
       cc->SetTopMargin(0.08);
       cc->SetBottomMargin(0.15);
 
@@ -762,15 +759,16 @@ void PlotPtDependence()
       mv2[i]->GetYaxis()->SetTitleSize(0.04);
       mv2[i]->GetYaxis()->SetTitleOffset(2.5);
 
-      mv2[i]->GetXaxis()->SetRangeUser(0.,550.);
+      mv2[i]->GetXaxis()->SetRangeUser(0.,1.5);
       mv2[i]->Draw("ALP");
-      if( ngr > 1 )
-	lg2[i]->Draw();
+      lg2[i]->Draw();
 
+      fOutput->cd();
+      mv2[i]->Write();
     }
   }
 
-  if( bplot[0] && bplot[7] ) {
+  if( bplot[0] && bplot[6] ) {
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     g_v2max->SetMarkerStyle(20);
     g_v2max->SetMarkerColor(2);
