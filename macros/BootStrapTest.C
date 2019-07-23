@@ -733,6 +733,10 @@ void DoublePhiBootStrap()
 
   
 
+  std::cout << " delta Psi = " << hboot->GetStdDev() << " cos(dphi) = " << cos( hboot->GetStdDev() ) << std::endl;
+
+
+
   // cc[0]->cd(id); id++; id++;
   // fgaus->Draw("lp");
 

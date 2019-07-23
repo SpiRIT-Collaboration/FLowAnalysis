@@ -175,8 +175,8 @@ void STParticle::SetRecoTrack(STRecoTrack *atrack)
   forigP3 = fRTrack->GetMomentumTargetPlane();
   fRotatedP3 = forigP3;
 
-  fRotatedPt = TVector2( fRotatedP3.X(),fRotatedP3.Y());
-  fPxz       = TVector2( fRotatedP3.Z(),-fRotatedP3.X());
+  fRotatedPt = TVector2( fRotatedP3.X(), fRotatedP3.Y());
+  fPxz       = TVector2( fRotatedP3.Z(), fRotatedP3.X());
   fPyz       = TVector2( fRotatedP3.Z(), fRotatedP3.Y());
 
   fP    = forigP3.Mag();

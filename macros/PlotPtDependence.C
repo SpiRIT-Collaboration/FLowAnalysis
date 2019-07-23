@@ -19,8 +19,8 @@ Bool_t bplot[] =
   { 0, // 0 data   It should be set to 1 in the code.
     0, // 1 model  It should be set to 1 in the code.
     0, // 2 v1 and v2 rapidity 
-    0, // 3 v1 and v2 on pt in one window
-    1, // 4 v1 and v2 in individual windows
+    1, // 3 v1 and v2 on pt in one window
+    0, // 4 v1 and v2 in individual windows
     0, // 5 Acceptance ypt
     0, // 6 <px>/A
     0, // 7 
@@ -39,8 +39,25 @@ UInt_t iv2at = 4;
 UInt_t  bver[]  = {1, 1, 0, 0, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v29.1.26" ,"advYPt_","m5-55"} ,
-  {".v29.1.25" ,"advYPt_","m5-55"} ,
+  {".v35.0.0"  ,"advYPt_","#phi<30"} ,  
+  {".v35.0.1"  ,"advYPt_","#phi>150"} ,  
+  {".v34.0.0"  ,"advYPt_","Reco"} ,  
+  {".v29.1.31" ,"advYPt_","phi<=30"} ,  
+  {".v29.1.32" ,"advYPt_","phi>=150"} ,
+  {".v31.0.1"  ,"advYPt_","pA -0.1;yaw>0"} ,
+  {".v31.0.2"  ,"advYPt_","pA -0.1;yaw<0"} ,
+  {".v32.0.0"  ,"advYPt_","org;yaw>0"} ,
+  {".v32.0.1"  ,"advYPt_","org;yaw<0"} ,
+  {".v30.1.0"  ,"advYPt_","yaw>0"} ,
+  {".v30.1.1"  ,"advYPt_","yaw<0"} ,
+  {".v29.1.27" ,"advYPt_","#Psi;yaw>0"} ,
+  {".v29.1.28" ,"advYPt_","#Psi;yaw<0"} ,
+  {".v33.0.1"  ,"advYPt_","AP/2;yaw>0"} ,
+  {".v33.0.0"  ,"advYPt_","PA/2;yaw<0"} ,
+  {".v31.0.0"  ,"advYPt_","pA -0.1;All"} ,
+  {".v29.1.29" ,"advYPt_","#Psi;All"} ,
+  {".v29.1.26" ,"advYPt_","yaw>0"} ,
+  {".v29.1.25" ,"advYPt_","yaw<0"} ,
   {".v29.1.24" ,"advYPt_","m5-55"} ,
   {".v29.1.22" ,"advYPt_","m5-55"} ,
   {".v29.1.21" ,"advYPt_","yaw<0"} , //"m5-80"} ,
@@ -337,13 +354,13 @@ void PlotPtDependence()
   // Pt dependence setup
   for(UInt_t k = 0; k < ybin1; k++){
     mv1[k]  = new TMultiGraph((TString)Form("mv1%d",k),  ";Pt [MeV/c]; v_1");
-    lg1[k] = new TLegend(0.18, 0.2, 0.6, 0.4); 
+    lg1[k] = new TLegend(0.28, 0.18, 0.65, 0.31); 
     lg1[k]->SetTextSize(0.05);
   }
 
   for(UInt_t k = 0; k < ybin2; k++) {
     mv2[k]  = new TMultiGraph((TString)Form("mv2%d",k),  ";Pt [MeV/c]; v_2");
-    lg2[k] = new TLegend(0.2, 0.15, 0.65, 0.43); 
+    lg2[k] = new TLegend(0.28, 0.18, 0.65, 0.31); 
     lg2[k]->SetTextSize(0.05);
   }
 
@@ -383,7 +400,8 @@ void PlotPtDependence()
     TString otitle  = ohtitle;
 
     if( ia == 1 ) { //data
-      otitle += sName[iz]+sVer[iz]+";"+cmnt[iz];
+      otitle += sVer[iz]+";"+cmnt[iz];
+      //      otitle += sName[iz]+sVer[iz]+";"+cmnt[iz];
     }
     else if( ia == 2 ) //amd
       otitle += amdHeader[is](4,5) + amdName[it];
@@ -391,6 +409,7 @@ void PlotPtDependence()
       otitle += pBUUConfig[ik].comment; 
     }
 
+    //otitle  = ohtitle;
 
     //acceptance
     if( igr < ngr ) {
@@ -447,7 +466,7 @@ void PlotPtDependence()
       yv1->SetLineColor(icolor);
     
       mrv1->Add(yv1,"lp");
-      lgr1->AddEntry(yv1,  ohtitle ,"lp");
+      lgr1->AddEntry(yv1,  otitle ,"lp");
 
       yv1->Fit("lslope","Q0","",-0.4,0.4);
       Double_t constlslope = lslope->GetParameter(0);
@@ -509,7 +528,7 @@ void PlotPtDependence()
       yv2->SetLineColor(icolor);
 
       mrv2->Add(yv2,"lp");
-      lgr2->AddEntry(yv2,  ohtitle ,"lp");
+      lgr2->AddEntry(yv2,  otitle ,"lp");
       // --end of rapidity dependence
 
       Double_t v2x, v2y, v2xe;
@@ -585,7 +604,7 @@ void PlotPtDependence()
       gr_v1A->GetXaxis()->SetRangeUser(0.,550.);
 
       mv1[k]->Add(gr_v1A,"lp");
-      lg1[k]->AddEntry(gr_v1A,  ohtitle,"lp");
+      lg1[k]->AddEntry(gr_v1A,  otitle,"lp");
 
     }
     
@@ -637,7 +656,7 @@ void PlotPtDependence()
       gr_v2A->GetXaxis()->SetRangeUser(0.,550.);
 
       mv2[k]->Add(gr_v2A,"lp");
-      lg2[k]->AddEntry(gr_v2A, ohtitle ,"lp");
+      lg2[k]->AddEntry(gr_v2A, otitle ,"lp");
 
       //      mv2[k]->GetYaxis()->SetRangeUser(v2mn, v2mx);
     }

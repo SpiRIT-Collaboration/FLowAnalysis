@@ -53,24 +53,22 @@ source runList.sh
 ##--- for Process1 ------------------------------------
 # *****> <Edit Here>
 # Set RUNNUMBER1 
-DBVERSION=29
-VERSION=29
+DBVERSION=0
+VERSION=35
 
 
-function execa() { ## Job for the 2841 with maximum event number =MEVT
-    RUNNUMBER1="2841"
-    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MEVT DBVER=$DBVERSION root run_analysis.C 
-}
-
-
-#RUNNUMBER1=(${RNF132})
+RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
-RUNNUMBER1=(${RNF124})
+#RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RBF132} ${RNF108} ${RNF124} ${RNF112}) 
 #RUNNUMBER1=(${RNFTEMP})
 #RUNNUMBER1=(${RNF132r})
 #RUNNUMBER1=(${RNF132p})
+
+function execa() { ## Job for the 2841 with maximum event number =MEVT
+    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MEVT DBVER=$DBVERSION root run_analysis.C 
+}
 
 MEVT=
 function execb() {  ## batch job for the first run with maxium event number = MEVT

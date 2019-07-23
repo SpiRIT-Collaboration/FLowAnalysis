@@ -31,6 +31,9 @@ Double_t pt_max = 800.;
 Double_t dpt1;
 Double_t dpt2;
 
+// Psi bin
+const UInt_t  psibin = 12;
+
 				   
 TString  partname[] = {"pi-","pi+","proton","deuteron" ,"triton", "3He", "4He", "neutron", "H",   "triton"};
 UInt_t   partid[]   = {211,    211,    2212, 1000010020, 1000010030, 1000020030, 1000020040, 2112, 1000010040, 1000010030};
