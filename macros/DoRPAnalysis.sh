@@ -15,8 +15,8 @@ RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF112})
 
-DBVERSION=35
-VERSION=35.0
+DBVERSION=36
+VERSION=36.0
 SUFX=BTt
 
 ##RUN=2841 SUFX=BTt VER=18.0 DBVER=18 root DoFlow_Analysis.C
@@ -66,3 +66,6 @@ function allcorr(){ ## Go through from the second to the last
 
 echo ${RUNNUMBER1[0]}
 grep function DoRPAnalysis.sh
+
+#corr
+#allcorr

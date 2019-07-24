@@ -1,7 +1,7 @@
 source setup.sh
 
 MNDB=BTt                           ##<---
-MNVERSION=35.0                     ##   <------@@ input 
+export MNVERSION=35.0              ##   <------@@ input 
 export MNSPID=2                    ##<--- pid: 2:p, 3:d, 4:t, 5:3He, 6:4He, 7:n, 8:n
 export MNMACRO=DoFlow_adv.C        ##<---
 
@@ -36,9 +36,9 @@ function runonebyoneshort()
 
 export MNRNF={$RNF108}
 export MNRNF={$RNF132}
-#PARTICLE=("3" "4" "5" "8")
-PARTICLE=("2")
-#export MNOVER=0
+#PARTICLE=("2")
+PARTICLE=("2" "3" "4" "5")
+export MNOVER=7
 function multipleexec()
 {
     typeset -i I=0;

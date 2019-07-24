@@ -172,7 +172,8 @@ void STParticle::SetRecoTrack(STRecoTrack *atrack)
 {
   fRTrack = atrack;
 
-  forigP3 = fRTrack->GetMomentumTargetPlane();
+  forigP3 = fRTrack->GetMomentumTargetPlane(); //v35
+  // forigP3 = fRTrack->GetMomentum();          // v36
   fRotatedP3 = forigP3;
 
   fRotatedPt = TVector2( fRotatedP3.X(), fRotatedP3.Y());
@@ -313,8 +314,8 @@ void  STParticle::RotateAlongBeamDirection(Double_t valuex, Double_t valuey)
   fRotatedP3.RotateY(-valuex);
   fRotatedP3.RotateX(-valuey);
 
-  fRotatedPt = TVector2( fRotatedP3.X(),fRotatedP3.Y());
-  fPxz       = TVector2( fRotatedP3.Z(),-fRotatedP3.X());
+  fRotatedPt = TVector2( fRotatedP3.X(), fRotatedP3.Y());
+  fPxz       = TVector2( fRotatedP3.Z(), fRotatedP3.X());
   fPyz       = TVector2( fRotatedP3.Z(), fRotatedP3.Y());
 
   bRotated = kTRUE;

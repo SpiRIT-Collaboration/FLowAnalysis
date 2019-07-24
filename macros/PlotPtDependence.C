@@ -30,51 +30,25 @@ Bool_t bplot[] =
 // --> Plotting selection
 //--- Data
 Bool_t bsys[]  = { 1, 0, 0, 0};
-Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bpid[]  = { 1, 1, 1, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {1, 1, 0, 0, 0, 0, 0, 0};
+UInt_t  bver[]  = {0, 0, 1, 0, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v35.0.0"  ,"advYPt_","#phi<30"} ,  
+  {".v35.0.5"  ,"advYPt_","|#phi|<30"} ,  
+  {".v35.0.6"  ,"advYPt_","|#phi|>150"} ,  
+  {".v35.0.4"  ,"advYPt_","all"} ,  
+  {".v36.0.0"  ,"advYPt_","M"} ,  
+  {".v36.0.1"  ,"advYPt_","|#phi|<30"} ,  
+  {".v36.0.2"  ,"advYPt_","|#phi|>150"} ,  
   {".v35.0.1"  ,"advYPt_","#phi>150"} ,  
   {".v34.0.0"  ,"advYPt_","Reco"} ,  
   {".v29.1.31" ,"advYPt_","phi<=30"} ,  
   {".v29.1.32" ,"advYPt_","phi>=150"} ,
-  {".v31.0.1"  ,"advYPt_","pA -0.1;yaw>0"} ,
-  {".v31.0.2"  ,"advYPt_","pA -0.1;yaw<0"} ,
-  {".v32.0.0"  ,"advYPt_","org;yaw>0"} ,
-  {".v32.0.1"  ,"advYPt_","org;yaw<0"} ,
-  {".v30.1.0"  ,"advYPt_","yaw>0"} ,
-  {".v30.1.1"  ,"advYPt_","yaw<0"} ,
-  {".v29.1.27" ,"advYPt_","#Psi;yaw>0"} ,
-  {".v29.1.28" ,"advYPt_","#Psi;yaw<0"} ,
-  {".v33.0.1"  ,"advYPt_","AP/2;yaw>0"} ,
-  {".v33.0.0"  ,"advYPt_","PA/2;yaw<0"} ,
-  {".v31.0.0"  ,"advYPt_","pA -0.1;All"} ,
-  {".v29.1.29" ,"advYPt_","#Psi;All"} ,
-  {".v29.1.26" ,"advYPt_","yaw>0"} ,
-  {".v29.1.25" ,"advYPt_","yaw<0"} ,
-  {".v29.1.24" ,"advYPt_","m5-55"} ,
-  {".v29.1.22" ,"advYPt_","m5-55"} ,
-  {".v29.1.21" ,"advYPt_","yaw<0"} , //"m5-80"} ,
-  {".v29.1.3"  ,"advYPt_","yaw<0"} , //"m5-80"} ,
-  {".v29.1.15" ,"advYPt_","m<2790"} , 
-  {".v29.1.20" ,"advYPt_","p>1000 yaw>0"} , 
-  {".v29.1.19" ,"advYPt_","p>1000 yaw<0"} , 
-  {".v29.1.16" ,"advYPt_","m>2790"} , 
-  {".v29.1.0"  ,"advYPt_","yaw>0"} , 
-  {".v29.1.12" ,"advYPt_","m5-80"} , 
-  {".v29.1.9"  ,"advYPt_","m5-80"} , 
-  {".v29.1.1"  ,"advYPt_","m5-55"} ,
-  {".v29.1.2"  ,"advYPt_","m5-40"} ,
-  {".v29.1.4"  ,"advYPt_","yaw>0&pitch>0"},//"m5-40"} ,
-  {".v29.1.5"  ,"advYPt_","yaw>0&pitch<0"},//"m5-40"} ,
-  {".v29.1.6"  ,"advYPt_","yaw>0&pitch<0"}, //"m5-80"} ,
-  {".v29.1.7"  ,"advYPt_","yaw>0&pitch>0"} //"m5-80"} ,
 };
 
 TString sVer[nmax];

@@ -275,7 +275,6 @@ void STSpiRITTPCTask::FinishEvent()
     return;
   }
 
-
   if( fIsFlowAnalysis ) {
 
     fflowtask->FinishEvent();
@@ -414,10 +413,7 @@ void STSpiRITTPCTask::ProceedEvent()
 
       //--- Rotate tracks along beam direction ---;                    
       if(ProjA > -1000 && ProjB > -1000)
-	//	aParticle->RotateAlongBeamDirection(ProjA/2000., ProjB/1000.);
 	aParticle->RotateAlongBeamDirection(ProjA/1000., ProjB/1000.);
-	//	aParticle->RotateAlongBeamDirection(-0.06, ProjB/1000.);
-	//      aParticle->RotateAlongBeamDirection(-0.1, ProjB/1000.);
 
       Int_t    Charge   = aParticle->GetCharge();
       TVector3 VMom     = aParticle->GetRotatedMomentum();
