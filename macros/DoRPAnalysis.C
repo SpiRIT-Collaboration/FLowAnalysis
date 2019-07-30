@@ -16,6 +16,11 @@ void DoRPAnalysis(Long64_t nmax = -1)
   auto fflowtask = new STFlowTask(kTRUE, kTRUE, kFALSE);
   auto fIsFlowAnalyais = fflowtask->Init(iRun, dVer);
 
+  if( !fIsFlowAnalyais ) {
+    std::cout << " A flow correction dbase is not fond. " << std::endl;
+    exit(0);
+  }
+
   Open();
 
   OutputTree();

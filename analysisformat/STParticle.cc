@@ -144,6 +144,8 @@ void STParticle::Clear(Option_t *option)
   fTargetf     = 1;
   fmomentumf   = 1;    
   fdedxf       = 1;
+  fRapidity    = -9.;
+  fRapiditycm  = -9.;
 
   fNDFf        = 1;    
   fclusterratiof = 1;  

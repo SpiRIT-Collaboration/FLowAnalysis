@@ -25,7 +25,7 @@ void openFlw()
 
   for(UInt_t i = 0; i < nconfig; i++){
     if( aRun[i] != "" && sDB[i] != ""){ 
-      std::cout << " RUN" << i << "-> " << aRun[i] << " : DB " << i << "-> " << sDB[i] << std::endl;
+      //      std::cout << " RUN" << i << "-> " << aRun[i] << " : DB " << i << "-> " << sDB[i] << std::endl;
 
       isys[ichain] = OpenChain(ichain);
       if(isys[ichain] < 10) ichain++;
@@ -62,10 +62,6 @@ UInt_t OpenChain(UInt_t m)
     ist+=5;
   }
 
-  for(Int_t i = 0; i < nrun; i++)
-    cout << " lrun = " << lrun.at(i) << endl;
-
-  
 
   cout << "sDB[0] " << sDB[0] << " " << sDB[0](10,1) << endl;
 

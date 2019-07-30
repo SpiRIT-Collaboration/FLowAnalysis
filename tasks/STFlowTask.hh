@@ -28,6 +28,7 @@ private:
   Bool_t fIsBootStrap;           //!< bootstrap analysis flag
   Bool_t fIsSubeventAnalysis;    //!< Subevent analysis flag  
   UInt_t selReactionPlanef;      //! track quality for reaction plane 
+  UInt_t iSystem;                //!  system ID {"(132Sn + 124Sn)", "(108Sn + 112Sn)", "(124Sn + 112Sn)", "(112Sn + 124Sn)", "(p + p)"}
   
   TString sVer; //!
 
@@ -73,7 +74,7 @@ public:
 
   Bool_t DoFlattening();
   Bool_t DoFlatteningSub();
-  Bool_t DoFlattening(STParticle &part);
+  TVector3 DoFlattening(TVector3 mvec, UInt_t ntrk);
   void   DoSubeventAnalysis();
   void   DoSubeventAnalysisFixedMultiplicity(UInt_t val);
 

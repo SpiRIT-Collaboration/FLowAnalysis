@@ -30,16 +30,23 @@ Bool_t bplot[] =
 // --> Plotting selection
 //--- Data
 Bool_t bsys[]  = { 1, 0, 0, 0};
-Bool_t bpid[]  = { 1, 1, 1, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bpid[]  = { 0, 0, 1, 1, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {0, 0, 1, 0, 0, 0, 0, 0};
+UInt_t  bver[]  = {1, 0, 0, 0, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
+  {".v37.1.2"  ,"advYPt_","|#phi|<30&150"} ,  
+  {".v37.0.4"  ,"advYPt_","good track"} ,  
+  {".v37.0.1"  ,"advYPt_","|#phi|<30"} ,  
+  {".v37.0.3"  ,"advYPt_","|#phi|>150"} ,  
+  {".v37.0.2"  ,"advYPt_","Error"} ,  
   {".v35.0.5"  ,"advYPt_","|#phi|<30"} ,  
+  {".v37.0.0"  ,"advYPt_","|#phi|<30"} ,  
+  {".v35.0.7"  ,"advYPt_","|#phi|<30&150"} ,  
   {".v35.0.6"  ,"advYPt_","|#phi|>150"} ,  
   {".v35.0.4"  ,"advYPt_","all"} ,  
   {".v36.0.0"  ,"advYPt_","M"} ,  
@@ -420,7 +427,7 @@ void PlotPtDependence()
     TH1I *hmult  = (TH1I*)fOpen->Get("hmult");
 
     TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gu_v1");
-    if( yv1 == NULL ) 
+    if( yv1 == NULL || bpBUUConfig[0] || bpBUUConfig[1]) 
       yv1 = (TGraphErrors*)fOpen->Get("gv_v1");
 
     if( yv1 != NULL ) {
@@ -483,7 +490,7 @@ void PlotPtDependence()
 
     //--- y vs v2 ---
     TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gu_v2");
-    if( yv2 == NULL )
+    if( yv2 == NULL || bpBUUConfig[0] || bpBUUConfig[1]) 
       yv2 = (TGraphErrors*)fOpen->Get("gv_v2");
 
     if( yv2 != NULL ) {
@@ -540,7 +547,7 @@ void PlotPtDependence()
     for(UInt_t k = 0; k < ybin1; k++){
 
       TGraphErrors *gr_v1 = (TGraphErrors*)fOpen->Get((TString)Form("gUt_v1%d",k));
-      if( gr_v1 == NULL )
+      if( gr_v1 == NULL || bpBUUConfig[0] || bpBUUConfig[1])
 	gr_v1 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v1%d",k));
 
       if( gr_v1 == NULL ) continue;
@@ -588,7 +595,7 @@ void PlotPtDependence()
 
       TGraphErrors *gr_v2 = (TGraphErrors*)fOpen->Get((TString)Form("gUt_v2%d",k));
 
-      if( gr_v2 == NULL )
+      if( gr_v2 == NULL || bpBUUConfig[0] || bpBUUConfig[1])
 	gr_v2 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v2%d",k));
 
       if( gr_v2 == NULL ) continue;
@@ -718,7 +725,7 @@ void PlotPtDependence()
     for(UInt_t i : ichoise) {
       cc = new TCanvas(Form("cv%d",i),Form("cv%d",i),500,550);
       cc->SetRightMargin(0.02);
-      cc->SetLeftMargin(0.25);
+      cc->SetLeftMargin(0.15);
       cc->SetTopMargin(0.08);
       cc->SetBottomMargin(0.15);
 
@@ -741,7 +748,7 @@ void PlotPtDependence()
     for(UInt_t i : ichoise2) {
       cc = new TCanvas(Form("cv%d",i+10),Form("cv%d",i+10),500,550);
       cc->SetRightMargin(0.02);
-      cc->SetLeftMargin(0.25);
+      cc->SetLeftMargin(0.15);
       cc->SetTopMargin(0.08);
       cc->SetBottomMargin(0.15);
 

@@ -1,54 +1,25 @@
 source setup.sh
 
-MNDB=BTt                           ##<---
-export MNVERSION=35.0              ##   <------@@ input 
-export MNSPID=2                    ##<--- pid: 2:p, 3:d, 4:t, 5:3He, 6:4He, 7:n, 8:n
-export MNMACRO=DoFlow_adv.C        ##<---
+##---->>> EDIT here
+export MNMACRO=DoFlow_adv.C        ##<--- MACRO name
+export MNRNF={$RNF108}            ##<--- 
+export MNDB=BTt                    ##<---
+export MNVERSION=37.1              ##   <------@@ input 
+export MNOVER=2
+##<-----------
 
 export MNrunOne='SUFX=$MNDB  VER=$MNVERSION root $MACRO.C'
 
-
-function exec4systems()   ## 4 systems
+function runmulti()
 {
-    export MNSPID=8
-    LC=0  UC=100 RUN={$RNF132} SUFX=$DB  VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($MNSPID\) 
-    LC=0  UC=100 RUN={$RNF108} SUFX=$DB  VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($MNSPID\) 
-    LC=0  UC=100 RUN={$RNF124} SUFX=$DB  VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($MNSPID\) 
-    LC=0  UC=100 RUN={$RNF112} SUFX=$DB  VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($MNSPID\) 
-}
-
-
-function runonebyonebatch() 
-{
-    RUN=$MNRNF SUFX=$DB  VER=$MNVERSION OUTVER=$MNOVER root -b -q $MACRO\($MNSPID\)
-}
-
-function runonebyone() 
-{
-    RUN=$MNRNF SUFX=$DB  VER=$MNVERSION OUTVER=$MNOVER root $MACRO\($MNSPID\)
-}
-
-function runonebyoneshort() 
-{
-    RUN={$MNRNF132r} SUFX=$DB  VER=$MNVERSION root $MACRO\($MNSPID\)
-}
-
-
-export MNRNF={$RNF108}
-export MNRNF={$RNF132}
-#PARTICLE=("2")
-PARTICLE=("2" "3" "4" "5")
-export MNOVER=7
-function multipleexec()
-{
+    PARTICLES=("3" "4" "5")
     typeset -i I=0;
-    while(( $I < ${#PARTICLE[@]} ))
+    while(( $I < ${#PARTICLES[@]} ))
     do
-	MNSPID=${PARTICLE[I]}
-	echo $I and $MNSPID 
-	runbatch
+	echo $I 
+	runbatch ${PARTICLES[I]}
 	let I++;
-	if [ $I -ge ${#PARTICLE[@]} ]; then
+	if [ $I -ge ${#PARTICLES[@]} ]; then
 	    break;
 	fi
     done
@@ -56,15 +27,15 @@ function multipleexec()
 
 function runbatch() 
 {
-    LC=0 UC=55 RUN=$MNRNF VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($MNSPID\)
+    LC=0 UC=55 RUN=$MNRNF VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($1\)
 }
 
 function run() 
 {
-    LC=0 UC=55 RUN=$MNRNF VER=$MNVERSION OUTVER=$MNOVER root $MNMACRO
+    LC=0 UC=55 RUN=$MNRNF VER=$MNVERSION OUTVER=$MNOVER root $MNMACRO\($1\)
 }
 
 echo $MNVERSION to $MNOVER
 cat DoFlow.sh |grep function
 env|grep MN
-
+echo "At first, Do it run -1 "

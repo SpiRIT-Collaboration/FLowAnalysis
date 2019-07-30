@@ -25,8 +25,8 @@ Double_t y_cm[]  = { 0.382453, 0.364873, 0.390302, 0.354066};
 Double_t y_bm[]  = { 0.360199, 0.377779, 0.354065, 0.390301};
 
 // pt bin
-const UInt_t   ptbin1  = 10; //16
-const UInt_t   ptbin2  = 8; //10
+const UInt_t   ptbin1  = 8; //16
+const UInt_t   ptbin2  = 5; //10
 Double_t pt_max = 800.;
 Double_t dpt1;
 Double_t dpt2;

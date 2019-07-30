@@ -65,6 +65,17 @@ Bool_t STFlowTask::Init(UInt_t irun, TString sver)
   sVer = sver;
   iRun = irun;
 
+  iSystem = 4;
+  if(iRun >= 2841 && iRun <= 3039)
+    iSystem = 0; // 132            
+  else if(iRun >= 2261 && iRun <= 2509)
+    iSystem = 1; // 108
+  else if(iRun >= 3059 && iRun <= 3184)
+    iSystem = 2; // 124
+  else if(iRun >= 2520 && iRun <= 2653)
+    iSystem = 3; // 112 
+
+
   fflowinfo->SetRun( irun );  
   
   LOG(INFO) << "STFlowTask::Init() >> " << irun << " Ver. " << sver << FairLogger::endl;
@@ -73,6 +84,7 @@ Bool_t STFlowTask::Init(UInt_t irun, TString sver)
     if( !SetupFlowDataBase() ) {
       LOG(ERROR) << "STFlowTask:: Flow database cannot be setup" << FairLogger::endl;
       fIsFlowCorrection = kFALSE;
+      return kFALSE;
     }
     else
       LOG(INFO) << "STFlowTask:: Flow database are ready. " << FairLogger::endl;
@@ -151,18 +163,14 @@ Bool_t STFlowTask::DoFlatteningSub()
   return kFALSE;
 }
 
-Bool_t STFlowTask::DoFlattening(STParticle &part)
+TVector3 STFlowTask::DoFlattening(TVector3 mvec, UInt_t ntrk)
 {
-  if( aflowcorrArray[0] != NULL ) {
-    
-    TVector3 rcvec =  Psi_FlatteningCorrection( 0, ntrack[4]-1, part.GetIndividualRPVector() );
-    part.SetIndividualRPVector( rcvec );
-    part.SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( part.GetRotatedPt().Phi() - rcvec.Phi()));
+  if( aflowcorrArray[0] == NULL ) 
+    return TVector3(-999.,0.,0.);
+      
+  TVector3 rcvec =  Psi_FlatteningCorrection( 0, ntrk, mvec );
   
-    return kTRUE;
-  }
-
-  return kFALSE;
+  return rcvec;
 }
 
 
@@ -418,7 +426,7 @@ void STFlowTask::SetupFlow(STParticle &apart)
   // Pt weight
   TLorentzVector lrnzVec =  apart.GetLorentzVector();
   
-  TVector3 boostVec = STLorentzBoostVector::GetBoostVector(4); //4: p+p
+  TVector3 boostVec = STLorentzBoostVector::GetBoostVector(iSystem); 
 
   lrnzVec.Boost(-boostVec);
 
@@ -500,11 +508,17 @@ void STFlowTask::SetIndividualReactionPlane( STParticle &apart )
   
   LOG(DEBUG) << " RP x " << mExcRP.X() << " <<- " << befv  << " num " << tpcParticle->GetEntries() << FairLogger::endl;
 
-  apart.SetIndividualRPAngle( mExcRP.Phi() );
-  apart.SetIndividualRPVector( mExcRP );
-
-  if(itraex > 0 ) 
-    DoFlattening( apart );
+  if(itraex > 0 ) { 
+    auto rcvec = DoFlattening( mExcRP, itraex );
+    apart.SetIndividualRPVector( rcvec );
+    apart.SetIndividualRPAngle( rcvec.Phi() );
+    apart.SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( apart.GetRotatedMomentum().Phi() - rcvec.Phi()));
+  }
+  else {
+    apart.SetIndividualRPVector( TVector3(-999.,0.,0.) );
+    apart.SetIndividualRPAngle( -9. );
+    apart.SetAzmAngle_wrt_RP( -9. );
+  }
 }
 
 

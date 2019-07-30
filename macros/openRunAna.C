@@ -71,12 +71,8 @@ void OpenChain()
     ist+=5;
   }
 
-  cout << " lrun " << lrun.at(0) << endl;
-
   GetSystem(lrun.at(0));
   cout << " system " << isys << " : " << sysName << endl;
-  for(Int_t i = 0; i < nrun; i++)
-    cout << " lrun = " << lrun.at(i) << endl;
 
   
   // set tree
