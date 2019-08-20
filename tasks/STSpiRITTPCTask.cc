@@ -191,7 +191,7 @@ Bool_t STSpiRITTPCTask::SetupInputDataFile()
   UInt_t i = 0;
   while(kTRUE){
 
-    TString recoFile = Form("run%04d_s%d.reco."+tVer+".root",iRun,i);
+    TString recoFile = Form("run%04d_s%02d.reco."+tVer+".root",iRun,i);
 
 
     if(gSystem->FindFile(rootDir,recoFile))

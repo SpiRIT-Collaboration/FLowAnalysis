@@ -9,8 +9,10 @@ source ../build/config.sh
 
 # TPC data
 
-export TPCDIR=/xrootd/spdaq02/recoData/20190206/data/
-export RCVER=HEAD.1780.1e193e6
+export TPCDIR=/data/spdaq01/recoData/20190725/data/
+export RCVER=HEAD.1834.fc633ca
+#export TPCDIR=/xrootd/spdaq02/recoData/20190206/data/
+#export RCVER=HEAD.1780.1e193e6
 #export TPCDIR=/xrootd/spdaq02/recoData/20181219/data/
 #export RCVER=HEAD.1769.ef17b59
 export ST132DIR=${STTPCDIR}
@@ -21,7 +23,6 @@ export STCkT100=${STTPCDIR}
 export STCkT300=${STTPCDIR}
 
 export STBBFITTER=db/BBFitter.root
-
 
 #BigRIPS data
 export STBEAM132=/cache/scr/spirit/DataAskedByMizuki/beam.Sn132_all/
@@ -56,12 +57,10 @@ source runList.sh
 DBVERSION=0
 VERSION=38
 
-
-RUNNUMBER1=(${RNF132})
+#RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
-#RUNNUMBER1=(${RNF112})
-#RUNNUMBER1=(${RBF132} ${RNF108}) 
+RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RNFTEMP})
 #RUNNUMBER1=(${RNF132r})
 #RUNNUMBER1=(${RNF132s})

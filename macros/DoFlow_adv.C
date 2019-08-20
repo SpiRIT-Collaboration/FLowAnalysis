@@ -212,7 +212,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   TString rangeLabel2[ybin2];
 
   for( UInt_t iy = 0; iy < ybin1; iy++ ) {
-    rangeLabel1[iy] = Form("%5.2f <= y < %5.2f"      ,yrange1[iy],yrange1[iy+1]);
+    rangeLabel1[iy] = Form("%5.2f <= y < %5.2f"      ,yrange1[iy]/y_cm[isys],yrange1[iy+1]/y_cm[isys]);
     hdy1[iy]      = new TH1D(Form("hdy1_y%d",iy)     ,rangeLabel1[iy]+";Rapidity", 500,-2.5,2.5);
     hdympt1[iy]   = new TH1D(Form("hdympt1%d",iy)    ,rangeLabel1[iy]+";Rapidity; <Pt>/A", 500,-1000.,1000.);
     hutphi10[iy]  = new TH1D(Form("hutphi10_%d",iy)  ,rangeLabel1[iy]+";#Delta #Psi",100,0.,3.2);
@@ -239,7 +239,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   }
 
   for( UInt_t iy = 0; iy < ybin2; iy++ ) {
-    rangeLabel2[iy] = Form("%5.2f <= y < %5.2f",yrange2[iy],yrange2[iy+1]);
+    rangeLabel2[iy] = Form("%5.2f <= y < %5.2f",yrange2[iy]/y_cm[isys],yrange2[iy+1]/y_cm[isys]);
     hdy2[iy] = new TH1D(Form("hdy2_y%d",iy),rangeLabel2[iy]+";Rapidity", 500,-2.5,2.5);
     hutphi20[iy]  = new TH1D(Form("hutphi20_%d",iy),rangeLabel2[iy]+";#Delta #Psi",100,0.,3.2);
     hutphi290[iy]= new TH1D(Form("hutphi290_%d",iy),rangeLabel2[iy]+";#Delta #Psi",100,0.,3.2);
@@ -462,9 +462,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   //--------------------------------------------------
   std::cout << " End of Event Loop " << std::endl;
 
-  Double_t *rpresall = new Double_t[4];
-  rpresall = GetRPResolutionwChi(hphi0_180, hphi90_180);
-
 
   TGraphErrors *gv_v1 = new TGraphErrors();
   gv_v1->SetName("gv_v1");
@@ -612,6 +609,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
       for( UInt_t ips = 0; ips < psibin; ips++ ){
 	Double_t nv1u  = (Double_t)hdyucos1[iy][ips]->GetEntries();
+
 	if( nv1u > 0 ) {
 	  rppsires = GetPsiRPResolution(ips);
 	  Double_t v1u   = hdyucos1[iy][ips]->GetMean();
@@ -640,6 +638,9 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     }
     
     // <px>
+    Double_t *rpresall = new Double_t[4];
+    rpresall = GetRPResolutionwChi(hphi0_180, hphi90_180);
+
     if( !std::isnan(rpresall[0]) ){
       Double_t mpxn = (Double_t)hdympt1[iy]->GetEntries();
       Double_t mpxc = hdympt1[iy]->GetMean() / rpresall[0] ;
@@ -1113,7 +1114,6 @@ Bool_t SetPsiRPResolution()
   Double_t x, y, xe, ye;
   UInt_t k = 0;
 
-
   for( Int_t i = 0; i < (Int_t)hgv_psi1->GetN(); i++ ) {
 
     hgv_psi1->GetPoint(i, x, y);
@@ -1128,6 +1128,9 @@ Bool_t SetPsiRPResolution()
 
     k++;
   }
+
+  
+
 
   for(UInt_t j = 0; j < (UInt_t)v1psix.size(); j++) {
     cout << "v1 resolution:"<< j << " th " << v1psix.at(j) << " vs " << v1psiy.at(j) << " +- " << v1psiye.at(j) << endl; 
@@ -1606,19 +1609,21 @@ void PsiAngleDependence()            //%% Executable :
 
   TH1I *hmult = new TH1I("hmult","multiplicity",80,0,80);
 
-  const UInt_t npsi = 12;
   TH1I *hphibin[npsi];
   TH1D *hphi0_180[npsi];
   TH1D *hphi90_180[npsi];
+  TH1D *hpsi[npsi];
   
-  for(UInt_t k = 0; k < mbin; k++){
+  for(UInt_t k = 0; k < npsi; k++){
     TString htitle = Form("hphi0_180_%d",k);
     hphi0_180[k]  = new TH1D(htitle, "",100,0.,3.2);
     htitle = Form("hphi90_180_%d",k);
     hphi90_180[k] = new TH1D(htitle,"",100,0.,3.2);
+    hpsi[k] = new TH1D(Form("hpsi%d",k),"",100,-3.15,3.15);
   }
 
   auto hiphi = new TH1I("hiphi","hiphi",15,0,15);
+
 
   //--------------------------------------------------
   //--- Event Loop
@@ -1644,9 +1649,10 @@ void PsiAngleDependence()            //%% Executable :
 
 
     auto phi   = TVector2::Phi_0_2pi(aflow->unitP_fc.Phi());
-    UInt_t iphi = UInt_t(phi/(TMath::Pi()/6.));
+    UInt_t iphi = UInt_t(phi/(TMath::Pi()/Double_t(npsi/2)));
 
-    hiphi->Fill(iphi);
+    hpsi[iphi] ->Fill( TVector2::Phi_mpi_pi(phi) );
+    hiphi->Fill( iphi );
 
     Double_t subdphi = abs(TVector2::Phi_mpi_pi((aflow->unitP_1fc).Phi() - (aflow->unitP_2fc).Phi()));
     hphi0_180[iphi] ->Fill(subdphi);
@@ -1654,11 +1660,6 @@ void PsiAngleDependence()            //%% Executable :
       hphi90_180[iphi]->Fill(subdphi);
   }
 
-  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
-  hiphi->Draw();
-
-  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),500,1000);
-  cc->Divide(2,npsi/2);
 
   auto gv_psi1 = new TGraphErrors();
   gv_psi1->SetName("gv_psi1");
@@ -1668,38 +1669,53 @@ void PsiAngleDependence()            //%% Executable :
   gv_psi2->SetName("gv_psi2");
   gv_psi2->SetTitle("; #ps2; <cos(#Delta 2#Psi)>");
    
-  UInt_t id = 1;
-  UInt_t ip = 0;
-  UInt_t nst[] = {6, 0};
 
+  UInt_t id = 1;
+  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,1000);
+  cc->Divide(2,npsi);
+
+  UInt_t ip = 0;
+  Double_t *rpres = new Double_t[4];
+
+  UInt_t nst[] = {6, 0};
   for(UInt_t j = 0; j < 2; j++) {
     for(UInt_t i = nst[j]; i < nst[j]+6; i++) {
       cc->cd(id); id++;
-
-      if( hphi0_180[i]->GetEntries() < 5 ) continue;
-
-      hphi0_180[i] ->Draw();
+      hphi0_180[i]->Draw();
+      hphi90_180[i]->SetLineColor(2);
       hphi90_180[i]->Draw("same");
 
-      Double_t *rpres = new Double_t[4];
+      cc->cd(id); id++;
+      hpsi[i]->Draw();
+
+       if( hphi0_180[i]->GetEntries() < 5 ) continue;
+
       rpres = GetRPResolutionwChi(hphi0_180[i], hphi90_180[i]);
 
+    
       if( hphi90_180[i]->GetEntries() > 15 && !std::isnan(rpres[0])) {
-	gv_psi1->SetPoint(ip, TVector2::Phi_mpi_pi((i)*TMath::Pi()/6.), rpres[0]);
+	Double_t psi = hpsi[i]->GetMean();
+	gv_psi1->SetPoint(ip, psi, rpres[0]);
 	gv_psi1->SetPointError(ip, 0., rpres[1]);
-
-	gv_psi2->SetPoint(ip, TVector2::Phi_mpi_pi((i)*TMath::Pi()/6.), rpres[2]);
+      
+	gv_psi2->SetPoint(ip, psi, rpres[2]);
 	gv_psi2->SetPointError(ip, 0., rpres[3]);
 	ip++;
       }
     }
   }
+
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));  
   gv_psi1->SetMarkerStyle(2);
   gv_psi1->Draw("ALP");
+
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));  
   gv_psi2->SetMarkerStyle(2);
   gv_psi2->Draw("ALP");
+
+  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+  hiphi->Draw();
+
 
   hmult->Write();
   hiphi->Write();

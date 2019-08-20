@@ -16,9 +16,11 @@ const Int_t nbinx = 30;
 UInt_t id = 0;
 
 
-Double_t yrange1[] = { -0.8, -0.25, -0.15, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45, 0.5, 0.8};
+//Double_t yrange1[] = { -0.8, -0.25, -0.15, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45, 0.5, 0.8};
+Double_t yrange1[] = { -0.2, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45, 0.5};
 const UInt_t ybin1 = sizeof(yrange1)/sizeof(Double_t);
-Double_t yrange2[] = { -0.8, -0.2, -0.05,  0.05, 0.2, 0.35, 0.5, 0.8};
+//Double_t yrange2[] = { -0.8, -0.2, -0.05,  0.05, 0.2, 0.35, 0.5, 0.8};
+Double_t yrange2[] = { -0.2, -0.05,  0.05, 0.2, 0.35, 0.5};
 const UInt_t ybin2 = sizeof(yrange2)/sizeof(Double_t);
 
 Double_t y_cm[]  = { 0.382453, 0.364873, 0.390302, 0.354066};
@@ -46,6 +48,7 @@ const UInt_t mbin = sizeof(mrange)/sizeof(UInt_t);
 Int_t  Lcent = 0;  // {75, 45, 30, 20, 0};
 Int_t  Ucent = 80;
 
+const UInt_t npsi = 12; // Number of bin in Psi
 
 TString amdpartname[] = {"prt","deut","trit","3He","4He","neut","H"};
 
