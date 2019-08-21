@@ -24,6 +24,8 @@ STParticle::STParticle(const STParticle &cp)
   
   ftrackID      = cp.ftrackID;;
   fPID          = cp.fPID;
+  fPID_tight    = cp.fPID_tight;
+  fPID_norm     = cp.fPID_norm;
   fPID_loose    = cp.fPID_loose;
   fRapidity     = cp.fRapidity;
   fRapiditycm   = cp.fRapiditycm;
@@ -128,6 +130,8 @@ void STParticle::Clear(Option_t *option)
 
   fpipid       = 0;
   fPID         = 0;
+  fPID_tight   = 0;
+  fPID_norm    = 0;
   fPID_loose   = 0;
   fNDF         = 0.;
   fclustex     = -1.;
@@ -140,6 +144,8 @@ void STParticle::Clear(Option_t *option)
   fTargetf     = 1;
   fmomentumf   = 1;    
   fdedxf       = 1;
+  fRapidity    = -9.;
+  fRapiditycm  = -9.;
 
   fNDFf        = 1;    
   fclusterratiof = 1;  
@@ -168,11 +174,12 @@ void STParticle::SetRecoTrack(STRecoTrack *atrack)
 {
   fRTrack = atrack;
 
-  forigP3 = fRTrack->GetMomentumTargetPlane();
+  forigP3 = fRTrack->GetMomentumTargetPlane(); //v35
+  // forigP3 = fRTrack->GetMomentum();          // v36
   fRotatedP3 = forigP3;
 
-  fRotatedPt = TVector2( fRotatedP3.X(),fRotatedP3.Y());
-  fPxz       = TVector2( fRotatedP3.Z(),-fRotatedP3.X());
+  fRotatedPt = TVector2( fRotatedP3.X(), fRotatedP3.Y());
+  fPxz       = TVector2( fRotatedP3.Z(), fRotatedP3.X());
   fPyz       = TVector2( fRotatedP3.Z(), fRotatedP3.Y());
 
   fP    = forigP3.Mag();
@@ -309,8 +316,8 @@ void  STParticle::RotateAlongBeamDirection(Double_t valuex, Double_t valuey)
   fRotatedP3.RotateY(-valuex);
   fRotatedP3.RotateX(-valuey);
 
-  fRotatedPt = TVector2( fRotatedP3.X(),fRotatedP3.Y());
-  fPxz       = TVector2( fRotatedP3.Z(),-fRotatedP3.X());
+  fRotatedPt = TVector2( fRotatedP3.X(), fRotatedP3.Y());
+  fPxz       = TVector2( fRotatedP3.Z(), fRotatedP3.X());
   fPyz       = TVector2( fRotatedP3.Z(), fRotatedP3.Y());
 
   bRotated = kTRUE;

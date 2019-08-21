@@ -16,6 +16,11 @@ void DoRPAnalysis(Long64_t nmax = -1)
   auto fflowtask = new STFlowTask(kTRUE, kTRUE, kFALSE);
   auto fIsFlowAnalyais = fflowtask->Init(iRun, dVer);
 
+  if( !fIsFlowAnalyais ) {
+    std::cout << " A flow correction dbase is not fond. " << std::endl;
+    exit(0);
+  }
+
   Open();
 
   OutputTree();
@@ -31,6 +36,10 @@ void DoRPAnalysis(Long64_t nmax = -1)
     if( !abeamInfo->GetBeamPID() ) continue;
 
     auto aFlowInfo = (STFlowInfo*)aFlowArray->At(0);
+
+    if( aFlowInfo->beamPID == 124 ){
+      if( (aFlowInfo->mtrack1*0.8-20) > aFlowInfo->mtrack4 || aFlowInfo->mtrack4 < 5) continue;
+    }
     
 
     fflowtask->SetFlowInfo( aFlowInfo );

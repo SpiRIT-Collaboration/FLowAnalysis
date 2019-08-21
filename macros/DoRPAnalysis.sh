@@ -6,56 +6,72 @@
 # ----------------------
 
 source ../build/config.sh
-
 source runList.sh
-RUNNUMBER1=(${RNF132r})
-RUNNUMBER1=(${RNF132p})
 
-DBVERSION=23
-VERSION=23.1
-SUFX=BTt
+##------>>> EDIT HERE 
+export MNRNF=$RNF108
+export MNDBVERSION=37
+export MNVERSION=37.1
+export MNDB=BTt
+##<----
 
-##RUN=2841 SUFX=BTt VER=18.0 DBVER=18 root DoFlow_Analysis.C
+function flattening() {
+    RUN={$MNRNF} VER=$MNDBVERSION SUFX=$MNDB root -q -b DoFlattening.C\(11\)
+    RUN={$MNRNF} VER=$MNDBVERSION SUFX=$MNDB root -q DoFlattening.C\(10\)
+}
 
-function flowcorr(){
-    RUN=${RUNNUMBER1[0]} VER=$VERSION SUFX=$SUFX DBVER=$DBVERSION root DoRPAnalysis.C\($MXEVT\)
+RUNNUMBER1=(${MNRNF})
+
+function corr(){    ## only the first run
+    RUN=${RUNNUMBER1[0]} VER=$MNVERSION SUFX=$MNDB DBVER=$MNDBVERSION root DoRPAnalysis.C\($MXEVT\)
 }
 
 
-function allflowcorr(){
-    typeset -i I=1
+function allcorr(){ ## Go through from the second to the last
+    typeset -i I=0
     while(( $I < ${#RUNNUMBER1[@]} ))
     do
 	RUN=${RUNNUMBER1[I]}
-	LOG=log/p2_${RUN}_v${VERSION}.log
-	echo RUN=${RUN} VER=$VERSION SUFX=$SUFX DBVER=$DBVERSION root -b -q DoRPAnalysis.C : $LOG
-	RUN=${RUN} VER=$VERSION SUFX=$SUFX DBVER=$DBVERSION root -b -q DoRPAnalysis.C >& $LOG &
+	LOG=log/p2_${RUN}_v${MNVERSION}.log
+	echo RUN=${RUN} VER=$MNVERSION SUFX=$MNDB DBVER=$MNDBVERSION root -b -q DoRPAnalysis.C : $LOG
+	RUN=${RUN} VER=$MNVERSION SUFX=$MNDB DBVER=$MNDBVERSION root -b -q DoRPAnalysis.C >& $LOG &
 	let I++
 	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
 	    break;
 	fi
 
 	RUN=${RUNNUMBER1[I]}
-	LOG=log/p2_${RUN}_v${VERSION}.log
-	echo RUN=${RUN} VER=$VERSION SUFX=$SUFX DBVER=$DBVERSION root -b -q DoRPAnalysis.C : $LOG
-	RUN=${RUN} VER=$VERSION SUFX=$SUFX DBVER=$DBVERSION root -b -q DoRPAnalysis.C >& $LOG &
+	LOG=log/p2_${RUN}_v${MNVERSION}.log
+	echo RUN=${RUN} VER=$MNVERSION SUFX=$MNDB DBVER=$MNDBVERSION root -b -q DoRPAnalysis.C : $LOG
+	RUN=${RUN} VER=$MNVERSION SUFX=$MNDB DBVER=$MNDBVERSION root -b -q DoRPAnalysis.C >& $LOG &
 	let I++
 	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
 	    break;
 	fi
 
 	RUN=${RUNNUMBER1[I]}
-	LOG=log/p2_${RUN}_v${VERSION}.log
-	echo RUN=${RUN} VER=$VERSION SUFX=$SUFX DBVER=$DBVERSION root -b -q DoRPAnalysis.C : $LOG
-	RUN=${RUN} VER=$VERSION SUFX=$SUFX DBVER=$DBVERSION root -b -q DoRPAnalysis.C >& $LOG &
+	LOG=log/p2_${RUN}_v${MNVERSION}.log
+	echo RUN=${RUN} VER=$MNVERSION SUFX=$MNDB DBVER=$MNDBVERSION root -b -q DoRPAnalysis.C : $LOG
+	RUN=${RUN} VER=$MNVERSION SUFX=$MNDB DBVER=$MNDBVERSION root -b -q DoRPAnalysis.C >& $LOG &
 	let I++
 	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
 	    break;
 	fi
 
 	RUN=${RUNNUMBER1[I]}
-	LOG=log/p2_${RUN}_v${VERSION}.log
-	RUN=${RUN} VER=$VERSION SUFX=$SUFX DBVER=$DBVERSION root -b -q DoRPAnalysis.C >& $LOG 
+	LOG=log/p2_${RUN}_v${MNVERSION}.log
+	RUN=${RUN} VER=$MNVERSION SUFX=$MNDB DBVER=$MNDBVERSION root -b -q DoRPAnalysis.C >& $LOG 
 	let I++
     done
+}
+
+echo ${RUNNUMBER1[0]}
+grep function DoRPAnalysis.sh
+env | grep MN
+
+echo "type docorrection"
+
+function docorrection() {
+    flattening
+    allcorr
 }

@@ -37,13 +37,17 @@ STFlowInfo::STFlowInfo(const STFlowInfo &cp)
   unitP_1fc= cp.unitP_1fc;
   unitP_2fc= cp.unitP_2fc;
   mtrack_1 = cp.mtrack_1;
-  mtrack_2 = cp.mtrack_1;
+  mtrack_2 = cp.mtrack_2;
   
   for(UInt_t i = 0; i < 3; i++) {
     bsPhi[i]   = cp.bsPhi[i];
     bsPhi_1[i] = cp.bsPhi_1[i];
     bsPhi_2[i] = cp.bsPhi_2[i];
   }
+
+  rpSigma   = cp.rpSigma;
+  rpChi[0]  = rpChi[0];
+  rpChi[1]  = rpChi[1];
 }
 
 STFlowInfo &STFlowInfo::operator=(const STFlowInfo &cp)
@@ -133,9 +137,10 @@ void STFlowInfo::Clear(){
     bsPhi_2[i] = 0.;
   }
 
-
+  rpSigma  = 0.;
+  rpChi[0] = 0.;
+  rpChi[1] = 0.;
   
-
 }
 
 ClassImp(STFlowInfo);

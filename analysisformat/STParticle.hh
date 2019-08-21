@@ -39,6 +39,8 @@ private:
   Int_t    ftrackID;
 
   UInt_t   fPID;
+  UInt_t   fPID_tight;
+  UInt_t   fPID_norm;
   UInt_t   fPID_loose;
   Double_t fRapidity;
   Double_t fRapiditycm;
@@ -141,6 +143,10 @@ public:
   void     SetPID();
   void     SetPID(Int_t value)           {fPID = value;} 
   Int_t    GetPID()                      {return fPID;}
+  void     SetPIDTight(Int_t value)      {fPID_tight = value;}           
+  Int_t    GetPIDTight()                 {return fPID_tight;}           
+  void     SetPIDNorm(Int_t value)       {fPID_norm = value;}           
+  Int_t    GetPIDNorm()                  {return fPID_norm;}           
   void     SetPIDLoose(Int_t value);           
   Int_t    GetPIDLoose()                 {return fPID_loose;}           
 
@@ -294,7 +300,7 @@ public:
   TVector3     GetPOCAVertex()                  {return rPOCAVertex;}
 
 
-  ClassDef(STParticle, 19)
+  ClassDef(STParticle, 20)
 
 };
 

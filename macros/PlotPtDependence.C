@@ -1,38 +1,124 @@
-#include "DoFlowAnalysis.h"
+#include "DoFlow.h"
+#include "SetStyle.C"
 
-  // --> Plotting selection
-Bool_t bsys[]  = { 1, 0, 0, 0};
-Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n
+struct gplot{
+  TString Version;
+  TString fileHeader;
+  TString comment;
+};
+
+
+TString  bName[]   = {"132Sn_","108Sn_","124Sn_","112Sn_"};
+Double_t sysdlt[]  = {0.22,    0.09,      0.15,   0.15};
+Double_t sysA[]    = {256.,    220.,      236.,   236};
+
+//==================================================
+//-- plot configuration
+//--------------------------------------------------
+Bool_t bplot[] = 
+  { 0, // 0 data   It should be set to 1 in the code.
+    0, // 1 model  It should be set to 1 in the code.
+    1, // 2 v1 and v2 rapidity 
+    1, // 3 v1 and v2 on pt in one window
+    0, // 4 v1 and v2 in individual windows
+    0, // 5 Acceptance ypt
+    0, // 6 <px>/A
+    0, // 7 v1 vs part 
+    1, // 8 v2_min 
+  };
+//==================================================
+
+// --> Plotting selection
+//--- Data
+Bool_t bsys[]  = { 0, 1, 0, 0};
+Bool_t bpid[]  = { 1, 1, 1, 1, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
-UInt_t cntw = 3;
+UInt_t cntw = 1;
+UInt_t iv2at = 4;
+//-----------
 
-UInt_t bver[]  = { 1, 1, 1, 1, 1, 1};
-TString sVer[] = {".v23.1.7",".v23.1.10", ".v23.1.11", ".v23.1.12", ".v23.1.13"};
-TString sName = "cosYPt_132Sn_";
+UInt_t  bver[]  = {1, 0, 0, 0, 0, 0, 0, 0};
+const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
+gplot gnames[] = { 
+  {".v37.1.4"  ,"advYPt_","m5to60"},//"|#phi|<30&150"} ,  
+  {".v37.1.3"  ,"advYPt_",""},//"|#phi|<30&150"} ,  
+  {".v37.1.2"  ,"advYPt_","|#phi|<30&150"} ,  
+  {".v37.0.4"  ,"advYPt_","good track"} ,  
+  {".v37.0.1"  ,"advYPt_","|#phi|<30"} ,  
+  {".v37.0.3"  ,"advYPt_","|#phi|>150"} ,  
+  {".v37.0.2"  ,"advYPt_","Error"} ,  
+  {".v35.0.5"  ,"advYPt_","|#phi|<30"} ,  
+  {".v37.0.0"  ,"advYPt_","|#phi|<30"} ,  
+  {".v35.0.7"  ,"advYPt_","|#phi|<30&150"} ,  
+  {".v35.0.6"  ,"advYPt_","|#phi|>150"} ,  
+  {".v35.0.4"  ,"advYPt_","all"} ,  
+  {".v36.0.0"  ,"advYPt_","M"} ,  
+  {".v36.0.1"  ,"advYPt_","|#phi|<30"} ,  
+  {".v36.0.2"  ,"advYPt_","|#phi|>150"} ,  
+  {".v35.0.1"  ,"advYPt_","#phi>150"} ,  
+  {".v34.0.0"  ,"advYPt_","Reco"} ,  
+  {".v29.1.31" ,"advYPt_","phi<=30"} ,  
+  {".v29.1.32" ,"advYPt_","phi>=150"} ,
+};
+
+TString sVer[nmax];
+TString sName[nmax];
+TString cmnt[nmax];
+
+//-- pBUU
+Bool_t  bpBUUConfig[]  = {0, 0, 0, 0};
+//-----------
+gplot pBUUConfig[] = {
+  {"_energy270_gamma0.50_b5_withCluster.","pBUU2","pBUU b5g0.5"},
+  {"_energy270_gamma1.75_b5_withCluster.","pBUU2","pBUU b5g1.75"},
+  {".b2.g05"   ,"pBUU_"  ,"pBUU b2g0.5"},
+  {".b2.g175"  ,"pBUU_"  ,"pBUU b2g1.75"},
+  {".b4.g05"   ,"pBUU_"  ,"pBUU b4g0.5"},
+  {".b4.g175"  ,"pBUU_"  ,"pBUU b4g1.75"}
+};
+Double_t pBUU_F[4][4] = { //F b2 g0.5, b2 g1.75, b4 g0.5, b4 g1.75
+  { 92.1902, 93.199, 120.6029, 120.467},   // 132
+  { 88.2085, 87.8252,113.6998, 113.6738},  // 108
+  { 88.2085, 87.8252,113.6998, 113.6738},  // 108 (124)
+  { 88.2085, 87.8252,113.6998, 113.6738}   // 108 (112)
+};
+
+Double_t pBUU_v2[4][4] = { //v2 b2 g0.5, b2 g1.75, b4 g0.5, b4 g1.75
+  { -0.0071928, -0.0058827, -0.0372598, -0.0338454}, //132
+  { -0.0066653, -0.0059764, -0.0372598, -0.0343415}, //108
+  { -0.0066653, -0.0059764, -0.0372598, -0.0343415}, //(124)
+  { -0.0066653, -0.0059764, -0.0372598, -0.0343415}  //(112)
+};
+
+//-- AMD
+Bool_t  amdEOS[]= {0, 0};
+//-----------
+TString amdName[] = {"SLy4",
+		     "SLy4-L108"};
+
+TString amdHeader[] = {"amd_132Sn124Sn270AMeV_cluster_",
+		       "amd_108Sn112Sn270AMeV_cluster_"};
 
 
-
+//==================================================
 UInt_t   ccvid = 0;
-TF1 *lslope = new TF1("lslope","[0]+[1]*x",-0.1,0.2);
+auto lslope = new TF1("lslope","[0]+[1]*x",-1., 1.);
+auto fv1fit = new TF1("fv1fit","[0]+[1]*x+[2]*x^3",-0.5,1.3);
 
 // --> configuration
-TString fsys[] = {"132Sn+124Sn","108Sn+112Sn","124Sn+112Sn","112Sn+124Sn"};
-TString rsys[] = {"132",        "108",        "124",        "112"};
-TString fpid[] = {"proton","deuteron","triton","3He","4He","neutron"};  
-
 Size_t  imsz[] = {1, 1, 1.3, 1.3, 1.3, 1.3, 1.3};
-Color_t icol[] = { kRed, kBlue, kSpring, kMagenta, kOrange, kViolet};
+Color_t icol[] = {  kRed, kBlue, kSpring, kMagenta, kOrange, kViolet};
 Color_t icolnn[]={ kPink, kBlue+1, kGreen+2, kViolet-1};
+
 
 TMultiGraph  *mv1[ybin1];
 TMultiGraph  *mv2[ybin2];
 TLegend      *lg1[ybin1];
 TLegend      *lg2[ybin2];
 
-void RemovePoints(TString fn, TGraphErrors &gr);
-void RemoveYPoint(TGraphErrors *gv);
-void RemovePtPoint(UInt_t ip, TGraphErrors *gv);
 void RapidityShift(TGraphErrors *gv);
+void ShiftX(TGraphErrors *gv, Double_t off);
+void GetMinimumv2(TGraphErrors *gr, Double_t &min, Double_t &mer);
 
 Double_t FittingAndIntegral(TGraphErrors *gr)
 {
@@ -48,39 +134,90 @@ Double_t FittingAndIntegral(TGraphErrors *gr)
 
 void PlotPtDependence()
 {
+  
   gStyle->SetOptStat(0);
+  SetStyle();
 
+  for(UInt_t i = 0; i < nmax; i++){
+    if( bver[i] ) {
+      sVer[i]  = gnames[i].Version;
+      sName[i] = gnames[i].fileHeader;
+      cmnt[i]  = gnames[i].comment;
+    }
+  }
 
-  Bool_t bplot = 0;
   TString ltitle;
 
 
   UInt_t ngr = 0;
   std::vector< TString > fname;
-  std::vector< std::vector< UInt_t >> index(5);
+  std::vector< std::vector< UInt_t >> index(6);
+
+  TGraphErrors *g_pBUUv2g5 = new TGraphErrors();
+  g_pBUUv2g5->SetName("g_pBUUv2g5");
+  g_pBUUv2g5->SetTitle("; (N-P)/A; v2");
+
+  TGraphErrors *g_pBUUv2g17 = new TGraphErrors();
+  g_pBUUv2g17->SetName("g_pBUUv2g17");
+  g_pBUUv2g17->SetTitle("; (N-P)/A; v2");
 
 
-  TGraphErrors *g_slope[4][6];
-  TGraphErrors *g_v2cm[4][6];
-  TGraphErrors *g_v1slp[4];
-  TGraphErrors *g_v2mid[4];
+  TGraphErrors *g_pBUUFg5 = new TGraphErrors();
+  g_pBUUFg5->SetName("g_pBUUFg5");
+  g_pBUUFg5->SetTitle("; (N-P)/A; F{MeV/c]");
+
+  TGraphErrors *g_pBUUFg17 = new TGraphErrors();
+  g_pBUUFg17->SetName("g_pBUUFg17");
+  g_pBUUFg17->SetTitle("; (N-P)/A; F{MeV/c]");
+
+
+  TGraphErrors *g_mpxslp = new TGraphErrors();
+  g_mpxslp->SetName("g_mpxslp");
+  g_mpxslp->SetTitle("; (N-P)/A; F[MeV/c]");
+
+  TGraphErrors *g_v1slp = new TGraphErrors();
+  g_v1slp->SetName("g_v1slp");
+  g_v1slp->SetTitle("; Multiplicity; slope of v1");
+
+  TGraphErrors *g_v2max = new TGraphErrors();
+  g_v2max->SetName("g_v2max");
+  g_v2max->SetTitle(";multiplicity; v2_max");
+
+  TGraphErrors *g_v2sysA = new TGraphErrors();
+  g_v2sysA->SetName("g_v2sysA");
+  g_v2sysA->SetTitle(";A_{beam} + A_{target}; v2");
+
+  TGraphErrors *g_v2sysD = new TGraphErrors();
+  g_v2sysD->SetName("g_v2sysD");
+  g_v2sysD->SetTitle(";(N-P)/A; v2");
+
+  // Rapidity dependence 
+  TH2D *hyptacp[10];
+
+  auto mrv1  = new TMultiGraph("mrv1"  ,";y_{cm}/y_{cm}; v1");
+  auto mrv2  = new TMultiGraph("mrv2"  ,";y_{cm}/y_{cm}; v2");
+  auto mv1sl = new TMultiGraph("mv1sl" ,";Centrality; v1 slope");
+  auto mv1slp= new TMultiGraph("mv1slp","; Particle ; v1 slope");
+  auto mmpx  = new TMultiGraph("mmpx","; y/y_{cm} ; <px>/A");
+  //  mv1slp->GetXaxis()->SetAlphanumeric(kTRUE);
+
+  auto lgr1 = new TLegend(0.54, 0.13, 0.87, 0.4, ""); 
+  auto lgr2 = new TLegend(0.38, 0.68, 0.75, 0.9, "");
+  auto lgr3 = new TLegend(0.35, 0.13, 0.7, 0.33, "");
+  auto lgr4 = new TLegend(0.15, 0.63, 0.5, 0.85, "");
+  auto lgr5 = new TLegend(0.15, 0.63, 0.5, 0.85, "");
+  auto lgr6 = new TLegend(0.72, 0.72, 0.94, 0.88,"");
+  auto lgr7 = new TLegend(0.16, 0.70, 0.46, 0.85,"");
+  auto lgr8 = new TLegend(0.16, 0.70, 0.46, 0.85,"");
+  auto lgr9 = new TLegend(0.16, 0.70, 0.46, 0.85,"");
+  auto lgr0 = new TLegend(0.16, 0.70, 0.46, 0.85,"");
+  auto lgr10= new TLegend(0.16, 0.70, 0.46, 0.85,"");
   
-
+  TString fOutName = "";
   for(UInt_t is = 0; is < 4; is++){
-    g_v1slp[is] = new TGraphErrors();
-    g_v1slp[is]->SetName( Form("g_v1slp%d",is) );
-
-    g_v2mid[is] = new TGraphErrors();
-    g_v2mid[is]->SetName( Form("g_v2mid%d",is) );
 
     for(UInt_t ip = 0; ip < (UInt_t)sizeof(bpid)/sizeof(Bool_t); ip++){
 
-      g_slope[is][ip] = new TGraphErrors();
-      g_slope[is][ip] ->SetName( Form("g_slope_%d%d",is,ip) );
-      g_v2cm[is][ip]  = new TGraphErrors();
-      g_v2cm[is][ip]  ->SetName( Form("g_v2cm_%d%d",is,ip) );
-      
-      
       if( !bsys[is] || !bpid[ip] ) continue;
 
       for(UInt_t it = 0; it < (UInt_t)sizeof(bcnt)/sizeof(Bool_t); it++){
@@ -91,82 +228,134 @@ void PlotPtDependence()
 	  
 	  if( bver[iz] == 0 ) continue;
 
-	  fname.push_back( "data/"+ sName + fpid[ip] + sVer[iz] + ".root" );
+	  fname.push_back( "data/"+ sName[iz] + bName[is] + fpid[ip] + sVer[iz] + ".root" );
+
+	  if( fOutName == "" )
+	    fOutName = "data/" + bName[is] + fpid[ip] + sVer[iz] + "_plt.root";
 
 	  std::cout << fname.at(ngr) << std::endl;
-	  ltitle = Form("mult %d ~ %d; azm%d",cent[it],cent[it+cntw],bver[iz]);
-	  std::cout << " label title " << ltitle << std::endl;
+	  ltitle = "";
+	  //	  ltitle = Form("mult %d ~ %d",cent[it],cent[it+cntw]);
+	  //	  std::cout << " label title " << ltitle << std::endl;
 
 	  index[0].push_back(is); // system
 	  index[1].push_back(ip); // pid
 	  index[2].push_back(it); // centrality
 	  index[3].push_back(it+cntw);
 	  index[4].push_back(iz);
-
+	  index[5].push_back(1);
 	  ngr++;
+
+	  bplot[0] = 1;
 	}
       }
     }
   }
 
-  cout << fname.size() << endl;
+
+  cout << " Number of data files --> " << fname.size() << endl;
+
+  //---- amd
+  UInt_t kgr = 0;
+  for(UInt_t ls = 0; ls < 2; ls++){
+    if( !bsys[ls] ) continue;
+
+    for(UInt_t lp = 0; lp < (UInt_t)sizeof(bpid)/sizeof(Bool_t); lp++){
+      if( !bpid[lp] ) continue;
+
+      for(UInt_t lo = 0; lo < (UInt_t)sizeof(amdEOS)/sizeof(Bool_t); lo++) { 
+	if( !amdEOS[lo] ) continue;
+
+	fname.push_back( "data/"+ amdHeader[ls]+amdName[lo]+"_"+amdpartname[lp]+"_cm.root" );
+	std::cout << fname.at(ngr+kgr) << std::endl;
+
+	index[0].push_back(ls);
+	index[1].push_back(lp);
+	index[2].push_back(lo);
+	index[3].push_back(3);
+	index[4].push_back((UInt_t)sizeof(bver)/sizeof(UInt_t)+1);
+	index[5].push_back(2);
+	kgr++;
+
+      }
+    }
+  }
   
+  //---- pBUU
+  UInt_t pgr = 0;
+  for(UInt_t ms = 0; ms < 4; ms++ ){
+    if( !bsys[ms] ) continue;
+    
+    for(UInt_t ip = 0; ip < (UInt_t)sizeof(bpid)/sizeof(Bool_t); ip++){
 
-  TString rapRange[ybin1];
-  for(UInt_t i = 1; i < ybin1 - 1; i++)
-    rapRange[i] = Form(" %f <= Y_cm < %f", yrange1[i-1],yrange1[i]);
-  rapRange[0] = Form(" Y_cm < %f", yrange1[0]);
-  rapRange[ybin1-1] = Form(" %f <= Y_cm", yrange1[ybin1-2]);
+      if( !bpid[ip] ) continue;
+      //      if( (!bpid[ip] && ip < 5) || (!bpid[6] && ip == 6)  ) continue;
 
-  TString rapRange2[ybin2];
-  for(UInt_t i = 1; i < ybin2 - 1; i++)
-    rapRange2[i] = Form(" %f <= Y_cm < %f", yrange2[i-1],yrange2[i]);
-  rapRange2[0] = Form(" Y_cm < %f", yrange2[0]);
-  rapRange2[ybin2-1] = Form(" %f <= Y_cm", yrange2[ybin2-2]);
+      for(UInt_t mt = 0; mt < (UInt_t)sizeof(bpBUUConfig)/sizeof(Bool_t); mt++) {
+	if( !bpBUUConfig[mt] ) continue;
+	
+	//@@@
+	fname.push_back("../../pBUU/data/"+pBUUConfig[mt].fileHeader+"sn" + rsys[ms] + "_sn" 
+			+ tsys[ms] + pBUUConfig[mt].Version + fpid[ip] + ".root");
+	
+	std::cout << fname.at(ngr+kgr+pgr) << std::endl;
+	index[0].push_back(ms);
+	index[1].push_back(ip);
+	index[2].push_back(0);
+	index[3].push_back(mt);
+	index[4].push_back(1);
+	index[5].push_back(3);
+	pgr++;
 
+	bplot[1] = 1;
+      }
+    }
+  }
+
+  //---------------------------------------------------
+
+  // pBUU by Genie
+  if( bplot[1] ) {
+    g_pBUUFg5->SetPoint(0, sysdlt[0], pBUU_F[0][2]);
+    g_pBUUFg5->SetPoint(1, sysdlt[1], pBUU_F[1][2]);
+    
+    g_pBUUFg17->SetPoint(0, sysdlt[0], pBUU_F[0][3]);
+    g_pBUUFg17->SetPoint(1, sysdlt[1], pBUU_F[1][3]);
+
+    g_pBUUv2g5->SetPoint(0, sysdlt[0], pBUU_v2[0][2]);
+    g_pBUUv2g5->SetPoint(1, sysdlt[1], pBUU_v2[1][2]);
+    
+    g_pBUUv2g17->SetPoint(0, sysdlt[0], pBUU_v2[0][3]);
+    g_pBUUv2g17->SetPoint(1, sysdlt[1], pBUU_v2[1][3]);
+  }  
+
+
+  TFile *fOutput = new TFile(fOutName,"recreate");
 
   TFile *fOpen;
 
-  // Rapidity dependence 
-  auto mrv1  = new TMultiGraph("mrv1"  ,";Rapidity; v1");
-  auto mrv2  = new TMultiGraph("mrv2"  ,";Rapidity; v2");
-  auto mv1sl = new TMultiGraph("mv1sl" ,";Centrality; v1 slope");
-  auto mv1slp= new TMultiGraph("mv1slp","; Particle ; v1 slope");
-  //  mv1slp->GetXaxis()->SetAlphanumeric(kTRUE);
-  auto mv2cm = new TMultiGraph("mv2cm" ,";Centrality; v2 at Y_cm");
-  auto mv2mid= new TMultiGraph("mv2mid","; Particle ; v2 at Y_cm");
 
-
-  auto lgr1 = new TLegend(0.54, 0.13, 0.87, 0.4, ltitle); 
-  auto lgr2 = new TLegend(0.21, 0.68, 0.57, 0.9, ltitle);
-  auto lgr3 = new TLegend(0.35, 0.13, 0.7, 0.33, ltitle);
-  auto lgr4 = new TLegend(0.15, 0.63, 0.5, 0.85, ltitle);
-  auto lgr5 = new TLegend(0.15, 0.63, 0.5, 0.85, ltitle);
-  auto lgr6 = new TLegend(0.72, 0.72, 0.94, 0.88,ltitle);
-  auto lgr7 = new TLegend(0.16, 0.70, 0.46, 0.85,ltitle);
-
-
-  // Pt dependence
+  // Pt dependence setup
   for(UInt_t k = 0; k < ybin1; k++){
-    mv1[k] = new TMultiGraph((TString)Form("mv1%d",k), rapRange[k]+";Pt [MeV/c]; v1");
-    lg1[k] = new TLegend(0.57, 0.64, 0.95, 0.92); 
+    mv1[k]  = new TMultiGraph((TString)Form("mv1%d",k),  ";Pt [MeV/c]; v_1");
+    lg1[k] = new TLegend(0.28, 0.18, 0.65, 0.31); 
     lg1[k]->SetTextSize(0.05);
   }
 
   for(UInt_t k = 0; k < ybin2; k++) {
-    mv2[k] = new TMultiGraph((TString)Form("mv2%d",k), rapRange2[k]+";Pt [MeV/c]; v2");
-    lg2[k] = new TLegend(0.5, 0.64, 0.95, 0.92); 
+    mv2[k]  = new TMultiGraph((TString)Form("mv2%d",k),  ";Pt [MeV/c]; v_2");
+    lg2[k] = new TLegend(0.28, 0.18, 0.65, 0.31); 
     lg2[k]->SetTextSize(0.05);
   }
 
-
-
-  //  UInt_t id = 1;
-
+  UInt_t islp = 0;
+  UInt_t isp = 0;
+  UInt_t isk = 0;
   UInt_t iss = 9;
   UInt_t ipp = 0;
   Color_t icolor = 100; 
-  for(UInt_t igr = 0; igr < ngr; igr++ ) {
+  UInt_t iv1f = 0;
+  for(UInt_t igr = 0; igr < ngr+kgr+pgr; igr++ ) {
 
     fOpen = TFile::Open(fname.at(igr)); 
 
@@ -174,15 +363,12 @@ void PlotPtDependence()
     else
       std::cout << fname.at(igr) << " is opened. " << std::endl;
 
-
-    TH1D *fevt = (TH1D*)fOpen->Get("hphi0_180");
-    UInt_t tevt = fevt->GetEntries();
-
     UInt_t is = index[0].at(igr);
     UInt_t ip = index[1].at(igr);
     UInt_t it = index[2].at(igr);
     UInt_t ik = index[3].at(igr);
     UInt_t iz = index[4].at(igr);
+    UInt_t ia = index[5].at(igr);
     
     if( is != iss ) {
       ipp = 0;
@@ -194,206 +380,293 @@ void PlotPtDependence()
     else
       icolor -= 2;
 
-    cout << igr  << " " << ip << " color " << icolor << endl;
+    TString ohtitle = lsys[is]+" "+fpid[ip];
+    TString otitle  = ohtitle;
 
+    if( ia == 1 ) { //data
+      //otitle += cmnt[iz];
+      //      otitle += sVer[iz]+";"+cmnt[iz];
+      otitle += sName[iz]+sVer[iz]+";"+cmnt[iz];
+    }
+    else if( ia == 2 ) //amd
+      otitle += amdHeader[is](4,5) + amdName[it];
+    else if( ia == 3 ) {// pBUU
+      otitle += pBUUConfig[ik].comment; 
+    }
+
+    //otitle  = ohtitle;
 
     //acceptance
-    TH2D *ff = (TH2D*)fOpen->Get("hyptacp");
-    ff->SetName(Form("hyptacp_%d",igr));
+    if( igr < ngr ) {
+      TH1D *fevt = (TH1D*)fOpen->Get("hphi0_180");
+      
+      if( fevt != NULL ) {
+	UInt_t tevt = fevt->GetEntries();
 
-    TString otitle = rsys[is]+"Sn "+fpid[ip]+sVer[iz];
-    ff->SetTitle(otitle);
-    ff->SetDirectory(gROOT);
-
-    gROOT->cd();
-    ff->ProjectionX("_px");
-    TH1D* ff1 = (TH1D*)gROOT->Get((TString)ff->GetName()+"_px");
-    
-    Double_t xwd = (Double_t)ff1->GetXaxis()->GetNbins()/(ff1->GetXaxis()->GetXmax() - ff1->GetXaxis()->GetXmin());
-    
-    if( fpid[ip] == "neutron" )
-      ff1->Scale( xwd / tevt /0.26);
-    else
-      ff1->Scale(xwd / tevt);
-
-    ff1->SetTitle("; Y_{cm}; dN/dy");
-    ff1->SetLineColor(icolor);
-    lgr3->AddEntry(ff1, otitle );
-    
+	auto ff = (TH2D*)fOpen->Get("hyptacp");
+	ff->SetTitle(otitle);
+	ff->SetDirectory(gROOT);
+	
+	gROOT->cd();
+	ff->ProjectionX("_px");
+	TH1D* ff1 = (TH1D*)gROOT->Get((TString)ff->GetName()+"_px");
+	
+	Double_t xwd = (Double_t)ff1->GetXaxis()->GetNbins()/(ff1->GetXaxis()->GetXmax() - ff1->GetXaxis()->GetXmin());
+	
+	if( fpid[ip] == "neutron" )
+	  ff1->Scale( xwd / tevt /0.26);
+	else
+	  ff1->Scale(xwd / tevt);
+	
+	ff1->SetTitle("; Y_{cm}; dN/dy");
+	ff1->SetLineColor(icolor);
+	lgr3->AddEntry(ff1, otitle );
+      }
+    }
 
     fOpen->cd();
-    
+
+    //------------------------------    
     // rapidity dependence
-    TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gv_v1");
-    
-    //    RemoveYPoint(yv1);
+    //--- v1 vs rapidity ---
+    if( ( bplot[0] || bplot[1]) && bplot[2] ) {
 
-    yv1->SetMarkerColor(icolor);
+      TH1I *hmult  = (TH1I*)fOpen->Get("hmult");
 
-    cout << "imark[" << is << "] " << imark[is] << endl;
-    yv1->SetMarkerStyle(imark[is]);
-    if( ip == 5 )
-      yv1->SetMarkerStyle(imark[is]+4);
-    yv1->SetMarkerSize(imsz[is]);
-    yv1->SetLineColor(icolor);
-	  
-    
-    mrv1->Add(yv1,"lp");
-    lgr1->AddEntry(yv1,  otitle ,"lp");
+      TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gu_v1");
+      if( yv1 == NULL || bpBUUConfig[0] || bpBUUConfig[1]) 
+	yv1 = (TGraphErrors*)fOpen->Get("gv_v1");
 
-
-    //slope
-    yv1->Fit("lslope","Q0","",-0.11,0.2);
-    Double_t constlslope = lslope->GetParameter(0);
-    Double_t slope = lslope->GetParameter(1);
-    Double_t slopee= lslope->GetParError(1);
-
-    g_slope[is][ip]->SetPoint(it, (Double_t)it+1+0.05*is, slope);
-    g_slope[is][ip]->SetPointError(it, 0., slopee);
-
-    g_v1slp[is]->SetPoint(ipp, ip+1, slope);
-    g_v1slp[is]->SetPointError(ipp,  0, slopee);
-    
-    TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gv_v2");
-    //    RemoveYPoint(yv2);
-
-    yv2->SetMarkerColor(icolor);
-    yv2->SetMarkerStyle(imark[is]);
-    if( ip == 5 )
-      yv2->SetMarkerStyle(imark[is]+4);
-    yv2->SetMarkerSize(imsz[is]);
-    yv2->SetLineColor(icolor);
-
-    mrv2->Add(yv2,"lp");
-    lgr2->AddEntry(yv2,  otitle ,"lp");
-    // --end of rapidity dependence
-
-    Double_t v2x, v2y, v2xe;
-    yv2->GetPoint(1, v2x, v2y);
-    v2xe = yv2->GetErrorY(1);
-    g_v2cm[is][ip]->SetPoint(it, (Double_t)it+1+0.05*is, v2y);
-    g_v2cm[is][ip]->SetPointError(it, 0., v2xe);
-
-    g_v2mid[is]->SetPoint(ipp, ip+1, v2y);
-    g_v2mid[is]->SetPointError(ipp, 0., v2xe); ipp++;
-
-    cout << fsys[is] << " : " << fpid[ip] << " -> " << v2y << " +- " << v2xe << " @ " << ipp <<  endl;
-
-    // Pt dependence 
-    for(UInt_t k = 0; k < ybin1; k++){
-
-      TGraphErrors *gr_v1 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v1%d",k));
-      
-      //      RemovePtPoint(ip, gr_v1);
-      
-      if( gr_v1 == NULL ) continue;
-      gr_v1->SetMarkerStyle(imark[is]);
-
-      if( ip == 5 )
-	gr_v1->SetMarkerStyle(imark[is]+4);
-      gr_v1->SetMarkerColor(icolor);
-      gr_v1->SetMarkerSize(imsz[is]);
-      gr_v1->SetLineColor(icolor);
-      gr_v1->GetXaxis()->SetRangeUser(0.,800.);
-
-
-      mv1[k]->Add(gr_v1,"lp");
-      lg1[k]->AddEntry(gr_v1,  otitle,"lp");
-    }
-    
-    cout << " ==== " << endl;
-
-    for(UInt_t k = 0; k < ybin2; k++){
-
-      TGraphErrors *gr_v2 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v2%d",k));
-      if( gr_v2 == NULL ) continue;
-
-      //      RemovePtPoint(ip,gr_v2);
-
-      
-      gr_v2->SetMarkerStyle(imark[is]);
-      if( ip == 5 )
-	gr_v2->SetMarkerStyle(imark[is]+4);
-      gr_v2->SetMarkerColor(icolor);
-      gr_v2->SetMarkerSize(imsz[is]);
-      gr_v2->SetLineColor(icolor);
-
-      mv2[k]->Add(gr_v2,"lp");
-      lg2[k]->AddEntry(gr_v2, otitle ,"lp");
-    }
+      if( yv1 != NULL ) {
+	yv1->SetMarkerColor(icolor);
+	yv1->SetMarkerStyle(imark[is]);
 	
+	yv1->RemovePoint(10);
+	yv1->RemovePoint(9);
+	yv1->RemovePoint(8);
+	yv1->RemovePoint(7);
+
+	if( ip == 5 )
+	  yv1->SetMarkerStyle(imark[is]+4);
+	yv1->SetMarkerSize(imsz[is]);
+	yv1->SetLineColor(icolor);
+	
+	mrv1->Add(yv1,"p");
+	lgr1->AddEntry(yv1,  otitle ,"lp");
+
+	fv1fit->SetLineColor(icolor);
+	yv1->Fit("fv1fit","","",-0.5,1.3);//"Q0","");
+	Double_t constlslope = fv1fit->GetParameter(0);
+	Double_t slope = fv1fit->GetParameter(1);
+	Double_t slopee= fv1fit->GetParError(1);
+	
+	std::cout << "************" << std::endl;
+	std::cout << otitle << " " << slope << " +- " << slopee << std::endl;
+      
+	if( hmult != NULL ) {
+	  // Double_t mmean = hmult->GetMean();
+	  // Double_t mstd  = hmult->GetStdDev() / sqrt( (Double_t)hmult->GetEntries() );
+	
+	  g_v1slp -> SetPoint(iv1f, sysA[is], slope);
+	  g_v1slp -> SetPointError(iv1f, 0., slopee);	
+	  iv1f++;
+	}
+      }
+    
+
+
+      //--- y vs v2 ---
+      TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gu_v2");
+      if( yv2 == NULL || bpBUUConfig[0] || bpBUUConfig[1]) 
+	yv2 = (TGraphErrors*)fOpen->Get("gv_v2");
+
+      if( yv2 != NULL ) {
+	//    ShiftX(yv2, 0.01*iz);
+	//    RemoveYPoint(yv2);
+
+	// yv2->RemovePoint(7);
+	// yv2->RemovePoint(6);
+	// yv2->RemovePoint(5);
+	
+	yv2->SetMarkerColor(icolor);
+	yv2->SetMarkerStyle(imark[is]);
+	if( ip == 5 )
+	  yv2->SetMarkerStyle(imark[is]+4);
+	yv2->SetMarkerSize(imsz[is]);
+	yv2->SetLineColor(icolor);
+	
+	mrv2->Add(yv2,"lp");
+	lgr2->AddEntry(yv2,  otitle ,"lp");
+	// --end of rapidity dependence
+	
+	Double_t v2x, v2y, v2ye;
+	GetMinimumv2(yv2, v2y, v2ye);
+
+	cout << " v2y " << v2y << " +- " << v2ye << endl;
+	
+	if( hmult != NULL ) {
+	  Double_t mmean = hmult->GetMean();
+	  Double_t mstd  = hmult->GetStdDev();
+	
+	  g_v2max->SetPoint(isp , isp, v2y);
+	  g_v2max->SetPointError(isp, 0., v2ye);
+	  isp++;
+	}
+
+	if( bsys[ik] ) {
+	  g_v2sysA->SetPoint(isk, sysA[is], v2y);
+	  g_v2sysA->SetPointError(isk, 0., v2ye);
+	
+	  g_v2sysD->SetPoint(isk, sysdlt[is], v2y);
+	  g_v2sysD->SetPointError(isk,  0.,  v2ye);
+	  isk++;
+	}
+      }
+    }
+
+    //--- <px>/A --- 
+    if( ( bplot[0] || bplot[1]) && bplot[6] ) {
+
+      TGraphErrors *ympx= (TGraphErrors*)fOpen->Get("gmpx");    
+      if( ympx != NULL) {
+
+	ympx->SetMarkerColor(icolor);
+	ympx->SetMarkerStyle(imark[is]);
+	
+	ympx->SetMarkerSize(imsz[is]);
+	ympx->SetLineColor(icolor);
+	  
+	mmpx->Add(ympx,"lp");
+	lgr9->AddEntry(ympx, otitle, "lp");
+	
+	ympx->Fit("lslope","Q0","",-0.4,0.4);
+	Double_t constlslope = lslope->GetParameter(0);
+	Double_t slope       = lslope->GetParameter(1)*1.4;
+	Double_t slopee      = lslope->GetParError(1);
+	std::cout << " <px> slop " << slope << " +- " << slopee << std::endl;
+	
+	//slope
+	g_mpxslp-> SetPoint(islp, sysdlt[is], slope);
+	g_mpxslp-> SetPointError(islp, 0, slopee);
+	islp++;
+      }
+    }
+
+
+    //--- Pt Ut dependence 
+    if( ( bplot[0] || bplot[1]) && (bplot[3] || bplot[4]) ) {
+
+      Double_t v1mx = -99.;
+      Double_t v1mn =  99.;
+      Double_t v2mx = -99.;
+      Double_t v2mn =  99.;
+
+      for(UInt_t k = 0; k < ybin1; k++){
+
+	TGraphErrors *gr_v1 = (TGraphErrors*)fOpen->Get((TString)Form("gUt_v1%d",k));
+	if( gr_v1 == NULL || bpBUUConfig[0] || bpBUUConfig[1])
+	  gr_v1 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v1%d",k));
+	
+	if( gr_v1 == NULL ) continue;
+	if( igr == 0 ) {
+	  mv1[k]->SetTitle(gr_v1->GetTitle());
+	  mv1[k]->GetXaxis()->SetTitle(gr_v1->GetXaxis()->GetTitle());
+	  mv1[k]->GetYaxis()->SetTitle("v1");
+	}
+
+	TGraphErrors *gr_v1A = new TGraphErrors();
+	for(UInt_t j = 0; j < (UInt_t)gr_v1->GetN(); j++ ){
+	  Double_t x, y;
+	  gr_v1->GetPoint(j, x, y);
+	  //x /= partA[ip+2];
+	  //	y /= partA[ip+2];
+	  auto xe = gr_v1->GetErrorX(j);
+	  auto ye = gr_v1->GetErrorY(j);
+
+	  if( x < 550. ) {
+	    gr_v1A->SetPoint(j, x, y);	
+	    gr_v1A->SetPointError(j,xe,ye);
+	  }
+	}
+
+      
+	if( gr_v1A == NULL ) continue;
+	gr_v1A->SetMarkerStyle(imark[is]);
+	
+
+	if( ip == 5 )
+	  gr_v1A->SetMarkerStyle(imark[is]+4);
+	gr_v1A->SetMarkerColor(icolor);
+	gr_v1A->SetMarkerSize(imsz[is]);
+	gr_v1A->SetLineColor(icolor);
+	gr_v1A->GetXaxis()->SetRangeUser(0.,550.);
+
+	mv1[k]->Add(gr_v1A,"lp");
+	lg1[k]->AddEntry(gr_v1A,  otitle,"lp");
+	
+      }
+    
+      cout << " ==== " << endl;
+
+      for(UInt_t k = 0; k < ybin2; k++){
+	
+	TGraphErrors *gr_v2 = (TGraphErrors*)fOpen->Get((TString)Form("gUt_v2%d",k));
+	
+	if( gr_v2 == NULL || bpBUUConfig[0] || bpBUUConfig[1])
+	  gr_v2 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v2%d",k));
+	
+	if( gr_v2 == NULL ) continue;
+	
+	if( igr == 0 ) {
+	  mv2[k]->SetTitle(gr_v2->GetTitle());
+	  mv2[k]->GetXaxis()->SetTitle(gr_v2->GetXaxis()->GetTitle());
+	  mv2[k]->GetYaxis()->SetTitle("v2");
+	}
+
+	TGraphErrors *gr_v2A = new TGraphErrors();
+	for(UInt_t j = 0; j < (UInt_t)gr_v2->GetN(); j++ ){
+	  Double_t x, y;
+	  gr_v2->GetPoint(j, x, y);
+	  //x /= partA[ip+2];
+	  //y /= partA[ip+2];
+	  auto xe = gr_v2->GetErrorX(j);
+	  auto ye = gr_v2->GetErrorY(j);
+
+	  if( x < 550. ) {
+	    gr_v2A->SetPoint(j, x, y);	
+	    gr_v2A->SetPointError(j,xe,ye);
+	  }
+	}
+	
+	//      RemovePtPoint(ip,gr_v2);
+	if( v2mx > gr_v2->GetYaxis()->GetXmax() )
+	  v2mx = gr_v2->GetYaxis()->GetXmax();
+	
+	if( v2mn < gr_v2->GetYaxis()->GetXmin() )
+	  v2mx = gr_v2->GetYaxis()->GetXmin();
+	
+	gr_v2A->SetMarkerStyle(imark[is]);
+	if( ip == 5 )
+	  gr_v2->SetMarkerStyle(imark[is]+4);
+	gr_v2A->SetMarkerColor(icolor);
+	gr_v2A->SetMarkerSize(imsz[is]);
+	gr_v2A->SetLineColor(icolor);
+	gr_v2A->GetXaxis()->SetRangeUser(0.,550.);
+
+	mv2[k]->Add(gr_v2A,"lp");
+	lg2[k]->AddEntry(gr_v2A, otitle ,"lp");
+
+	//      mv2[k]->GetYaxis()->SetRangeUser(v2mn, v2mx);
+      }
+    }	
     fOpen->Close();
   }
 
-  if( bplot || kFALSE ) {
-    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
-    cc->Divide(1,ngr);
-    for(UInt_t i = 0; i < ngr; i++){
-      cc->cd(i+1);
-      TH2D* ff = (TH2D*)gROOT->Get(Form("hyptacp_%d",i));
-      ff->Draw("colz");
-    }
-  
- 
-    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
-    Double_t ymax = 0;
-    UInt_t   imax = 0;
-    for(Int_t i = 0; i < ngr; i++){
-      TH1D* ff = (TH1D*)gROOT->Get(Form("hyptacp_%d_px",i));
-      if( ymax < ff->GetMaximum() ) {
-	ymax = ff->GetMaximum();
-	imax = i;
-	ff->Draw();
-      }
-    }
-    for(Int_t i = 0; i < ngr; i++) {
-      TH1D* ff = (TH1D*)gROOT->Get(Form("hyptacp_%d_px",i));
-      if( i != imax ) ff->Draw("same");
-    }
-    lgr3->Draw();
-  }
+  //-------------->>>> Plotting >>>>>---------------------
 
-  if( bplot || kTRUE ) { // gothered plots
-    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
-    cc->Divide(ybin1/2,2);
-    for(UInt_t k = 0; k < ybin1; k++){
-      cc->cd(k+1);
-      mv1[k]->Draw("ALP");
-      if( k == ybin1-2 )
-	lg1[k]->Draw();
-    }
-
-    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
-    cc->Divide(ybin2,1);
-    for(UInt_t k = 0; k < ybin2; k++){
-      cc->cd(k+1);
-      //    mv2[k]->SetMaximum( 0.2);
-      //    mv2[k]->SetMinimum(-0.2);
-      mv2[k]->Draw("ALP");
-      if( k == ybin2-2 ) lg2[k]->Draw();
-    }
-  }
-
-
-  if( bplot || kFALSE ) {
-    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
-    mv1[2]->Draw("ALP");
-    lg1[2]->Draw();
-    
-    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
-    mv1[3]->Draw("ALP");
-    lg1[3]->Draw();
-
-    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
-    mv1[4]->Draw("ALP");
-    lg1[4]->Draw();
-  }
-
-
-
-
-  if( bplot || kTRUE ) {
-    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
+  //--- v1 and v2 vs rapidity ---
+  if( ( bplot[0] || bplot[1]) && bplot[2] ) {
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     mrv1->Draw("ALP");
     lgr1->Draw();
 
@@ -412,7 +685,8 @@ void PlotPtDependence()
     aLineY1->SetLineStyle(3);
     aLineY1->Draw();
   
-    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
+    //--- v2 vs rapidity ---
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     mrv2->Draw("ALP");
     lgr2->Draw();
 
@@ -428,245 +702,176 @@ void PlotPtDependence()
   }
 
 
-  for(UInt_t is = 0; is < 4; is++){
 
-    for(UInt_t ip = 0; ip < 4; ip++){
-      TString otitle = rsys[is]+"Sn "+fpid[ip];
-
-      UInt_t icolor = (icol[is] + 4*ip);
-      if( g_slope[is][ip]->GetN() > 0 ) {
-	g_slope[is][ip]->SetMarkerStyle(imark[is]);
-	g_slope[is][ip]->SetMarkerColor(icol[is]+2*ip);
-	g_slope[is][ip]->SetLineColor(icol[is]+2*ip);
-	mv1sl->Add(g_slope[is][ip],"lp");      
-	
-	lgr4->AddEntry(g_slope[is][ip], otitle, "lp");
-      }
-
-      if( g_v2cm[is][ip]->GetN() > 0) {
-	g_v2cm[is][ip]->SetMarkerStyle(imark[is]);
-	g_v2cm[is][ip]->SetMarkerColor(icol[is]+2*ip);
-	g_v2cm[is][ip]->SetLineColor(icol[is]+2*ip);
-	mv2cm->Add(g_v2cm[is][ip],"lp");      
-
-	lgr5->AddEntry(g_v2cm[is][ip], otitle, "lp");
-      }
+  if( bplot[0] && bplot[5] ) {
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),500,200);
+    cc->Divide(1,ngr);
+    for(UInt_t i = 0; i < ngr; i++){
+      if( hyptacp[i] == NULL) continue;
+      cc->cd(i+1);
+      hyptacp[ngr]->Draw("colz");
     }
-    
-    if( g_v1slp[is]->GetN() > 0 ){
-      g_v1slp[is]->SetMarkerStyle(imark[is]);
-      g_v1slp[is]->SetMarkerColor(icol[is]);
-      g_v1slp[is]->SetLineColor(icol[is]);
-      mv1slp->Add(g_v1slp[is], "lp");
-      lgr7->AddEntry(g_v1slp[is], rsys[is]+"Sn","lp");
+  }
+
+  if( (bplot[0] || bplot[1]) && bplot[3] ) { // gethered plots
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1400,900);
+    cc->Divide(ybin1/2,2);
+    for(UInt_t k = 0; k < ybin1-1; k++){
+      cc->cd(k+1);
+      mv1[k]->Draw("ALP");
+      if( k == ybin1-2 )
+	lg1[k]->Draw();
+      fOutput->cd();
+      mv1[k]->Write();
     }
 
-    if( g_v2mid[is]->GetN() > 0) {
-      g_v2mid[is]->SetMarkerStyle(imark[is]);
-      g_v2mid[is]->SetMarkerColor(icol[is]);
-      g_v2mid[is]->SetLineColor(icol[is]);
-      mv2mid->Add(g_v2mid[is],"lp");      
-      lgr6->AddEntry(g_v2mid[is], rsys[is]+"Sn", "lp");
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1400,500);
+    cc->Divide(ybin2-1,1);
+    for(UInt_t k = 0; k < ybin2-1; k++){
+      cc->cd(k+1);
+      mv2[k]->Draw("ALP");
+      if( k == ybin2-2 ) lg2[k]->Draw();
+      fOutput->cd();
+      mv2[k]->Write();
     }
-
-
-    mv1slp->GetXaxis()->SetLimits(0.5, 5.5);
-    mv2mid->GetXaxis()->SetLimits(0.5, 5.5);
-    for( UInt_t ippp = 0; ippp < 5; ippp++ ) {
-      mv1slp->GetXaxis()->SetBinLabel(mv1slp->GetXaxis()->FindBin(ippp+1.), fpid[ippp]);
-      mv2mid->GetXaxis()->SetBinLabel(mv2mid->GetXaxis()->FindBin(ippp+1.), fpid[ippp]);
-    }
-    mv1slp->GetXaxis()->LabelsOption("h");
-    mv2mid->GetXaxis()->LabelsOption("h");
-
   }
 
 
-  if( bplot || kFALSE) {
-    //for NN v1-pt
-    gStyle->SetPadRightMargin(0.05);
-    gStyle->SetPadLeftMargin(2.8);
-    gStyle->SetPadLeftMargin(0.1);
-    gStyle->SetTitleYSize(0.04);
-    gStyle->SetTitleYOffset(1.1);
 
-    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
-    mv2mid->GetYaxis()->SetRangeUser(-0.06, -0.01);
-    mv2mid->Draw("ALP");
-    lgr6->Draw();
+  if( bplot[0] && bplot[4] ) {  // individual pt plots  
 
-    ic++; cc = new TCanvas(Form("cc%d",ic),"cc6");
-    mv1slp->Draw("ALP");
-
-    lgr7->SetX1NDC(0.15);
-    lgr7->SetY1NDC(0.64);
-    lgr7->SetX2NDC(0.41);
-    lgr7->SetY2NDC(0.88);
-    lgr7->Draw();
-  }
-
-  if( bplot || kFALSE ) {  // individual pt plots  
-    for(UInt_t i = 0; i < 8; i++) {
-      cc = new TCanvas(Form("cv%d",i),Form("cv%d",i),400,450);
+    UInt_t ichoise[]={1,3,6};
+    for(UInt_t i : ichoise) {
+      cc = new TCanvas(Form("cv%d",i),Form("cv%d",i),500,550);
       cc->SetRightMargin(0.02);
-      cc->SetLeftMargin(0.12);
-      cc->SetTopMargin(0.05);
+      cc->SetLeftMargin(0.15);
+      cc->SetTopMargin(0.08);
+      cc->SetBottomMargin(0.15);
+
+      mv1[i]->GetXaxis()->SetNdivisions(505);
       mv1[i]->GetXaxis()->SetLabelSize(0.04);
       mv1[i]->GetYaxis()->SetLabelSize(0.04);
       mv1[i]->GetXaxis()->SetTitleSize(0.05);
-      mv1[i]->GetYaxis()->SetTitleSize(0.05);
-      mv1[i]->GetYaxis()->SetTitleOffset(1.2);
+      mv1[i]->GetYaxis()->SetTitleSize(0.04);
+      mv1[i]->GetYaxis()->SetTitleOffset(2.5);
 
-      if( i == 0 )
-	mv1[0]->GetYaxis()->SetRangeUser(-0.4,0.);
-      else if( i == 1)
-	mv1[1]->GetYaxis()->SetRangeUser(-0.4,0.);
-      else if( i == 2 )
-	mv1[2]->GetYaxis()->SetRangeUser(-0.2,0.15);
-      else if( i == 3 )
-	mv1[3]->GetYaxis()->SetRangeUser(-0.1,0.15);
-      else
-	mv1[i]->GetYaxis()->SetRangeUser(-0.1,0.5);
-
+      mv1[i]->GetXaxis()->SetRangeUser(0.,1.5);
       mv1[i]->Draw("ALP");
       lg1[i]->Draw();
 
+      fOutput->cd();
+      mv1[i]->Write();
     }
 
-    for(UInt_t i = 0; i < 5; i++) {
-      cc = new TCanvas(Form("cv%d",i+10),Form("cv%d",i+10),400,450);
+    UInt_t ichoise2[] = {2};
+    for(UInt_t i : ichoise2) {
+      cc = new TCanvas(Form("cv%d",i+10),Form("cv%d",i+10),500,550);
       cc->SetRightMargin(0.02);
-      cc->SetLeftMargin(0.12);
-      cc->SetTopMargin(0.05);
+      cc->SetLeftMargin(0.15);
+      cc->SetTopMargin(0.08);
+      cc->SetBottomMargin(0.15);
+
+      mv1[i]->GetXaxis()->SetNdivisions(505);
       mv2[i]->GetXaxis()->SetLabelSize(0.04);
       mv2[i]->GetYaxis()->SetLabelSize(0.04);
       mv2[i]->GetXaxis()->SetTitleSize(0.05);
-      mv2[i]->GetYaxis()->SetTitleSize(0.05);
-      mv2[i]->GetYaxis()->SetTitleOffset(1.2);
+      mv2[i]->GetYaxis()->SetTitleSize(0.04);
+      mv2[i]->GetYaxis()->SetTitleOffset(2.5);
 
-      mv2[i]->GetYaxis()->SetRangeUser(-0.07,0.04);
-
+      mv2[i]->GetXaxis()->SetRangeUser(0.,1.5);
       mv2[i]->Draw("ALP");
       lg2[i]->Draw();
 
+      fOutput->cd();
+      mv2[i]->Write();
     }
   }
 
-  if( bplot || kFALSE ){  
-    ic++; cc = new TCanvas(Form("cc%d",ic),"v1_target",500,500);
-    mv1[1]->SetMaximum(0.);
-    mv1[1]->SetMinimum(-0.27);
-    mv1[1]->Draw("ALP");
-
-    ic++; cc = new TCanvas(Form("cc%d",ic),"v1_mid",500,500);
-    mv1[3]->Draw("ALP");
-
-    ic++; cc = new TCanvas(Form("cc%d",ic),"v1_beam",500,500);
-    mv1[5]->Draw("ALP");
-    lg1[5]->SetX1NDC(0.5);
-    lg1[5]->SetY1NDC(0.16);
-    lg1[5]->SetX2NDC(0.95);
-    lg1[5]->SetY2NDC(0.40);
-    lg1[5]->Draw();
-  }
-  
-}
-
-
-void SaveCanvas(TString cnt = "", Int_t isel=-1)
-{
-  if(isel > -1)
-    gROOT->GetListOfCanvases()->At(isel)->SaveAs("ypt_"+cnt+Form("_%d",isel)+".png");
-
-  else {
-    TString mdir = "ypt_"+cnt;
-    gSystem->mkdir(mdir);
-    gSystem->cd(mdir);
-      
-    Int_t iCanvas = gROOT->GetListOfCanvases()->GetEntries();  
-    for(Int_t i = 0; i < iCanvas; i++)
-      gROOT->GetListOfCanvases()->At(i)->SaveAs(mdir+Form("_%d",i)+".png");
-
-    gSystem->cd("..");
-    std::cout << "Figures in " + mdir << std::endl;
-  }
-}
-
-void RemovePoints(TString fn, TGraphErrors &gr)
-{
-
-  if( fn == "data/NL132Sn_neutron.root" ) {
-
-
-    if( (TString)gr.GetName() == "gPt_v11") 
-      gr.RemovePoint(1);
-    else if( (TString)gr.GetName() == "gPt_v12") 
-      gr.RemovePoint(2);
-    else if( (TString)gr.GetName() == "gPt_v13") 
-      gr.RemovePoint(3);
-    else if( (TString)gr.GetName() == "gPt_v15") { 
-      gr.RemovePoint(4);
-
-    }    
-    else if( (TString)gr.GetName() == "gPt_v16" ) {
-      for(UInt_t i = 0; i < 2; i++)
-	gr.RemovePoint(4);
-    }
-    else if( (TString)gr.GetName() =="gPt_v17" ) {
-      for(UInt_t i = 0; i < 6; i++)
-	gr.RemovePoint(1);
-      //      gr.RemovePoint(0);
-    }
-
-
-    if( (TString)gr.GetName() == "gPt_v21" ) 
-      gr.RemovePoint(2);
-    else if( (TString)gr.GetName() == "gPt_v23") {
-      for(UInt_t i = 0; i < 3; i++)
-	gr.RemovePoint(3);
-      gr.RemovePoint(0);
-    }
-    else if( (TString)gr.GetName() == "gPt_v24")
-      gr.RemovePoint(3);
-
+  if( bplot[0] && bplot[7] ) {
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+    g_v1slp->SetMarkerStyle(20);
+    g_v1slp->SetMarkerColor(2);
+    g_v1slp->Draw("AP");
+    g_v1slp->Print();
   }
 
-  if( fn == "data/NL108Sn_neutron.root" ) {
+  if( bplot[0] && bplot[8] ) {
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+    g_v2max->SetMarkerStyle(20);
+    g_v2max->SetMarkerColor(2);
+    g_v2max->Draw("AP");
+    g_v2max->Print();
+  }
 
-    cout << gr.GetName() << endl;
-    gr.Print();
+  if( bplot[0] && bplot[6] ) {
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+    auto msysD = new TMultiGraph("msysD","; (N-P)/A; F[MeV/c]");
+    g_mpxslp->SetMarkerStyle(20);
+    g_mpxslp->SetMarkerColor(2);
+    msysD->Add(g_mpxslp, "LP");
+    lgr0->AddEntry(g_mpxslp,"DATA x 1.4");
 
-    if( (TString)gr.GetName() == "gPt_v10" ) 
-      gr.RemovePoint(1);
-    if( (TString)gr.GetName() == "gPt_v11" ) 
-      gr.RemovePoint(2);
-    if( (TString)gr.GetName() == "gPt_v13" ) 
-      gr.RemovePoint(3);
-    if( (TString)gr.GetName() == "gPt_v14" ) 
-      gr.RemovePoint(3);
-    if( (TString)gr.GetName() == "gPt_v15" ) { 
-      for(UInt_t i = 0; i < 2; i++)
-	gr.RemovePoint(3);
+    if( bplot[1] ) {
+      g_pBUUFg5 ->SetMarkerStyle(21);
+      g_pBUUFg5 ->SetMarkerColor(6);
+      g_pBUUFg5 ->SetLineColor(6);
+      g_pBUUFg17->SetMarkerStyle(21);
+      g_pBUUFg17->SetMarkerColor(8);
+      g_pBUUFg17->SetLineColor(8);
+	
+      msysD->Add(g_pBUUFg5,"LP");
+      msysD->Add(g_pBUUFg17,"LP");
+      lgr0->AddEntry(g_pBUUFg5,"pBUU b4 g0.5");
+      lgr0->AddEntry(g_pBUUFg17,"pBUU b4 g1.75");
     }
-    else if( (TString)gr.GetName() == "gPt_v16" ) { 
-      for(UInt_t i = 0; i < 3; i++)
-	gr.RemovePoint(3);
-    }
-    else if( (TString)gr.GetName() == "gPt_v17" ) { 
-      for(UInt_t i = 0; i < 5; i++)
-	gr.RemovePoint(1);
-    }
-    else if( (TString)gr.GetName() == "gPt_v22" ) 
-      gr.RemovePoint(2);
-    else if( (TString)gr.GetName() == "gPt_v23" ) {
-      for(UInt_t i = 0; i < 2; i++)
-	gr.RemovePoint(3);
-      gr.RemovePoint(0);
-    }
-    else if( (TString)gr.GetName() == "gPt_v24" ) {
-      for(UInt_t i = 0; i < 2; i++)
-	gr.RemovePoint(4);
-      gr.RemovePoint(0);
+    msysD->Draw("ALP");
+    lgr0->Draw();
+
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+    mmpx->Draw("ALP");
+    lgr9->Draw();
+
+    auto Ymin = mmpx->GetYaxis()->GetXmin();
+    auto Ymax = mmpx->GetYaxis()->GetXmax();
+    auto Xmin = mmpx->GetXaxis()->GetXmin();
+    auto Xmax = mmpx->GetXaxis()->GetXmax();
+
+    auto aLineX3 = new TLine(Xmin, 0., Xmax, 0.);
+    aLineX3->SetLineColor(1);
+    aLineX3->SetLineStyle(3);
+    aLineX3->Draw();
+
+    auto aLineY3 = new TLine(0., Ymin, 0., Ymax);
+    aLineY3->SetLineColor(1);
+    aLineY3->SetLineStyle(3);
+    aLineY3->Draw();
+
+
+    if( g_v2sysD->GetN() > 1 ) {
+      auto mv2sysD = new TMultiGraph("mv2sysD","; (N-P)/A; v2");
+      g_v2sysD->SetMarkerStyle(20);
+      g_v2sysD->SetMarkerColor(2);
+      g_v2sysD->SetLineColor(4);
+      mv2sysD->Add(g_v2sysD,"LP");
+      lgr10->AddEntry(g_mpxslp,"DATA");
+
+      if( bplot[1] ) {
+	g_pBUUv2g5 ->SetMarkerStyle(21);
+	g_pBUUv2g5 ->SetMarkerColor(6);
+	g_pBUUv2g5 ->SetLineColor(6);
+	g_pBUUv2g17->SetMarkerStyle(21);
+	g_pBUUv2g17->SetMarkerColor(8);
+	g_pBUUv2g17->SetLineColor(8);
+	
+	mv2sysD->Add(g_pBUUv2g5,"LP");
+	mv2sysD->Add(g_pBUUv2g17,"LP");
+	lgr10->AddEntry(g_pBUUv2g5,"pBUU b4 g0.5");
+	lgr10->AddEntry(g_pBUUv2g17,"pBUU b4 g1.75");
+      }
+
+      ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+      mv2sysD->Draw("AP");
+      lgr10->Draw();
     }
   }
 }
@@ -684,56 +889,16 @@ void RapidityShift(TGraphErrors *gv)
   }
 }
 
-void RemoveYPoint(TGraphErrors *gv)
+void ShiftX(TGraphErrors *gv, Double_t off)
 {
-  cout << " removey " << gv->GetN() <<endl;
   Double_t xx, yy;
   for(Int_t k = (Int_t)gv->GetN()-1; k > -1; k--) {
 
     gv->GetPoint(k, xx, yy);
-    if( xx < -0.2 ) {
-      gv->RemovePoint(k);
-      //      std::cout << "===> REMOVEPOINT in Y (" << xx << "," << yy << ")" << std::endl;    
-    }
-    if( xx > 0.37 ) {
-      gv->RemovePoint(k);
-      //      std::cout << "===> REMOVEPOINT in Y (" << xx << "," << yy << ")" << std::endl;    
-    }
+    xx += off;
+    gv->SetPoint(k, xx, yy);
   }
-
-  for(Int_t k = (Int_t)gv->GetN()-1; k > -1; k--) {
-    yy = gv->GetErrorY(k);
-    if( yy > 0.15 )
-      gv->RemovePoint(k);
-
-  }  
 }
-
-void RemovePtPoint(UInt_t ip, TGraphErrors *gv)
-{
-  if( gv == NULL ) return;
-
-  //  cout << "removept " << gv->GetN() <<  endl;
-  Double_t ptcut = 700.;
-  if( ip == 5 ) ptcut = 400.;
-
-  Double_t xx, yy;
-  for(Int_t k = (Int_t)gv->GetN()-1; k > -1; k--) {
-    gv->GetPoint(k, xx, yy);
-    if( xx > ptcut ) {
-      gv->RemovePoint(k);
-      //      std::cout << "===> REMOVEPOINT in Pt (" << xx << "," << yy << ")" <<  std::endl;
-    }
-  }  
-  for(Int_t k = (Int_t)gv->GetN()-1; k > -1; k--) {
-    yy = gv->GetErrorY(k);
-    if( yy > 0.12 )
-      gv->RemovePoint(k);
-
-  }  
-}
-
-
 
 void integ()
 {
@@ -752,4 +917,20 @@ void integ()
     //    hyptacp_3_px->Integral()/200+hyptacp_4_px->Integral()/200+hyptacp_5_px->Integral()/200;
   }
 }
-  
+
+
+void GetMinimumv2(TGraphErrors *gr, Double_t &min, Double_t &mer)
+{
+  Double_t x, y;
+  min = 999.;
+  UInt_t mid = 0;
+  for(UInt_t i = 0; i < gr->GetN(); i++) {
+    gr->GetPoint(i, x, y);
+    if( y < min ) {
+      min = y;
+      mid = i;
+    }
+  }
+
+  mer = gr->GetErrorY(mid);
+}

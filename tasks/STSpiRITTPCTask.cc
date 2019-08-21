@@ -115,18 +115,16 @@ Bool_t STSpiRITTPCTask::SetupParameters()
   
 
   //--- angle dependeing mass fitter //
-  massCal->SetParameter("db/BBFitter.root");
+  //  massCal->SetParameter("db/BBFitter.root");
 
-  // fstatus = massFitter->SetFunction("/cache/scr/spirit/mizuki/Bethe-Bloch_Fitter/mk_NewFitter_20190111/",
-  // 				    "BBFitter.root",
-  // 				    "f1IterBBProtonRotate_" + STRunToBeamA::GetBeamSnA(iRun) );
-  // if( !fstatus ) LOG(ERROR) << " BB Mass fittter function was not loaded. " << FairLogger::endl;
+  UInt_t bmA = STRunToBeamA::GetBeamA(iRun);
 
-  // fstatus = massFitter->SetMassFitFunction("/cache/scr/spirit/mizuki/Bethe-Bloch_Fitter/mk_NewFitter_20190111/",
-  // 					   "MassFitter.root",
-  // 					   "f1IterMassFitRotate_" + STRunToBeamA::GetBeamSnA(iRun) );
+  if( bmA == 124 )
+    bmA = 132;  
+  else if( bmA == 112 )
+    bmA = 108;
 
-  //  if( ! fstatus ) LOG(ERROR) << " BB Mass gaus fit function was not loaded. " << FairLogger::endl;
+  massCal->LoadCalibrationParameters("db/PIDCalib.root",bmA);
 
   //------------------------------
 
@@ -193,7 +191,7 @@ Bool_t STSpiRITTPCTask::SetupInputDataFile()
   UInt_t i = 0;
   while(kTRUE){
 
-    TString recoFile = Form("run%04d_s%d.reco."+tVer+".root",iRun,i);
+    TString recoFile = Form("run%04d_s%02d.reco."+tVer+".root",iRun,i);
 
 
     if(gSystem->FindFile(rootDir,recoFile))
@@ -202,7 +200,7 @@ Bool_t STSpiRITTPCTask::SetupInputDataFile()
     else 
       break;
     
-    LOG(INFO) << i << " recoFile " << rootDir+recoFile << FairLogger::endl;
+    LOG(INFO) << i << " recoFile " << recoFile << FairLogger::endl;
     i++;
 
   }
@@ -277,7 +275,6 @@ void STSpiRITTPCTask::FinishEvent()
     return;
   }
 
-
   if( fIsFlowAnalysis ) {
 
     fflowtask->FinishEvent();
@@ -301,6 +298,25 @@ void STSpiRITTPCTask::SetupEventInfo()
   ProjA   = fBDC->GetProjA();
   ProjB   = fBDC->GetProjB();  
 
+  BeamIndex = 5;
+  if( BeamPID > 0 ){
+    switch(BeamPID) {
+    case 132:
+      BeamIndex = 0;
+      break;
+    case 108:
+      BeamIndex = 1;
+      break;
+    case 124:
+      BeamIndex = 2;
+      break;
+    case 112:
+      BeamIndex = 3;
+      break;
+    }
+  }
+
+
   if( fIsFlowAnalysis && fflowinfo != nullptr) 
     fflowtask->SetupEventInfo(fEventID, fBDC);
 
@@ -310,23 +326,34 @@ void STSpiRITTPCTask::SetupEventInfo()
 
 void STSpiRITTPCTask::SetupTrackQualityFlag(STParticle *apart) 
 {
-  if( apart->GetP() == 0 || apart->GetP() > 3100 )
-    apart->SetMomentumFlag(0);
+  // if( apart->GetP() == 0 || apart->GetP() > 3100 )
+  //   apart->SetMomentumFlag(0);
 
-  if( apart->GetdEdx() <= 0. )
-    apart->SetdEdxFlag(0);
+  // if( apart->GetdEdx() <= 0. )
+  //   apart->SetdEdxFlag(0);
+
+  // if( apart->GetDistanceAtVertex() > 20 )
+  //   apart->SetDistanceAtVertexFlag(0);
+
+  // if( abs( apart->GetVertex().Z() + 13.1 ) > 1.7*3. )
+  //   apart->SetVertexAtTargetFlag(0);
+
+  // if( apart->GetNDF() < 20) 
+  //   apart->SetNDFFlag(0);
 
 
-  if( apart->GetDistanceAtVertex() > 20 )
+  // Kaneko-kun's Definition since 30 May 2019
+  if(BeamIndex < 4) {
+    if( abs( apart->GetVertex().Z() - VtxMean[BeamIndex].Z() ) > 2.*VtxSigm[BeamIndex] ||
+	abs( apart->GetVertex().X() - VtxMean[BeamIndex].X() ) > 15. ||
+	abs( apart->GetVertex().Y() - VtxMean[BeamIndex].Y() ) > 20. )
+      apart->SetVertexAtTargetFlag(0); 
+  }
+	
+  if( apart->GetDistanceAtVertex() > 10 )
     apart->SetDistanceAtVertexFlag(0);
 
-  if( apart->GetDistanceAtVertex() > 20 )
-    apart->SetDistanceAtVertexFlag(0);
-
-  if( abs( apart->GetVertex().Z() + 13.1 ) > 1.7*3. )
-    apart->SetVertexAtTargetFlag(0);
-
-  if( apart->GetNDF() < 20) 
+  if( apart->GetNDF() < 15) 
     apart->SetNDFFlag(0);
 
 }
@@ -358,8 +385,8 @@ void STSpiRITTPCTask::ProceedEvent()
 
   LOG(DEBUG) << "nttack[0] -------------------- > " << ntrack[0] << FairLogger::endl;
                  
-  TIter next(trackVAArray);
-
+  //  TIter next(trackVAArray);
+  TIter next(trackArray);
   STRecoTrack *trackFromArray = NULL;
   TClonesArray &ptpcParticle = *tpcParticle;
 
@@ -394,25 +421,29 @@ void STSpiRITTPCTask::ProceedEvent()
 
 
       //--- Set MassFitter      
-      Double_t mass[2];
+      Double_t mass[2] = {0.,0.};
       if( dEdx > -1 ){
-	mass[0]  = massCal->CalcMass(1., VMom, dEdx);
-	mass[1]  = massCal->CalcMass(2., VMom, dEdx);
-      }
-      else {
-	mass[0] = 0.;
-	mass[1] = 0.;
+	mass[0]  = massCal->CalcMass(0, 1., VMom, dEdx);  // proton fitted
+
+	if( mass[0] > 1500. )  // deuteron fitted
+	  mass[0]  = massCal->CalcMass(1, 1., VMom, dEdx);  
+
+	mass[1]  = massCal->CalcMass(1, 2., VMom, dEdx);
       }
 
       aParticle->SetBBMass(mass[0]);      
       aParticle->SetBBMassHe(mass[1]);
 
-      Int_t    pid_tight  = GetPID(mass, dEdx);
+      Int_t    pid_tight  = GetPIDTight(mass, dEdx);
+      Int_t    pid_normal = GetPIDNorm(mass, dEdx);
       Int_t    pid_loose  = GetPIDLoose(mass, dEdx);
       
       //      massFitter->GetBBMass(VMom, dEdx, Charge, massH, massHe, pid_tight, pid_loose); 
       aParticle->SetPID(pid_tight);
+      aParticle->SetPIDTight(pid_tight);
+      aParticle->SetPIDNorm(pid_normal);
       aParticle->SetPIDLoose(pid_loose);
+      
 
       LOG(DEBUG) << " mass H "  << mass[0]  << " & pid " << pid_loose << " : " << pid_tight << ": " << dEdx << FairLogger::endl;
       LOG(DEBUG) << " mass He"  << mass[1] << " & pid " << pid_loose << " : " << pid_tight  << ": " << dEdx << FairLogger::endl;
@@ -484,9 +515,9 @@ Int_t STSpiRITTPCTask::GetPIDLoose(Double_t mass[2], Double_t dedx)
     return 0;
 
   // p, d, t   
-  else if( mass[1] < MassRegionLU[4][0] && mass[0] > 0 ) {
+  else if( mass[1] < MassRegionLU_L[4][0] ) {
     for(UInt_t i = 0; i < 4; i++) {
-      if( mass[0] >= MassRegionLU[i][0] && mass[0] < MassRegionLU[i][1] ) {
+      if( mass[0] >= MassRegionLU_L[i][0] && mass[0] < MassRegionLU_L[i][1] ) {
 	STPID::PID pid = static_cast<STPID::PID>(i);
         return STPID::GetPDG(pid);
       }
@@ -495,7 +526,57 @@ Int_t STSpiRITTPCTask::GetPIDLoose(Double_t mass[2], Double_t dedx)
   // He3, He4, He6
   else if( mass[0] >= 3100 && dedx <= 700) {
     for( UInt_t i = 4; i < 7; i++ ){
-      if( mass[1] >= MassRegionLU[i][0] && mass[1] < MassRegionLU[i][1] ) {
+      if( mass[1] >= MassRegionLU_L[i][0] && mass[1] < MassRegionLU_L[i][1] ) {
+	STPID::PID pid = static_cast<STPID::PID>(i);
+        return STPID::GetPDG(pid);
+      }
+    }
+  }
+  return 0;
+}
+Int_t STSpiRITTPCTask::GetPIDTight(Double_t mass[2], Double_t dedx)
+{
+  if( mass[0] == 0 )
+    return 0;
+
+  // p, d, t   
+  else if( mass[1] < MassRegionLU_T[4][0]  ) {
+    for(UInt_t i = 0; i < 4; i++) {
+      if( mass[0] >= MassRegionLU_T[i][0] && mass[0] < MassRegionLU_T[i][1] ) {
+	STPID::PID pid = static_cast<STPID::PID>(i);
+        return STPID::GetPDG(pid);
+      }
+    }
+  }
+  // He3, He4, He6
+  else if( mass[0] >= 3100 && dedx <= 700) {
+    for( UInt_t i = 4; i < 7; i++ ){
+      if( mass[1] >= MassRegionLU_T[i][0] && mass[1] < MassRegionLU_T[i][1] ) {
+	STPID::PID pid = static_cast<STPID::PID>(i);
+        return STPID::GetPDG(pid);
+      }
+    }
+  }
+  return 0;
+}
+Int_t STSpiRITTPCTask::GetPIDNorm(Double_t mass[2], Double_t dedx)
+{
+  if( mass[0] == 0 )
+    return 0;
+
+  // p, d, t   
+  else if( mass[1] < MassRegionLU_N[4][0] ) {
+    for(UInt_t i = 0; i < 4; i++) {
+      if( mass[0] >= MassRegionLU_N[i][0] && mass[0] < MassRegionLU_N[i][1] ) {
+	STPID::PID pid = static_cast<STPID::PID>(i);
+        return STPID::GetPDG(pid);
+      }
+    }
+  }
+  // He3, He4, He6
+  else if( mass[0] >= 3100 && dedx <= 700) {
+    for( UInt_t i = 4; i < 7; i++ ){
+      if( mass[1] >= MassRegionLU_N[i][0] && mass[1] < MassRegionLU_N[i][1] ) {
 	STPID::PID pid = static_cast<STPID::PID>(i);
         return STPID::GetPDG(pid);
       }

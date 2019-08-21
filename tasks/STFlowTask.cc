@@ -51,12 +51,30 @@ void STFlowTask::SetFlowTask( TClonesArray &atpcParticle )
     DoFlowAnalysis( *aParticle );
 
   }
+  
+  Double_t N = (Double_t)(ntrack[4]-1);
+  Double_t rpsigma = 1./(2.* N) * (sum_omg2/N / pow(sum_omg/N,2) );
+  if( std::isinf( rpsigma ) ) rpsigma = 0;
+
+  fflowinfo->SetRPSigma( sqrt(rpsigma) );
 }
 
 
 Bool_t STFlowTask::Init(UInt_t irun, TString sver)
 {
   sVer = sver;
+  iRun = irun;
+
+  iSystem = 4;
+  if(iRun >= 2841 && iRun <= 3039)
+    iSystem = 0; // 132            
+  else if(iRun >= 2261 && iRun <= 2509)
+    iSystem = 1; // 108
+  else if(iRun >= 3059 && iRun <= 3184)
+    iSystem = 2; // 124
+  else if(iRun >= 2520 && iRun <= 2653)
+    iSystem = 3; // 112 
+
 
   fflowinfo->SetRun( irun );  
   
@@ -66,6 +84,7 @@ Bool_t STFlowTask::Init(UInt_t irun, TString sver)
     if( !SetupFlowDataBase() ) {
       LOG(ERROR) << "STFlowTask:: Flow database cannot be setup" << FairLogger::endl;
       fIsFlowCorrection = kFALSE;
+      return kFALSE;
     }
     else
       LOG(INFO) << "STFlowTask:: Flow database are ready. " << FairLogger::endl;
@@ -110,6 +129,7 @@ void STFlowTask::FinishEvent()
 
   if( fIsSubeventAnalysis ) 
     DoSubeventAnalysis();
+  //DoSubeventAnalysisFixedMultiplicity(20);
 
   if( fIsFlowCorrection ) {
     if( !DoFlattening() )
@@ -143,18 +163,14 @@ Bool_t STFlowTask::DoFlatteningSub()
   return kFALSE;
 }
 
-Bool_t STFlowTask::DoFlattening(STParticle &part)
+TVector3 STFlowTask::DoFlattening(TVector3 mvec, UInt_t ntrk)
 {
-  if( aflowcorrArray[0] != NULL ) {
-    
-    TVector3 rcvec =  Psi_FlatteningCorrection( 0, ntrack[4]-1, part.GetIndividualRPVector() );
-    part.SetIndividualRPVector( rcvec );
-    part.SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( part.GetRotatedPt().Phi() - rcvec.Phi()));
+  if( aflowcorrArray[0] == NULL ) 
+    return TVector3(-999.,0.,0.);
+      
+  TVector3 rcvec =  Psi_FlatteningCorrection( 0, ntrk, mvec );
   
-    return kTRUE;
-  }
-
-  return kFALSE;
+  return rcvec;
 }
 
 
@@ -162,8 +178,8 @@ void STFlowTask::DoSubeventAnalysis()
 {
   if( ntrack[4] == 0 ) return;
   
-  STBootStrap* bs_unitP_1 = new STBootStrap(1000);
-  STBootStrap* bs_unitP_2 = new STBootStrap(1000);
+  STBootStrap* bs_unitP_1 = new STBootStrap(1);
+  STBootStrap* bs_unitP_2 = new STBootStrap(1);
 
   UInt_t np = ntrack[4];
   if(np%2 == 1) np++;
@@ -175,6 +191,9 @@ void STFlowTask::DoSubeventAnalysis()
   STParticle *apart = NULL;
 
   UInt_t itrack = 0;
+
+  LOG(DEBUG) << " ntrack[4] " << ntrack[4] << FairLogger::endl;
+
   while( (apart = (STParticle*)next() ) ) {
     
     if( apart->GetReactionPlaneFlag() %2 == 1 ) {
@@ -182,6 +201,7 @@ void STFlowTask::DoSubeventAnalysis()
       TVector2 ptr= apart->GetRotatedPt().Unit();
 
       if( rndArray[itrack] == 0 ) {
+        apart->AddReactionPlaneFlag(100);
 
         fflowinfo->unitP_1 += wt * TVector3(ptr.X(), ptr.Y(), 0.);
 	LOG(DEBUG) << " sub 1 " << fflowinfo->unitP_1.X()  
@@ -192,10 +212,11 @@ void STFlowTask::DoSubeventAnalysis()
         if( fIsBootStrap )
           bs_unitP_1->Add(wt * ptr);
 
-        apart->AddReactionPlaneFlag(100);
         fflowinfo->mtrack_1++;
       }
       else  {
+        apart->AddReactionPlaneFlag(500);
+
         fflowinfo->unitP_2+= wt * TVector3(ptr.X(), ptr.Y(), 0.);
 	LOG(DEBUG) << " sub 2    " << fflowinfo->unitP_2.X()  
 		   << " + "     << wt * ptr.X()
@@ -204,13 +225,87 @@ void STFlowTask::DoSubeventAnalysis()
         if( fIsBootStrap )
           bs_unitP_2->Add(wt * ptr);
 
-        apart->AddReactionPlaneFlag(200);
         fflowinfo->mtrack_2++;
       }
 
       itrack++;
       if( itrack > npart ) break;
 
+    }
+  }
+
+
+  if(fIsBootStrap && fflowinfo->mtrack_1 > 0 && fflowinfo->mtrack_2 > 0 ) {
+    bs_unitP_1->BootStrapping();
+    bs_unitP_2->BootStrapping();
+  }
+
+  DoFlatteningSub();
+
+
+  delete bs_unitP_1;
+  delete bs_unitP_2;
+  
+}
+
+void STFlowTask::DoSubeventAnalysisFixedMultiplicity(UInt_t val)
+{
+  if( ntrack[4] < val+5 ) return;
+  
+  STBootStrap* bs_unitP_1 = new STBootStrap(1);
+  STBootStrap* bs_unitP_2 = new STBootStrap(1);
+
+
+  UInt_t totaltrack = tpcParticle->GetEntries();
+  const UInt_t npart = val;
+
+  UInt_t *index = RandumPickUp(val, totaltrack);
+
+  UInt_t *rndArray = new UInt_t[npart];
+  rndArray = RandomDivide2(npart);
+
+  STParticle *apart = NULL;
+
+  UInt_t itrack = 0;
+  
+  for( UInt_t i = 0; i < (UInt_t)totaltrack; i++ ) {
+  
+    apart = (STParticle*)tpcParticle->At( *(index+i) );
+    
+    if( apart->GetReactionPlaneFlag() %2 == 1 ) {
+
+      Double_t wt = apart->GetRPWeight();
+      TVector2 ptr= apart->GetRotatedPt().Unit();
+      
+      if( rndArray[itrack] == 0 ) {
+
+	fflowinfo->unitP_1 += wt * TVector3(ptr.X(), ptr.Y(), 0.);
+	LOG(DEBUG) << " sub 1 " << fflowinfo->unitP_1.X()  
+		   << " + "     << wt * ptr.X()
+		   << " : "     << apart->GetReactionPlaneFlag()
+		   << FairLogger::endl;
+
+	if( fIsBootStrap )
+	  bs_unitP_1->Add(wt * ptr);
+	
+	apart->AddReactionPlaneFlag(100);
+	fflowinfo->mtrack_1++;
+      }
+      else  {
+	fflowinfo->unitP_2+= wt * TVector3(ptr.X(), ptr.Y(), 0.);
+	LOG(DEBUG) << " sub 2    " << fflowinfo->unitP_2.X()  
+		   << " + "     << wt * ptr.X()
+		   << " : "     << apart->GetReactionPlaneFlag()
+		   << FairLogger::endl;
+	if( fIsBootStrap )
+	  bs_unitP_2->Add(wt * ptr);
+	
+	apart->AddReactionPlaneFlag(200);
+	fflowinfo->mtrack_2++;
+      }
+
+      itrack++;
+      if( itrack > npart ) break;
     }
   }
 
@@ -226,14 +321,47 @@ void STFlowTask::DoSubeventAnalysis()
   delete bs_unitP_2;
   
 }
+
+UInt_t *STFlowTask::RandumPickUp(const UInt_t val, const UInt_t npart)
+{
+  Float_t vsort[npart];
+  
+  rnd.RndmArray(npart, vsort);
+  
+  std::vector< std::pair< Float_t, UInt_t > > psort;
+
+  for( UInt_t i = 0; i < npart; i++ )    
+    psort.push_back( std::make_pair(vsort[i], i) );
+
+  std::sort( psort.begin(), psort.end() );
+
+  std::vector< UInt_t > idxsort;
+  for( UInt_t i = 0; i < npart; i++ ) 
+    idxsort.push_back( psort[i].second ); 
+
+  std::sort( idxsort.begin(), idxsort.end() );
+
+  UInt_t *index = new UInt_t[npart];
+  for( UInt_t i = 0; i < npart; i++ ) 
+    *(index + i) = idxsort[i];
+  
+  return index;
+}
+
 UInt_t *STFlowTask::RandomDivide2(const UInt_t npart)
 {
   UInt_t  *rndarray = new UInt_t[npart];
+  UInt_t nmax = npart;
+
+  if( npart%2 == 1 ) {
+    nmax = npart -1 ;
+    rndarray[npart-1] = 0;
+  }
 
   UInt_t c1 = 0;
   UInt_t c2 = 0;
   UInt_t count = 0;
-  while( count < npart ){
+  while( count < nmax ){
 
     Float_t rrd = rnd.Rndm() ;
 
@@ -285,11 +413,7 @@ void STFlowTask::SetupFlow(STParticle &apart)
   if( pid == 211 )
     apart.SetReactionPlaneFlag(10);
 
-  else if( pid > 2000 &&
-           apart.GetGoodTrackFlag()     > 0 &&
-           apart.GetdEdxFlag()          > 0 &&
-           apart.GetMomentumFlag()      > 0
-           ) {
+  else if( pid > 2000 &&  apart.GetFromTargetFlag() ) { //fTargetf = fVatTargetf*fdistanceatvertexf;
     apart.SetReactionPlaneFlag(1000);
 
     if(apart.GetNDFFlag())
@@ -302,7 +426,7 @@ void STFlowTask::SetupFlow(STParticle &apart)
   // Pt weight
   TLorentzVector lrnzVec =  apart.GetLorentzVector();
   
-  TVector3 boostVec = STLorentzBoostVector::GetBoostVector(4); //4: p+p
+  TVector3 boostVec = STLorentzBoostVector::GetBoostVector(iSystem); 
 
   lrnzVec.Boost(-boostVec);
 
@@ -329,6 +453,11 @@ void STFlowTask::DoFlowAnalysis(STParticle &apart)
 
     TVector2 upt = apart.GetRotatedPt().Unit();
     fflowinfo->unitP += apart.GetRPWeight() * TVector3( upt.X(), upt.Y(), 0.);
+
+
+    sum_omg2 += pow(apart.GetRPWeight(), 2);
+    sum_omg  += apart.GetRPWeight();
+
 
     if( fIsBootStrap )
       bs_unitP->Add(apart.GetRPWeight() * apart.GetRotatedPt().Unit());
@@ -379,11 +508,17 @@ void STFlowTask::SetIndividualReactionPlane( STParticle &apart )
   
   LOG(DEBUG) << " RP x " << mExcRP.X() << " <<- " << befv  << " num " << tpcParticle->GetEntries() << FairLogger::endl;
 
-  apart.SetIndividualRPAngle( mExcRP.Phi() );
-  apart.SetIndividualRPVector( mExcRP );
-
-  if(itraex > 0 ) 
-    DoFlattening( apart );
+  if(itraex > 0 ) { 
+    auto rcvec = DoFlattening( mExcRP, itraex );
+    apart.SetIndividualRPVector( rcvec );
+    apart.SetIndividualRPAngle( rcvec.Phi() );
+    apart.SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( apart.GetRotatedMomentum().Phi() - rcvec.Phi()));
+  }
+  else {
+    apart.SetIndividualRPVector( TVector3(-999.,0.,0.) );
+    apart.SetIndividualRPAngle( -9. );
+    apart.SetAzmAngle_wrt_RP( -9. );
+  }
 }
 
 
@@ -393,6 +528,9 @@ void STFlowTask::Clear()
   ntrack[5] = 0;
 
   fflowinfo->Clear();
+
+  sum_omg2 = 0;
+  sum_omg  = 0;
 }
 
 TVector3 STFlowTask::Psi_FlatteningCorrection(UInt_t isel, Int_t ival, TVector3 Pvec)
@@ -454,15 +592,16 @@ Bool_t STFlowTask::SetupFlowDataBase()
 {
   TString  fname[2];
   Int_t    ncount = 1;
-  fname[0] = "132Sn.v"+sVer+".psi.";
+  TString  SNA = STRunToBeamA::GetBeamSnA(iRun);
+  //  fname[0] = "132Sn.v"+sVer+".psi.";
+  fname[0] = SNA + ".v"+sVer+".psi.";
 
   if( fIsSubeventAnalysis ) {
-    fname[1] = "132Sn.v"+sVer+".subpsi1.";;
+    //    fname[1] = "132Sn.v"+sVer+".subpsi1.";;
+    fname[1] = SNA + ".v"+sVer+".subpsi1.";;
     ncount++;
   }
-
   
-
   for(UInt_t i = 0; i < TMath::Min(ncount, 2); i++){
     LOG(INFO) << " Database name is " << fname[i]  << " / " << ncount << " ( " << fIsSubeventAnalysis << FairLogger::endl;
 

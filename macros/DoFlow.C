@@ -12,6 +12,17 @@ TClonesArray *aArray;
 TClonesArray *aFlowArray;
 TClonesArray *aNLClusterArray;
 
+ROOT::Math::Interpolator *itrpvx;
+
+std::vector< Double_t > v1x;
+std::vector< Double_t > v1y;
+std::vector< Double_t > v1xe;
+std::vector< Double_t > v1ye;
+
+std::vector< Double_t > v2x;
+std::vector< Double_t > v2y;
+std::vector< Double_t > v2xe;
+std::vector< Double_t > v2ye;
 
 
 // functions
@@ -19,9 +30,12 @@ void     GetFittingParameters(TH1D &h1, Double_t pp[6]);
 void     GetFittingParameters(TH1D &h1, Double_t pp[6], Double_t corr[2]);
 Double_t GetRapidity_cm(TVector3 p, Double_t mass, TVector3 bvec);
 UInt_t   SetBranch();
-void     PlotPtDependence(UInt_t selid);     
+void     PlotPtDependence(UInt_t selid);
+TString  SetupOutputFile(TString fopt);
+
 Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180);
-void     PlotCosPtDependence(UInt_t selid);
+Double_t *GetRPResolution(UInt_t vn, UInt_t mult);
+
 
 Double_t  GetError(Double_t x, Double_t y, Double_t xe, Double_t ye)
 {
@@ -34,10 +48,7 @@ Double_t  GetError(Double_t x, Double_t y, Double_t xe, Double_t ye)
 Double_t rapoffset[] = {0.01113, -0.00645, 0.01898, -0.01726};
 UInt_t   npb = 30;
 
-UInt_t  icent = 0;
-UInt_t  jcent = 3;
-
-//--------- main ----------//
+//-------------------//
 void DoFlow(UInt_t isel = 2) 
 {
   gROOT->Reset();
@@ -51,39 +62,41 @@ void DoFlow(UInt_t isel = 2)
     exit(0);
 
 
-  gROOT->ProcessLine(".! grep -i void DoFlowAnalysis.C ");
+  gROOT->ProcessLine(".! grep -i void DoFlow.C ");
 
 
   // Multiplicity cut ================================
   TString su = gSystem -> Getenv("UC");
   if( su != "" ) {
-    UInt_t ucent = (UInt_t)atoi(su);
-    if( ucent < sizeof(cent)/sizeof(UInt_t)-1)
-      icent = ucent;
+    Ucent = (UInt_t)atoi(su);
+    if( Ucent < 0 )
+      Ucent = 80;
   }
 
 
   su = gSystem -> Getenv("LC");
   if( su != "" ) {
-    UInt_t lcent = (UInt_t)atoi(su);
-    if(  lcent < sizeof(cent)/sizeof(UInt_t))
-      jcent = lcent;
+    Lcent = (UInt_t)atoi(su);
+    if( Lcent > Ucent || Lcent < 0)
+      Lcent = 0;
   }
 
-  std::cout << " Multiplicity :: " << cent[icent] << " to " << cent[jcent] << std::endl;
+  std::cout << " Multiplicity :: " << Lcent << " to " << Ucent << std::endl;
 
   //==================================================
 
-  PlotCosPtDependence(isel);  
+  PlotPtDependence(isel);  
+
 }
 
 
 //pdt
-void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
+void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 {
   gStyle->SetOptStat(0);
 
-  std::cout << "PlotCosPtDependence(" << selid << ")" << std::endl;
+
+  std::cout << "PlotPtDependence(" << selid << ")" << std::endl;
   // PT binning
   Double_t pt_max = 800.;
   UInt_t   nbin1  = 10; //16
@@ -91,54 +104,19 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   Double_t dpt1   = pt_max/(Double_t)nbin1;
   Double_t dpt2   = pt_max/(Double_t)nbin2;
 
-  auto cutfile = new TFile("db/RegionCut.root");
-  TCutG *goodThetaPhi = (TCutG*)cutfile->Get("goodThetaPhi");
-  cutfile->Close();    
+  // auto cutfile = new TFile("db/RegionCut.root");
+  // TCutG *goodThetaPhi = (TCutG*)cutfile->Get("goodThetaPhi");
+  // cutfile->Close();    
 
 
-  //--------------------------------------------------
-  //----- SETUP OUTPUT FILE --------------------------
-  //--------------------------------------------------
-  gSystem->cd("data");
-  TString oVer = gSystem->Getenv("OUTVER");
-  TString fName = "cosYPt_"+ sysName + "_" + partname[selid]+".v"+sVer+"."+oVer;
-
-  if( oVer == "" ) {
-    UInt_t kVer = 0; 
-    TString checkName;
-
-    while( kTRUE ) {
-      checkName = Form(fName + "%d.root", kVer);
-      if( !gSystem->FindFile(".",checkName) ) {
-	break;
-      }
-      else
-	kVer++;
-    }
-    fName = Form(fName + "%d.root", kVer);
-  }
-  else {
-    TString checkName = fName + ".root";;
-    if( !gROOT->IsBatch() && gSystem->FindFile(".",checkName) ) {
-      std::cout << checkName << " is existing. Do you recreate? (y/n)" << std::endl;
-      TString sAns;
-      cin >> sAns;
-      if(sAns != "y" || sAns != "Y") {
-	std::cout << " Retry" << std::endl;
-	exit(0);
-      }
-    }
-    fName = checkName;
-  }
-
-  std::cout << "File " << fName << " is created. " << std::endl;  
-
-  //--------------------------------------------------
+  TString fHeader = "cosYPt_"+ sysName + "_" + partname[selid]+".v"+sVer+".";
+  auto fName = SetupOutputFile( fHeader );
 
 
-  auto GraphSave = new TFile(fName,"recreate");
+  auto GraphSave  = new TFile(fName,"recreate");
   auto hphi0_180  = new TH1D("hphi0_180" ,"#Phi from  0 to 180; #Phi",100,0.,3.2);
   auto hphi90_180 = new TH1D("hphi90_180","#Phi from 90 to 180; #Phi",100,0.,3.2);
+  auto *hmult     = new TH1I("hmult","multiplicity",80,0,80);
 
   Int_t pcharge = 1;
   if(selid == 0)  pcharge = -1;
@@ -148,8 +126,8 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   for(UInt_t i = 0; i < ybin1; i++ ){
     if( i == 0 )
       rangeLabel1[0] = Form(" y < %5.2f ",yrange1[0]);
-    else if ( i == ybin1 -1 )
-      rangeLabel1[i] = Form("%5.2f <= y "    ,yrange1[ybin1-1]);
+    else if ( i == ybin1 - 2)
+      rangeLabel1[i] = Form("%5.2f <= y "    ,yrange1[i]);
     else 
       rangeLabel1[i] = Form("%5.2f <= y < %5.2f",yrange1[i-1],yrange1[i]);
   }
@@ -157,8 +135,8 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   for(UInt_t i = 0; i < ybin2; i++ ){
     if( i == 0 )
       rangeLabel2[0] = Form(" y < %5.2f ",yrange2[0]);
-    else if ( i == ybin1 -1 )
-      rangeLabel2[i] = Form("%5.2f <= y "    ,yrange2[ybin2-1]);
+    else if ( i == ybin1 - 2 )
+      rangeLabel2[i] = Form("%5.2f <= y "    ,yrange2[i]);
     else 
       rangeLabel2[i] = Form("%5.2f <= y < %5.2f",yrange2[i-1],yrange2[i]);
   }
@@ -171,8 +149,7 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   auto hazm    = new TH1D("hazm",    "; #phi"                   ,100, -3.2, 3.2);
   auto hmidv2  = new TH1D("hmidv2",  "; #Delta#phi"             ,100, -3.2, 3.2);
 
-  TString hlabel  = (TString)Form("mtrack4 %2d to %d ; Y_{cm}; Pt [MeV/c]",
-				  (UInt_t)cent[icent],(UInt_t)cent[jcent]);
+  TString hlabel  = (TString)Form("mtrack4 %2d to %2d ; Y_{cm}; Pt [MeV/c]",Lcent,Ucent);
   auto hyptacp    = new TH2D("hyptacp", hlabel ,200, -0.4, 0.5, 200, 0., 800);
   auto hntrack    = new TH1I("hntrack",  "; Number of good track", 60, 0, 60);
   auto hyawpitch  = new TH2D("hyawpitch","; Yaw angle; Pitch angle",200,-1.5,1.5,200,-1.5,1.5);
@@ -182,25 +159,29 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   TH1D *hyphi2[ybin2];
   TH1D *hyptphi1[ybin1][nbin1];
   TH1D *hyptphi2[ybin2][nbin2];
+  TH1D *hypt1[ybin1];
+  TH1D *hypt2[ybin1];
   //------------------------------
 
+  std::vector< std::vector< Double_t > > dphiv1(ybin1);
   std::vector< std::vector< Double_t > > cosv1x(ybin1);
+  std::vector< std::vector< Double_t > > dphiv2(ybin2);
   std::vector< std::vector< Double_t > > cosv2x(ybin2);
-  Double_t  cosv1[ybin1];
-  Double_t  cosv2[ybin2];
   Double_t  sinv1[ybin1];
   Double_t  sinv2[ybin2];
 
+
+  //---> v1 vs rapidity
   std::vector< std::vector< std::vector< Double_t> > > cosv1ptx(ybin1);
   Double_t  cosv1pt[ybin1][nbin1];
   Double_t  sinv1pt[ybin1][nbin1];
   for( UInt_t i = 0; i < ybin1; i++) {
-    cosv1[i]   = 0.;
-    sinv1[i]   = 0.;
     cosv1x[i].clear();
+    dphiv1[i].clear();
     cosv1ptx[i].resize(nbin1);
 
     hyphi1[i] = new TH1D( Form("hyphi1_%d",i),rangeLabel1[i]+"#De #Phi"   , npb, -3.15, 3.15);
+    hypt1[i]  = new TH1D( Form("hypt1_%d",i), rangeLabel1[i]+"; Pt", 100, 0., 800.);
 
     for( UInt_t j = 0; j < nbin1; j++ ){
       cosv1pt[i][j] = 0.;
@@ -211,15 +192,16 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
     }
   }
 
+  //---> v2 vs rapidity
   std::vector< std::vector< std::vector< Double_t> > > cosv2ptx(ybin2);
   Double_t  cosv2pt[ybin2][nbin2];
   Double_t  sinv2pt[ybin2][nbin2];
   for( UInt_t i = 0; i < ybin2; i++) {
-    cosv2[i]   = 0.;
-    sinv2[i]   = 0.;
     cosv2x[i].clear();
+    dphiv2[i].clear();
     cosv2ptx[i].resize(nbin2);
     hyphi2[i] = new TH1D( Form("hyphi2_%d",i),rangeLabel2[i]+"2x #Delta #phi", npb, -3.15, 3.15);
+    hypt2[i]  = new TH1D( Form("hypt2_%d",i), rangeLabel2[i]+"; Pt", 100, 0., 800.);
 
     for( UInt_t j = 0; j < nbin2; j++ ){
       cosv2pt[i][j] = 0.;
@@ -230,25 +212,28 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   }
     
   
+
+
   Int_t nevt = SetBranch();
   cout << " Number of events " << nevt << endl;
   
+  //--------------------------------------------------
+  //--- Event Loop
+  //--------------------------------------------------
   for(Int_t i = 0; i < nevt; i++){
 
     rChain->GetEntry(i);
     STFlowInfo *aflow = (STFlowInfo*)aFlowArray->At(0);
 
+    /// for reaction plane resolution
+    ///    Bool_t bFill = kFALSE;
+    Bool_t bFill = kTRUE;
+
+
     /// centrality selection
-    if(aflow->mtrack4 > cent[icent] || aflow->mtrack4 <= cent[jcent] ) continue;
+    if(aflow->mtrack4 > Ucent || aflow->mtrack4 <= Lcent ) continue;
 
-    hntrack->Fill( aflow->mtrack4 );
-
-    Double_t subevt_phi = abs(TVector2::Phi_mpi_pi((aflow->unitP_1fc).Phi()-
-						   (aflow->unitP_2fc).Phi())); 
-
-    hphi0_180->Fill( subevt_phi );
-    if( subevt_phi > TMath::Pi()/2. )
-      hphi90_180->Fill( subevt_phi );
+    hmult->Fill(aflow->mtrack4);
 
     TIter next(aArray);
     STParticle *aPart = NULL;
@@ -267,16 +252,21 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 
       //------------------------------
       //----- Particle Selection -----
-      if( pid == partid[selid] && rpf > 10000 &&
-	  pitch < 0  )
-	  { //&& 
-
+      //      if( pid == partid[selid] && rpf > 10000 ){ //&& yaw < 0 && pitch < 0) {
+      if( (selid == 8 && (pid == partid[2] || pid == partid[3] || pid == partid[4]) &&
+	   yaw > 0) ||
+	  (pid == partid[selid]  && yaw > 0 ) ) {
+      
+	bFill = kTRUE;
+      
 	auto pt    = aPart->GetRotatedMomentum().Pt();
 	auto dphi  = aPart->GetAzmAngle_wrt_RP();
 	auto rapid = aPart->GetRapiditycm();;	
 	auto bmass = aPart->GetBBMass();
 	auto phi   = aPart->GetRotatedMomentum().Phi();
 	auto theta = aPart->GetRotatedMomentum().Theta();
+
+	if( pt < 120. ) continue;
 
 	hazm     ->Fill( phi );	
 	hmass    ->Fill( aPart->GetRotatedMomentum().Mag(), bmass);
@@ -298,9 +288,9 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 	}
 	
 	hyphi1[irapid]->Fill(dphi);
-	cosv1x[irapid].push_back( rapid );
-	cosv1[irapid] += cos(dphi);
-	sinv1[irapid] += sin(dphi);
+	hypt1[irapid] ->Fill(aPart->GetRotatedMomentum().Pt());
+	cosv1x[irapid].push_back( rapid/y_cm[isys] );
+	dphiv1[irapid].push_back( cos(dphi) );
 
 	UInt_t ipt = nbin1 - 1;
 	for(UInt_t i = 0; i < nbin1; i++){
@@ -316,7 +306,6 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 	sinv1pt[irapid][ipt] += sin(dphi);
 
 	irapid = ybin2 - 1;
-
 	for( UInt_t i = 0; i < ybin2; i++){
 	  if(rapid < yrange2[i]){
 	    irapid = i;
@@ -325,9 +314,9 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 	}
 
 	hyphi2[irapid]->Fill(TVector2::Phi_mpi_pi(2.*dphi));
-	cosv2x[irapid].push_back( rapid );
-	cosv2[irapid] += cos(2.*dphi);
-	sinv2[irapid] += sin(2.*dphi);
+	hypt2[irapid] ->Fill(aPart->GetRotatedMomentum().Pt());
+	cosv2x[irapid].push_back( rapid/y_cm[isys] );
+	dphiv2[irapid].push_back( cos(2.*dphi) );
 
 	ipt = nbin2 - 1;
 	for(UInt_t i = 0; i < nbin2; i++){
@@ -343,16 +332,30 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 	sinv2pt[irapid][ipt] += sin(2.*dphi);
       }
     }
+
+    if( bFill ) {
+      hntrack->Fill( aflow->mtrack4 );
+
+      Double_t subevt_phi = abs(TVector2::Phi_mpi_pi((aflow->unitP_1fc).Phi()-
+						     (aflow->unitP_2fc).Phi())); 
+
+      hphi0_180->Fill( subevt_phi );
+      if( subevt_phi > TMath::Pi()/2. )
+	hphi90_180->Fill( subevt_phi );
+    }
   }
   //--------------------------------------------------
+  //--- Enf of event Loop
+  //--------------------------------------------------
     
+
   TGraphErrors *gv_v1 = new TGraphErrors();
   gv_v1->SetName("gv_v1");
   TGraphErrors *gv_v2 = new TGraphErrors();
   gv_v2->SetName("gv_v2");
   
   TGraphErrors *gPt_v1[ybin1];
-  TGraphErrors *gPt_v2[ybin1];
+  TGraphErrors *gPt_v2[ybin2];
     
   for(UInt_t kn = 0; kn < ybin1 ; kn++){      
     gPt_v1[kn] = new TGraphErrors();
@@ -391,12 +394,18 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
     //v1 rapidity dependence
     Double_t rapm  = TMath::Mean(  cosv1x[kn].begin(), cosv1x[kn].end());
     Double_t rape  = TMath::StdDev(cosv1x[kn].begin(), cosv1x[kn].end());
-      
-    Double_t yv1  = cosv1[kn] / (Double_t)cosv1x[kn].size();
-    Double_t yv1e = sinv1[kn] / (Double_t)cosv1x[kn].size();
 
-    Double_t yv1c  = yv1/rpres[0];
+
+    Double_t yv1  = TMath::Mean(dphiv1[kn].begin(), dphiv1[kn].end());
+    Double_t yv1e = TMath::StdDev(dphiv1[kn].begin(), dphiv1[kn].end());
+
+    Double_t n0   = (Double_t)cosv1x[kn].size();
+    if( n0 > 0 )
+      yv1e /= sqrt( n0 );    
+
+    Double_t yv1c  = yv1/rpres[0];//*sqrt((Double_t)cosv1x[kn].size());
     Double_t yv1ce = GetError(yv1, rpres[0], yv1e, rpres[1]);
+
 
     if( !std::isnan(rapm) ) {
       gv_v1->SetPoint( kl,      rapm, yv1c);
@@ -434,6 +443,7 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
       }
     }
     gPt_v1[kn]->Write();
+    hypt1[kn]->Write();
   }
 
   kl = 0;
@@ -441,14 +451,21 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 
     if( cosv2x[kn].size() == 0 ) continue;
 
-    Double_t rapm  = TMath::Mean(cosv2x[kn].begin(), cosv2x[kn].end());
+    Double_t rapm  = TMath::Mean(  cosv2x[kn].begin(), cosv2x[kn].end());
     Double_t rape  = TMath::StdDev(cosv2x[kn].begin(), cosv2x[kn].end());
 
-    Double_t yv2  = cosv2[kn] / (Double_t)cosv2x[kn].size();
-    Double_t yv2e = sinv2[kn] / (Double_t)cosv2x[kn].size();
+    
+    Double_t yv2  = TMath::Mean(  dphiv2[kn].begin(), dphiv2[kn].end());
+    Double_t yv2e = TMath::StdDev(dphiv2[kn].begin(), dphiv2[kn].end());
+
+    Double_t n0   = (Double_t)cosv2x[kn].size();
+    if( n0 > 0 )
+      yv2e /= sqrt( n0 );
 
     Double_t yv2c  = yv2 / rpres[2];
     Double_t yv2ce = GetError(yv2, rpres[2], yv2e, rpres[3]);
+
+    cout << " v2 " << yv2 << " / " << rpres[2] << " = " << yv2c << endl;
 
     if( !std::isnan(rapm) ) {
       gv_v2->SetPoint( kl,    rapm, yv2c);
@@ -480,15 +497,18 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
       }
     }
     gPt_v2[kn]->Write();
+    hypt2[kn]->Write();
   }
 
+  hmult->Write();
   gv_v1->Write();
   gv_v2->Write();
 
 
-  //====================
-  //plotting
-  ic++; id=1;
+  //--------------------------------------------------
+  //--- Ploting
+  //--------------------------------------------------
+  id=1;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
   cc->Divide(2,2);
 
@@ -507,7 +527,7 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   cc->cd(id); id++;
   hazm->Draw();
   
-  ic++; id = 1;
+  id = 1;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
   cc->Divide(2,2);
   cc->cd(id); id++; id++;
@@ -518,31 +538,35 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   hpitch->Draw();
 
   
-
-  ic++;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
   hyptacp->Draw("colz");
   
 
 
-  ic++; id = 1;
+  id = 1;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),2000,500);
-  cc->Divide(ybin1,1);
+  cc->Divide(ybin1,2);
   for(UInt_t kn = 0; kn < ybin1; kn++){
     cc->cd(id); id++;
     gPt_v1[kn]->Draw("ALP");
+
+    cc->cd(id+ybin1-1);
+    hypt1[kn]->Draw();
   }
 
-  ic++; id = 1;
+  id = 1;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1600,500);
-  cc->Divide(ybin2,1);
+  cc->Divide(ybin2,2);
   for(UInt_t kn = 0; kn < ybin2; kn++){
     cc->cd(id); id++;
     gPt_v2[kn]->Draw("ALP");
+
+    cc->cd(id+ybin2-1);
+    hypt2[kn]->Draw();
+    
   }
 
 
-  ic++; id = 1;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
   gv_v1->Draw("ALP");
 
@@ -553,14 +577,13 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
   LineV->Draw();
   LineH->Draw();
 
-  ic++; id = 1;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
   gv_v2->Draw("ALP");
 
-  ic++; 
   ic++; cc   = new TCanvas("dyphi","dphi1 y bin",500,1200);
   cc->Divide(2, ybin1);
 
+  //--- y-bin and pt-bin
   auto cc1   = new TCanvas("dphi1","dphi1 y bin and pt bin",2000,1200);
   cc1->Divide(nbin1, ybin1);
 
@@ -569,13 +592,12 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 
   id = 1;
   for(UInt_t i = 0; i < ybin1; i++) {
-    cc1->cd(2*(i+1)-1);
+    cc->cd(2*(i+1)-1);
     hyphi1[i]->SetNormFactor(npb);
     hyphi1[i]->Draw("e");
 
     for(UInt_t j = 0; j < nbin1; j++){
-      cc2->cd(id);    id++;
-
+      cc1->cd(id);    id++;
       
       if(hyptphi1[i][j]->GetEntries() == 0) continue;
       
@@ -600,7 +622,6 @@ void PlotCosPtDependence(UInt_t selid = 2)       //%% Executable :
 
     }
   } 
-  ic += 3;
 
   hphi0_180->Write();
   hyptacp->Write();
@@ -628,7 +649,7 @@ void PlotAzimuthalDistribution(UInt_t selid = 2)       //%% Executable :
 
   gSystem->cd("data");
 
-  TString fName = Form("YPT_n%2dto%d_",cent[icent],cent[jcent]);
+  TString fName = Form("YPT_n%2dto%d_",Lcent,Ucent);
   fName  +=  sysName + "_xs" + partname[selid]+"_1.root";
   auto GraphSave = new TFile(fName,"recreate");
   std::cout << "File " << fName << " is created. " << std::endl;
@@ -736,8 +757,91 @@ void PlotAzimuthalDistribution(UInt_t selid = 2)       //%% Executable :
 }
 
 //**************************************************
-//**************************************************
+Double_t *GetRPResolution(UInt_t vn, UInt_t mult)
+{
+  Double_t *rpcor = new Double_t[3];
 
+  UInt_t xn = v1x.size() - 1;
+  if( mult <= v1x.at( v1x.size() - 1 ) ) {
+    xn = (UInt_t)itrpvx->Eval( (Double_t)mult ) ;
+  
+    if( abs(v1x.at(xn) - mult) > abs(v1x.at(xn+1) - mult) )
+      xn += 1;
+  }
+
+
+  if( vn == 1 ){
+
+    rpcor[0] = v1x.at(xn);
+    rpcor[1] = v1y.at(xn);
+    rpcor[2] = v1ye.at(xn);
+  }
+  else {
+    rpcor[0] = v2x.at(xn);
+    rpcor[1] = v2y.at(xn);
+    rpcor[2] = v2ye.at(xn);
+  }
+  
+  return rpcor;
+
+}
+//**************************************************
+Bool_t SetRPResolution()
+{
+  itrpvx = new ROOT::Math::Interpolator(20, ROOT::Math::Interpolation::kPOLYNOMIAL);
+
+  TString fname = "data/mlt_"+ sysName + ".v25.0.5.root";
+  TFile *fOpen = TFile::Open(fname);
+  if( fOpen == NULL ) kFALSE;
+
+  auto hgv_mcos1 = (TGraphErrors*)fOpen->Get("gv_mcos1");
+  auto hgv_mcos2 = (TGraphErrors*)fOpen->Get("gv_mcos2");
+
+  std::vector< Double_t > ix;
+    
+  Double_t x, y, xe, ye;
+  UInt_t k = 0;
+  ix.push_back(k); 
+  v1x.push_back(0.); v1xe.push_back(0.);
+  v1y.push_back(0.); v1ye.push_back(0.);
+  k++;
+  for( UInt_t i = (UInt_t)hgv_mcos1->GetN()-1; i > 0; i-- ) {
+    hgv_mcos1->GetPoint(i, x, y);
+    xe = hgv_mcos1->GetErrorX(i);
+    ye = hgv_mcos1->GetErrorY(i);
+
+    ix.push_back(k); 
+    v1x.push_back(x);
+    v1y.push_back(y);
+    v1xe.push_back(xe);
+    v1ye.push_back(ye);
+
+    cout << k << " th " << v1x.at(k) << " vs " << v1y.at(k) << endl; 
+    k++;
+  }
+  itrpvx->SetData(v1x,ix);
+
+  
+  v2x.push_back(0.); v2xe.push_back(0.);
+  v2y.push_back(0.); v2ye.push_back(0.);
+
+  for( UInt_t i = (UInt_t)hgv_mcos2->GetN()-1; i > 0; i-- ) {
+    hgv_mcos2->GetPoint(i, x, y);
+    xe = hgv_mcos2->GetErrorX(i);
+    ye = hgv_mcos2->GetErrorY(i);
+
+    v2x.push_back(x);
+    v2y.push_back(y);
+    v2xe.push_back(xe);
+    v2ye.push_back(ye);
+  }
+
+  fOpen->Close();
+
+  return kTRUE;
+}
+
+//**************************************************
 Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)            //%% Executable : 
 {
   hphi90_180->SetLineColor(2);
@@ -745,30 +849,55 @@ Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)            //%%
   Double_t m0 = hphi0_180->GetEntries();
   Double_t m1 = hphi90_180->GetEntries();
 
-  Double_t chi = sqrt(-2.* log(2.* m1/m0));
-  
-  Double_t m01e = m1/m0*sqrt(1./m1+1./m0);
-  Double_t chie = chi - sqrt(-2.* log(2. * (m1/m0+m01e)));
+  if( m0 == 0 ) {
+    std::cout << " No entry in hphi0_180 " << endl;
+    return 0;
+  }
+
+  //  Double_t chi = sqrt(-2.* log(2.* m1/m0));
+  Double_t mr    = m1/m0;
+  Double_t mre2  = m1/m0 * (1./m0 + 1./m1);
+  Double_t chi   = sqrt(-4.* log(2.* mr));
+  Double_t chie2 = -4.*log(2.*mr)/pow(mr,2)* mre2;
 
   Double_t *rpres = new Double_t[4];
 
-  rpres[0] = sqrt(TMath::Pi())/(2.*TMath::Gamma(1))*chi;
-  rpres[1] = sqrt(TMath::Pi())/(2.*TMath::Gamma(1))*(chi+chie) - rpres[0];
-  rpres[2] = sqrt(TMath::Pi())/(2.*2.*TMath::Gamma(1.5))*pow(chi,2);
-  rpres[3] = sqrt(TMath::Pi())/(2.*2.*TMath::Gamma(1.5))*pow(chi+chie,2) - rpres[2];
+  if( chi > 0. ) {
 
-  // ic++;
-  // cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
-  // hphi0_180->Draw();
-  // hphi90_180->Draw("same");
+    //v1
+    rpres[0] = 0.626657*chi    - 0.09694*pow(chi,3) + 0.02754 * pow(chi,4) - 0.002283*pow(chi,5);
+  
+    Double_t err2 = pow(0.626657,2) * chie2;
+    err2 += pow(0.09694,2) *  6.* pow(chi,4) * chie2;
+    err2 += pow(0.02754,2) * 16.* pow(chi,6) * chie2;
+    err2 += pow(0.002283,2)* 25.* pow(chi,8) * chie2;
+    rpres[1] = sqrt( err2 );
 
-  //  Double_t para[6];
-  //  GetFittingParameters( *hphi0_180, para);
+    //v2
+    rpres[2] = 0.25*pow(chi,2) - 0.011414*pow(chi,3) - 0.034726*pow(chi,4) + 0.006815*pow(chi,5);
+    err2  = pow(0.25,2) * chie2;
+    err2 += pow(0.011414,2) *  9.* pow(chi,4) * chie2;
+    err2 += pow(0.034726,2) * 16.* pow(chi,6) * chie2;
+    err2 += pow(0.006815,2) * 25.* pow(chi,5) * chie2;
+    rpres[3] = sqrt( err2 );
+  }
+
+  else {
+    Double_t chie = sqrt(chie2);
+    rpres[0] = sqrt(TMath::Pi())/(2.*sqrt(2))*chi*exp(-chi*chi/4.)*
+      (ROOT::Math::cyl_bessel_i(0,chi*chi/4.)+ROOT::Math::cyl_bessel_i(1,chi*chi/4.));
+    rpres[1] = 0.;
+    rpres[2] = sqrt(TMath::Pi())/(2.*sqrt(2))*chi*exp(-chi*chi/4.)*
+      (ROOT::Math::cyl_bessel_i(0.5,chi*chi/4.)+ROOT::Math::cyl_bessel_i(1.5,chi*chi/4.));
+    rpres[3] = 0.;
+  }
 
   std::cout << " Resolution : v1 " 
 	    << std::setw(14) << rpres[0] << " +- " << std::setw(10) << rpres[1]
 	    << " v2 "
 	    << std::setw(14) << rpres[2] << " +- " << std::setw(10) << rpres[3]
+	    << " Chi " 
+	    << std::setw(10) << chi
 	    << std::endl;
 
   return rpres;
@@ -952,7 +1081,7 @@ void DetectorBias()
     STFlowInfo *aflow = (STFlowInfo*)aFlowArray->At(0);
 
     
-    if(aflow->mtrack4 > cent[icent] || aflow->mtrack4 <= cent[jcent] ) continue;      
+    if(aflow->mtrack4 > Ucent || aflow->mtrack4 <= Lcent ) continue;      
     count++;
 
     cosphi += cos( (aflow->unitP_fc).Phi());      
@@ -974,72 +1103,110 @@ void DetectorBias()
 
 void CentralityDependence()            //%% Executable :
 {
-  //  UInt_t mrange[] = {70, 50, 45, 40, 35, 25, 20, 0};
-  UInt_t mrange[] = {70, 35, 28, 0};
 
-  const UInt_t mbin = sizeof(mrange)/sizeof(UInt_t) - 1;
-  TH1D *hphi0_180;
-  TH1D *hphi90_180;
-  TH1I *hmult;
+  const UInt_t mbin = sizeof(mrange)/sizeof(UInt_t);
+
+  TString fHeader = "mlt_"+ sysName + ".v"+sVer+".";
+  auto fName = SetupOutputFile( fHeader );
+
+  auto GraphSave = new TFile(fName,"recreate");
+
+  
+  TH1I *hmult = new TH1I("hmult","multiplicity",80,0,80);
+  TH1I *hmultbin[mbin];
+  TH1D *hphi0_180[mbin];
+  TH1D *hphi90_180[mbin];
+
+  for(UInt_t k = 0; k < mbin; k++){
+    TString htitle = Form("hmultbin_%d",k);
+    hmultbin[k]  = new TH1I(htitle,"",80,0,80);
+
+    htitle = Form("hphi0_180_%d",k);
+    hphi0_180[k]  = new TH1D(htitle, "",100,0.,3.2);
+    htitle = Form("hphi90_180_%d",k);
+    hphi90_180[k] = new TH1D(htitle,"",100,0.,3.2);
+  }
+
+
+  Long64_t nEntry = SetBranch();
+
+  for(Long64_t i = 0; i < nEntry; i++) {
+
+    rChain->GetEntry(i);
+
+    STFlowInfo *aflow = (STFlowInfo*)aFlowArray->At(0);
+    if( aflow == NULL || aflow->mtrack4 == 0 ) continue;
+    hmult -> Fill( aflow->mtrack4 );
+
+    UInt_t ik = 0;
+    while( ik < mbin ){
+      if( aflow->mtrack4 > mrange[ik] ) break;
+      ik++;
+    }
+    
+    //    cout << ik << " " << aflow->mtrack4 << endl;
+
+    hmultbin[ik] -> Fill( aflow->mtrack4 );
+
+    Double_t subdphi = abs(TVector2::Phi_mpi_pi((aflow->unitP_1fc).Phi() - (aflow->unitP_2fc).Phi()));
+    hphi0_180[ik]->Fill( subdphi );
+    if( subdphi > TMath::Pi()/2. )
+      hphi90_180[ik]->Fill( subdphi );
+  }
+   
 
   auto gv_mcos1 = new TGraphErrors();
+  gv_mcos1->SetName("gv_mcos1");
   gv_mcos1->SetTitle(";Multiplicity; <cos(#Psi)>");
+
   auto gv_mcos2 = new TGraphErrors();
+  gv_mcos2->SetName("gv_mcos2");
   gv_mcos2->SetTitle(";Multiplicity; <cos(2#Psi)>");
 
-
   auto cc80 = new TCanvas("cc80","cc80",500,1000);
-  cc80->Divide(2,7);
-  
+  cc80->Divide(2,mbin);
+   
   UInt_t id = 1;
+  UInt_t ip = 0;
   for(UInt_t i = 0; i < mbin; i++) {
     cc80->cd(id); id++;
-    TCut hcut = Form("mtrack4>%u&&mtrack4<=%u",mrange[i+1],mrange[i]);
 
-    TString htitle = Form("hphi0_%d",i);
-    hphi0_180  = new TH1D(htitle, "",100,0.,3.2);
-    rChain->Project(htitle,"abs(TVector2::Phi_mpi_pi(unitP_1->Phi()-unitP_2->Phi()))",hcut);
-    hphi0_180->Draw();
+    if( hphi0_180[i]->GetEntries() < 5 ) continue;
 
-    htitle = Form("hphi90_%d",i);
-    hphi90_180 = new TH1D(htitle,"",100,0.,3.2);
-    TCut phicut = "abs(TVector2::Phi_mpi_pi(unitP_1->Phi()-unitP_2->Phi()))>1.5707963";
-    rChain->Project(htitle,"abs(TVector2::Phi_mpi_pi(unitP_1->Phi()-unitP_2->Phi()))",hcut&&phicut);
-    hphi90_180->Draw("same");
+    hphi0_180[i] ->Draw();
+    hphi90_180[i]->Draw("same");
 
-    hmult = new TH1I(Form("hmult_%u",i),"",70,0.,70.);
-    rChain->Project(Form("hmult_%u",i),"mtrack4",hcut);
     cc80->cd(id); id++;
-    hmult->Draw();
+    hmultbin[i]->Draw();
     
 
-     Double_t *rpres = new Double_t[4];
-     rpres = GetRPResolutionwChi(hphi0_180, hphi90_180);
-     std::cout << mrange[i+1] << " ~ " << mrange[i] 
+    Double_t *rpres = new Double_t[4];
+    rpres = GetRPResolutionwChi(hphi0_180[i], hphi90_180[i]);
+    std::cout << mrange[i+1] << " ~ " << mrange[i] 
      	      << " <cos(Phi)> = " << rpres[0] << " +- " << rpres[1] 
      	      << " <cos(2Phi)> = "<< rpres[2] << " +- " << rpres[3] 
      	      << std::endl;
      
-     hmult->GetMean();
+    if( hphi90_180[i]->GetEntries() > 15 && !std::isnan(rpres[0])) {
+      gv_mcos1->SetPoint(ip, hmultbin[i]->GetMean(), rpres[0]);
+      gv_mcos1->SetPointError(ip, hmultbin[i]->GetStdDev(), rpres[1]);
 
-     gv_mcos1->SetPoint(i, hmult->GetMean(), rpres[0]);
-     gv_mcos1->SetPointError(i, hmult->GetStdDev(), rpres[1]);
-
-     gv_mcos2->SetPoint(i, hmult->GetMean(), rpres[2]);
-     gv_mcos2->SetPointError(i, hmult->GetStdDev(), rpres[3]);
+      gv_mcos2->SetPoint(ip, hmultbin[i]->GetMean(), rpres[2]);
+      gv_mcos2->SetPointError(ip, hmultbin[i]->GetStdDev(), rpres[3]);
+      ip++;
+    }
   }
-
-  hmult = new TH1I("hmult",";Multiplicity",70,0,70);
-  rChain->Project("hmult","mtrack4");
-
-  auto cc79 = new TCanvas("cc79","cc79");
-  hmult->Draw("");
-
   auto cc81 = new TCanvas("cc81","cc81");
   gv_mcos1->Draw("ALP");
 
   auto cc82 = new TCanvas("cc82","cc82");
   gv_mcos2->Draw("ALP");
+
+  hmult->Write();
+  gv_mcos1->Write();
+  gv_mcos2->Write();  
+  GraphSave->Write();
+
 }
 
 
@@ -1061,3 +1228,46 @@ UInt_t SetBranch()
   return rChain->GetEntries();
 }
 
+
+TString SetupOutputFile(TString fopt)
+{
+  //--------------------------------------------------
+  //----- SETUP OUTPUT FILE --------------------------
+  //--------------------------------------------------
+  gSystem->cd("data");
+  TString oVer = gSystem->Getenv("OUTVER");
+  TString fName = fopt + oVer;
+
+  if( oVer == "" ) {
+    UInt_t kVer = 0; 
+    TString checkName;
+
+    while( kTRUE ) {
+      checkName = Form(fName + "%d.root", kVer);
+      if( !gSystem->FindFile(".",checkName) ) {
+	break;
+      }
+      else
+	kVer++;
+    }
+    fName = Form(fName + "%d.root", kVer);
+  }
+  else {
+    TString checkName = fName + ".root";;
+    if( !gROOT->IsBatch() && gSystem->FindFile(".",checkName) ) {
+      std::cout << checkName << " is existing. Do you recreate? (y/n)" << std::endl;
+      TString sAns;
+      std::cin >> sAns;
+      if(sAns == "N" || sAns == "n") {
+	std::cout << " Retry" << std::endl;
+	exit(0);
+      }
+    }
+    fName += ".root";
+  }
+
+  std::cout << "File " << fName << " is created. " << std::endl;  
+
+  return fName;
+  //--------------------------------------------------
+}

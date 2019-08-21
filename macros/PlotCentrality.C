@@ -1,50 +1,128 @@
-void previous()
-{
-  //132Sn _rf.v4.7.0.cv0.
-  Double_t mult[]  = {4., 12., 20., 28., 36.,};
-  Double_t multe[] = {4.,  4.,  4.,  4.,  4.,};
+#include "DoFlow.h"
+#include "SetStyle.C"
 
-  Double_t mcos[]  = {0.06667,0.103186,0.130410,0.13108,0.12151};
-  Double_t mcose[] = {0.00219,0.000552,0.000423,0.00075,0.00351};
+//==================================================
+//-- plot configuration
+//--------------------------------------------------
+  // --> Plotting selection
+Bool_t bsys[]  = { 1, 1, 0, 0};
+Bool_t bpid[]  = { 0, 0, 0, 0, 0, 0, 1}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bcnt[]  = { 1, 0, 0}; 
+UInt_t cntw = 3;
 
+UInt_t  bver[]  = { 1, 0, 0, 0};
+TString sVer[]  = {".v29.1",".v26.5", ".v27.1.0", ".v25.0.4", ".v23.1.13",".AMD:"};
+TString sName[] = {"mlt_"    ,"mlt_"  ,  "mlt"    ,  "mlt"    ,  "mlt"     ,"mlt"}; //"cosYPt_132Sn_";
+TString bName[] = {"132Sn","108Sn","124Sn","112Sn"};
 
-  auto gv_mcos = new TGraphErrors(5, mult,mcos,multe,mcose);
-  gv_mcos->SetName("gv_mcos");
-  gv_mcos->SetTitle("; Multiplicity ; <cos #Delta#Phi_sub> ");
+Bool_t amdEOS[]= {0, 0};
+TString amdName[] = {"SLy4",
+		     "SLy4-L108"};
 
-  gv_mcos->SetMarkerStyle(20);
-  gv_mcos->SetMarkerColor(4);
-  gv_mcos->SetLineColor(4);
+TString amdHeader[] = {"amd_132Sn124Sn270AMeV_cluster_",
+		       "amd_108Sn112Sn270AMeV_cluster_"};
+//==================================================
 
-  auto cc0 = new TCanvas("cc0","cc0");
-  gv_mcos->Draw("ALP");
+UInt_t   ccvid = 0;
+TF1 *lslope = new TF1("lslope","[0]+[1]*x",-0.1,0.2);
 
-}
+// --> configuration
 
-void v12cos()
-{
-  Double_t mult[]  = {39.1,      31.0,    21.2};
-  Double_t multe[] = {3.4 ,      2.,       4.3};
-  Double_t cos1[]  = {0.818874,0.865476, 0.743198};
-  Double_t cos1e[] = {0.002623,0.002272, 0.001989};
-  Double_t cos2[]  = {0.426889,0.476859, 0.351632};
-  Double_t cos2e[] = {0.002738,0.002507, 0.001885};
+Size_t  imsz[]   = {1, 1, 1.3, 1.3, 1.3, 1.3, 1.3};
+Color_t icol[]   = { kRed, kBlue, kSpring, kMagenta, kOrange, kViolet};
+Color_t icolnn[] = { kPink, kBlue+1, kGreen+2, kViolet-1};
 
-
-  auto gv_mcos1 = new TGraphErrors(3, mult, cos1, multe, cos1e);
-  auto gv_mcos2 = new TGraphErrors(3, mult, cos2, multe, cos2e);
-  
-
-  auto m_cos = new TMultiGraph("mcos",";Multiplicity; <cos>");
-  m_cos->Add(gv_mcos1,"LP");
-  m_cos->Add(gv_mcos2,"LP");
-
-  m_cos->Draw("AP");
-
-}
+TH1I *hhmult;
 
 void PlotCentrality()
 {
-  v12cos();
-}
+  gStyle->SetOptStat(0);
+  SetStyle();
 
+  TFile *fOpen;
+  TMultiGraph *mcos1 = new TMultiGraph("mcos1",";Multiplicity; <cos( #Delta #Psi)>");
+  TMultiGraph *mcos2 = new TMultiGraph("mcos2",";Multiplicity; <cos( 2#Delta #Psi)>");
+
+  auto  lgr0 = new TLegend(0.62, 0.71, 0.80, 0.9);
+  auto  lgr1 = new TLegend(0.48, 0.23, 0.65, 0.4);
+  auto  lgr2 = new TLegend(0.48, 0.23, 0.65, 0.4);
+
+
+
+  UInt_t icc = 0;
+  TCanvas *cc = new TCanvas(Form("cc%d",icc),Form("cc%d",icc)); icc++;
+
+  UInt_t ip = 0;
+  for( UInt_t is = 0; is < 4; is++ ){
+    if( !bsys[is] ) continue;
+
+    for(UInt_t iz = 0; iz < (UInt_t)sizeof(bver)/sizeof(UInt_t); iz++){
+      if( !bver[iz] ) continue;
+
+      TString label = fsys[is];
+      TString fname = "data/"+ sName[iz] + bName[is] + sVer[iz]+ ".root";
+
+      fOpen = TFile::Open(fname);
+    
+      if(fOpen == NULL ) continue;
+
+      std::cout << fname << " is opened. " << std::endl;
+
+      hhmult    = (TH1I*)fOpen->Get("hmult");
+      hhmult -> SetName(Form("hmult_%d",is));
+      hhmult -> SetTitle(";Multiplicity; 1/NdN/dM");
+      hhmult -> GetYaxis()->SetNdivisions(505);
+      hhmult -> SetNormFactor(1);
+      hhmult -> SetLineColor(icol[ip]);
+      hhmult -> SetMaximum(100000);
+      hhmult -> Draw( iopt[ip] );
+      lgr0   -> AddEntry( hhmult, label, "lp" );
+
+      auto hgv_mcos1 = (TGraphErrors*)fOpen->Get("gv_mcos1");
+      auto hgv_mcos2 = (TGraphErrors*)fOpen->Get("gv_mcos2");
+      
+      if( is == 0 ) {
+	hgv_mcos1->RemovePoint(12);
+	hgv_mcos2->RemovePoint(12);
+      }
+      
+
+      hgv_mcos1 -> SetName(Form("hgv_mcos1_%d",is));
+      hgv_mcos1 -> SetMarkerStyle(20);
+      hgv_mcos1 -> SetMarkerColor(icol[ip]);
+      hgv_mcos1 -> SetLineColor(icol[ip]);
+
+      hgv_mcos2 -> SetName(Form("hgv_mcos2_%d",is));
+      hgv_mcos2 -> SetMarkerStyle(20);
+      hgv_mcos2 -> SetMarkerColor(icol[ip]);
+      hgv_mcos2 -> SetLineColor(icol[ip]);
+
+      mcos1->Add( hgv_mcos1 );
+      lgr1 ->AddEntry( hgv_mcos1, label, "lp");
+
+      mcos2->Add( hgv_mcos2 );      
+      lgr2 ->AddEntry( hgv_mcos2, label, "lp");
+
+
+      if( fname == "data/mlt_132Sn.v27.0.root" ||
+	  fname == "data/mlt_132Sn.v27.1.0.root") {
+	hgv_mcos1->RemovePoint(9);
+	hgv_mcos2->RemovePoint(9);
+      }
+      
+      //      fOpen->Close();
+      ip++;
+    }
+  }
+  lgr0->Draw();
+
+  cc = new TCanvas(Form("cc%d",icc),Form("cc%d",icc)); icc++;
+  mcos1->Draw("ALP");
+  lgr1 ->Draw();
+
+  cc = new TCanvas(Form("cc%d",icc),Form("cc%d",icc)); icc++;
+  mcos2->Draw("ALP");
+  lgr2 ->Draw();
+
+  
+}

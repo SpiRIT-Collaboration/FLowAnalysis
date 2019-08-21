@@ -9,10 +9,12 @@ source ../build/config.sh
 
 # TPC data
 
+export TPCDIR=/data/spdaq01/recoData/20190725/data/
+export RCVER=HEAD.1834.fc633ca
 #export TPCDIR=/xrootd/spdaq02/recoData/20190206/data/
 #export RCVER=HEAD.1780.1e193e6
-export TPCDIR=/xrootd/spdaq02/recoData/20181219/data/
-export RCVER=HEAD.1769.ef17b59
+#export TPCDIR=/xrootd/spdaq02/recoData/20181219/data/
+#export RCVER=HEAD.1769.ef17b59
 export ST132DIR=${STTPCDIR}
 export ST108DIR=${STTPCDIR}
 export ST124DIR=${STTPCDIR}
@@ -21,7 +23,6 @@ export STCkT100=${STTPCDIR}
 export STCkT300=${STTPCDIR}
 
 export STBBFITTER=db/BBFitter.root
-
 
 #BigRIPS data
 export STBEAM132=/cache/scr/spirit/DataAskedByMizuki/beam.Sn132_all/
@@ -53,34 +54,29 @@ source runList.sh
 ##--- for Process1 ------------------------------------
 # *****> <Edit Here>
 # Set RUNNUMBER1 
-DBVERSION=25
-VERSION=23
-MEVT=1000
-#RUNNUMBER1="2841 2843 2844"
-RUNNUMBER1="2841"
+DBVERSION=0
+VERSION=38
 
-function exec() {
-    MXEVT=$MEVT
-    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT DBVER=$DBVERSION root run_analysis.C 
-}
-
-function execb() {
-    MXEVT=$MEVT
-    LOG=log/prc1_$RUNNUMBER1_v$VERSION.log
-    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MXEVT DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
-}
-
-RUNNUMBER1=(${RNF132})
+#RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
-#RUNNUMBER1=(${RNF112})
-#RUNNUMBER1=(${RBF132} ${RNF108} ${RNF124} ${RNF112}) 
+RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RNFTEMP})
 #RUNNUMBER1=(${RNF132r})
-#RUNNUMBER1=(${RNF132p})
+#RUNNUMBER1=(${RNF132s})
 
-MXEVT=
-function process(){
+function execa() { ## Job for the 2841 with maximum event number =MEVT
+    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MEVT DBVER=$DBVERSION root run_analysis.C 
+}
+
+MEVT=
+function execb() {  ## batch job for the first run with maxium event number = MEVT
+    echo $MEVT
+    LOG=log/p1_${RUN}_v${VERSION}.log
+    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MEVT DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
+}
+
+function execc(){   ## batch job from the second to the end.
     typeset -i I=1
     while(( $I < ${#RUNNUMBER1[@]} ))
     do
@@ -121,6 +117,11 @@ function process(){
 
 #RUN=${RUNNUMBER1[0]}
 #RUN=${RUN} VER=$VERSION root -b -q run_analysis.C\(1000\)
+
+grep function run_analysis.sh
+
+#execb
+#execc
 
 
 

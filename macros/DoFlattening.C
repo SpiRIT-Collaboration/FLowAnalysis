@@ -93,6 +93,14 @@ void ReCentering(UInt_t isel = 10, Int_t nmin=0, Int_t nmax=100) //%% Executable
   else if(isel == 11)
     cutdef = Form("mtrack_1>=%d   && mtrack_1<%d",nmin,nmax);
 
+  if( isys == 2 ) {
+    if(isel == 10)
+      cutdef = Form("(mtrack1*0.8-20)<mtrack4 && mtrack4>=%d && mtrack4<%d",nmin,nmax);
+    else if(isel == 11)
+      cutdef = Form("(mtrack1*0.8-20)<mtrack4 && mtrack_1>=%d   && mtrack_1<%d",nmin,nmax);
+  }
+
+
   TCut multcut = TCut(cutdef);
 
   rChain->Project(Form("hQx%d_%d",nmin,isel), unitpX, multcut&&"beamPID>0");
@@ -211,6 +219,11 @@ void Flatten_Psi_ntrack(UInt_t isel)
     STBDC      *aBDC  = (STBDC*)aBDCArray->At(0);
 
     if( aBDC->ProjA == -9999 && aFlow->beamPID == 0 ) continue;
+
+    if( isys == 2 ) {
+      if( (aFlow->mtrack1*0.8-20) > aFlow->mtrack4 ) continue;
+      if( aFlow->mtrack4 < 5 ) continue;
+    }
 
     auto mtrack4  = aFlow->GetNTrack(4);
     auto mtrack_1 = aFlow->mtrack_1;
