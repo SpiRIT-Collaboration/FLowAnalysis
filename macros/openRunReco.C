@@ -1,0 +1,36 @@
+{
+  auto flw = new TChain("cbmsim");
+  flw->Add("/xrootd/spdaq02/recoData/20181219/data/run2993_s0.reco.HEAD.1769.ef17b59.root");
+  flw->Add("/xrootd/spdaq02/recoData/20181219/data/run2993_s1.reco.HEAD.1769.ef17b59.root");
+  flw->Add("/xrootd/spdaq02/recoData/20181219/data/run2993_s2.reco.HEAD.1769.ef17b59.root");
+  flw->Add("/xrootd/spdaq02/recoData/20181219/data/run2993_s3.reco.HEAD.1769.ef17b59.root");
+  flw->Add("/xrootd/spdaq02/recoData/20181219/data/run2993_s4.reco.HEAD.1769.ef17b59.root");
+  flw->Add("/xrootd/spdaq02/recoData/20181219/data/run2993_s5.reco.HEAD.1769.ef17b59.root");
+  flw->Add("/xrootd/spdaq02/recoData/20181219/data/run2993_s6.reco.HEAD.1769.ef17b59.root");
+  flw->Add("/xrootd/spdaq02/recoData/20181219/data/run2993_s7.reco.HEAD.1769.ef17b59.root");
+  flw->Add("/xrootd/spdaq02/recoData/20181219/data/run2993_s8.reco.HEAD.1769.ef17b59.root");
+  flw->Add("/xrootd/spdaq02/recoData/20181219/data/run2993_s9.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s10.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s11.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s12.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s13.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s14.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s15.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s16.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s17.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s18.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s19.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s20.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s21.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s22.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s23.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s24.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s25.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s26.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s27.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s28.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s29.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s30.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s31.reco.HEAD.1769.ef17b59.root");
+  flw->Add( "/xrootd/spdaq02/recoData/20181219/data/run2993_s32.reco.HEAD.1769.ef17b59.root");
+}
