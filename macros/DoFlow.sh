@@ -4,8 +4,8 @@ source setup.sh
 export MNMACRO=DoFlow_adv.C        ##<--- MACRO name
 export MNRNF={$RNF108}             ##<--- 
 export MNDB=BTt                    ##<---
-export MNVERSION=37.1              ##   <------@@ input 
-export MNOVER=4
+export MNVERSION=39.0              ##   <------@@ input 
+export MNOVER=0
 ##<-----------
 
 export MNrunOne='SUFX=$MNDB  VER=$MNVERSION root $MACRO.C'

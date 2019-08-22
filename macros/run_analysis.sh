@@ -8,13 +8,20 @@
 source ../build/config.sh
 
 # TPC data
+#
+#VERSION=38
+#export TPCDIR=/data/spdaq01/recoData/20190725/data/
+#export RCVER=HEAD.1834.fc633ca
 
-export TPCDIR=/data/spdaq01/recoData/20190725/data/
-export RCVER=HEAD.1834.fc633ca
-#export TPCDIR=/xrootd/spdaq02/recoData/20190206/data/
-#export RCVER=HEAD.1780.1e193e6
-#export TPCDIR=/xrootd/spdaq02/recoData/20181219/data/
-#export RCVER=HEAD.1769.ef17b59
+
+VERSION=37
+export TPCDIR=/data/spdaq01/recoData/20190206/data/
+export RCVER=HEAD.1780.1e193e6
+
+VERSION=39
+export TPCDIR=/data/spdaq01/recoData/20190804/data/
+export RCVER=HEAD.1853.e498ace
+
 export ST132DIR=${STTPCDIR}
 export ST108DIR=${STTPCDIR}
 export ST124DIR=${STTPCDIR}
@@ -55,12 +62,11 @@ source runList.sh
 # *****> <Edit Here>
 # Set RUNNUMBER1 
 DBVERSION=0
-VERSION=38
 
 #RUNNUMBER1=(${RNF132})
-#RUNNUMBER1=(${RNF108})
+RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
-RUNNUMBER1=(${RNF112})
+#RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RNFTEMP})
 #RUNNUMBER1=(${RNF132r})
 #RUNNUMBER1=(${RNF132s})

@@ -10,8 +10,8 @@ source runList.sh
 
 ##------>>> EDIT HERE 
 export MNRNF=$RNF108
-export MNDBVERSION=37
-export MNVERSION=37.1
+export MNDBVERSION=39
+export MNVERSION=39.0
 export MNDB=BTt
 ##<----
 

@@ -78,13 +78,11 @@ Bool_t STFlowTask::Init(UInt_t irun, TString sver)
 
   fflowinfo->SetRun( irun );  
   
-  LOG(INFO) << "STFlowTask::Init() >> " << irun << " Ver. " << sver << FairLogger::endl;
-
   if( fIsFlowCorrection) {
     if( !SetupFlowDataBase() ) {
       LOG(ERROR) << "STFlowTask:: Flow database cannot be setup" << FairLogger::endl;
       fIsFlowCorrection = kFALSE;
-      return kFALSE;
+      // return kFALSE;
     }
     else
       LOG(INFO) << "STFlowTask:: Flow database are ready. " << FairLogger::endl;

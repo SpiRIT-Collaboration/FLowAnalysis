@@ -37,7 +37,8 @@ public:
   void       Finish(){fActive = kFALSE;}
 
   void   SetPersistence(Bool_t value = kTRUE);
-  void   SetRunInfo(TString vDir, TString tver, TString sver){rootDir = vDir, tVer = tver, sVer=sver;}  
+  void   SetRunInfo(TString vDir, TString tver, TString sver){rootDir = vDir, tVer = tver, sVer=sver;
+    LOG(INFO) << " setruninfor " << sVer << FairLogger::endl;}  
 
   Long64_t GetEventID()  {return fEventIDLast;}
   Long64_t GetEntries() {return nEntry;}
@@ -100,6 +101,7 @@ private:
   TDatime  dtime;         //! 
   TDatime  beginTime;     //!  
 
+  // by v37:  
   //vertex mean
   TVector3 VtxMean[4] = { TVector3( 2.25909e+00,  -2.26504e+02,  -1.34982e+01), //! 132Sn
 			  TVector3(-9.66045e-01,  -2.29565e+02,  -1.37814e+01), //! 108Sn
