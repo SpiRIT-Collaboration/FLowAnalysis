@@ -38,7 +38,6 @@ private:
   
   UInt_t  ntrack[7]; //!
 
-  void   Clear();
   Bool_t SetupParameters();
   Bool_t SetupInputDataFile();
   Bool_t SetupFlowDataBase();
@@ -65,6 +64,7 @@ private:
   Int_t  GetMultiplicityCorretionIndex(UInt_t isel, UInt_t ival);
 
 public:
+  void   Clear();
   UInt_t *RandumPickUp(const UInt_t val, const UInt_t npart);
   void   SetNTrack(UInt_t *nval);
   void   SetupFlow(STParticle &apart);
@@ -83,7 +83,7 @@ public:
   void     DoIndividualReactionPlaneAnalysis();
   void     SetIndividualReactionPlane( STParticle &apart );
 
-  void   SetupEventInfo(Long64_t eventid, STBDC *aBDC);
+  void   SetupEventInfo(Long64_t eventid, UInt_t val);
   void   SetFlowTask( TClonesArray &atpcParticle );
   void   SetParticleArray( TClonesArray &atpcParticle ){tpcParticle = &atpcParticle;}
   void   FinishEvent();

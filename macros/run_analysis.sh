@@ -13,12 +13,11 @@ source ../build/config.sh
 #export TPCDIR=/data/spdaq01/recoData/20190725/data/
 #export RCVER=HEAD.1834.fc633ca
 
+#VERSION=37
+#export TPCDIR=/data/spdaq01/recoData/20190206/data/
+#export RCVER=HEAD.1780.1e193e6
 
-VERSION=37
-export TPCDIR=/data/spdaq01/recoData/20190206/data/
-export RCVER=HEAD.1780.1e193e6
-
-VERSION=39
+VERSION=38
 export TPCDIR=/data/spdaq01/recoData/20190804/data/
 export RCVER=HEAD.1853.e498ace
 
@@ -63,8 +62,8 @@ source runList.sh
 # Set RUNNUMBER1 
 DBVERSION=0
 
-#RUNNUMBER1=(${RNF132})
-RUNNUMBER1=(${RNF108})
+RUNNUMBER1=(${RNF132})
+#RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RNFTEMP})

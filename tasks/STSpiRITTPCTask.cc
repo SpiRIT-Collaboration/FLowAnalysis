@@ -9,7 +9,7 @@ STSpiRITTPCTask::STSpiRITTPCTask()
     fIsBootStrap(kFALSE),
     fIsSubeventAnalysis(kTRUE),
     selReactionPlanef(100),
-    fEventID(-1),
+    fEventID(0),
     massCal(new STMassCalculator())
 {
 
@@ -44,7 +44,7 @@ STSpiRITTPCTask::~STSpiRITTPCTask()
   delete massCal;
 
   delete flowAnalysis; //!
-  delete fflowinfo;    //!
+  //  delete fflowinfo;    //!
 
   for(UInt_t i = 0; i < 2; i++) {
     if( aflowcorrArray[i] != nullptr )
@@ -80,14 +80,15 @@ InitStatus STSpiRITTPCTask::Init()
   }
   else
     LOG(INFO) << "STBDC is found. " << FairLogger::endl;
+
   tpcParticle = new TClonesArray("STParticle",100);
   fRootManager -> Register("STParticle","flow",tpcParticle, fIsPersistence);
+
 
   if( fIsFlowAnalysis ) {
     flowAnalysis = new TClonesArray("STFlowInfo",1);
     fRootManager -> Register("STFlow","flow",flowAnalysis, fIsPersistence);
 
-    fflowinfo = new STFlowInfo();
     fflowtask = new STFlowTask(kTRUE, kTRUE, kFALSE); //(flattening, subevent, bootstrap)
     fIsFlowAnalysis = fflowtask->Init(iRun, sVer);
   }
@@ -214,7 +215,7 @@ Bool_t STSpiRITTPCTask::SetupInputDataFile()
   
   prcEntry = nEntry;
 
-
+  fChain -> SetBranchAddress("STEventHeader", &eventHeader);
   fChain -> SetBranchAddress("STRecoTrack",   &trackArray);
   fChain -> SetBranchAddress("VATracks",      &trackVAArray);
   fChain -> SetBranchAddress("STVertex"   ,   &vertexArray);
@@ -232,9 +233,27 @@ void STSpiRITTPCTask::Exec(Option_t *opt)
 
   LOG(DEBUG) << "STSpiRITTPCTask::Exec() is called " << opt << FairLogger::endl;  
   Clear();
+    
+  fChain -> GetEntry(fEventID);  
 
-  fEventID++;
-  
+  ShowProcessTime();
+
+  if(SetupEventInfo()) {
+    ProceedEvent();
+    FinishEvent();
+
+    fEventID++;
+  }
+
+  if( fEventID >= prcEntry )  {
+      LOG(INFO) << "STSpiRITTPC:: Finishing analysis. " << FairLogger::endl;
+      Finish();
+  }
+
+}
+
+void STSpiRITTPCTask::ShowProcessTime()
+{
   UInt_t pdev = prcEntry/200;
   if(prcEntry < 200) pdev = 1;
 
@@ -242,25 +261,12 @@ void STSpiRITTPCTask::Exec(Option_t *opt)
     dtime.Set();
     Int_t ptime = dtime.Get() - beginTime.Get();
     LOG(INFO) << "Process " 
-	      << setw(4) << ((Double_t)fEventID/(Double_t)prcEntry)*100. << " % = "
+	      << setw(4) << (Int_t)((Double_t)fEventID/(Double_t)prcEntry)*100 << " % = "
 	      << setw(8) << fEventID << "/"<< prcEntry 
 	      << "--->"
 	      << dtime.AsString() << " ---- "
 	      << (Int_t)ptime/60 << " [min] "
 	      << FairLogger::endl;
-  }
-
-  if( fEventID < prcEntry ) {
-
-    fChain -> GetEntry(fEventID);  
-
-    SetupEventInfo();
-    ProceedEvent();
-    FinishEvent();
-  }
-  else {
-    LOG(INFO) << "STSpiRITTPC:: Finishing analysis. " << FairLogger::endl;
-    Finish();
   }
 }
 
@@ -269,13 +275,14 @@ void STSpiRITTPCTask::FinishEvent()
   LOG(DEBUG) << "STSpiRITTPCTask::FinishEvent is called. " << FairLogger::endl;
 
   auto anaRun = FairRunAna::Instance();  
-  if( ntrack[2] == 0 || BeamPID == 0) {
-    anaRun->MarkFill(kFALSE);
-    return;
-  }
+  // if( ntrack[2] == 0 || BeamPID == 0) {
+  //   anaRun->MarkFill(kFALSE);
+  //   return;
+  // }
 
   if( fIsFlowAnalysis ) {
 
+    fflowtask->SetupEventInfo(rEventID, BeamPID);
     fflowtask->FinishEvent();
     fflowinfo = fflowtask->GetFlowInfo();
     
@@ -288,15 +295,25 @@ void STSpiRITTPCTask::FinishEvent()
 }
 
 
-void STSpiRITTPCTask::SetupEventInfo()
+Bool_t STSpiRITTPCTask::SetupEventInfo()
 {
+  rEventID = eventHeader -> GetEventID() - 1;
+  
   auto fBDCArray = (TClonesArray *)fRootManager->GetObject("STBDC");
   auto fBDC = (STBDC*)fBDCArray->At(0);
-  
-  BeamPID = fBDC->GetBeamPID();
+
+  LOG(DEBUG) << " TPC vs BDC " << rEventID << " vs " << fBDC->GetEventID() << FairLogger::endl;
+
+  if( rEventID != fBDC->GetEventID() ) {
+    LOG(ERROR) << " not match TPC and BDC event ID " << rEventID << " vs " << fBDC->GetEventID() << FairLogger::endl;
+    return kFALSE;
+  }
+
   ProjA   = fBDC->GetProjA();
   ProjB   = fBDC->GetProjB();  
 
+
+  BeamPID = fBDC->GetBeamPID();
   BeamIndex = 5;
   if( BeamPID > 0 ){
     switch(BeamPID) {
@@ -316,49 +333,37 @@ void STSpiRITTPCTask::SetupEventInfo()
   }
 
 
-  if( fIsFlowAnalysis && fflowinfo != nullptr) 
-    fflowtask->SetupEventInfo(fEventID, fBDC);
-
+  return kTRUE;
 }
 
 
 
+Bool_t STSpiRITTPCTask::GetVertexQuality(TVector3 vert) 
+{
+  if(BeamIndex < 4) {
+    if( abs( vert.Z() - VtxMean[BeamIndex].Z() ) > 2.*VtxSigm[BeamIndex] ||
+	abs( vert.X() - VtxMean[BeamIndex].X() ) > 15. ||
+	abs( vert.Y() - VtxMean[BeamIndex].Y() ) > 20. )
+      return kFALSE;;
+  }
+  else
+    return kFALSE;
+
+  return kTRUE;
+}
+
 void STSpiRITTPCTask::SetupTrackQualityFlag(STParticle *apart) 
 {
-  // if( apart->GetP() == 0 || apart->GetP() > 3100 )
-  //   apart->SetMomentumFlag(0);
-
-  // if( apart->GetdEdx() <= 0. )
-  //   apart->SetdEdxFlag(0);
-
-  // if( apart->GetDistanceAtVertex() > 20 )
-  //   apart->SetDistanceAtVertexFlag(0);
-
-  // if( abs( apart->GetVertex().Z() + 13.1 ) > 1.7*3. )
-  //   apart->SetVertexAtTargetFlag(0);
-
-  // if( apart->GetNDF() < 20) 
-  //   apart->SetNDFFlag(0);
-
-
-  // Kaneko-kun's Definition since 30 May 2019
-  if(BeamIndex < 4) {
-    if( abs( apart->GetVertex().Z() - VtxMean[BeamIndex].Z() ) > 2.*VtxSigm[BeamIndex] ||
-	abs( apart->GetVertex().X() - VtxMean[BeamIndex].X() ) > 15. ||
-	abs( apart->GetVertex().Y() - VtxMean[BeamIndex].Y() ) > 20. )
-      apart->SetVertexAtTargetFlag(0); 
-  }
-	
   if( apart->GetDistanceAtVertex() > 10 )
     apart->SetDistanceAtVertexFlag(0);
 
   if( apart->GetNDF() < 15) 
     apart->SetNDFFlag(0);
-
 }
 
 void STSpiRITTPCTask::Clear()
 {
+  rEventID = 0;
   BeamPID = 0;
   ProjA = 0.;
   ProjB = 0;
@@ -368,7 +373,7 @@ void STSpiRITTPCTask::Clear()
   tpcParticle->Clear();
 
   if( fIsFlowAnalysis ) {
-    fflowinfo->Clear();
+    fflowtask->Clear();
     flowAnalysis->Clear();
   }
 }
@@ -376,99 +381,90 @@ void STSpiRITTPCTask::Clear()
 void STSpiRITTPCTask::ProceedEvent()
 {
 
-  if( BeamPID == 0) 
-    return;
-
-  
   ntrack[0] = trackArray -> GetEntries();
 
   LOG(DEBUG) << "nttack[0] -------------------- > " << ntrack[0] << FairLogger::endl;
                  
-  //  TIter next(trackVAArray);
+  auto vertex = (STVertex *) vertexArray -> At(0);
+  if( vertex == NULL ) return;
+
+
+  Bool_t vflag = GetVertexQuality(vertex->GetPos());
+
   TIter next(trackArray);
   STRecoTrack *trackFromArray = NULL;
   TClonesArray &ptpcParticle = *tpcParticle;
 
   while( (trackFromArray = (STRecoTrack*)next()) ) {
 
-    auto parentvid = trackFromArray->GetVertexID();
+    ntrack[1]++;
 
-    STVertex* vertex = NULL;
-    if (parentvid > -1) {
+    STParticle *aParticle = new STParticle();
+    aParticle->SetRecoTrack(trackFromArray);
 
-      ntrack[1]++;
+    //--- Set event and track quality ---;  
+    aParticle->SetVertex(vertex);
+    aParticle->SetVertexAtTargetFlag((Int_t)vflag);
+    SetupTrackQualityFlag( aParticle );
 
-      vertex = (STVertex *) vertexArray -> At(parentvid);
-
-      STParticle *aParticle = new STParticle();
-      aParticle->SetRecoTrack(trackFromArray);
-
-      //--- Set vertex of the track ---;  
-      aParticle->SetVertex(vertex);
-
-      SetupTrackQualityFlag( aParticle );
-
-      //      if( aParticle->GetGoodTrackFlag()%2 == 0) continue;
-
-      //--- Rotate tracks along beam direction ---;                    
-      if(ProjA > -1000 && ProjB > -1000)
-	aParticle->RotateAlongBeamDirection(ProjA/1000., ProjB/1000.);
-
-      Int_t    Charge   = aParticle->GetCharge();
-      TVector3 VMom     = aParticle->GetRotatedMomentum();
-      Double_t dEdx     = aParticle->GetdEdx();
+    //--- Rotate tracks along beam direction ---;                    
+    if(ProjA > -1000 && ProjB > -1000)
+      aParticle->RotateAlongBeamDirection(ProjA/1000., ProjB/1000.);
+    
+    Int_t    Charge   = aParticle->GetCharge();
+    TVector3 VMom     = aParticle->GetRotatedMomentum();
+    Double_t dEdx     = aParticle->GetdEdx();
 
 
-      //--- Set MassFitter      
-      Double_t mass[2] = {0.,0.};
-      if( dEdx > -1 ){
-	mass[0]  = massCal->CalcMass(0, 1., VMom, dEdx);  // proton fitted
-
-	if( mass[0] > 1500. )  // deuteron fitted
-	  mass[0]  = massCal->CalcMass(1, 1., VMom, dEdx);  
-
-	mass[1]  = massCal->CalcMass(1, 2., VMom, dEdx);
-      }
-
-      aParticle->SetBBMass(mass[0]);      
-      aParticle->SetBBMassHe(mass[1]);
-
-      Int_t    pid_tight  = GetPIDTight(mass, dEdx);
-      Int_t    pid_normal = GetPIDNorm(mass, dEdx);
-      Int_t    pid_loose  = GetPIDLoose(mass, dEdx);
+    //--- Set MassFitter      
+    Double_t mass[2] = {0.,0.};
+    if( dEdx > -1 ){
+      mass[0]  = massCal->CalcMass(0, 1., VMom, dEdx);  // proton fitted
       
-      //      massFitter->GetBBMass(VMom, dEdx, Charge, massH, massHe, pid_tight, pid_loose); 
-      aParticle->SetPID(pid_tight);
-      aParticle->SetPIDTight(pid_tight);
-      aParticle->SetPIDNorm(pid_normal);
-      aParticle->SetPIDLoose(pid_loose);
+      if( mass[0] > 1500. )  // deuteron fitted
+	mass[0]  = massCal->CalcMass(1, 1., VMom, dEdx);  
       
-
-      LOG(DEBUG) << " mass H "  << mass[0]  << " & pid " << pid_loose << " : " << pid_tight << ": " << dEdx << FairLogger::endl;
-      LOG(DEBUG) << " mass He"  << mass[1] << " & pid " << pid_loose << " : " << pid_tight  << ": " << dEdx << FairLogger::endl;
-
-      //--- number cluster ratio
-      if( kFALSE ) {
-	Double_t clustNum = VMom.Mag()>4000.?
-	  db->GetClusterNum(Charge, VMom.Theta(), VMom.Phi(), 4000.):
-	  db->GetClusterNum(Charge, VMom.Theta(), VMom.Phi(), VMom.Mag());
-	//--- Set theoretical number of cluster
-	aParticle->SetExpectedClusterNumber(clustNum);
-      }
-      
-      if( aParticle->GetGoodTrackFlag() > 1000 )
-	ntrack[3]++;
-
-      aParticle->SetTrackID(ntrack[2]);
-      new(ptpcParticle[ntrack[2]]) STParticle(*aParticle);
-      ntrack[2]++;
-
+      mass[1]  = massCal->CalcMass(1, 2., VMom, dEdx);
     }
-  
+
+    aParticle->SetBBMass(mass[0]);      
+    aParticle->SetBBMassHe(mass[1]);
+      
+    Int_t    pid_tight  = GetPIDTight(mass, dEdx);
+    Int_t    pid_normal = GetPIDNorm(mass, dEdx);
+    Int_t    pid_loose  = GetPIDLoose(mass, dEdx);
+    
+    //      massFitter->GetBBMass(VMom, dEdx, Charge, massH, massHe, pid_tight, pid_loose); 
+    aParticle->SetPID(pid_tight);
+    aParticle->SetPIDTight(pid_tight);
+    aParticle->SetPIDNorm(pid_normal);
+    aParticle->SetPIDLoose(pid_loose);
+    
+
+    LOG(DEBUG) << " mass H "  << mass[0]  << " & pid " << pid_loose << " : " << pid_tight << ": " << dEdx << FairLogger::endl;
+    LOG(DEBUG) << " mass He"  << mass[1] << " & pid " << pid_loose << " : " << pid_tight  << ": " << dEdx << FairLogger::endl;
+
+    //--- number cluster ratio
+    if( kFALSE ) {
+      Double_t clustNum = VMom.Mag()>4000.?
+	db->GetClusterNum(Charge, VMom.Theta(), VMom.Phi(), 4000.):
+	db->GetClusterNum(Charge, VMom.Theta(), VMom.Phi(), VMom.Mag());
+      //--- Set theoretical number of cluster
+      aParticle->SetExpectedClusterNumber(clustNum);
+    }
+      
+    if( aParticle->GetGoodTrackFlag() > 1000 )
+      ntrack[3]++;
+    
+    aParticle->SetTrackID(ntrack[2]);
+    new(ptpcParticle[ntrack[2]]) STParticle(*aParticle);
+    ntrack[2]++;
+    
   }
 
+  
   //--- Set up for flow ---;
-  if( fIsFlowAnalysis && fflowinfo != nullptr) {
+  if( fIsFlowAnalysis ) {
     fflowtask->SetNTrack(ntrack);
     fflowtask->SetFlowTask( ptpcParticle  );
   }

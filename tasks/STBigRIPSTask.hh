@@ -10,6 +10,7 @@
 #include "TCutG.h"
 #include "TString.h"
 #include "STBDC.hh"
+#include "STEventHeader.hh"
 
 class STBigRIPSTask : virtual public FairTask
 {
@@ -34,6 +35,7 @@ private:
   TClonesArray* fEvent;
   STBDC*        fBDC;
   
+  Int_t            neve;
   Double_t         aoq;
   Double_t         z;
   Double_t         tof;
@@ -85,7 +87,7 @@ private:
 public:
   Int_t   GetBeamPID();
 
-  ClassDef(STBigRIPSTask, 0);
+  ClassDef(STBigRIPSTask, 1);
 };
 
 

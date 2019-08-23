@@ -45,6 +45,7 @@ public:
 
   void      SetRun(Int_t val){ run = val;}
   void      SetEventID(Long64_t val){ evt = val;}
+  Long64_t  GetEventID(){return evt;}
 
   Double_t  GetProjA(){return ProjA;}
   Double_t  GetProjB(){return ProjB;}

@@ -94,8 +94,9 @@ Bool_t STBigRIPSTask::SetupInputDataFile()
 
   //----- Set branch addresses.       
 
-  ribfChain->SetBranchAddress("aoq",&aoq);
+  ribfChain->SetBranchAddress("neve",&neve);
   ribfChain->SetBranchAddress("z",&z);
+  ribfChain->SetBranchAddress("aoq",&aoq);
   ribfChain->SetBranchAddress("beta",&beta);
   ribfChain->SetBranchAddress("brho",&brho);
   ribfChain->SetBranchAddress("isGood",&isGood);
@@ -126,6 +127,7 @@ void STBigRIPSTask::ProceedEvent()
   
   fBDC = new STBDC();
   
+  fBDC->evt    = (Long64_t)neve;
   fBDC->SnA    = SnA;
   fBDC->aoq    = aoq ;
   fBDC->z      = z ;
@@ -149,7 +151,7 @@ void STBigRIPSTask::ProceedEvent()
   fBDC->ProjB  = ProjB ;
 
   fBDC->SetRun( iRun ); 
-  fBDC->SetEventID( fEventID );
+  fBDC->SetEventID( neve );
 
   beamPID = GetBeamPID();
   fBDC->SetBeamPID( beamPID );
@@ -244,7 +246,6 @@ void STBigRIPSTask::Exec(Option_t *opt)
 {
   LOG(DEBUG) << "STBigRIPSTask::Exec is called " << FairLogger::endl;
   fEventID++;
-  
 
   ProceedEvent();
 

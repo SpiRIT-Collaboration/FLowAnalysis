@@ -94,25 +94,25 @@ private:
   Double_t ProjB;  //!
 
 private:
-  Long64_t fEventID;      //! 
+  Long64_t rEventID;      //! read event ID from recotrack data  
+  Long64_t fEventID;      //! counted event ID
   Long64_t fEventIDLast;  //!
   Long64_t nEntry;
   Long64_t prcEntry;      //!
   TDatime  dtime;         //! 
   TDatime  beginTime;     //!  
 
-  // by v37:  
-  //vertex mean
-  TVector3 VtxMean[4] = { TVector3( 2.25909e+00,  -2.26504e+02,  -1.34982e+01), //! 132Sn
-			  TVector3(-9.66045e-01,  -2.29565e+02,  -1.37814e+01), //! 108Sn
-			  TVector3( 1.47193e+00,  -2.27352e+02,  -1.34916e+01), //! 124Sn
-			  TVector3( 1.55937e+00,  -2.29191e+02,  -1.32485e+01)};//! 112Sn
-  // vetex sigma Z);
-  Double_t VtxSigm[4] = { 1.91418,  //! 132Sn 
-			  1.84580,  //! 108Sn
-			  1.56109,  //! 124Sn
-			  1.41496}; //! 112Sn
-
+  // for v38(20190804/data/):  
+  //STVertex.fPos
+  TVector3 VtxMean[4] = { TVector3( 2.10312, -2.04848e+02, -1.50300e+01), // 132Sn
+			  TVector3(-8.25318e-01, -2.06242e+02, -1.44491e+01), //108Sn
+			  TVector3(-8.25318e-01, -2.06242e+02, -1.44491e+01), //108Sn (temp)
+			  TVector3(-8.25318e-01, -2.06242e+02, -1.44491e+01)}; //108Sn(temp)
+  
+  Double_t VtxSigm[4] = { 2.0505,   //! 132Sn 
+			  1.38199,  //108Sn
+			  1.38199,  //124Sn (temp)
+			  1.38199}; //112Sn (temp)
 
   Double_t MassRegion[7][4] ={{ 127.2,   21.3,      4.,  4.},            //pi  
 			      { 911.044, 68.4656,   2.,  2.},            //p  685.3 to 1,165.9
@@ -152,12 +152,14 @@ private:
   Bool_t SetupFlowDataBase();
 
   void   ProceedEvent();
-  void   SetupEventInfo();
+  Bool_t SetupEventInfo();
   void   SetupTrackQualityFlag(STParticle *apart);
   Int_t  GetPID(Double_t mass[2], Double_t dedx);
   Int_t  GetPIDTight(Double_t mass[2], Double_t dedx);
   Int_t  GetPIDNorm (Double_t mass[2], Double_t dedx);
   Int_t  GetPIDLoose(Double_t mass[2], Double_t dedx);
+  void   ShowProcessTime();
+  Bool_t GetVertexQuality(TVector3 vert);
 
 public:
   void   SetFlowAnalysis(Bool_t val) {fIsFlowAnalysis = val;}
@@ -166,6 +168,7 @@ public:
   Bool_t GetSubEventAnalysisFlag()   {return fIsSubeventAnalysis;}
   void   SetBootStrap(Bool_t val)    {fIsBootStrap = val;}
   Bool_t GetBootStrapFlag()          {return fIsBootStrap;}
+
 
   // return input file chain
   TChain* GetChain()                 {return fChain;}

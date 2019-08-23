@@ -383,13 +383,13 @@ UInt_t *STFlowTask::RandomDivide2(const UInt_t npart)
 }
 
 
-void STFlowTask::SetupEventInfo(Long64_t eventid, STBDC *aBDC)
+void STFlowTask::SetupEventInfo(Long64_t eventid, UInt_t val)
 {
   if( fflowinfo != nullptr) {
 
     fflowinfo->SetEventID( eventid );
-    fflowinfo->SnA     = aBDC->SnA;
-    fflowinfo->beamPID = aBDC->beamPID;
+    fflowinfo->beamPID = val;
+    fflowinfo->SnA     = val;
 
     LOG(DEBUG) << "flowinfo " << eventid << " * " << fflowinfo <<FairLogger::endl;
   }
