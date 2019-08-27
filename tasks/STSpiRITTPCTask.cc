@@ -239,8 +239,8 @@ void STSpiRITTPCTask::Exec(Option_t *opt)
   ShowProcessTime();
 
   if(SetupEventInfo()) {
-    ProceedEvent();
-    FinishEvent();
+    if(ProceedEvent()) 
+      FinishEvent();
 
     fEventID++;
   }
@@ -261,7 +261,7 @@ void STSpiRITTPCTask::ShowProcessTime()
     dtime.Set();
     Int_t ptime = dtime.Get() - beginTime.Get();
     LOG(INFO) << "Process " 
-	      << setw(4) << (Int_t)((Double_t)fEventID/(Double_t)prcEntry)*100 << " % = "
+	      << setw(4) << Int_t((Double_t)fEventID/(Double_t)prcEntry*100.) << " % = "
 	      << setw(8) << fEventID << "/"<< prcEntry 
 	      << "--->"
 	      << dtime.AsString() << " ---- "
@@ -309,29 +309,11 @@ Bool_t STSpiRITTPCTask::SetupEventInfo()
     return kFALSE;
   }
 
-  ProjA   = fBDC->GetProjA();
-  ProjB   = fBDC->GetProjB();  
-
-
+  ProjA   = fBDC->ProjA;
+  ProjB   = fBDC->ProjB;  
+  ProjX   = fBDC->ProjX;
+  ProjY   = fBDC->ProjY;
   BeamPID = fBDC->GetBeamPID();
-  BeamIndex = 5;
-  if( BeamPID > 0 ){
-    switch(BeamPID) {
-    case 132:
-      BeamIndex = 0;
-      break;
-    case 108:
-      BeamIndex = 1;
-      break;
-    case 124:
-      BeamIndex = 2;
-      break;
-    case 112:
-      BeamIndex = 3;
-      break;
-    }
-  }
-
 
   return kTRUE;
 }
@@ -340,14 +322,19 @@ Bool_t STSpiRITTPCTask::SetupEventInfo()
 
 Bool_t STSpiRITTPCTask::GetVertexQuality(TVector3 vert) 
 {
-  if(BeamIndex < 4) {
-    if( abs( vert.Z() - VtxMean[BeamIndex].Z() ) > 2.*VtxSigm[BeamIndex] ||
-	abs( vert.X() - VtxMean[BeamIndex].X() ) > 15. ||
-	abs( vert.Y() - VtxMean[BeamIndex].Y() ) > 20. )
-      return kFALSE;;
-  }
-  else
-    return kFALSE;
+  if( ProjA < -99 || ProjA > 100) return kFALSE;
+
+  if( ProjB < -99 ) return kFALSE;
+
+  if( abs(ProjX) > 20 || abs(ProjY) > 20 ) return kFALSE;
+
+  auto BeamIndex = STRunToBeamA::GetSystemID(iRun);
+  if(BeamIndex >= 4) return kFALSE;
+
+  if( abs( vert.Z() - VtxMean[BeamIndex].Z() ) > 2.*VtxSigm[BeamIndex] ||
+      abs( vert.X() - VtxMean[BeamIndex].X() ) > 15. ||
+      abs( vert.Y() - VtxMean[BeamIndex].Y() ) > 20. )
+    return kFALSE;;
 
   return kTRUE;
 }
@@ -367,6 +354,8 @@ void STSpiRITTPCTask::Clear()
   BeamPID = 0;
   ProjA = 0.;
   ProjB = 0;
+  ProjX = -999.;
+  ProjY = -999.;
 
   for (Int_t m = 0; m < 7; m++) ntrack[m] = 0;
 
@@ -378,7 +367,7 @@ void STSpiRITTPCTask::Clear()
   }
 }
 
-void STSpiRITTPCTask::ProceedEvent()
+Bool_t STSpiRITTPCTask::ProceedEvent()
 {
 
   ntrack[0] = trackArray -> GetEntries();
@@ -386,10 +375,13 @@ void STSpiRITTPCTask::ProceedEvent()
   LOG(DEBUG) << "nttack[0] -------------------- > " << ntrack[0] << FairLogger::endl;
                  
   auto vertex = (STVertex *) vertexArray -> At(0);
-  if( vertex == NULL ) return;
 
+  Bool_t vflag = kFALSE;
+  if( vertex != NULL ) 
+    vflag = GetVertexQuality(vertex->GetPos());
+  else
+    return kFALSE;
 
-  Bool_t vflag = GetVertexQuality(vertex->GetPos());
 
   TIter next(trackArray);
   STRecoTrack *trackFromArray = NULL;
@@ -408,9 +400,12 @@ void STSpiRITTPCTask::ProceedEvent()
     SetupTrackQualityFlag( aParticle );
 
     //--- Rotate tracks along beam direction ---;                    
-    if(ProjA > -1000 && ProjB > -1000)
+    if( vflag ) 
       aParticle->RotateAlongBeamDirection(ProjA/1000., ProjB/1000.);
-    
+    else
+      aParticle->SetBeamonTargetFlag(0);
+
+
     Int_t    Charge   = aParticle->GetCharge();
     TVector3 VMom     = aParticle->GetRotatedMomentum();
     Double_t dEdx     = aParticle->GetdEdx();
@@ -465,9 +460,12 @@ void STSpiRITTPCTask::ProceedEvent()
   
   //--- Set up for flow ---;
   if( fIsFlowAnalysis ) {
+    fflowtask->SetGoodEventFlag((UInt_t)vflag);
     fflowtask->SetNTrack(ntrack);
     fflowtask->SetFlowTask( ptpcParticle  );
   }
+
+  return kTRUE;
 }
 
 Int_t STSpiRITTPCTask::GetPID(Double_t mass[2], Double_t dedx)

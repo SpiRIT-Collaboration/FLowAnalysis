@@ -152,8 +152,12 @@ Bool_t STFlowTask::DoFlatteningSub()
 {
   if( aflowcorrArray[1] != NULL ) {
 
-    fflowinfo->unitP_1fc = Psi_FlatteningCorrection( 1, fflowinfo->mtrack_1, fflowinfo->unitP_1);
-    fflowinfo->unitP_2fc = Psi_FlatteningCorrection( 1, fflowinfo->mtrack_2, fflowinfo->unitP_2);
+    fflowinfo->unitP_1fc = Psi_FlatteningCorrection( 0, fflowinfo->mtrack_1, fflowinfo->unitP_1);
+    fflowinfo->unitP_2fc = Psi_FlatteningCorrection( 0, fflowinfo->mtrack_2, fflowinfo->unitP_2);
+
+    // test
+    //    fflowinfo->unitP_1fc = Psi_FlatteningCorrection( 1, fflowinfo->mtrack_1, fflowinfo->unitP_1);
+    //    fflowinfo->unitP_2fc = Psi_FlatteningCorrection( 1, fflowinfo->mtrack_2, fflowinfo->unitP_2);
     
     return kTRUE;
   }

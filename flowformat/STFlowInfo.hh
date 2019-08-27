@@ -51,7 +51,9 @@ public:
 
   Double_t rpSigma;
   Double_t rpChi[2];
-
+  
+  UInt_t   goodEventf;
+  
 public:
 
   void Clear();
@@ -68,12 +70,15 @@ public:
     else 
       return 0;
   }
-  
+  void   SetGoodEventFlag(UInt_t ival){goodEventf = ival;}
+
+  UInt_t GetGoodEventFlag(){return goodEventf;}
+
   void      SetRPSigma(Double_t val) {rpSigma = val;}
   Double_t  GetRPSigma() {return rpSigma;}
   void      SetRPChi(Double_t val, UInt_t n){n < 1 ? rpChi[n] = val : rpChi[0] = val;}
 
-  ClassDef(STFlowInfo,3);
+  ClassDef(STFlowInfo,4);
 };
 
 #endif

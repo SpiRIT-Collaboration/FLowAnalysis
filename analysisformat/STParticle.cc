@@ -138,6 +138,9 @@ void STParticle::Clear(Option_t *option)
   fclusterratio= -1.;
 
   // Track quality flag
+  fBeamonTargetf = 1;
+  fVBDCCorf      = 1;
+  fBDCCorf       = 1;
   fgoodtrackf  = 1;
   fVatTargetf  = 1;   
   fdistanceatvertexf = 1;

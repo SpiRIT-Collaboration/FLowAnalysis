@@ -23,6 +23,7 @@
 #include "STRunToBeamA.hh"
 #include "TObject.h"
 #include "FairLink.h"
+#include "STRunToBeamA.hh"
 
 class STSpiRITTPCTask : public FairTask
 {
@@ -89,9 +90,10 @@ private:
   UInt_t  ntrack[7]; //!
   
   Int_t    BeamPID;//!
-  Int_t    BeamIndex; //!
   Double_t ProjA;  //!
   Double_t ProjB;  //!
+  Double_t ProjX;  //!
+  Double_t ProjY;  //!
 
 private:
   Long64_t rEventID;      //! read event ID from recotrack data  
@@ -151,7 +153,7 @@ private:
   Bool_t SetupInputDataFile();
   Bool_t SetupFlowDataBase();
 
-  void   ProceedEvent();
+  Bool_t ProceedEvent();
   Bool_t SetupEventInfo();
   void   SetupTrackQualityFlag(STParticle *apart);
   Int_t  GetPID(Double_t mass[2], Double_t dedx);

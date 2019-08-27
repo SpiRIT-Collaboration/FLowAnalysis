@@ -32,15 +32,17 @@ void DoRPAnalysis(Long64_t nmax = -1)
 
     rChain->GetEntry(ievt);
 
-    auto abeamInfo = (STBDC*)aBDC->At(0);
-    if( !abeamInfo->GetBeamPID() ) continue;
-
+    //------ Event selection
     auto aFlowInfo = (STFlowInfo*)aFlowArray->At(0);
+    if( aFlowInfo == NULL ) continue;
+    if( aFlowInfo->goodEventf == 0 || aFlow->beamPID == 0 ) continue;
+    
 
     if( aFlowInfo->beamPID == 124 ){
-      if( (aFlowInfo->mtrack1*0.8-20) > aFlowInfo->mtrack4 || aFlowInfo->mtrack4 < 5) continue;
+      if( (aFlowInfo->mtrack1*0.8-20) > aFlowInfo->mtrack4 ) continue;
     }
-    
+        
+    //------ end of event selection
 
     fflowtask->SetFlowInfo( aFlowInfo );
     fflowtask->DoFlattening();

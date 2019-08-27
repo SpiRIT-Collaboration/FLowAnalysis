@@ -4,6 +4,7 @@ STFlowInfo::STFlowInfo()
 {
   SnA = 0;
   run = 0;
+  goodEventf = 1;
 
   Clear();
 }
@@ -48,6 +49,8 @@ STFlowInfo::STFlowInfo(const STFlowInfo &cp)
   rpSigma   = cp.rpSigma;
   rpChi[0]  = rpChi[0];
   rpChi[1]  = rpChi[1];
+
+  goodEventf = cp.goodEventf;
 }
 
 STFlowInfo &STFlowInfo::operator=(const STFlowInfo &cp)

@@ -30,16 +30,17 @@ Bool_t bplot[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 0, 1, 0, 0};
-Bool_t bpid[]  = { 1, 1, 1, 1, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bsys[]  = { 1, 1, 0, 0};
+Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {1, 0, 0, 0, 0, 0, 0, 0};
+UInt_t  bver[]  = {1, 1, 0, 0, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
+  {".v38.0.0"  ,"advYPt_","m5to60"},
   {".v37.1.4"  ,"advYPt_","m5to60"},//"|#phi|<30&150"} ,  
   {".v37.1.3"  ,"advYPt_",""},//"|#phi|<30&150"} ,  
   {".v37.1.2"  ,"advYPt_","|#phi|<30&150"} ,  

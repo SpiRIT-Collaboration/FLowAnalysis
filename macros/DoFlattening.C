@@ -159,6 +159,8 @@ void Flatten_Psi_ntrack(UInt_t isel)
     
   auto habiphi = new TH2D(Form("habiphi_%d",isel)," ;#Psi_rot; #Psi_fc",200,-3.2,3.2,200,-3.2,3.2);
 
+  auto hbdcXY  = new TH2D(Form("hbdcXY_%d",isel)," ;ProjX;ProjY",100,-20,120,100,-50,50);
+
   //--- retrivewed data
   Double_t bsPhi_1[3];
   Double_t bsPhi_2[3];
@@ -211,14 +213,19 @@ void Flatten_Psi_ntrack(UInt_t isel)
   Int_t icout = 0;
   std::vector<Double_t> ophi;
 
-
   for(UInt_t i = 0; i < nevt; i++){
     rChain->GetEntry(i);
 
     STFlowInfo *aFlow = (STFlowInfo*)aFlowArray->At(0);
-    STBDC      *aBDC  = (STBDC*)aBDCArray->At(0);
+    if( aFlow == NULL ) continue;
 
-    if( aBDC->ProjA == -9999 && aFlow->beamPID == 0 ) continue;
+    if( aFlow->goodEventf == 0 || aFlow->beamPID == 0 ) continue;
+    
+
+    STBDC      *aBDC  = (STBDC*)aBDCArray->At(0);
+    if( aBDC == NULL ) continue;
+    hbdcXY->Fill(aBDC->ProjX,aBDC->ProjY);
+
 
     if( isys == 2 ) {
       if( (aFlow->mtrack1*0.8-20) > aFlow->mtrack4 ) continue;
@@ -319,6 +326,10 @@ void Flatten_Psi_ntrack(UInt_t isel)
   aLeg->AddEntry(haiphi,"ReCentering & Shifting","lp");
   
   aLeg->Draw();
+
+  im++;
+  cc[im] = new TCanvas(Form("cc%d",im),Form("cc%d",im),700,500);
+  hbdcXY->Draw();
 }
 
 void SaveReCenteringData(UInt_t m)

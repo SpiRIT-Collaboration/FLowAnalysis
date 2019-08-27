@@ -98,6 +98,8 @@ public:
 
 
   STFlowInfo  *GetFlowInfo() {return fflowinfo;}
+  void    SetGoodEventFlag(UInt_t val){fflowinfo->SetGoodEventFlag(val);}
+  UInt_t  GetGoodEventFlag(){return fflowinfo->GetGoodEventFlag();}
 
 };
 

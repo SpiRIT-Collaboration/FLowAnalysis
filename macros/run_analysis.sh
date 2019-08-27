@@ -17,7 +17,7 @@ source ../build/config.sh
 #export TPCDIR=/data/spdaq01/recoData/20190206/data/
 #export RCVER=HEAD.1780.1e193e6
 
-VERSION=38
+VERSION=39
 export TPCDIR=/data/spdaq01/recoData/20190804/data/
 export RCVER=HEAD.1853.e498ace
 
