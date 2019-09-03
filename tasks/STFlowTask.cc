@@ -421,11 +421,14 @@ void STFlowTask::SetupFlow(STParticle &apart)
   if( pid == 211 )
     apart.SetReactionPlaneFlag(10);
 
-  else if( pid > 2000 &&  apart.GetFromTargetFlag() ) { //fTargetf = fVatTargetf*fdistanceatvertexf;
+  else if( pid > 2000 &&  
+	   apart.GetdEdxFlag()       &&  // dedx <= maxdEdx
+	   apart.GetMomentumFlag()   &&    // p <= maxMomentum
+	   apart.GetNDF() >= 2       &&
+	   apart.GetDistanceAtVertex() <= 20 ) {
+
     apart.SetReactionPlaneFlag(1000);
 
-    if(apart.GetNDFFlag())
-      apart.AddReactionPlaneFlag(10000);
   }
   else
     apart.SetReactionPlaneFlag(0);
@@ -470,9 +473,8 @@ void STFlowTask::DoFlowAnalysis(STParticle &apart)
     if( fIsBootStrap )
       bs_unitP->Add(apart.GetRPWeight() * apart.GetRotatedPt().Unit());
   }
-
-  if( apart.GetReactionPlaneFlag() >= selReactionPlanef && apart.GetReactionPlaneFlag()%2==1 )
-    ntrack[5]++;  
+  else
+    ntrack[5]++;
 }
 
 

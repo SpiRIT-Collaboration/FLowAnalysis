@@ -200,6 +200,10 @@ void STParticle::SetRecoTrack(STRecoTrack *atrack)
   rChi2          =  fRTrack -> GetChi2();
   rClusterSize   = (fRTrack -> GetClusterIDArray()) -> size();
 
+  // quality flag
+  if( fP > maxMomentum ) fmomentumf = 0;
+  if( fdEdx > maxdEdx  ) fdedxf     = 0;
+
 }
 
 void STParticle::SetVATrack(STGenfitVATask *atrack)

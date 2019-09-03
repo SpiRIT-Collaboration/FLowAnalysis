@@ -448,7 +448,7 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
       aParticle->SetExpectedClusterNumber(clustNum);
     }
       
-    if( aParticle->GetGoodTrackFlag() > 1000 )
+    if( aParticle->GetGoodTrackFlag() >= 1 )
       ntrack[3]++;
     
     aParticle->SetTrackID(ntrack[2]);

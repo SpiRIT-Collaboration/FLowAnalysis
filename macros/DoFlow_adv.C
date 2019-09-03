@@ -331,7 +331,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
       // ---- track quality selection ---
       if( !aPart->GetNDFFlag() ) continue;
-      if( aPart->GetReactionPlaneFlag() == 0 ) continue;
+      if( aPart->GetReactionPlaneFlag()%2 != 0 ) continue;
       if( pt < 0. ) continue;
       if( aPart->GetIndividualRPAngle() < -8 ) continue;
       //------------------------------

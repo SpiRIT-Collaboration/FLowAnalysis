@@ -115,7 +115,7 @@ private:
   Int_t     rClusterSize;
 
   Double_t  maxdEdx     = 2000.;  //!
-  Double_t  maxMomentum = 3200.;  //!
+  Double_t  maxMomentum = 4700.;  //!
   Double_t  protonMaxMomentum = 2500.;  //!
 
 
@@ -213,7 +213,7 @@ public:
   // good track flag
   void   SetGoodTrackFlag(Int_t value)          {fgoodtrackf  = value;}
   Int_t  GetGoodTrackFlag() {
-    fgoodtrackf = fdedxf*fTargetf*fmomentumf + 10*fNDFf + 100*fclusterratiof;
+    fgoodtrackf = 10*fdedxf*fTargetf*fmomentumf + fNDFf;
     return fgoodtrackf;}
 
 
