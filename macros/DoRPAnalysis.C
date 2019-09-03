@@ -35,7 +35,7 @@ void DoRPAnalysis(Long64_t nmax = -1)
     //------ Event selection
     auto aFlowInfo = (STFlowInfo*)aFlowArray->At(0);
     if( aFlowInfo == NULL ) continue;
-    if( aFlowInfo->goodEventf == 0 || aFlow->beamPID == 0 ) continue;
+    if( aFlowInfo->goodEventf == 0 || aFlowInfo->beamPID == 0 ) continue;
     
 
     if( aFlowInfo->beamPID == 124 ){

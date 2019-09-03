@@ -897,51 +897,51 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
 
 
-  id=1;
-  ic++; cc = new TCanvas(Form("cc%d",ic),"y : cos(2#psi)",2000,1500);
-  cc->Divide(12,ybin1);
-  UInt_t ipt = 4;
-  for( UInt_t iy = 0; iy < ybin1; iy++ ) {
-    for( UInt_t ips = 0; ips < psibin; ips++ ) {
-      cc->cd(id); id++;
-      hdydutcos1[iy][ipt][ips]->Draw();
-    }
-  }
+  // id=1;
+  // ic++; cc = new TCanvas(Form("cc%d",ic),"y : cos(2#psi)",2000,1500);
+  // cc->Divide(12,ybin1);
+  // UInt_t ipt = 4;
+  // for( UInt_t iy = 0; iy < ybin1; iy++ ) {
+  //   for( UInt_t ips = 0; ips < psibin; ips++ ) {
+  //     cc->cd(id); id++;
+  //     hdydutcos1[iy][ipt][ips]->Draw();
+  //   }
+  // }
 
-  id=1;
-  ic++; cc = new TCanvas(Form("cc%d",ic),"pt : cos(#psi) 2",2000,1500);
-  cc->Divide(12,ptbin1);
-  UInt_t iy = 2;
+  // id=1;
+  // ic++; cc = new TCanvas(Form("cc%d",ic),"pt : cos(#psi) 2",2000,1500);
+  // cc->Divide(12,ptbin1);
+  // UInt_t iy = 2;
 
-  std::cout << " Raidity range " << rangeLabel1[iy] << std::endl;
-  for( UInt_t ipt = 0; ipt < ptbin1; ipt++ ) {
-    for( UInt_t ips = 0; ips < psibin; ips++ ) {
-      cc->cd(id); id++;
-      hdydutcos1[iy][ipt][ips]->Draw();
-    }
-  }
+  // std::cout << " Raidity range " << rangeLabel1[iy] << std::endl;
+  // for( UInt_t ipt = 0; ipt < ptbin1; ipt++ ) {
+  //   for( UInt_t ips = 0; ips < psibin; ips++ ) {
+  //     cc->cd(id); id++;
+  //     hdydutcos1[iy][ipt][ips]->Draw();
+  //   }
+  // }
 
-  id=1;
-  ic++; cc = new TCanvas(Form("cc%d",ic),"pt : #delta #phi 2",2000,1500);
-  cc->Divide(12,ptbin1);
-  for( UInt_t ipt = 0; ipt < ptbin1; ipt++ ) {
-    for( UInt_t ips = 0; ips < psibin; ips++ ) {
-      cc->cd(id); id++;
-      hdydutdphi1[iy][ipt][ips]->Draw();
-    }
-  }
+  // id=1;
+  // ic++; cc = new TCanvas(Form("cc%d",ic),"pt : #delta #phi 2",2000,1500);
+  // cc->Divide(12,ptbin1);
+  // for( UInt_t ipt = 0; ipt < ptbin1; ipt++ ) {
+  //   for( UInt_t ips = 0; ips < psibin; ips++ ) {
+  //     cc->cd(id); id++;
+  //     hdydutdphi1[iy][ipt][ips]->Draw();
+  //   }
+  // }
 
-  id=1;
-  ic++; cc = new TCanvas(Form("cc%d",ic),"pt : #delta #phi 7",2000,1500);
-  cc->Divide(12,ptbin1);
-  iy = 7;
-  std::cout << " Raidity range " << rangeLabel1[iy] << std::endl;
-  for( UInt_t ipt = 0; ipt < ptbin1; ipt++ ) {
-    for( UInt_t ips = 0; ips < psibin; ips++ ) {
-      cc->cd(id); id++;
-      hdydutdphi1[iy][ipt][ips]->Draw();
-    }
-  }
+  // id=1;
+  // ic++; cc = new TCanvas(Form("cc%d",ic),"pt : #delta #phi 7",2000,1500);
+  // cc->Divide(12,ptbin1);
+  // iy = 7;
+  // std::cout << " Raidity range " << rangeLabel1[iy] << std::endl;
+  // for( UInt_t ipt = 0; ipt < ptbin1; ipt++ ) {
+  //   for( UInt_t ips = 0; ips < psibin; ips++ ) {
+  //     cc->cd(id); id++;
+  //     hdydutdphi1[iy][ipt][ips]->Draw();
+  //   }
+  // }
 
   gSystem->cd("..");
 }

@@ -9,17 +9,23 @@ source ../build/config.sh
 
 # TPC data
 #
-#VERSION=38
-#export TPCDIR=/data/spdaq01/recoData/20190725/data/
-#export RCVER=HEAD.1834.fc633ca
-
 #VERSION=37
 #export TPCDIR=/data/spdaq01/recoData/20190206/data/
 #export RCVER=HEAD.1780.1e193e6
 
-VERSION=39
-export TPCDIR=/data/spdaq01/recoData/20190804/data/
+#VERSION=38
+#export TPCDIR=/data/spdaq01/recoData/20190804/data/
+#export RCVER=HEAD.1853.e498ace
+
+#VERSION=39
+#export TPCDIR=/data/spdaq01/recoData/20190804/data.corr_ExBl112/
+#export RCVER=HEAD.1853.e498ace
+#export SUFX=BTt
+
+VERSION=40
+export TPCDIR=/data/spdaq01/recoData/20190804/data.corr_ExBl112/
 export RCVER=HEAD.1853.e498ace
+export SUFX=BTt
 
 export ST132DIR=${STTPCDIR}
 export ST108DIR=${STTPCDIR}
@@ -28,7 +34,8 @@ export ST112DIR=${STTPCDIR}
 export STCkT100=${STTPCDIR}
 export STCkT300=${STTPCDIR}
 
-export STBBFITTER=db/BBFitter.root
+##export STBBFITTER=db/BBFitter.root
+export STBBFITTER=db/FlattenPID.root # Kaneko-kun's PID calibration files done with 20190804/data.corr_ExBl112/ 
 
 #BigRIPS data
 export STBEAM132=/cache/scr/spirit/DataAskedByMizuki/beam.Sn132_all/

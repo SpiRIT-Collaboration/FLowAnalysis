@@ -221,7 +221,6 @@ void Flatten_Psi_ntrack(UInt_t isel)
 
     if( aFlow->goodEventf == 0 || aFlow->beamPID == 0 ) continue;
     
-
     STBDC      *aBDC  = (STBDC*)aBDCArray->At(0);
     if( aBDC == NULL ) continue;
     hbdcXY->Fill(aBDC->ProjX,aBDC->ProjY);

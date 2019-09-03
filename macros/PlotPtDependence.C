@@ -24,24 +24,25 @@ Bool_t bplot[] =
     0, // 5 Acceptance ypt
     0, // 6 <px>/A
     0, // 7 v1 vs part 
-    1, // 8 v2_min 
+    0, // 8 v2_min 
   };
 //==================================================
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 1, 0, 0};
+Bool_t bsys[]  = { 1, 1, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn
 Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {1, 1, 0, 0, 0, 0, 0, 0};
+UInt_t  bver[]  = {1, 0, 0, 0, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v38.0.0"  ,"advYPt_","m5to60"},
+  {".v39.1.0"  ,"advYPt_","m5to60"},
   {".v37.1.4"  ,"advYPt_","m5to60"},//"|#phi|<30&150"} ,  
+  {".v38.0.0"  ,"advYPt_","m5to60"},
   {".v37.1.3"  ,"advYPt_",""},//"|#phi|<30&150"} ,  
   {".v37.1.2"  ,"advYPt_","|#phi|<30&150"} ,  
   {".v37.0.4"  ,"advYPt_","good track"} ,  
@@ -50,16 +51,6 @@ gplot gnames[] = {
   {".v37.0.2"  ,"advYPt_","Error"} ,  
   {".v35.0.5"  ,"advYPt_","|#phi|<30"} ,  
   {".v37.0.0"  ,"advYPt_","|#phi|<30"} ,  
-  {".v35.0.7"  ,"advYPt_","|#phi|<30&150"} ,  
-  {".v35.0.6"  ,"advYPt_","|#phi|>150"} ,  
-  {".v35.0.4"  ,"advYPt_","all"} ,  
-  {".v36.0.0"  ,"advYPt_","M"} ,  
-  {".v36.0.1"  ,"advYPt_","|#phi|<30"} ,  
-  {".v36.0.2"  ,"advYPt_","|#phi|>150"} ,  
-  {".v35.0.1"  ,"advYPt_","#phi>150"} ,  
-  {".v34.0.0"  ,"advYPt_","Reco"} ,  
-  {".v29.1.31" ,"advYPt_","phi<=30"} ,  
-  {".v29.1.32" ,"advYPt_","phi>=150"} ,
 };
 
 TString sVer[nmax];
@@ -67,7 +58,7 @@ TString sName[nmax];
 TString cmnt[nmax];
 
 //-- pBUU
-Bool_t  bpBUUConfig[]  = {0, 0, 0, 0};
+Bool_t  bpBUUConfig[]  = {1, 1, 0, 0};
 //-----------
 gplot pBUUConfig[] = {
   {"_energy270_gamma0.50_b5_withCluster.","pBUU2","pBUU b5g0.5"},
@@ -178,11 +169,11 @@ void PlotPtDependence()
 
   TGraphErrors *g_v1slp = new TGraphErrors();
   g_v1slp->SetName("g_v1slp");
-  g_v1slp->SetTitle("; Multiplicity; slope of v1");
+  g_v1slp->SetTitle("; (n-p)/A; slope of v1");
 
   TGraphErrors *g_v2max = new TGraphErrors();
   g_v2max->SetName("g_v2max");
-  g_v2max->SetTitle(";multiplicity; v2_max");
+  g_v2max->SetTitle("; (n-p)/A; v2_max");
 
   TGraphErrors *g_v2sysA = new TGraphErrors();
   g_v2sysA->SetName("g_v2sysA");
@@ -191,6 +182,19 @@ void PlotPtDependence()
   TGraphErrors *g_v2sysD = new TGraphErrors();
   g_v2sysD->SetName("g_v2sysD");
   g_v2sysD->SetTitle(";(N-P)/A; v2");
+
+  TGraphErrors *g_v1slpsys[4];
+  TGraphErrors *g_v2maxsys[4];
+  for(UInt_t jj = 0; jj < 4; jj++){
+    g_v1slpsys[jj] = new TGraphErrors();
+    g_v2maxsys[jj] = new TGraphErrors();
+
+  }
+
+  auto m_v1sys = new TMultiGraph();
+  auto m_v2sys = new TMultiGraph();
+  m_v1sys->SetTitle(";(n-p)/A; v1 slop");
+  m_v2sys->SetTitle(";(n-p)/A; -v2 max");
 
   // Rapidity dependence 
   TH2D *hyptacp[10];
@@ -354,6 +358,8 @@ void PlotPtDependence()
   UInt_t isk = 0;
   UInt_t iss = 9;
   UInt_t ipp = 0;
+  UInt_t ips1[4] = {0,0,0,0};
+  UInt_t ips2[4] = {0,0,0,0};
   Color_t icolor = 100; 
   UInt_t iv1f = 0;
   for(UInt_t igr = 0; igr < ngr+kgr+pgr; igr++ ) {
@@ -381,7 +387,7 @@ void PlotPtDependence()
     else
       icolor -= 2;
 
-    TString ohtitle = lsys[is]+" "+fpid[ip];
+    TString ohtitle = lsys[is]+" "+lpid[ip];
     TString otitle  = ohtitle;
 
     if( ia == 1 ) { //data
@@ -468,9 +474,16 @@ void PlotPtDependence()
 	  // Double_t mmean = hmult->GetMean();
 	  // Double_t mstd  = hmult->GetStdDev() / sqrt( (Double_t)hmult->GetEntries() );
 	
-	  g_v1slp -> SetPoint(iv1f, sysA[is], slope);
+	  g_v1slp -> SetPoint(iv1f, sysdlt[is], slope);
 	  g_v1slp -> SetPointError(iv1f, 0., slopee);	
 	  iv1f++;
+
+	  g_v1slpsys[ip]->SetPoint(ips1[ip], sysdlt[is], slope);
+	  g_v1slpsys[ip]->SetPointError(ips1[ip], 0., slopee);
+	  ips1[ip]++;
+	  // g_v1slpsys[is]->SetPoint(ipp, ip, slope);
+	  // g_v1slpsys[is]->SetPointError(ipp, 0., slopee);
+	  //	  ipp++;
 	}
       }
     
@@ -509,9 +522,17 @@ void PlotPtDependence()
 	  Double_t mmean = hmult->GetMean();
 	  Double_t mstd  = hmult->GetStdDev();
 	
-	  g_v2max->SetPoint(isp , isp, v2y);
+	  g_v2max->SetPoint(isp , sysdlt[is], v2y);
 	  g_v2max->SetPointError(isp, 0., v2ye);
 	  isp++;
+
+
+	  g_v2maxsys[ip]->SetPoint(ips2[ip], sysdlt[is], -v2y);
+	  g_v2maxsys[ip]->SetPointError(ips2[ip], 0., v2ye);
+	  ips2[ip]++;
+	  // g_v2maxsys[is]->SetPoint(ipp, ip, v2y);
+	  // g_v2maxsys[is]->SetPointError(ipp, 0., v2ye);
+	  ipp++;
 	}
 
 	if( bsys[ik] ) {
@@ -794,6 +815,20 @@ void PlotPtDependence()
     g_v1slp->SetMarkerColor(2);
     g_v1slp->Draw("AP");
     g_v1slp->Print();
+
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+    for(UInt_t jj = 0; jj < 4; jj++){
+      if(g_v1slpsys[jj]->GetN() > 0) {
+	g_v1slpsys[jj]->SetMarkerStyle(20);
+	g_v1slpsys[jj]->SetMarkerColor(icol[jj]);
+	g_v1slpsys[jj]->SetLineColor(icol[jj]);
+
+	g_v1slpsys[jj]->Print();
+	
+	m_v1sys->Add(g_v1slpsys[jj]);
+      }
+    }
+    m_v1sys->Draw("AP");
   }
 
   if( bplot[0] && bplot[8] ) {
@@ -802,6 +837,18 @@ void PlotPtDependence()
     g_v2max->SetMarkerColor(2);
     g_v2max->Draw("AP");
     g_v2max->Print();
+
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+    for(UInt_t jj = 0; jj < 4; jj++){
+      if(g_v2maxsys[jj]->GetN() > 0) {
+	g_v2maxsys[jj]->SetMarkerStyle(20);
+	g_v2maxsys[jj]->SetMarkerColor(icol[jj]);
+	g_v2maxsys[jj]->SetLineColor(icol[jj]);
+	
+	m_v2sys->Add(g_v2maxsys[jj]);
+      }
+    }
+    m_v2sys->Draw("AP");
   }
 
   if( bplot[0] && bplot[6] ) {

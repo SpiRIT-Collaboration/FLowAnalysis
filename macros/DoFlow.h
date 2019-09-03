@@ -4,6 +4,7 @@ TString lsys[] = {"^{132}Sn",        "^{108}Sn",            "^{124}Sn",         
 TString rsys[] = {"132",        "108",        "124",        "112"};
 TString tsys[] = {"124",        "112",        "112",        "124"};
 TString fpid[] = {"proton","deuteron","triton","3He","4He","neutron","H"};  
+TString lpid[] = {"1H",    "2H",      "3H"    ,"3He","4He","N"      ,"H"};  
 
 const UInt_t nsys = 4;
 const UInt_t nprt = 5;

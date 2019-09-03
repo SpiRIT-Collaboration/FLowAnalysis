@@ -21,6 +21,7 @@ void run_analysis(Int_t nevt = -1)
   TString tDir = gSystem -> Getenv("TPCDIR");
   TString tVer = gSystem -> Getenv("RCVER");
   TString bDir = gSystem -> Getenv("BDCDIR");
+  TString ssfx = gSystem -> Getenv("SUFX");
 
   FairLogger* fLogger = FairLogger::GetLogger();
   if( sRun=="" || sVer=="" || tDir=="" ) {
@@ -34,7 +35,7 @@ void run_analysis(Int_t nevt = -1)
   FairRunAna* anaRun = new FairRunAna();
   anaRun->SetRunId(atoi(sRun));
 
-  TString foutname = "data/run"+sRun+"_BTt.v"+sVer+".root";
+  TString foutname = "data/run" + sRun + "_" + ssfx + ".v" + sVer + ".root";
   anaRun->SetOutputFile(foutname);
     
   FairRootManager* fman = FairRootManager::Instance();

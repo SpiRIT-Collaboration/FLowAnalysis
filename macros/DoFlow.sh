@@ -4,7 +4,7 @@ source setup.sh
 export MNMACRO=DoFlow_adv.C        ##<--- MACRO name
 export MNRNF={$RNF132}             ##<--- 
 export MNDB=BTt                    ##<---
-export MNVERSION=38.0              ##   <------@@ input 
+export MNVERSION=39.1              ##   <------@@ input 
 export MNOVER=0
 ##<-----------
 
@@ -40,5 +40,5 @@ cat DoFlow.sh |grep function
 env|grep MN
 echo "run -1 :: Get centrality and Psi dependent correction"
 echo "run    :: open files "
-echo "run 2  :: DoFlow_adv.C"
+echo "run  2 :: DoFlow_adv.C"
 echo "Type  run #(partid) "
