@@ -1,16 +1,18 @@
+#!/bin/bash
+
 source setup.sh
 
 ##---->>> EDIT here
 export MNMACRO=DoFlow_adv.C        ##<--- MACRO name
 export MNRNF={$RNF132}             ##<--- 
 export MNDB=BTt                    ##<---
-export MNVERSION=39.1              ##   <------@@ input 
-export MNOVER=0
+export MNVERSION=40.0              ##   <------@@ input 
+export MNOVER=1
 ##<-----------
 
 export MNrunOne='SUFX=$MNDB  VER=$MNVERSION root $MACRO.C'
 
-function runmulti()
+function doflowmulti()
 {
     PARTICLES=("3" "4" "5")
     typeset -i I=0;
@@ -25,20 +27,25 @@ function runmulti()
     done
 }
 
-function runbatch() 
+function doflowbatch() 
 {
     LC=0 UC=60 RUN=$MNRNF VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($1\)
 }
 
-function run() 
+function doflow() 
 {
+    if [ -n "$2" ]; then
+	export MNOVER=$2
+	echo $2 and $MNOVER
+    fi
+
     LC=0 UC=60 RUN=$MNRNF VER=$MNVERSION OUTVER=$MNOVER root $MNMACRO\($1\)
 }
 
 echo $MNVERSION to $MNOVER
 cat DoFlow.sh |grep function
 env|grep MN
-echo "run -1 :: Get centrality and Psi dependent correction"
-echo "run    :: open files "
-echo "run  2 :: DoFlow_adv.C"
-echo "Type  run #(partid) "
+echo "doflow -1 :: Get centrality and Psi dependent correction"
+echo "doflow    :: open files "
+echo "doflow  2 0 :: DoFlow_adv.C"
+echo "Type  run #(partid) #(Output version)"

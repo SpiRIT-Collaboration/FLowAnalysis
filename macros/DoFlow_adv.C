@@ -175,8 +175,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   TString hlabel  = (TString)Form("mtrack1 %2d to %2d ; Y_{cm}; Pt [MeV/c]",Lcent,Ucent);
   auto hyptacp    = new TH2D("hyptacp", hlabel ,200, -1., 1.4, 200, 0., 1100);
   auto huy        = new TH2D("huy","; y_{cm}/y_{beam}; u_{t0} ", 200,-1., 1.8, 200,0.,1.8);
-  auto hpsi       = new TH2D("hpsi",";#Psi;",15, -1.,14., 100,0.,1.);
-  auto hpsi1      = new TH1D("hpsi1",";#Psi",100,0.,1.);
+  auto hpsi       = new TH2D("hpsi",";#Psi;",100, -3.14,3.14, 200,0.,1.);
+  auto hpsi1      = new TH1D("hpsi1",";#Psi",200,0.,1.);
 
   TH1I *hmult = new TH1I("hmult",";Multiplicity",80,0,80);
   TH1F *hdydptcos1[ybin1][ptbin1][mbin];
@@ -316,9 +316,12 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     //--------------------------------------------------
     while( (aPart = (STParticle*)next()) ) {
 
+      // ---- track quality selection ---
+      if( aPart->GetGoodTrackFlag() != 11 ) continue;
+      //------------------------------
+
       auto yaw   = aPart->GetYawAngle();
       auto pitch = aPart->GetPitchAngle();
-      auto ndf   = aPart->GetNDF();
       auto pt    = aPart->GetRotatedMomentum().Pt();
       auto mom   = aPart->GetRotatedMomentum().Mag();
       auto bmass = aPart->GetBBMass();
@@ -329,12 +332,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       // auto pid   = aPart->GetPIDLoose();  
       // auto pid   = aPart->GetPIDNorm();  
 
-      // ---- track quality selection ---
-      if( !aPart->GetNDFFlag() ) continue;
-      if( aPart->GetReactionPlaneFlag()%2 != 0 ) continue;
-      if( pt < 0. ) continue;
-      if( aPart->GetIndividualRPAngle() < -8 ) continue;
-      //------------------------------
       //----- Particle Selection -----
 
       Bool_t bpart = kFALSE;
@@ -370,11 +367,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       if( !bpart ) continue; //default
       //-----------------
-
-      //      if( yaw < 0 || pitch < 0 ) continue;
-      //      if( yaw < 0  ) continue; //default
-      //      if( yaw > 0  ) continue;
-
       //      if( abs( phi ) > 30.*TMath::DegToRad() ) continue;
       //      if( abs( phi ) < 150.*TMath::DegToRad() ) continue;
       if( abs( phi ) > 30.*TMath::DegToRad() && abs( phi ) < 150.*TMath::DegToRad() ) continue;
@@ -384,7 +376,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
       rppsires = GetPsiRPResolution(ipsi);
       hpsi1->Fill(rppsires[4]);
-      hpsi->Fill(ipsi, rppsires[4]);
+      hpsi->Fill(aflow->unitP_fc.Phi(), rppsires[4]);
       
       auto dphi  = aPart->GetAzmAngle_wrt_RP();
       auto rapid = aPart->GetRapiditycm();;	
@@ -811,8 +803,9 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   hpsi     ->Write();
   hpsi1    ->Write();
 
+
   //--------------------------------------------------
-  //--- Ploting
+  //--- Plotting
   //--------------------------------------------------
   id=1;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),2000,500);
@@ -895,6 +888,21 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
   hpsi->Draw("colz");
 
+
+  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
+  huy->Draw("colz");
+
+  //--------------------------------------------------
+  //--- Debug plotting
+  // id=1;
+  // ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),2000,500);
+  // cc->Divide(ybin2, psibin);
+  // for( UInt_t iy = 0; iy < ybin2; iy++ ) {
+  //   for( UInt_t ips = 0; ips < psibin; ips++) {
+  //     cc->cd(id); id++;
+  //     hdydutcos2[iy][2][ips]->Draw();
+  //   }
+  // }
 
 
   // id=1;
@@ -1230,6 +1238,9 @@ Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)            //%%
   Double_t m0 = hphi0_180->GetEntries();
   Double_t m1 = hphi90_180->GetEntries();
 
+  m0 = 2438783.;
+  m1 = 870439.;
+
   if( m0 == 0 ) {
     std::cout << " No entry in hphi0_180 " << endl;
     return 0;
@@ -1273,11 +1284,11 @@ Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)            //%%
     rpres[3] = 0.;
   }
 
-  // std::cout << " Resolution : v1 " 
-  // 	    << std::setw(14) << rpres[0] << " +- " << std::setw(10) << rpres[1]
-  // 	    << " v2 "
-  // 	    << std::setw(14) << rpres[2] << " +- " << std::setw(10) << rpres[3]
-  // 	    << std::endl;
+   std::cout << " Resolution : v1 " 
+   	    << std::setw(14) << rpres[0] << " +- " << std::setw(10) << rpres[1]
+   	    << " v2 "
+   	    << std::setw(14) << rpres[2] << " +- " << std::setw(10) << rpres[3]
+   	    << std::endl;
 
   return rpres;
 }

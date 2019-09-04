@@ -30,18 +30,22 @@ Bool_t bplot[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 1, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn
-Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bsys[]  = { 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn
+Bool_t bpid[]  = { 0, 1, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {1, 0, 0, 0, 0, 0, 0, 0};
+UInt_t  bver[]  = {1, 1, 1, 0, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v39.1.0"  ,"advYPt_","m5to60"},
+  {".v40.0.0"  ,"advYPt_","|#phi|<30&150"},
   {".v37.1.4"  ,"advYPt_","m5to60"},//"|#phi|<30&150"} ,  
+  {".v39.1.0"  ,"advYPt_","m5to60"},
+  {".v40.0.2"  ,"advYPt_","all"},
+  {".v40.0.1"  ,"advYPt_","|#phi|<30"},
+  {".v40.0.2"  ,"advYPt_","|#phi|<150"},
   {".v38.0.0"  ,"advYPt_","m5to60"},
   {".v37.1.3"  ,"advYPt_",""},//"|#phi|<30&150"} ,  
   {".v37.1.2"  ,"advYPt_","|#phi|<30&150"} ,  
@@ -58,7 +62,7 @@ TString sName[nmax];
 TString cmnt[nmax];
 
 //-- pBUU
-Bool_t  bpBUUConfig[]  = {1, 1, 0, 0};
+Bool_t  bpBUUConfig[]  = {0, 0, 0, 0};
 //-----------
 gplot pBUUConfig[] = {
   {"_energy270_gamma0.50_b5_withCluster.","pBUU2","pBUU b5g0.5"},
@@ -199,15 +203,15 @@ void PlotPtDependence()
   // Rapidity dependence 
   TH2D *hyptacp[10];
 
-  auto mrv1  = new TMultiGraph("mrv1"  ,";y_{cm}/y_{cm}; v1");
-  auto mrv2  = new TMultiGraph("mrv2"  ,";y_{cm}/y_{cm}; v2");
+  auto mrv1  = new TMultiGraph("mrv1"  ,";y/y_{cm}; v1");
+  auto mrv2  = new TMultiGraph("mrv2"  ,";y/y_{cm}; v2");
   auto mv1sl = new TMultiGraph("mv1sl" ,";Centrality; v1 slope");
   auto mv1slp= new TMultiGraph("mv1slp","; Particle ; v1 slope");
   auto mmpx  = new TMultiGraph("mmpx","; y/y_{cm} ; <px>/A");
   //  mv1slp->GetXaxis()->SetAlphanumeric(kTRUE);
 
-  auto lgr1 = new TLegend(0.54, 0.13, 0.87, 0.4, ""); 
-  auto lgr2 = new TLegend(0.38, 0.68, 0.75, 0.9, "");
+  auto lgr1 = new TLegend(0.40, 0.25, 0.90, 0.40, ""); 
+  auto lgr2 = new TLegend(0.20, 0.75, 0.65, 0.9, "");
   auto lgr3 = new TLegend(0.35, 0.13, 0.7, 0.33, "");
   auto lgr4 = new TLegend(0.15, 0.63, 0.5, 0.85, "");
   auto lgr5 = new TLegend(0.15, 0.63, 0.5, 0.85, "");
@@ -387,13 +391,13 @@ void PlotPtDependence()
     else
       icolor -= 2;
 
-    TString ohtitle = lsys[is]+" "+lpid[ip];
+    TString ohtitle = lsys[is]+" "+lpid[ip]+" ";
     TString otitle  = ohtitle;
 
     if( ia == 1 ) { //data
       //otitle += cmnt[iz];
       //      otitle += sVer[iz]+";"+cmnt[iz];
-      otitle += sName[iz]+sVer[iz]+";"+cmnt[iz];
+      otitle += "DATA"+sVer[iz]+";"+cmnt[iz];
     }
     else if( ia == 2 ) //amd
       otitle += amdHeader[is](4,5) + amdName[it];

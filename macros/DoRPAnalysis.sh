@@ -9,9 +9,9 @@ source ../build/config.sh
 source runList.sh
 
 ##------>>> EDIT HERE 
-export MNRNF=$RNF112
-export MNDBVERSION=39
-export MNVERSION=39.1
+export MNRNF=$RNF132
+export MNDBVERSION=40
+export MNVERSION=40.0
 export MNSFX=BTt
 ##<----
 
@@ -74,6 +74,7 @@ echo "type correction <- correction only"
 
 function flattenandcorrection() {
     flattening
+    corr
     allcorr
 }
 
