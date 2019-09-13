@@ -141,3 +141,20 @@ void SaveCanvas(TString fopt = "", Int_t isel=-1)
 }
 
 
+UInt_t SetBranch()
+{
+  if(rChain == NULL) {
+    std::cout << " no file is loaded " << std::endl;
+    return 0;
+  }
+
+  std::cout << " Nentry ->  " << rChain->GetEntries() << std::endl;
+
+  if(aArray != NULL)
+    aArray->Clear();
+
+  rChain->SetBranchAddress("STParticle",&aArray);
+  rChain->SetBranchAddress("STFlow"    ,&aFlowArray);
+
+  return rChain->GetEntries();
+}

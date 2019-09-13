@@ -35,9 +35,14 @@ void DoRPAnalysis(Long64_t nmax = -1)
     //------ Event selection
     auto aFlowInfo = (STFlowInfo*)aFlowArray->At(0);
     if( aFlowInfo == NULL ) continue;
-    if( aFlowInfo->goodEventf == 0 || aFlowInfo->beamPID == 0 ) continue;
-    
 
+    if( iVer[0] > 38 ) {
+      if( aFlowInfo->goodEventf == 0 || aFlowInfo->beamPID == 0 )
+	continue;
+    }
+    else
+      if( aFlowInfo->beamPID == 0 ) continue;
+    
     if( aFlowInfo->beamPID == 124 ){
       if( (aFlowInfo->mtrack1*0.8-20) > aFlowInfo->mtrack4 ) continue;
     }

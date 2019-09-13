@@ -9,9 +9,9 @@ source ../build/config.sh
 source runList.sh
 
 ##------>>> EDIT HERE 
-export MNRNF=$RNF132
-export MNDBVERSION=40
-export MNVERSION=40.0
+export MNRNF=$RNF108
+export MNDBVERSION=41
+export MNVERSION=41.0
 export MNSFX=BTt
 ##<----
 
@@ -74,7 +74,7 @@ echo "type correction <- correction only"
 
 function flattenandcorrection() {
     flattening
-    corr
+    RUN=${RUNNUMBER1[0]} VER=$MNVERSION SUFX=$MNSFX DBVER=$MNDBVERSION root -b -q DoRPAnalysis.C
     allcorr
 }
 

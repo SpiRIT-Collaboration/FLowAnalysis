@@ -11,4 +11,10 @@ TString aRun;
 TString sSuf;
 TString sVer;
 
+// Retrivew tree
+TClonesArray *aArray; 
+TClonesArray *aFlowArray;
+TClonesArray *aNLClusterArray;
+
+
 #endif

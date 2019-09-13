@@ -25,13 +25,15 @@ Bool_t bplot[] =
     0, // 6 <px>/A
     0, // 7 v1 vs part 
     0, // 8 v2_min 
+    0, // 9 v1 slope and v2 max dependence on m
   };
 //==================================================
+
 
 // --> Plotting selection
 //--- Data
 Bool_t bsys[]  = { 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn
-Bool_t bpid[]  = { 0, 1, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
@@ -40,21 +42,15 @@ UInt_t iv2at = 4;
 UInt_t  bver[]  = {1, 1, 1, 0, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v40.0.0"  ,"advYPt_","|#phi|<30&150"},
-  {".v37.1.4"  ,"advYPt_","m5to60"},//"|#phi|<30&150"} ,  
-  {".v39.1.0"  ,"advYPt_","m5to60"},
-  {".v40.0.2"  ,"advYPt_","all"},
-  {".v40.0.1"  ,"advYPt_","|#phi|<30"},
-  {".v40.0.2"  ,"advYPt_","|#phi|<150"},
-  {".v38.0.0"  ,"advYPt_","m5to60"},
-  {".v37.1.3"  ,"advYPt_",""},//"|#phi|<30&150"} ,  
-  {".v37.1.2"  ,"advYPt_","|#phi|<30&150"} ,  
-  {".v37.0.4"  ,"advYPt_","good track"} ,  
-  {".v37.0.1"  ,"advYPt_","|#phi|<30"} ,  
-  {".v37.0.3"  ,"advYPt_","|#phi|>150"} ,  
-  {".v37.0.2"  ,"advYPt_","Error"} ,  
-  {".v35.0.5"  ,"advYPt_","|#phi|<30"} ,  
-  {".v37.0.0"  ,"advYPt_","|#phi|<30"} ,  
+  {".v40.0.0"  ,"advYPt_","ExB"},
+  {".v41.0.0"  ,"advYPt_","ExB & SC"},
+  {".v38.0.0"  ,"advYPt_","no corr"},
+  {".v41.0.2"  ,"advYPt_","|#phi|>150"},
+  {".v41.0.3"  ,"advYPt_","all"},
+  {".v41.0.4"  ,"advYPt_","m45-65"},//"|#phi|<30&150"},
+  {".v41.0.5"  ,"advYPt_","m55-65"},//"|#phi|<30&150"},
+  {".v41.0.6"  ,"advYPt_","m65<"},//"|#phi|<30&150"},
+  {".v41.0.7"  ,"advYPt_","m0-60"},//"|#phi|<30&150"},
 };
 
 TString sVer[nmax];
@@ -173,11 +169,11 @@ void PlotPtDependence()
 
   TGraphErrors *g_v1slp = new TGraphErrors();
   g_v1slp->SetName("g_v1slp");
-  g_v1slp->SetTitle("; (n-p)/A; slope of v1");
+  g_v1slp->SetTitle("; multiplicity; v1 slope");
 
   TGraphErrors *g_v2max = new TGraphErrors();
   g_v2max->SetName("g_v2max");
-  g_v2max->SetTitle("; (n-p)/A; v2_max");
+  g_v2max->SetTitle("; multiplicity; -v2_max");
 
   TGraphErrors *g_v2sysA = new TGraphErrors();
   g_v2sysA->SetName("g_v2sysA");
@@ -408,6 +404,15 @@ void PlotPtDependence()
     //otitle  = ohtitle;
 
     //acceptance
+    if( bplot[0] && bplot[5] ) {
+      hyptacp[igr] = (TH2D*)fOpen->Get("hyptacp");
+      if( hyptacp[igr] == NULL) {
+	cout <<" NULL 222" << endl;
+      } 
+      else
+	hyptacp[igr]->SetTitle(Form("hyptacp_%d",igr));
+    }
+
     if( igr < ngr ) {
       TH1D *fevt = (TH1D*)fOpen->Get("hphi0_180");
       
@@ -417,7 +422,7 @@ void PlotPtDependence()
 	auto ff = (TH2D*)fOpen->Get("hyptacp");
 	ff->SetTitle(otitle);
 	ff->SetDirectory(gROOT);
-	
+
 	gROOT->cd();
 	ff->ProjectionX("_px");
 	TH1D* ff1 = (TH1D*)gROOT->Get((TString)ff->GetName()+"_px");
@@ -453,9 +458,9 @@ void PlotPtDependence()
 	yv1->SetMarkerStyle(imark[is]);
 	
 	yv1->RemovePoint(10);
-	yv1->RemovePoint(9);
-	yv1->RemovePoint(8);
-	yv1->RemovePoint(7);
+	// yv1->RemovePoint(9);
+	// yv1->RemovePoint(8);
+	// yv1->RemovePoint(7);
 
 	if( ip == 5 )
 	  yv1->SetMarkerStyle(imark[is]+4);
@@ -475,19 +480,16 @@ void PlotPtDependence()
 	std::cout << otitle << " " << slope << " +- " << slopee << std::endl;
       
 	if( hmult != NULL ) {
-	  // Double_t mmean = hmult->GetMean();
-	  // Double_t mstd  = hmult->GetStdDev() / sqrt( (Double_t)hmult->GetEntries() );
-	
-	  g_v1slp -> SetPoint(iv1f, sysdlt[is], slope);
-	  g_v1slp -> SetPointError(iv1f, 0., slopee);	
+
+	  Double_t mmean = hmult->GetMean();
+	  Double_t mstd  = hmult->GetStdDev();
+	  g_v1slp -> SetPoint(iv1f, mmean, slope);
+	  g_v1slp -> SetPointError(iv1f, mstd, slopee);	
 	  iv1f++;
 
 	  g_v1slpsys[ip]->SetPoint(ips1[ip], sysdlt[is], slope);
 	  g_v1slpsys[ip]->SetPointError(ips1[ip], 0., slopee);
 	  ips1[ip]++;
-	  // g_v1slpsys[is]->SetPoint(ipp, ip, slope);
-	  // g_v1slpsys[is]->SetPointError(ipp, 0., slopee);
-	  //	  ipp++;
 	}
       }
     
@@ -522,22 +524,20 @@ void PlotPtDependence()
 
 	cout << " v2y " << v2y << " +- " << v2ye << endl;
 	
-	if( hmult != NULL ) {
+	if( hmult != NULL ){
+
 	  Double_t mmean = hmult->GetMean();
-	  Double_t mstd  = hmult->GetStdDev();
-	
-	  g_v2max->SetPoint(isp , sysdlt[is], v2y);
-	  g_v2max->SetPointError(isp, 0., v2ye);
+	  Double_t mstd  = hmult->GetStdDev() ;
+	  g_v2max->SetPoint(isp , mmean, -v2y);
+	  g_v2max->SetPointError(isp, mstd, v2ye);
 	  isp++;
 
 
 	  g_v2maxsys[ip]->SetPoint(ips2[ip], sysdlt[is], -v2y);
 	  g_v2maxsys[ip]->SetPointError(ips2[ip], 0., v2ye);
 	  ips2[ip]++;
-	  // g_v2maxsys[is]->SetPoint(ipp, ip, v2y);
-	  // g_v2maxsys[is]->SetPointError(ipp, 0., v2ye);
 	  ipp++;
-	}
+	}	
 
 	if( bsys[ik] ) {
 	  g_v2sysA->SetPoint(isk, sysA[is], v2y);
@@ -730,12 +730,17 @@ void PlotPtDependence()
 
 
   if( bplot[0] && bplot[5] ) {
-    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),500,200);
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),500,700);
     cc->Divide(1,ngr);
     for(UInt_t i = 0; i < ngr; i++){
-      if( hyptacp[i] == NULL) continue;
-      cc->cd(i+1);
-      hyptacp[ngr]->Draw("colz");
+      if( hyptacp[i] == NULL) {
+	cout << " NULL " << endl;
+	continue;
+      }
+      else {
+       	cc->cd(i+1);
+	//       	hyptacp[i]->Draw("colz");
+      }
     }
   }
 
@@ -813,13 +818,15 @@ void PlotPtDependence()
     }
   }
 
-  if( bplot[0] && bplot[7] ) {
+  if( bplot[0] && bplot[9] ) {
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     g_v1slp->SetMarkerStyle(20);
     g_v1slp->SetMarkerColor(2);
     g_v1slp->Draw("AP");
     g_v1slp->Print();
+  }
 
+  if( bplot[0] && bplot[7]) {
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     for(UInt_t jj = 0; jj < 4; jj++){
       if(g_v1slpsys[jj]->GetN() > 0) {
@@ -835,13 +842,15 @@ void PlotPtDependence()
     m_v1sys->Draw("AP");
   }
 
-  if( bplot[0] && bplot[8] ) {
+  if( bplot[0] &&  bplot[9] ) {
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     g_v2max->SetMarkerStyle(20);
     g_v2max->SetMarkerColor(2);
     g_v2max->Draw("AP");
     g_v2max->Print();
-
+  }
+    
+  if( bplot[0] && bplot[8] ){
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     for(UInt_t jj = 0; jj < 4; jj++){
       if(g_v2maxsys[jj]->GetN() > 0) {
@@ -854,6 +863,7 @@ void PlotPtDependence()
     }
     m_v2sys->Draw("AP");
   }
+  
 
   if( bplot[0] && bplot[6] ) {
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));

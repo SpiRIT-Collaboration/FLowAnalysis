@@ -8,10 +8,6 @@ auto *fcos1 = new TF1("fcos1","[0]+2.*[1]*cos(x)"   ,-1.*TMath::Pi(),TMath::Pi()
 
 UInt_t selReactionPlanef = 10000;
 
-// Retrivew tree
-TClonesArray *aArray; 
-TClonesArray *aFlowArray;
-TClonesArray *aNLClusterArray;
 
 //multiplicity dependent correction factor
 ROOT::Math::Interpolator *itrpvx;
@@ -110,8 +106,10 @@ void DoFlow_adv(Int_t isel = 0)
 
   if( isel > 0 )
     PlotPtDependence((UInt_t)isel);  
+  else if( isel == -1 )
+    PlotPtDependence(0);  
 
-  else if( isel == -1 ) {
+  else if( isel == -2 ) {
     CentralityDependence() ;
     PsiAngleDependence()   ;
   }
@@ -160,8 +158,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
   auto GraphSave  = new TFile(fName,"recreate");
 
-  Int_t pcharge = 1;
-  if(selid == 0)  pcharge = -1;
 
   std::cout << " Rapidity binning " << ybin1 << std::endl;
 
@@ -327,16 +323,16 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       auto bmass = aPart->GetBBMass();
       auto phi   = aPart->GetRotatedMomentum().Phi();
       auto theta = aPart->GetRotatedMomentum().Theta();
+      auto charge= aPart->GetCharge();
 
       auto pid   = aPart->GetPIDTight();  // = GetPID()
       // auto pid   = aPart->GetPIDLoose();  
       // auto pid   = aPart->GetPIDNorm();  
 
       //----- Particle Selection -----
-
       Bool_t bpart = kFALSE;
       auto MassNumber = partA[selid];
-      if( selid == 8 ) {
+      if( selid == 8 ) {   //H
 	if( pid == partid[2] ) {
 	  MassNumber = partA[2];
 	  bpart = kTRUE;
@@ -350,26 +346,33 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	  bpart = kTRUE;
 	}
       }
-      else if( selid == 9 ){
+      else if( selid == 9 ){ 
 	if( pid == partid[4] && mom > 1000  ) {
 	  pid = partid[4];
 	  MassNumber = partA[4];
 	  bpart = kTRUE;
 	}
       }
-      else if( selid < 8 ) {
+      else if( selid < 8 ) { //pi- pi+ p d t 3He 4He
 	if(pid == partid[selid] ){
 	  MassNumber = partA[selid];
-	  bpart = kTRUE;
+	    bpart = kTRUE;
+
+	  if(selid == 0 && charge == 1 )
+	    bpart = kFALSE;
+	  else if( selid == 1 && charge == -1 )
+	    bpart = kFALSE;
+
 	}
       }
+
 
       //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       if( !bpart ) continue; //default
       //-----------------
-      //      if( abs( phi ) > 30.*TMath::DegToRad() ) continue;
-      //      if( abs( phi ) < 150.*TMath::DegToRad() ) continue;
-      if( abs( phi ) > 30.*TMath::DegToRad() && abs( phi ) < 150.*TMath::DegToRad() ) continue;
+      if( abs( phi ) > 30.*TMath::DegToRad() ) continue;
+      //if( abs( phi ) < 150.*TMath::DegToRad() ) continue;
+      //      if( abs( phi ) > 30.*TMath::DegToRad() && abs( phi ) < 150.*TMath::DegToRad() ) continue;
       //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
       bFill = kTRUE;
@@ -452,7 +455,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   //--------------------------------------------------
   //--- Enf of event Loop
   //--------------------------------------------------
-  std::cout << " End of Event Loop " << std::endl;
+  LOG(INFO) << " End of Event Loop " << FairLogger::endl;
 
 
   TGraphErrors *gv_v1 = new TGraphErrors();
@@ -628,12 +631,20 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
       iyv++;
     }
-    
-    // <px>
-    Double_t *rpresall = new Double_t[4];
-    rpresall = GetRPResolutionwChi(hphi0_180, hphi90_180);
+  }
 
-    if( !std::isnan(rpresall[0]) ){
+
+  //--- <px>
+  Double_t *rpresall = new Double_t[4];
+  rpresall = GetRPResolutionwChi(hphi0_180, hphi90_180);
+
+  if( !std::isnan(rpresall[0]) ){
+    for( UInt_t iy = 0; iy < ybin1; iy++ ) {
+
+      Double_t yn    = (Double_t)hdy1[iy]->GetEntries();    
+      Double_t ymean = hdy1[iy]->GetMean() ;
+      Double_t ystdv = hdy1[iy]->GetStdDev()/sqrt(yn);
+
       Double_t mpxn = (Double_t)hdympt1[iy]->GetEntries();
       Double_t mpxc = hdympt1[iy]->GetMean() / rpresall[0] ;
       Double_t mpxe = hdympt1[iy]->GetStdDev()/sqrt(mpxn);
@@ -644,12 +655,9 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	gmpx->SetPointError( impx, ystdv, mpxe ); 
 	impx++;
       }      
+      gPt_v1[iy]->Write();
+      gUt_v1[iy]->Write();
     }
-    //@@@
-    
-    
-    gPt_v1[iy]->Write();
-    gUt_v1[iy]->Write();
   }
   
   //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -722,9 +730,9 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	  v2u_n   += nv2u;
 	  v2u_ste += pow(v2uee*nv2u,2);
 
-	  cout << " v2 corr " << ips << " res " << rppsires[4] << " +- " << rppsires[5] 
-	       << " n " << nv2u << " v2u = " << v2u << " -> " << v2u/rppsires[4]
-	        << endl;
+	  LOG(DEBUG) << " v2 corr " << ips << " res " << rppsires[4] << " +- " << rppsires[5] 
+		     << " n " << nv2u << " v2u = " << v2u << " -> " << v2u/rppsires[4]
+		     << FairLogger::endl;
 	}
       }
 
@@ -1110,7 +1118,7 @@ Bool_t SetPsiRPResolution()
   TFile *fOpen = TFile::Open(fname);
   if( fOpen == NULL ) return kFALSE;
   
-  std::cout << fname << " is opened. " << std::endl;
+  LOG(INFO) << fname << " is opened. " << FairLogger::endl;
 
   auto hgv_psi1 = (TGraphErrors*)fOpen->Get("gv_psi1");
   auto hgv_psi2 = (TGraphErrors*)fOpen->Get("gv_psi2");
@@ -1141,7 +1149,7 @@ Bool_t SetPsiRPResolution()
 
 
   for(UInt_t j = 0; j < (UInt_t)v1psix.size(); j++) {
-    cout << "v1 resolution:"<< j << " th " << v1psix.at(j) << " vs " << v1psiy.at(j) << " +- " << v1psiye.at(j) << endl; 
+    LOG(INFO) << "v1 resolution:"<< j << " th " << v1psix.at(j) << " vs " << v1psiy.at(j) << " +- " << v1psiye.at(j) << FairLogger::endl; 
   }
 
   itrpvpsix->SetData(v1psix,ix);
@@ -1160,7 +1168,7 @@ Bool_t SetPsiRPResolution()
   }
 
   for(UInt_t j = 0; j < (UInt_t)v2psix.size(); j++) {
-    cout << "v2 resolution: "<< j << " th " << v2psix.at(j) << " vs " << v2psiy.at(j) << " +- " << v2psiye.at(j) << endl; 
+    LOG(INFO) << "v2 resolution: "<< j << " th " << v2psix.at(j) << " vs " << v2psiy.at(j) << " +- " << v2psiye.at(j) << FairLogger::endl; 
   }
 
 
@@ -1176,7 +1184,10 @@ Bool_t SetRPResolution()
 
   TString fname = "data/mlt_"+ sysName + ".v" + sVer + ".root";
   TFile *fOpen = TFile::Open(fname);
-  if( fOpen == NULL ) return kFALSE;
+  if( fOpen == NULL ) {
+    LOG(ERROR) << "Please do it doflow -2 " << FairLogger::endl;
+    return kFALSE;
+  }
   
   std::cout << fname << " is opened. " << std::endl;
 
@@ -1221,7 +1232,7 @@ Bool_t SetRPResolution()
     v2xe.push_back(xe);
     v2ye.push_back(ye);
 
-    cout << "v2 resolution "<< k << " th " << v2x.at(k) << " vs " << v2y.at(k) << " +- " << v2ye.at(k) << endl; 
+    LOG(DEBUG) << "v2 resolution "<< k << " th " << v2x.at(k) << " vs " << v2y.at(k) << " +- " << v2ye.at(k) << FairLogger::endl; 
     k++;
   }
 
@@ -1237,9 +1248,6 @@ Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)            //%%
 
   Double_t m0 = hphi0_180->GetEntries();
   Double_t m1 = hphi90_180->GetEntries();
-
-  m0 = 2438783.;
-  m1 = 870439.;
 
   if( m0 == 0 ) {
     std::cout << " No entry in hphi0_180 " << endl;
@@ -1284,11 +1292,11 @@ Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)            //%%
     rpres[3] = 0.;
   }
 
-   std::cout << " Resolution : v1 " 
+  LOG(INFO) << " Getting correction factor " 
    	    << std::setw(14) << rpres[0] << " +- " << std::setw(10) << rpres[1]
    	    << " v2 "
    	    << std::setw(14) << rpres[2] << " +- " << std::setw(10) << rpres[3]
-   	    << std::endl;
+   	    << FairLogger::endl;
 
   return rpres;
 }
@@ -1862,23 +1870,6 @@ void CentralityDependence()            //%% Executable :
 }
 
 
-UInt_t SetBranch()
-{
-  if(rChain == NULL) {
-    std::cout << " no file is loaded " << std::endl;
-    return 0;
-  }
-
-  std::cout << " Nentry ->  " << rChain->GetEntries() << std::endl;
-
-  if(aArray != NULL)
-    aArray->Clear();
-
-  rChain->SetBranchAddress("STParticle",&aArray);
-  rChain->SetBranchAddress("STFlow"    ,&aFlowArray);
-
-  return rChain->GetEntries();
-}
 
 
 TString SetupOutputFile(TString fopt)
