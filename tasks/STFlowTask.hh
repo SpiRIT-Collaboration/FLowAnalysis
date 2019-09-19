@@ -85,8 +85,9 @@ public:
 
   void   SetupEventInfo(Long64_t eventid, UInt_t val);
   void   SetFlowTask( TClonesArray &atpcParticle );
-  void   SetParticleArray( TClonesArray &atpcParticle ){tpcParticle = &atpcParticle;}
+  void   SetFlowTask();
   void   FinishEvent();
+  void   SetParticleArray( TClonesArray &atpcParticle ){tpcParticle = &atpcParticle;}
 
   void   SetFlowCorrection(Bool_t val)   {fIsFlowCorrection = val;}
   Bool_t GetFlowCorrectionFlag()         {return fIsFlowCorrection;}

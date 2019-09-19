@@ -106,11 +106,12 @@ void STFlowInfo::SetNTrack(UInt_t nval, UInt_t idx) {
   }
 }
 
-void STFlowInfo::Clear(){
-  
+void STFlowInfo::AllClear()
+{
+\
   evt = 0;
   beamPID = 0;
-  
+
   for(UInt_t i = 0; i < 7; i++)
     ntrack[i] = 0;
 
@@ -121,6 +122,13 @@ void STFlowInfo::Clear(){
   mtrack4   = 0;
   mtrack5   = 0;
   mtrack6   = 0;
+
+  Clear();
+  
+}
+
+void STFlowInfo::Clear()
+{
 
   unitP_fc   = TVector3(0.,0.,0.);
   unitP_rc   = TVector3(0.,0.,0.);

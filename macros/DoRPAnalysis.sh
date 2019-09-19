@@ -11,8 +11,9 @@ source runList.sh
 ##------>>> EDIT HERE 
 export MNRNF=$RNF108
 export MNDBVERSION=41
-export MNVERSION=41.0
+export MNVERSION=41.1
 export MNSFX=BTt
+export REDO=0
 ##<----
 
 function flattening() {

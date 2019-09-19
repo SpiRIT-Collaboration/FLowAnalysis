@@ -57,6 +57,7 @@ public:
 public:
 
   void Clear();
+  void AllClear();
   void SetRun(Int_t val){ run = val; }
   void SetBeamA(Int_t val)  { SnA = val; }
   void SetBeamPID(Int_t val){ beamPID = val; }

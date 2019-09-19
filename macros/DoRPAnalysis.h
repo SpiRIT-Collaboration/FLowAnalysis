@@ -14,7 +14,7 @@ TString sRun;
 TString sSuf;
 TString sVer;
 TString dVer;
-
+Bool_t  bRedo;
 
 void      SetEnvironment();
 Bool_t    DefineVersion();

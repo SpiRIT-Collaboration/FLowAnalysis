@@ -46,36 +46,45 @@ void DoRPAnalysis(Long64_t nmax = -1)
     if( aFlowInfo->beamPID == 124 ){
       if( (aFlowInfo->mtrack1*0.8-20) > aFlowInfo->mtrack4 ) continue;
     }
-        
     //------ end of event selection
 
     fflowtask->SetFlowInfo( aFlowInfo );
-    fflowtask->DoFlattening();
-    fflowtask->DoFlatteningSub();
+    fflowtask->SetParticleArray( *aParticleArray );
 
+    if( !bRedo ) { 
+
+      fflowtask->DoFlattening();
+      fflowtask->DoFlatteningSub();
+
+      TIter next(aParticleArray);
+      STParticle *apart = NULL; 
+      UInt_t idx = 0;
+      while( (apart = (STParticle*)next()) ) {
+
+	fflowtask->SetIndividualReactionPlane( *apart );
+	TVector3 rpvec = apart->GetIndividualRPVector();
+	apart->SetAzmAngle_wrt_RP( TVector2::Phi_mpi_pi( apart->GetRotatedMomentum().Phi() - rpvec.Phi() ) );
+
+	TClonesArray &arr = *aParticleArray;
+	apart = (STParticle*)arr.At(idx);
+	
+	//	cout << "aft1 ->" << apart->GetIndividualRPVector().Phi() << endl;
+
+	idx++ ;
+      }
+    }
+
+    else {  // Redo Reaction plane calculation
+
+      fflowtask->SetFlowTask();
+      fflowtask->FinishEvent();
+    }
+  
     aFlowInfo = fflowtask->GetFlowInfo();
-      
+
     TClonesArray &aflow = *anewFlow;
     new( aflow[0] ) STFlowInfo( *aFlowInfo );
 
-
-    fflowtask->SetParticleArray( *aParticleArray );
-    TIter next(aParticleArray);
-    STParticle *apart = NULL; 
-    UInt_t idx = 0;
-    while( (apart = (STParticle*)next()) ) {
-
-      fflowtask->SetIndividualReactionPlane( *apart );
-      TVector3 rpvec = apart->GetIndividualRPVector();
-      apart->SetAzmAngle_wrt_RP( TVector2::Phi_mpi_pi( apart->GetRotatedMomentum().Phi() - rpvec.Phi() ) );
-
-      TClonesArray &arr = *aParticleArray;
-      apart = (STParticle*)arr.At(idx);
-	
-      //	cout << "aft1 ->" << apart->GetIndividualRPVector().Phi() << endl;
-
-      idx++ ;
-    }
 
     mflw->Fill();
 
@@ -102,6 +111,7 @@ void SetEnvironment()
   sSuf   = gSystem -> Getenv("SUFX");
   sVer   = gSystem -> Getenv("VER");  // Version ID
   dVer   = gSystem -> Getenv("DBVER");
+  TString sRedo  = gSystem -> Getenv("REDO");
   
   if(sRun =="" || sSuf == "" || sVer == ""|| !DefineVersion()) {
     cout << " Please type " << endl;
@@ -112,12 +122,14 @@ void SetEnvironment()
   // Set RUN number
   iRun = atoi(sRun);
 
+  // set re calculation flag
+  bRedo = sRedo=="1" ? kTRUE : kFALSE;
+
   // Print Run configuration 
   cout << " ---------- CONFIGURATION ----------  " << endl;
   cout << "RUN = "      << sRun   << " with ver "  << sVer  
        << "Flow correction ver "  << dVer   << " databases " 
        << endl;
-
 }
 
 Bool_t DefineVersion()
@@ -198,7 +210,11 @@ void Open()
 void OutputTree()
 {
   //@@@
+  if( bRedo ) 
+    fname = Form("run"+sRun+"_"+sSuf+"R.v%d",iVer[0]);
+
   fname += Form(".%d.root",iVer[1]);
+
   TString fo = fname;
 
   if( !gROOT->IsBatch() && gSystem->FindFile("data/",fo) ) {

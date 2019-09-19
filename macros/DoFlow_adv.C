@@ -325,9 +325,9 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       auto theta = aPart->GetRotatedMomentum().Theta();
       auto charge= aPart->GetCharge();
 
-      auto pid   = aPart->GetPIDTight();  // = GetPID()
-      // auto pid   = aPart->GetPIDLoose();  
-      // auto pid   = aPart->GetPIDNorm();  
+      // auto pid   = aPart->GetPIDTight();  // = GetPID()
+      auto pid   = aPart->GetPIDLoose();  
+      //auto pid   = aPart->GetPIDNorm();  
 
       //----- Particle Selection -----
       Bool_t bpart = kFALSE;
@@ -370,8 +370,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       if( !bpart ) continue; //default
       //-----------------
-      if( abs( phi ) > 30.*TMath::DegToRad() ) continue;
-      //if( abs( phi ) < 150.*TMath::DegToRad() ) continue;
+      //if( abs( phi ) > 30.*TMath::DegToRad() ) continue;
+      if( abs( phi ) < 150.*TMath::DegToRad() ) continue;
       //      if( abs( phi ) > 30.*TMath::DegToRad() && abs( phi ) < 150.*TMath::DegToRad() ) continue;
       //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -1686,7 +1686,7 @@ void PsiAngleDependence()            //%% Executable :
 
   auto gv_psi2 = new TGraphErrors();
   gv_psi2->SetName("gv_psi2");
-  gv_psi2->SetTitle("; #ps2; <cos(#Delta 2#Psi)>");
+  gv_psi2->SetTitle("; #psi; <cos(#Delta 2#Psi)>");
    
 
   UInt_t id = 1;

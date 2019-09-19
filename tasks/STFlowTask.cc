@@ -38,9 +38,22 @@ STFlowTask::~STFlowTask()
 
 void STFlowTask::SetFlowTask( TClonesArray &atpcParticle )
 {
-  Clear();
-
   tpcParticle = &atpcParticle;
+
+  fflowinfo->AllClear();
+  SetFlowTask();
+}
+
+void STFlowTask::SetFlowTask()
+{
+  sum_omg2 = 0;
+  sum_omg  = 0;  
+  ntrack[4] = 0;
+  ntrack[5] = 0;
+
+  fflowinfo->Clear();
+
+
   TIter next(tpcParticle);
 
   STParticle* aParticle = NULL;
@@ -417,6 +430,7 @@ void STFlowTask::SetupFlow(STParticle &apart)
 {
   // Setup for flow analysis
 
+
   auto pid    =  apart.GetPIDLoose();
   if( pid == 211 )
     apart.SetReactionPlaneFlag(10);
@@ -425,6 +439,8 @@ void STFlowTask::SetupFlow(STParticle &apart)
 	   apart.GetdEdxFlag()       &&  // dedx <= maxdEdx
 	   apart.GetMomentumFlag()   &&    // p <= maxMomentum
 	   apart.GetNDF() >= 2       &&
+	   // apart.GetNDF() >= 20       &&
+	   apart.GetVertexAtTargetFlag() && 
 	   apart.GetDistanceAtVertex() <= 20 ) {
 
     apart.SetReactionPlaneFlag(1000);
@@ -455,7 +471,7 @@ void STFlowTask::SetupFlow(STParticle &apart)
 void STFlowTask::DoFlowAnalysis(STParticle &apart)
 {
   
-  SetupFlow( apart );
+  //  SetupFlow( apart );
 
   if( apart.GetReactionPlaneFlag() >= selReactionPlanef ){
     ntrack[4]++;
@@ -534,13 +550,6 @@ void STFlowTask::SetIndividualReactionPlane( STParticle &apart )
 
 void STFlowTask::Clear()
 {
-  ntrack[4] = 0;
-  ntrack[5] = 0;
-
-  fflowinfo->Clear();
-
-  sum_omg2 = 0;
-  sum_omg  = 0;
 }
 
 TVector3 STFlowTask::Psi_FlatteningCorrection(UInt_t isel, Int_t ival, TVector3 Pvec)
