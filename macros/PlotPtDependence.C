@@ -42,13 +42,17 @@ UInt_t iv2at = 4;
 UInt_t  bver[]  = {1, 1, 0, 0, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v40.0.1"  ,"advYPt_","|#phi|<30"},//"PID_tight"},
   {".v41.0.1"  ,"advYPt_","|#phi|<30"},//"PID_tight"},
-  {".v40.0.2"  ,"advYPt_","|#phi|>150"},//"PID_tight"}, 
   {".v41.0.2"  ,"advYPt_","|#phi|>150"},//"PID_tight"},
+  {".v40.0.1"  ,"advYPt_","|#phi|<30"},//"PID_tight"},
+  {".v40.0.2"  ,"advYPt_","|#phi|>150"},//"PID_tight"}, 
+  {".v29.1.0"  ,"advYPt_","yaw>0"} , 
+  {".v29.1.3"  ,"advYPt_","yaw<0"} , 
+  {".v41.0.9"  ,"advYPt_","all runs"},//"|#phi|<30&150"},//NDF>2"},//"PID_loose"},
+  {".v41.1.9"  ,"advYPt_","run>2334"},//"|#phi|<30&150"},//NDF>2"},//"PID_loose"},
   {".v41.0.12" ,"advYPt_","|#phi|>150"},//"PID_loose"},
+  {".v41.1.12" ,"advYPt_","run>2334"},//"|#phi|>150"},//NDF>2"},//"PID_loose"},
   {".v40.0.0"  ,"advYPt_","|#phi|<30&150"},//NDF>2"},//"PID_tight"}, 
-  {".v41.0.9"  ,"advYPt_","|#phi|<30&150"},//NDF>2"},//"PID_loose"},
   {".v41.0.11" ,"advYPt_","|#phi|<30"},//"PID_loose"},
   {".v41.0.0"  ,"advYPt_","|#phi|<30&150"},//NDF>2"},//"PID_tight"},
   {".v41.0.10" ,"advYPt_","PID_loose"},

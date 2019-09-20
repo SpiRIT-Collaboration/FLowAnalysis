@@ -174,7 +174,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   auto hpsi       = new TH2D("hpsi",";#Psi;",100, -3.14,3.14, 200,0.,1.);
   auto hpsi1      = new TH1D("hpsi1",";#Psi",200,0.,1.);
 
-  TH1I *hmult = new TH1I("hmult",";Multiplicity",80,0,80);
+  TH1I *hmult = new TH1I("hmult",";Multiplicity",100,0,100);
   TH1F *hdydptcos1[ybin1][ptbin1][mbin];
   TH1F *hdydptcos2[ybin1][ptbin1][mbin];
   TH1D *hdydpt1[ybin1][ptbin1];
@@ -1507,7 +1507,7 @@ void AzimuthalAngleDependence()            //%% Executable :
   auto fName = SetupOutputFile( fHeader );
   auto GraphSave = new TFile(fName,"recreate");
 
-  TH1I *hmult = new TH1I("hmult","multiplicity",80,0,80);
+  TH1I *hmult = new TH1I("hmult","multiplicity",100,0,100);
 
   const UInt_t nphi = 12;
   TH1I *hphibin[nphi];
@@ -1623,10 +1623,10 @@ void PsiAngleDependence()            //%% Executable :
   gROOT->Reset();
   gROOT->cd();
 
-  TString fName = "data/psi_"+ sysName + ".v"+sVer+".root";
+  TString fName = "data/bpsi_"+ sysName + ".v"+sVer+".root";
   auto GraphSave = new TFile(fName,"recreate");
 
-  TH1I *hmult = new TH1I("hmult","multiplicity",80,0,80);
+  TH1I *hmult = new TH1I("hmult","multiplicity",100,0,100);
 
   TH1I *hphibin[npsi];
   TH1D *hphi0_180[npsi];
@@ -1756,8 +1756,8 @@ void CentralityDependence()            //%% Executable :
   auto GraphSave = new TFile(fName,"recreate");
 
   
-  TH1I *hmult  = new TH1I("hmult" ,"multiplicity",80,0,80);
-  TH1I *hmult1 = new TH1I("hmult1","multiplicity",80,0,80);
+  TH1I *hmult  = new TH1I("hmult" ,"multiplicity",100,0,100);
+  TH1I *hmult1 = new TH1I("hmult1","multiplicity",100,0,100);
   TH1I *hmultbin1[mbin];
   TH1I *hmultbin4[mbin];
   TH1D *hphi0_180[mbin];
@@ -1765,9 +1765,9 @@ void CentralityDependence()            //%% Executable :
 
   for(UInt_t k = 0; k < mbin; k++){
     TString htitle = Form("hmultbin4_%d",k);
-    hmultbin4[k]  = new TH1I(htitle,"",80,0,80);
+    hmultbin4[k]  = new TH1I(htitle,"",100,0,100);
     htitle = Form("hmultbin1_%d",k);
-    hmultbin1[k]  = new TH1I(htitle,"",80,0,80);
+    hmultbin1[k]  = new TH1I(htitle,"",100,0,100);
 
     htitle = Form("hphi0_180_%d",k);
     hphi0_180[k]  = new TH1D(htitle, "",100,0.,3.2);

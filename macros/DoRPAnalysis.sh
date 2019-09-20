@@ -12,7 +12,7 @@ source runList.sh
 export MNRNF=$RNF108
 export MNDBVERSION=41
 export MNVERSION=41.1
-export MNSFX=BTt
+export MNSFX=BTtR
 export REDO=0
 ##<----
 
