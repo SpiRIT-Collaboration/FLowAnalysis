@@ -13,7 +13,10 @@ void DoRPAnalysis(Long64_t nmax = -1)
   SetEnvironment();
 
   // I/O
-  auto fflowtask = new STFlowTask(kTRUE, kTRUE, kFALSE);
+  Bool_t bCorr = kTRUE;
+  //  if( bRedo ) bCorr = kFALSE;
+
+  auto fflowtask = new STFlowTask(bCorr, kTRUE, kFALSE);
   auto fIsFlowAnalyais = fflowtask->Init(iRun, dVer);
 
   if( !fIsFlowAnalyais ) {
@@ -210,8 +213,8 @@ void Open()
 void OutputTree()
 {
   //@@@
-  if( bRedo ) 
-    fname = Form("run"+sRun+"_"+sSuf+"R.v%d",iVer[0]);
+  // if( bRedo ) 
+  //   fname = Form("run"+sRun+"_"+sSuf+"R.v%d",iVer[0]);
 
   fname += Form(".%d.root",iVer[1]);
 

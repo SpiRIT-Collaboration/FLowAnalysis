@@ -48,6 +48,7 @@ void STFlowTask::SetFlowTask()
 {
   sum_omg2 = 0;
   sum_omg  = 0;  
+  ntrack[2] = 0;
   ntrack[4] = 0;
   ntrack[5] = 0;
 
@@ -59,6 +60,9 @@ void STFlowTask::SetFlowTask()
   STParticle* aParticle = NULL;
   
   while( (aParticle = (STParticle*)next() ) ) {
+
+    if( aParticle->GetDistanceAtVertex() < 20 )
+      ntrack[2]++;
     
     SetupFlow( *aParticle );
     DoFlowAnalysis( *aParticle );

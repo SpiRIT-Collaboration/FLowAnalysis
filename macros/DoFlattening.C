@@ -26,6 +26,7 @@ UInt_t ic = -1;
 Int_t ntrack[7];
 
 Int_t iVer;
+TString dVer;
 
 TString unitpX;
 TString unitpY;
@@ -53,6 +54,8 @@ void DoFlattening(UInt_t isel = 10)
   UInt_t ichain = 0;
 
   openRunAna();
+
+  dVer   = gSystem -> Getenv("DBVER");
 
   rChain = (TChain*)gROOT->FindObject("rChain");
   if(rChain == NULL) {    

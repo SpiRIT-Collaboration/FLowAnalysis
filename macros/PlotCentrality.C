@@ -18,13 +18,15 @@ Double_t sysA[]    = {256.,    220.,      236.,   236};
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 0, 1, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn
+Bool_t bsys[]  = { 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn
 //-----------
-UInt_t  bver[]  = {1, 1, 0, 0};
+UInt_t  bver[]  = {1, 1, 1, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v41.1"  ,"mlt_",""},//"ExB&S.C."},
   {".v41.0"  ,"mlt_",""},//"ExB&S.C."},
+  {".v40.0"  ,"mlt_",""},//"ExB&S.C."},
+  {".v29.1"  ,"mlt_",""},//"ExB&S.C."},
+  {".v41.1"  ,"mlt_",""},//"ExB&S.C."},
   {".v42.0"  ,"mlt_","ExB&S.C. NDF>20"},
   {".v40.0"  ,"mlt_","ExB"},
   {".v38.0"  ,"mlt_","no corr*"},
