@@ -371,8 +371,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       if( !bpart ) continue; //default
       //-----------------
       //if( abs( phi ) > 30.*TMath::DegToRad() ) continue;
-      if( abs( phi ) < 150.*TMath::DegToRad() ) continue;
-      //      if( abs( phi ) > 30.*TMath::DegToRad() && abs( phi ) < 150.*TMath::DegToRad() ) continue;
+      //if( abs( phi ) < 150.*TMath::DegToRad() ) continue;
+      if( abs( phi ) > 30.*TMath::DegToRad() && abs( phi ) < 150.*TMath::DegToRad() ) continue;
       //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
       bFill = kTRUE;
@@ -1114,7 +1114,7 @@ Bool_t SetPsiRPResolution()
 {
   itrpvpsix = new ROOT::Math::Interpolator(20, ROOT::Math::Interpolation::kPOLYNOMIAL);
 
-  TString fname = "data/psi_"+ sysName + ".v" + sVer + ".root";
+  TString fname = "data/bpsi_"+ sysName + ".v" + sVer + ".root";
   TFile *fOpen = TFile::Open(fname);
   if( fOpen == NULL ) return kFALSE;
   
@@ -1541,7 +1541,7 @@ void AzimuthalAngleDependence()            //%% Executable :
     /// centrality selection   
     if(aflow->mtrack1 > Ucent || aflow->mtrack1 <= Lcent || aflow->mtrack4 < 6) continue;
 
-    hmult->Fill( aflow->mtrack1 );
+    hmult->Fill( aflow->mtrack2 );
     bRes = kTRUE; //@@@ 
     TIter next(aArray);
     STParticle *aPart = NULL;

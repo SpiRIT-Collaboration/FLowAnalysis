@@ -32,18 +32,19 @@ Bool_t bplot[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn
+Bool_t bsys[]  = { 1, 1, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn
 Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {1, 1, 0, 0, 0, 0, 0, 0};
+UInt_t  bver[]  = {0, 0, 1, 0, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v41.0.1"  ,"advYPt_","|#phi|<30"},//"PID_tight"},
-  {".v41.0.2"  ,"advYPt_","|#phi|>150"},//"PID_tight"},
+  {".v41.2.1"  ,"advYPt_","|#phi|<30"},//"PID_tight"},
+  {".v41.2.0"  ,"advYPt_","|#phi|<150"},//"PID_tight"},
+  {".v41.2.2"  ,"advYPt_","|#phi|>30&150"},//"PID_tight"},
   {".v40.0.1"  ,"advYPt_","|#phi|<30"},//"PID_tight"},
   {".v40.0.2"  ,"advYPt_","|#phi|>150"},//"PID_tight"}, 
   {".v29.1.0"  ,"advYPt_","yaw>0"} , 

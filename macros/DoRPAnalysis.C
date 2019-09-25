@@ -14,7 +14,10 @@ void DoRPAnalysis(Long64_t nmax = -1)
 
   // I/O
   Bool_t bCorr = kTRUE;
-  //  if( bRedo ) bCorr = kFALSE;
+  if( bRedo ) bCorr = kFALSE;
+
+  if( bCorr )
+    std::cout << " Flattening will be done. " << std::endl;
 
   auto fflowtask = new STFlowTask(bCorr, kTRUE, kFALSE);
   auto fIsFlowAnalyais = fflowtask->Init(iRun, dVer);
@@ -142,21 +145,30 @@ Bool_t DefineVersion()
   TString ver = sVer + ".";
   
   for ( Int_t i = 0; i < 2; i++) {
-    if( ver.First(".") < 0 ) break;
+    if( ver.First(".") > 0 ) {
 
-    Ssiz_t end = ver.First(".")  ;
-    TString ver1 = ver(0, end);
+      Ssiz_t end = ver.First(".")  ;
+      TString ver1 = ver(0, end);
+      
+      ver = ver(end+1, ver.Length());
+      
+      iVer[i] = atoi(ver1);
 
-    ver = ver(end+1, ver.Length());
 
-    iVer[i] = atoi(ver1);
-
-    if(i==1) bfound = kTRUE;
-
+      if(i==1) bfound = kTRUE;
+      break;
+    }
   }
+   
+  if ( !bfound ) {
+    iVer[0] = atoi( sVer );
+    iVer[1] = 0;
+    std::cout << " Input ersion number : v" << iVer[0] << "  " << iVer[1]  << std::endl;
+
+    if( iVer[0] >= 0 ) bfound = kTRUE;
+  }
+
   
-  if(!bfound)
-    std::cout << " missing version number : v" << iVer[0] << "." << iVer[1]  << std::endl;
 
   return bfound;
 }
@@ -184,7 +196,8 @@ void PrintProcess(Int_t ievt)
 
 void Open()
 { 
-  fname = Form("run"+sRun+"_"+sSuf+".v%d",iVer[0]);
+  //  fname = Form("run"+sRun+"_"+sSuf+".v%d",iVer[0]);
+  fname = "run"+sRun+"_"+sSuf+".v"+sVer;
   TString fn = fname + ".root";
   std::cout << fn << std::endl;
 
@@ -214,9 +227,9 @@ void OutputTree()
 {
   //@@@
   // if( bRedo ) 
-  //   fname = Form("run"+sRun+"_"+sSuf+"R.v%d",iVer[0]);
-
-  fname += Form(".%d.root",iVer[1]);
+  //  fname = Form("run"+sRun+"_"+sSuf+"R.v%d",iVer[0]);
+  //fname += Form(".%d.root",iVer[1]);
+  fname = "run"+sRun+"_"+sSuf+".v"+dVer+".root";
 
   TString fo = fname;
 

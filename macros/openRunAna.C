@@ -10,12 +10,14 @@ void openRunAna()
   aRun = gSystem -> Getenv("RUN");
   sSuf = gSystem -> Getenv("SUFX");
   sVer = gSystem -> Getenv("VER");  
+  dVer = gSystem -> Getenv("DBVER");
 
-  if( aRun != "" || sSuf != "" || sVer != ""){ 
+  if( aRun != "" || sSuf != "" || sVer != "" || dVer != ""){ 
     std::cout << " system " << sysName
 	      << " RUN -> " << aRun 
 	      << " : Suffix -> " << sSuf 
 	      << " : Ver --> " << sVer
+	      << " : DataBaser Version --> " << dVer
 	      << std::endl;
     OpenChain();
   }

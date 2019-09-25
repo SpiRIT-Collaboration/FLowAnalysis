@@ -26,7 +26,6 @@ UInt_t ic = -1;
 Int_t ntrack[7];
 
 Int_t iVer;
-TString dVer;
 
 TString unitpX;
 TString unitpY;
@@ -54,8 +53,6 @@ void DoFlattening(UInt_t isel = 10)
   UInt_t ichain = 0;
 
   openRunAna();
-
-  dVer   = gSystem -> Getenv("DBVER");
 
   rChain = (TChain*)gROOT->FindObject("rChain");
   if(rChain == NULL) {    
@@ -299,7 +296,7 @@ void Flatten_Psi_ntrack(UInt_t isel)
       }
     }
       
-    TString comm1 = sysName + ".v" + sVer + "." + flabel;
+    TString comm1 = sysName + ".v" + dVer + "." + flabel;
     comm1 += Form(".m%d:flatten_Psi_ntrk; ntrack>= %f && ntrack< %f ",
 		  j,ntrkbin[j],ntrkbin[j+1]);
 
