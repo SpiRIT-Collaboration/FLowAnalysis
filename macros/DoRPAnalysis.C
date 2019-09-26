@@ -119,11 +119,14 @@ void SetEnvironment()
   dVer   = gSystem -> Getenv("DBVER");
   TString sRedo  = gSystem -> Getenv("REDO");
   
-  if(sRun =="" || sSuf == "" || sVer == ""|| !DefineVersion()) {
+  if(sRun =="" || sSuf == "" || sVer == "" || !DefineVersion()) {
     cout << " Please type " << endl;
     cout << "$ RUN=#### VER=#.# SUFX=BTt root DoFlow_Analysis.C " << endl;
     exit(0);
   }
+
+  finname  = "run"+sRun+"_"+sSuf+".v"+sVer + ".root";
+  foutname = "run"+sRun+"_"+sSuf+".v"+dVer + ".root"; 
 
   // Set RUN number
   iRun = atoi(sRun);
@@ -197,13 +200,20 @@ void PrintProcess(Int_t ievt)
 void Open()
 { 
   //  fname = Form("run"+sRun+"_"+sSuf+".v%d",iVer[0]);
-  fname = "run"+sRun+"_"+sSuf+".v"+sVer;
-  TString fn = fname + ".root";
+
+  TString fn = finname;
   std::cout << fn << std::endl;
 
   if( !gSystem->FindFile("data/", fn) ) {
-    std::cout << fname << " : Input file desn't exist. "  << std::endl;
+    std::cout << finname << " : Input file desn't exist. "  << std::endl;
     exit(0);
+  }
+
+  if( finname == foutname ) {
+    std::cout << "[NOTICE] An input and an ouput files is the sane name." << std::endl;
+    
+    gSystem->Rename(fn, "data/tmp_"+finname);
+    fn = "data/tmp_"+finname;
   }
 
   rChain = new TChain("cbmsim");
@@ -229,12 +239,10 @@ void OutputTree()
   // if( bRedo ) 
   //  fname = Form("run"+sRun+"_"+sSuf+"R.v%d",iVer[0]);
   //fname += Form(".%d.root",iVer[1]);
-  fname = "run"+sRun+"_"+sSuf+".v"+dVer+".root";
-
-  TString fo = fname;
+  TString fo = foutname;
 
   if( !gROOT->IsBatch() && gSystem->FindFile("data/",fo) ) {
-    cout << fname << " is existing. Do you recreate? (y/n)" << endl;
+    std::cout << fo << " is existing. Do you recreate? (y/n)" << std::endl;
     TString sAns;
     std::cin >> sAns;
     if(sAns == "y" || sAns == "Y")
@@ -245,9 +253,9 @@ void OutputTree()
     }      
   }
   else {
-    std::cout << "Output file is " << fname << endl;
-    fname = "data/" + fname;
-    fout  = new TFile(fname,"recreate");
+    std::cout << "Output file is " << foutname << endl;
+    foutname = "data/" + foutname;
+    fout  = new TFile(foutname,"recreate");
   }
 
   mflw = new TTree("cbmsim","Flow corrected");
@@ -258,6 +266,7 @@ void OutputTree()
   if( aBDC != NULL )          mflw->Branch("STBDC",&aBDC);
   if( aParticleArray != NULL) mflw->Branch("STParticle",&aParticleArray);
   if( anewFlow != NULL)       mflw->Branch("STFlow",&anewFlow);
+
 }
 
 

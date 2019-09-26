@@ -23,6 +23,8 @@ void      PrintProcess(Int_t ievt);
 void      Open();
 void      OutputTree();
 
+TString    finname;
+TString    foutname;
 
 TClonesArray     *aBDC;
 TClonesArray     *aParticleArray;
@@ -32,7 +34,6 @@ TClonesArray     *anewFlow;
 STFlowTask       *aFlowTask;
 
 
-TString   fname;
 Long64_t  nEntry;
 TTree    *mflw;
 TFile    *fout;

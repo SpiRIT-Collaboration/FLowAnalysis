@@ -1623,10 +1623,12 @@ void PsiAngleDependence()            //%% Executable :
   gROOT->Reset();
   gROOT->cd();
 
-  TString fName = "data/bpsi_"+ sysName + ".v"+sVer+".root";
+  TString fName = Form("data/bpsi_"+ sysName + ".v"+sVer+".m%02dto%02d.root",Lcent,Ucent);
   auto GraphSave = new TFile(fName,"recreate");
 
-  TH1I *hmult = new TH1I("hmult","multiplicity",100,0,100);
+  TH1I *hmult  = new TH1I("hmult","multiplicity",100,0,100);
+  TH1I *hmult1 = new TH1I("hmult1","multiplicity",100,0,100);
+  TH1I *hmult2 = new TH1I("hmult2","multiplicity",100,0,100);
 
   TH1I *hphibin[npsi];
   TH1D *hphi0_180[npsi];
@@ -1659,9 +1661,12 @@ void PsiAngleDependence()            //%% Executable :
     Bool_t bRes  = kFALSE;
 
     /// centrality selection   
-    if(aflow->mtrack1 > Ucent || aflow->mtrack1 <= Lcent || aflow->mtrack4 < 6) continue;
+    if(aflow->mtrack2 > Ucent || aflow->mtrack2 <= Lcent || aflow->mtrack4 < 6) continue;
 
-    hmult->Fill( aflow->mtrack1 );
+    hmult ->Fill( aflow->mtrack4 );
+    hmult1->Fill( aflow->mtrack1 );
+    hmult2->Fill( aflow->mtrack2 );
+
     bRes = kTRUE; //@@@ 
     TIter next(aArray);
     STParticle *aPart = NULL;
@@ -1737,6 +1742,8 @@ void PsiAngleDependence()            //%% Executable :
 
 
   hmult->Write();
+  hmult1->Write();
+  hmult2->Write();
   hiphi->Write();
   gv_psi1->Write();
   gv_psi2->Write();
@@ -1758,6 +1765,7 @@ void CentralityDependence()            //%% Executable :
   
   TH1I *hmult  = new TH1I("hmult" ,"multiplicity",100,0,100);
   TH1I *hmult1 = new TH1I("hmult1","multiplicity",100,0,100);
+  TH1I *hmult2 = new TH1I("hmult2","multiplicity",100,0,100);
   TH1I *hmultbin1[mbin];
   TH1I *hmultbin4[mbin];
   TH1D *hphi0_180[mbin];
@@ -1785,6 +1793,7 @@ void CentralityDependence()            //%% Executable :
     if( aflow == NULL || aflow->mtrack4 <= 5 ) continue;
     hmult  -> Fill( aflow->mtrack4 );
     hmult1 -> Fill( aflow->mtrack1 );
+    hmult2 -> Fill( aflow->mtrack2 );
 
     UInt_t ik = 0;
     while( ik < mbin ) {
@@ -1792,7 +1801,7 @@ void CentralityDependence()            //%% Executable :
       ik++;
     }
     
-    hmultbin1[ik] -> Fill( aflow->mtrack1 );
+    hmultbin1[ik] -> Fill( aflow->mtrack2 );
     hmultbin4[ik] -> Fill( aflow->mtrack4 );
 
     Double_t subdphi = abs(TVector2::Phi_mpi_pi((aflow->unitP_1fc).Phi() - (aflow->unitP_2fc).Phi()));
@@ -1864,6 +1873,9 @@ void CentralityDependence()            //%% Executable :
   gv_mcos1m1->Write();
   gv_mcos2m1->Write();  
   GraphSave->Write();
+  hmult->Write();
+  hmult1->Write();
+  hmult2->Write();
 
   std::cout <<  GraphSave->GetName() << " is created. " << std::endl;
  

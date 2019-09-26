@@ -32,7 +32,7 @@ function corr(){    ## only the first run
 
 
 function allcorr(){ ## Go through from the second to the last
-    typeset -i I=1
+    typeset -i I=2
     while(( $I < ${#RUNNUMBER1[@]} ))
     do
 	RUN=${RUNNUMBER1[I]}

@@ -14,12 +14,12 @@ Double_t sysA[]    = {256.,    220.,      236.,   236};
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn
+Bool_t bsys[]  = { 1, 1, 0, 1};    //132Sn, 108Sn, 124Sn, 112Sn
 //-----------
 UInt_t  bver[]  = {1, 1, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v41.0"  ,"advYPt_",""},//"ExB&S.C."},
+  {".v41.2"  ,"advYPt_",""},//"ExB&S.C."},
   {".v41.0"  ,"advYPt_",""},//"ExB&S.C."},
   {".v41.1"  ,"advYPt_",""},//"ExB&S.C."},
   {".v42.0"  ,"advYPt_","ExB&S.C. NDF>20"},
@@ -79,11 +79,11 @@ void PlotPsiCorrection(UInt_t bmp = 0) // 0: phi, 1:mlt
 
 	if( !bver[it] ) continue;
 
-	TString fname = "data/psi_" + bName[is] + sVer[it] + ".root";
+	TString fname = "data/bpsi_" + bName[is] + sVer[it] + ".root";
 	if( bmp >= 1 )
 	  fname = "data/mlt_" + bName[is] + sVer[it] + ".root";
-	// if( it == 0 )
-	//   fname = "data/bpsi_"+ bName[is] + sVer[it] + ".root";
+	if( is == 1 )
+	   fname = "data/psi_"+ bName[is] + sVer[it] + ".root";
 
 
 	auto fOpen = TFile::Open(fname); 
