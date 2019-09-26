@@ -626,7 +626,7 @@ Bool_t STFlowTask::SetupFlowDataBase()
   }
   
   for(UInt_t i = 0; i < TMath::Min(ncount, 2); i++){
-    LOG(INFO) << " Database name is " << fname[i]  << " / " << ncount << " ( " << fIsSubeventAnalysis << FairLogger::endl;
+    LOG(INFO) << " Database name is " << fname[i]  << " / " << ncount << " (" << fIsSubeventAnalysis << ")" <<FairLogger::endl;
 
     UInt_t ihmsum = 0;
     UInt_t imtk = 0;

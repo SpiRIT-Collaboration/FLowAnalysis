@@ -44,6 +44,8 @@ Color_t icol[]   = { kRed, kBlue, kSpring, kMagenta, kOrange, kViolet};
 Color_t icolnn[] = { kPink, kBlue+1, kGreen+2, kViolet-1};
 
 TH1I *hhmult;
+TH1I *hhmult1;
+TH1I *hhmult2;
 
 void PlotCentrality()
 {
@@ -59,9 +61,13 @@ void PlotCentrality()
   }
 
   TFile *fOpen;
-  auto  lgr0 = new TLegend(0.2, 0.7, 0.50, 0.9);
-  UInt_t icc = 0;
-  TCanvas *cc = new TCanvas(Form("cc%d",icc),Form("cc%d",icc)); icc++;
+  auto  lgr1 = new TLegend(0.7, 0.7, 0.95, 0.9);
+  auto  lgr2 = new TLegend(0.7, 0.7, 0.95, 0.9);
+  auto  lgr4 = new TLegend(0.6, 0.7, 0.90, 0.9);
+ 
+  TCanvas *cc1 = new TCanvas("cc1","cc1"); 
+  TCanvas *cc2 = new TCanvas("cc2","cc2"); 
+  TCanvas *cc4 = new TCanvas("cc4","cc4"); 
 
   UInt_t ip = 0;
   for( UInt_t is = 0; is < 4; is++ ){
@@ -79,18 +85,46 @@ void PlotCentrality()
 
       std::cout << fname << " is opened. " << std::endl;
 
-      hhmult    = (TH1I*)fOpen->Get("hmult1");
-      hhmult -> SetName(Form("hmult1_%d",is));
-      hhmult -> SetTitle(";Multiplicity; Normalized");
+      hhmult    = (TH1I*)fOpen->Get("hmult");
+      hhmult -> SetName(Form("hmult_%d",is));
+      hhmult -> SetTitle("mtrack4;Multiplicity; Normalized");
       hhmult -> GetYaxis()->SetNdivisions(505);
       hhmult -> SetNormFactor(1);
       hhmult -> SetLineColor(icol[ip]);
-      hhmult -> SetMaximum(65000);
+      hhmult -> SetMaximum(85000);
+      lgr4   -> AddEntry( hhmult, label, "lp" );
+      cc4->cd();
       hhmult -> Draw( iopt[ip] );
-      lgr0   -> AddEntry( hhmult, label, "lp" );
+
+      hhmult1 = (TH1I*)fOpen->Get("hmult1");
+      hhmult1 -> SetName(Form("hmult1_%d",is));
+      hhmult1 -> SetTitle("mtrack1;Multiplicity; Normalized");
+      hhmult1 -> GetYaxis()->SetNdivisions(505);
+      hhmult1 -> SetNormFactor(1);
+      hhmult1 -> SetLineColor(icol[ip]);
+      hhmult1 -> SetMaximum(65000);
+      lgr1    -> AddEntry( hhmult1, label, "lp" );
+      cc1->cd();
+      hhmult1 -> Draw( iopt[ip] );
+
+      hhmult2 =  (TH1I*)fOpen->Get("hmult2");
+      hhmult2 -> SetName(Form("hmult2_%d",is));
+      hhmult2 -> SetTitle("mtrack2;Multiplicity; Normalized");
+      hhmult2 -> GetYaxis()->SetNdivisions(505);
+      hhmult2 -> SetNormFactor(1);
+      hhmult2 -> SetLineColor(icol[ip]);
+      hhmult2 -> SetMaximum(65000);
+      lgr2    -> AddEntry( hhmult, label, "lp" );
+      cc2->cd();
+      hhmult2 -> Draw( iopt[ip] );
 
       ip++;
     }
   }
-  lgr0->Draw();
+  cc1->cd();
+  lgr1->Draw();
+  cc2->cd();
+  lgr2->Draw();
+  cc4->cd();
+  lgr4->Draw();
 }

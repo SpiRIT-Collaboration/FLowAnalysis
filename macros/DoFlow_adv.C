@@ -57,7 +57,8 @@ UInt_t   GetPsiRPIndex(Double_t aVal);
 UInt_t   GetRPCorrIndex(Double_t mult);
 void     CentralityDependence(); 
 void     PsiAngleDependence(); 
-
+TString  GetPsiRPFileName();
+void     GetResolution();
 Double_t  GetError(Double_t x, Double_t y, Double_t xe, Double_t ye)
 {
   if( y == 0 && ye == 0 ) return 0.;
@@ -114,8 +115,53 @@ void DoFlow_adv(Int_t isel = 0)
     PsiAngleDependence()   ;
   }
 
+  else if( isel == -3 ) 
+    GetResolution();
+
 }
 
+void GetResolution()
+{
+  TH1I *hmult = new TH1I("hmult",";Multiplicity",100,0,100);
+  TH1D *hphi0_180  = new TH1D("hphi0_180" , "0to180",100,0.,3.2);
+  TH1D *hphi90_180 = new TH1D("hphi90_180","90to180",100,0.,3.2);
+
+  Int_t nevt = SetBranch();  
+  //--------------------------------------------------
+  //--- Event Loop
+  //--------------------------------------------------
+  for(Int_t i = 0; i < nevt; i++){
+
+    rChain->GetEntry(i);
+    STFlowInfo *aflow = (STFlowInfo*)aFlowArray->At(0);
+
+    if( aflow->mtrack4 < 3 ) continue;
+
+    Double_t subevt_phi = abs(TVector2::Phi_mpi_pi((aflow->unitP_1fc).Phi()-
+						   (aflow->unitP_2fc).Phi()));
+      
+    hphi0_180->Fill( subevt_phi );
+    if( subevt_phi > TMath::Pi()/2. )
+      hphi90_180->Fill( subevt_phi );
+
+    hmult->Fill( aflow->mtrack2 );
+
+  }
+
+  auto reaolution = GetRPResolutionwChi(hphi0_180, hphi90_180);
+
+  std::cout << " <cos (d phi) > = " << *reaolution << std::endl;
+
+
+  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+  hmult->Draw();
+
+  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+  hphi0_180->Draw();
+  hphi90_180->SetLineColor(2);
+  hphi90_180->Draw("same");
+  
+}
 
 //pdt
 void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
@@ -1110,11 +1156,16 @@ Double_t *GetPsiRPResolution(UInt_t ival)
 }
 
   //**************************************************
+TString GetPsiRPFileName()
+{
+  return  Form("data/bpsi_"+ sysName + ".v"+sVer+".m%02dto%02d.root",Lcent,Ucent);
+}
+
 Bool_t SetPsiRPResolution()
 {
   itrpvpsix = new ROOT::Math::Interpolator(20, ROOT::Math::Interpolation::kPOLYNOMIAL);
 
-  TString fname = "data/bpsi_"+ sysName + ".v" + sVer + ".root";
+  TString fname = GetPsiRPFileName(); 
   TFile *fOpen = TFile::Open(fname);
   if( fOpen == NULL ) return kFALSE;
   
@@ -1342,15 +1393,14 @@ void FlatteningCheck()
 
 
   //----- Drawing 
-  ic++;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
   hphitheta->Draw("colz");
 
-  ic++;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
   hphimtrck->Draw("colz");
 
 }
+
 
 
 
@@ -1623,7 +1673,7 @@ void PsiAngleDependence()            //%% Executable :
   gROOT->Reset();
   gROOT->cd();
 
-  TString fName = Form("data/bpsi_"+ sysName + ".v"+sVer+".m%02dto%02d.root",Lcent,Ucent);
+  TString fName = GetPsiRPFileName();
   auto GraphSave = new TFile(fName,"recreate");
 
   TH1I *hmult  = new TH1I("hmult","multiplicity",100,0,100);

@@ -11,8 +11,8 @@ source runList.sh
 #RNF132="2841"
 
 ##------>>> EDIT HERE 
-export MNRNF=$RNF132
-export MNINVERSION=41.2
+export MNRNF=$RNF112
+export MNINVERSION=41.3
 export MNVERSION=41.2
 export MNSFX=BTt
 export REDO=0
@@ -77,6 +77,7 @@ echo "type flattenandcorrection <- all full process"
 echo "type correction <- correction only"
 
 function flattenandcorrection() {
+    export REDO=0
     flattening
     RUN=${RUNNUMBER1[0]} VER=$MNINVERSION SUFX=$MNSFX DBVER=$MNVERSION root -b -q DoRPAnalysis.C
     allcorr
