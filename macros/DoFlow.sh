@@ -4,10 +4,10 @@ source setup.sh
 
 ##---->>> EDIT here
 export MNMACRO=DoFlow_adv.C        ##<--- MACRO name
-export MNRNF={$RNF132}             ##<--- 
+export MNRNF={$RNF108}             ##<--- 
 export MNDB=BTt                    ##<---
 export MNVERSION=41.2              ##   <------@@ input 
-export MNOVER=2
+export MNOVER=4
 ##<-----------
 
 export MNrunOne='SUFX=$MNDB  VER=$MNVERSION root $MACRO.C'
@@ -34,17 +34,17 @@ function doflowmulti()
 
 function doflowbatch() 
 {
-    LC=0 UC=60 RUN=$MNRNF VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($1\)
+    LC=0 UC=40 RUN=$MNRNF VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($1\)
 }
 
 function doflow() 
 {
     if [ -n "$2" ]; then
 	export MNOVER=$2
-	echo $2 and $MNOVER
+	echo "output version -> "  $MNOVER
     fi
 
-    LC=0 UC=60 RUN=$MNRNF VER=$MNVERSION OUTVER=$MNOVER root $MNMACRO\($1\)
+    LC=0 UC=40 RUN=$MNRNF VER=$MNVERSION OUTVER=$MNOVER root $MNMACRO\($1\)
 }
 
 echo $MNVERSION to $MNOVER
@@ -59,8 +59,14 @@ echo "Type  run #(partid) #(Output version)"
 
 function doflowmdependence() 
 {
-    LC=0  UC=45  RUN=$MNRNF VER=$MNVERSION OUTVER=4 root -b -q $MNMACRO\(8\) 
-    LC=45 UC=55  RUN=$MNRNF VER=$MNVERSION OUTVER=5 root -b -q $MNMACRO\(8\) 
-    LC=55 UC=65  RUN=$MNRNF VER=$MNVERSION OUTVER=6 root -b -q $MNMACRO\(8\) 
-    LC=65 UC=100 RUN=$MNRNF VER=$MNVERSION OUTVER=7 root -b -q $MNMACRO\(8\)
+    
+    LC=0  UC=30  RUN=$MNRNF VER=$MNVERSION root -b -q $MNMACRO\(-4\)  
+    LC=30 UC=40  RUN=$MNRNF VER=$MNVERSION root -b -q $MNMACRO\(-4\)
+    LC=40 UC=50  RUN=$MNRNF VER=$MNVERSION root -b -q $MNMACRO\(-4\)
+    LC=50 UC=80  RUN=$MNRNF VER=$MNVERSION root -b -q $MNMACRO\(-4\)
+
+    LC=0  UC=30  RUN=$MNRNF VER=$MNVERSION OUTVER=5 root -b -q $MNMACRO\(8\)   
+    LC=30 UC=40  RUN=$MNRNF VER=$MNVERSION OUTVER=6 root -b -q $MNMACRO\(8\) 
+    LC=40 UC=50  RUN=$MNRNF VER=$MNVERSION OUTVER=7 root -b -q $MNMACRO\(8\) 
+    LC=50 UC=80  RUN=$MNRNF VER=$MNVERSION OUTVER=8 root -b -q $MNMACRO\(8\) 
 }

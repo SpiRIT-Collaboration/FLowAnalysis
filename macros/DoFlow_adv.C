@@ -102,10 +102,12 @@ void DoFlow_adv(Int_t isel = 0)
 
   std::cout << " Multiplicity :: " << Lcent << " to " << Ucent << std::endl;
 
-  std::cout << " Output Version v" << sVer << "." << gSystem->Getenv("OUTVER") << std::endl;
   //==================================================
+  if( isel > -1 )
+    std::cout << " Output Version v" << sVer << "." << gSystem->Getenv("OUTVER") << std::endl;
 
-  if( isel > 0 )
+
+  if( isel > 0 ) 
     PlotPtDependence((UInt_t)isel);  
   else if( isel == -1 )
     PlotPtDependence(0);  
@@ -117,6 +119,10 @@ void DoFlow_adv(Int_t isel = 0)
 
   else if( isel == -3 ) 
     GetResolution();
+
+  else if( isel == -4 ) {
+    PsiAngleDependence()   ;
+  }
 
 }
 
@@ -338,9 +344,9 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     }
 
     /// centrality selection
-    if(aflow->mtrack1 > Ucent || aflow->mtrack1 <= Lcent || aflow->mtrack4 < 6) continue;
+    if(aflow->mtrack2 > Ucent || aflow->mtrack2 <= Lcent || aflow->mtrack4 < 6) continue;
 
-    hmult->Fill( aflow->mtrack1 );
+    hmult->Fill( aflow->mtrack2 );
 
     bRes = kTRUE; //@1
 

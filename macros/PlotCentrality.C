@@ -113,7 +113,7 @@ void PlotCentrality()
       hhmult2 -> GetYaxis()->SetNdivisions(505);
       hhmult2 -> SetNormFactor(1);
       hhmult2 -> SetLineColor(icol[ip]);
-      hhmult2 -> SetMaximum(65000);
+      hhmult2 -> SetMaximum(70000);
       lgr2    -> AddEntry( hhmult, label, "lp" );
       cc2->cd();
       hhmult2 -> Draw( iopt[ip] );
