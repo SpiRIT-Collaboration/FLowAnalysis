@@ -463,7 +463,6 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
     ntrack[2]++;
     
   }
-
   
   //--- Set up for flow ---;
   if( fIsFlowAnalysis ) {

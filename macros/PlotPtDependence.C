@@ -23,13 +23,13 @@ Bool_t bplot[] =
     0, // 4 v1 and v2 in individual windows
     0, // 5 Acceptance ypt
     0, // 6 <px>/A
-    1, // 7 v1 vs part system dependence
-    1, // 8 v2_min system dependence 
+    0, // 7 v1 vs part system dependence
+    0, // 8 v2_min system dependence 
     0  // 9 v1 slope and v2 max dependence on m
   };
 
 Bool_t bstyle[] =
-  { 1,  // 0 132Sn p,d,t, v1v2-y (for NUSYM2019)
+  { 0,  // 0 132Sn p,d,t, v1v2-y (for NUSYM2019)
     0   // 1 Model comparison 
   };
 //==================================================
@@ -37,8 +37,8 @@ Bool_t bstyle[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 1, 0, 1};    //132Sn, 108Sn, 124Sn, 112Sn
-Bool_t bpid[]  = { 1, 1, 1, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bsys[]  = { 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn
+Bool_t bpid[]  = { 0, 0, 0, 0, 0, 0, 1}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
@@ -101,6 +101,7 @@ TString amdHeader[] = {"amd_132Sn124Sn270AMeV_cluster_",
 UInt_t   ccvid = 0;
 auto lslope = new TF1("lslope","[0]+[1]*x",-1., 1.);
 auto fv1fit = new TF1("fv1fit","[0]+[1]*x+[2]*x^3",-0.5,1.3);
+auto fv2fit = new TF1("fv2fit","[0]+[1]*x^2+[2]*x^4",0.,1.1);
 
 // --> configuration
 Size_t  imsz[] = {1, 1, 1.3, 1.3, 1.3, 1.3, 1.3};
@@ -551,7 +552,8 @@ void PlotPtDependence()
 	  yv2->SetMarkerStyle(imark[is]+4);
 	yv2->SetMarkerSize(imsz[is]);
 	yv2->SetLineColor(icolor);
-	
+
+
 	mrv2->Add(yv2,"lp");
 	lgr2->AddEntry(yv2,  otitle ,"lp");
 	// --end of rapidity dependence
@@ -787,8 +789,6 @@ void PlotPtDependence()
     aLineX2->Draw();
   }
 
-
-
   if( bplot[0] && bplot[5] ) {
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),500,700);
     cc->Divide(1,ngr);
@@ -828,7 +828,6 @@ void PlotPtDependence()
   }
 
 
-
   if( bplot[0] && bplot[4] ) {  // individual pt plots  
 
     UInt_t ichoise[]={0,1,4};
@@ -854,7 +853,7 @@ void PlotPtDependence()
       mv1[i]->Write();
     }
 
-    UInt_t ichoise2[] = {1};
+    UInt_t ichoise2[] = {0,1,2,3,4,5};
     for(UInt_t i : ichoise2) {
       cc = new TCanvas(Form("cv%d",i+10),Form("cv%d",i+10),500,550);
       cc->SetRightMargin(0.02);
@@ -870,6 +869,7 @@ void PlotPtDependence()
       mv2[i]->GetYaxis()->SetTitleOffset(2.5);
 
       //      mv2[i]->GetXaxis()->SetRangeUser(0.,1.5);
+      mv2[i]->Fit("fv2fit","","",0.,1.1);
       mv2[i]->Draw("ALP");
       lg2[i]->Draw();
 

@@ -124,14 +124,15 @@ private:
   
   void     Initialize();
 
-  //private:
   void     SetProperty();
+  void     SetRotatedPt();                       
 
   void     CheckKATANAHit(){};
   void     CheckKYOTOHit(){};
 
 
 public:
+  void     Clean()                       {Clear();}
   void     SetRecoTrack(STRecoTrack *atrack);
   void     SetVATrack(STGenfitVATask *atrack);
 
@@ -176,7 +177,7 @@ public:
 
   void     SetIndividualRPVector(TVector3 vec)  {frpv = vec;}
   TVector3 GetIndividualRPVector()              {return frpv;}
-  void     SetRotatedMomentum(TVector3 value)   {fRotatedP3 = value;}
+  void     SetRotatedMomentum(TVector3 value)   {fRotatedP3 = value; SetRotatedPt(); SetLorentzVector();}
   TVector3 GetRotatedMomentum()                 {return fRotatedP3;}
   TVector2 GetRotatedPt()                       {return fRotatedPt;}
   void     SetLorentzVector();

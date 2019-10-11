@@ -90,7 +90,7 @@ void OpenChain()
   for(Int_t i = 0; i < (Int_t)lrun.size(); i++){
     TString rootdir = "data/"; 
 
-    TString fname = Form("run%d",lrun.at(i))+fform;
+    TString fname = Form("run%04d",lrun.at(i))+fform;
     cout << fname << endl;
 
     if(gSystem->FindFile(rootdir,fname)) {
@@ -156,7 +156,8 @@ UInt_t SetBranch()
     aArray->Clear();
 
   rChain->SetBranchAddress("STParticle",&aArray);
-  rChain->SetBranchAddress("STFlow"    ,&aFlowArray);
+  //  rChain->SetBranchAddress("STFlow"    ,&aFlowArray);
+  rChain->SetBranchAddress("STFlowInfo"    ,&aFlowArray);
 
   return rChain->GetEntries();
 }

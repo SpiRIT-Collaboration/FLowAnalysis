@@ -323,13 +323,17 @@ void  STParticle::RotateAlongBeamDirection(Double_t valuex, Double_t valuey)
   fRotatedP3.RotateY(-valuex);
   fRotatedP3.RotateX(-valuey);
 
-  fRotatedPt = TVector2( fRotatedP3.X(), fRotatedP3.Y());
-  fPxz       = TVector2( fRotatedP3.Z(), fRotatedP3.X());
-  fPyz       = TVector2( fRotatedP3.Z(), fRotatedP3.Y());
+  SetRotatedPt();
 
   bRotated = kTRUE;
 }
 
+void STParticle::SetRotatedPt()
+{
+  fRotatedPt = TVector2( fRotatedP3.X(), fRotatedP3.Y());
+  fPxz       = TVector2( fRotatedP3.Z(), fRotatedP3.X());
+  fPyz       = TVector2( fRotatedP3.Z(), fRotatedP3.Y());  
+}
 
 void STParticle::SetPiPID()
 {

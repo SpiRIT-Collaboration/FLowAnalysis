@@ -4,12 +4,14 @@ source setup.sh
 
 ##---->>> EDIT here
 export MNMACRO=DoFlow_adv.C        ##<--- MACRO name
-export MNRNF={$RNF108}             ##<--- 
-export MNDB=BTt                    ##<---
-export MNVERSION=41.2              ##   <------@@ input 
-export MNOVER=4
+export MNRNF={$RNFSIM}             ##<--- 
+export MNDB=rpsim ##BTt                    ##<---
+export MNVERSION=0              ##   <------@@ input 
+export MNOVER=0
 ##<-----------
 
+
+export SUFX=$MNDB
 export MNrunOne='SUFX=$MNDB  VER=$MNVERSION root $MACRO.C'
 
 function doflowmulti()

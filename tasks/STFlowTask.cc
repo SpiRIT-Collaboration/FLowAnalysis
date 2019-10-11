@@ -54,7 +54,6 @@ void STFlowTask::SetFlowTask()
 
   fflowinfo->Clear();
 
-
   TIter next(tpcParticle);
 
   STParticle* aParticle = NULL;
@@ -112,6 +111,7 @@ void STFlowTask::SetFlowInfo(STFlowInfo *aflowinfo)
 {
   fflowinfo = aflowinfo;
 
+
   ntrack[0] = fflowinfo->mtrack0;
   ntrack[1] = fflowinfo->mtrack1;
   ntrack[2] = fflowinfo->mtrack2;
@@ -119,6 +119,9 @@ void STFlowTask::SetFlowInfo(STFlowInfo *aflowinfo)
   ntrack[4] = fflowinfo->mtrack4;
   ntrack[5] = fflowinfo->mtrack5;
   ntrack[6] = fflowinfo->mtrack6;
+
+  LOG(INFO) << "STFlowTask::SetFlowInfo is called. " << ntrack[4] << FairLogger::endl;
+
 }
 
 void   STFlowTask::SetNTrack(UInt_t *nval)
@@ -136,8 +139,6 @@ Bool_t STFlowTask::SetupParameters()
 
 void STFlowTask::FinishEvent()
 {
-  LOG(DEBUG) << "STFlowTask::FinishEvent is called. " << ntrack[4] << FairLogger::endl;
-
   fflowinfo->SetNTrack(ntrack);
 
   DoIndividualReactionPlaneAnalysis();
@@ -439,13 +440,14 @@ void STFlowTask::SetupFlow(STParticle &apart)
   if( pid == 211 )
     apart.SetReactionPlaneFlag(10);
 
-  else if( pid > 2000 &&  
-	   apart.GetdEdxFlag()       &&  // dedx <= maxdEdx
-	   apart.GetMomentumFlag()   &&    // p <= maxMomentum
-	   apart.GetNDF() >= 2       &&
-	   // apart.GetNDF() >= 20       &&
-	   apart.GetVertexAtTargetFlag() && 
-	   apart.GetDistanceAtVertex() <= 20 ) {
+  else if( apart.GetReactionPlaneFlag() == 1111 || // for simulation
+	  ( pid > 2000 &&  
+	    apart.GetdEdxFlag()       &&  // dedx <= maxdEdx
+	    apart.GetMomentumFlag()   &&    // p <= maxMomentum
+	    apart.GetNDF() >= 2       &&
+	    // apart.GetNDF() >= 20       &&
+	    apart.GetVertexAtTargetFlag() && 
+	    apart.GetDistanceAtVertex() <= 20 )) {
 
     apart.SetReactionPlaneFlag(1000);
 
@@ -484,7 +486,6 @@ void STFlowTask::DoFlowAnalysis(STParticle &apart)
 
     TVector2 upt = apart.GetRotatedPt().Unit();
     fflowinfo->unitP += apart.GetRPWeight() * TVector3( upt.X(), upt.Y(), 0.);
-
 
     sum_omg2 += pow(apart.GetRPWeight(), 2);
     sum_omg  += apart.GetRPWeight();
@@ -538,8 +539,9 @@ void STFlowTask::SetIndividualReactionPlane( STParticle &apart )
   
   LOG(DEBUG) << " RP x " << mExcRP.X() << " <<- " << befv  << " num " << tpcParticle->GetEntries() << FairLogger::endl;
 
-  if(itraex > 0 ) { 
-    auto rcvec = DoFlattening( mExcRP, itraex );
+  if(itraex > 0 ) {
+    TVector3 rcvec = fIsFlowCorrection == kTRUE ?  DoFlattening( mExcRP, itraex ) : mExcRP ;
+
     apart.SetIndividualRPVector( rcvec );
     apart.SetIndividualRPAngle( rcvec.Phi() );
     apart.SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( apart.GetRotatedMomentum().Phi() - rcvec.Phi()));
