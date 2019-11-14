@@ -1,4 +1,5 @@
 #include "DoRPAnalysis.h"
+#include "RunToSystemID.h"
 //----------------------------------------------------------------------
 // DoFlowAnalysis.C 
 // input: 
@@ -35,21 +36,21 @@ void DoRPAnalysis(Long64_t nmax = -1)
   for(Long64_t ievt = 0; ievt < nEntry; ievt++){
 
     PrintProcess(ievt);
-
     rChain->GetEntry(ievt);
 
     //------ Event selection
-    auto aFlowInfo = (STFlowInfo*)aFlowArray->At(0);
+    aFlowInfo = (STFlowInfo*)aFlowArray->At(0);
     if( aFlowInfo == NULL ) continue;
+    beamPID = aFlowInfo->beamPID;
 
     if( iVer[0] > 38 ) {
-      if( aFlowInfo->goodEventf == 0 || aFlowInfo->beamPID == 0 )
+      if( aFlowInfo->goodEventf == 0 || beamPID == 0 )
 	continue;
     }
     else
-      if( aFlowInfo->beamPID == 0 ) continue;
+      if( beamPID == 0 ) continue;
     
-    if( aFlowInfo->beamPID == 124 ){
+    if( beamPID == 124 ){
       if( (aFlowInfo->mtrack1*0.8-20) > aFlowInfo->mtrack4 ) continue;
     }
     //------ end of event selection
@@ -67,6 +68,8 @@ void DoRPAnalysis(Long64_t nmax = -1)
       UInt_t idx = 0;
       while( (apart = (STParticle*)next()) ) {
 
+	//	cout << "bef  ->" << apart->GetIndividualRPVector().Phi() << endl;
+
 	fflowtask->SetIndividualReactionPlane( *apart );
 	TVector3 rpvec = apart->GetIndividualRPVector();
 	apart->SetAzmAngle_wrt_RP( TVector2::Phi_mpi_pi( apart->GetRotatedMomentum().Phi() - rpvec.Phi() ) );
@@ -75,7 +78,6 @@ void DoRPAnalysis(Long64_t nmax = -1)
 	apart = (STParticle*)arr.At(idx);
 	
 	//	cout << "aft1 ->" << apart->GetIndividualRPVector().Phi() << endl;
-
 	idx++ ;
       }
     }
@@ -115,29 +117,34 @@ void SetEnvironment()
 
   sRun   = gSystem -> Getenv("RUN");  // RUN number
   sSuf   = gSystem -> Getenv("SUFX");
-  sVer   = gSystem -> Getenv("VER");  // Version ID
-  dVer   = gSystem -> Getenv("DBVER");
+  sVer   = gSystem -> Getenv("VER");  // input version
+  oVer   = gSystem -> Getenv("OVER"); // output version
+  dVer   = gSystem -> Getenv("DBVER");// database version
+
   TString sRedo  = gSystem -> Getenv("REDO");
   
   if(sRun =="" || sSuf == "" || sVer == "" || !DefineVersion()) {
     cout << " Please type " << endl;
-    cout << "$ RUN=#### VER=#.# SUFX=BTt root DoFlow_Analysis.C " << endl;
+    cout << "Check settings of environments " << endl;
     exit(0);
   }
 
   finname  = "run"+sRun+"_"+sSuf+".v"+sVer + ".root";
-  foutname = "run"+sRun+"_"+sSuf+".v"+dVer + ".root"; 
+  foutname = "run"+sRun+"_"+sSuf+".v"+oVer + ".root"; 
 
   // Set RUN number
   iRun = atoi(sRun);
+  RunToSystemID(iRun);
 
   // set re calculation flag
   bRedo = sRedo=="1" ? kTRUE : kFALSE;
 
   // Print Run configuration 
   cout << " ---------- CONFIGURATION ----------  " << endl;
-  cout << "RUN = "      << sRun   << " with ver "  << sVer  
-       << "Flow correction ver "  << dVer   << " databases " 
+  cout << " Input file  -> " << finname 
+       << " Output file -> " << foutname
+       << " flow correction database version -> v." << dVer
+       << " ReDo ? " << bRedo
        << endl;
 }
 
@@ -228,7 +235,12 @@ void Open()
   aBDC = new TClonesArray("STBDC", 1);
   aParticleArray = new TClonesArray("STParticle",100);
 
-  rChain->SetBranchAddress("STBDC"     ,&aBDC);
+  
+  if( isys < 4)
+    rChain->SetBranchAddress("STBDC"     ,&aBDC);
+  else if( isys == 4 ) 
+    rChain->SetBranchAddress("RPPsi"     ,&RPPsi);
+
   rChain->SetBranchAddress("STParticle",&aParticleArray);
   rChain->SetBranchAddress("STFlow",    &aFlowArray);
 
@@ -263,10 +275,12 @@ void OutputTree()
   anewFlow = new TClonesArray("STFlowInfo",1);
 
   //-- output                                                                                                              
-  if( aBDC != NULL )          mflw->Branch("STBDC",&aBDC);
+  if( aBDC != NULL && beamPID != 100)  mflw->Branch("STBDC",&aBDC);
   if( aParticleArray != NULL) mflw->Branch("STParticle",&aParticleArray);
   if( anewFlow != NULL)       mflw->Branch("STFlow",&anewFlow);
-
+  if( isys  == 4 )            mflw->Branch("RPPsi" ,&RPPsi);
+    
+ 
 }
 
 

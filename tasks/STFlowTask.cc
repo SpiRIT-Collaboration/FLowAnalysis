@@ -120,7 +120,7 @@ void STFlowTask::SetFlowInfo(STFlowInfo *aflowinfo)
   ntrack[5] = fflowinfo->mtrack5;
   ntrack[6] = fflowinfo->mtrack6;
 
-  LOG(INFO) << "STFlowTask::SetFlowInfo is called. " << ntrack[4] << FairLogger::endl;
+  LOG(DEBUG) << "STFlowTask::SetFlowInfo is called. " << ntrack[4] << FairLogger::endl;
 
 }
 
@@ -156,7 +156,7 @@ void STFlowTask::FinishEvent()
 Bool_t STFlowTask::DoFlattening()
 {
   if( aflowcorrArray[0] != NULL ) {
-    
+ 
     fflowinfo->unitP_fc = Psi_FlatteningCorrection( 0, ntrack[4], fflowinfo->unitP);
     fflowinfo->unitP_rc = Psi_ReCenteringCorrection(0, ntrack[4], fflowinfo->unitP);
     
@@ -540,11 +540,13 @@ void STFlowTask::SetIndividualReactionPlane( STParticle &apart )
   LOG(DEBUG) << " RP x " << mExcRP.X() << " <<- " << befv  << " num " << tpcParticle->GetEntries() << FairLogger::endl;
 
   if(itraex > 0 ) {
-    TVector3 rcvec = fIsFlowCorrection == kTRUE ?  DoFlattening( mExcRP, itraex ) : mExcRP ;
+    TVector3 rcvec = fIsFlowCorrection == kTRUE ?  DoFlattening( mExcRP, itraex + 1 ) : mExcRP ;
 
     apart.SetIndividualRPVector( rcvec );
     apart.SetIndividualRPAngle( rcvec.Phi() );
     apart.SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( apart.GetRotatedMomentum().Phi() - rcvec.Phi()));
+
+    LOG(DEBUG) << " phi " << rcvec.Phi() << " <<- " << mExcRP.Phi() << " " << fIsFlowCorrection << FairLogger::endl;
   }
   else {
     apart.SetIndividualRPVector( TVector3(-999.,0.,0.) );

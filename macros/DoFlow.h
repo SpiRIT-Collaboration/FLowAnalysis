@@ -1,6 +1,6 @@
 
-TString fsys[] = {"^{132}Sn+^{124}Sn","^{108}Sn+^{112}Sn","^{124}Sn+^{112}Sn","^{112}Sn+^{124}Sn"};
-TString lsys[] = {"^{132}Sn",        "^{108}Sn",            "^{124}Sn",           "^{112}Sn"};
+TString fsys[] = {"^{132}Sn+^{124}Sn","^{108}Sn+^{112}Sn","^{124}Sn+^{112}Sn","^{112}Sn+^{124}Sn", "RPSim"};
+TString lsys[] = {"^{132}Sn",        "^{108}Sn",            "^{124}Sn",           "^{112}Sn"     , "^{100}Sn"  };
 TString rsys[] = {"132",        "108",        "124",        "112"};
 TString tsys[] = {"124",        "112",        "112",        "124"};
 TString fpid[] = {"proton","deuteron","triton","3He","4He","neutron","H"};  
@@ -8,8 +8,8 @@ TString lpid[] = {"1H",    "2H",      "3H"    ,"3He","4He","N"      ,"H"};
 
 const UInt_t nsys = 4;
 const UInt_t nprt = 5;
-TString  iopt[]     = {"","same","same","same","same", "same"};
-UInt_t   imark[]    = {20, 21, 22, 23, 25, 26, 24};  
+TString  iopt[]     = {"","same","same","same","same", "same", "same"};
+UInt_t   imark[]    = {20, 21, 22, 23, 25, 26, 24, 20};  
 
 UInt_t ic = -1;
 TCanvas *cc;
@@ -18,10 +18,12 @@ UInt_t id = 0;
 
 
 //Double_t yrange1[] = { -0.8, -0.25, -0.15, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45, 0.5, 0.8};
-Double_t yrange1[] = { -0.2, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45, 0.5};
+Double_t yrange1[] = {-0.5, -0.45, -0.35, -0.25, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45, 0.5};
+// data Double_t yrange1[] = { -0.2, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45, 0.5};
 const UInt_t ybin1 = sizeof(yrange1)/sizeof(Double_t);
 //Double_t yrange2[] = { -0.8, -0.2, -0.05,  0.05, 0.2, 0.35, 0.5, 0.8};
-Double_t yrange2[] = { -0.2, -0.05,  0.05, 0.2, 0.35, 0.5};
+// data Double_t yrange2[] = { -0.2, -0.05,  0.05, 0.2, 0.35, 0.5};
+Double_t yrange2[] = { -0.5, -0.35, -0.2, -0.05,  0.05, 0.2, 0.35, 0.5};
 const UInt_t ybin2 = sizeof(yrange2)/sizeof(Double_t);
 
 Double_t y_cm[]  = { 0.382453, 0.364873, 0.390302, 0.354066};
@@ -48,6 +50,7 @@ const UInt_t mbin = sizeof(mrange)/sizeof(UInt_t);
 
 Int_t  Lcent = 0;  // {75, 45, 30, 20, 0};
 Int_t  Ucent = 80;
+Int_t  RPBase;
 
 const UInt_t npsi = 12; // Number of bin in Psi
 

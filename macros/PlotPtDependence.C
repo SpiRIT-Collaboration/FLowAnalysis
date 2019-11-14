@@ -1,5 +1,6 @@
 #include "DoFlow.h"
 #include "SetStyle.C"
+#include "SimFunction.C"
 
 struct gplot{
   TString Version;
@@ -7,10 +8,10 @@ struct gplot{
   TString comment;
 };
 
+TString  bName[]   = {"132Sn_","108Sn_","124Sn_","112Sn_","100Sn_"};
+Double_t sysdlt[]  = {0.22,    0.09,      0.15,   0.15   , 0.22};
+Double_t sysA[]    = {256.,    220.,      236.,   236.   ,  256.};
 
-TString  bName[]   = {"132Sn_","108Sn_","124Sn_","112Sn_"};
-Double_t sysdlt[]  = {0.22,    0.09,      0.15,   0.15};
-Double_t sysA[]    = {256.,    220.,      236.,   236};
 
 //==================================================
 //-- plot configuration
@@ -30,24 +31,41 @@ Bool_t bplot[] =
 
 Bool_t bstyle[] =
   { 0,  // 0 132Sn p,d,t, v1v2-y (for NUSYM2019)
-    0   // 1 Model comparison 
+    0,  // 1 Model comparison 
+    0,  //   RPSim fv1y and fv2y is plotted.
   };
 //==================================================
 
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn
-Bool_t bpid[]  = { 0, 0, 0, 0, 0, 0, 1}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bsys[]  = { 0, 0, 0, 0, 1};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
+Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {1, 0, 0, 0, 0, 0, 0, 0};
+UInt_t  bver[]  = {1, 0, 0, 0, 0, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v41.2.4"  ,"advYPt_",""},//m2_0to50&&|#phi|>30&150"},
+  {""         ,"advYPt_",""},
+  {".v11.0"   ,"advYPt_",""},
+  {".v7.4"    ,"advYPt_","fc-All"},
+  {".v7.2"    ,"advYPt_","fc-#phi<45"},
+  {".v7.3"    ,"advYPt_","fc-#fc>45"},
+  {".v8.0"    ,"advYPt_","org-All"},
+  {".v8.1"    ,"advYPt_","org-#phi<45"},
+  {".v8.2"    ,"advYPt_","org-#fc>45"},
+  {".v5.5"    ,"advYPt_","{phi}<30or150"},
+  {".v5.12"   ,"advYPt_",""},
+  {".v5.4"    ,"advYPt_","allphi"},
+  {".v5.10"   ,"advYPt_","|pitch/yaw|<1"},
+  {".v3.1"    ,"advYPt_","1.6e+6"},
+  {".v3.2"    ,"advYPt_","1e+6"},
+  {".v3.3"    ,"advYPt_","1e+6"},
+  {".v41.2.10" ,"advYPt_","All Phi"},//m2_0to50&&|#phi|>30&150"},
+  {".v41.2.4"  ,"advYPt_","|#phi|>30&150"},
   {".v41.2.5"  ,"advYPt_",""},//m2_0to50&&|#phi|>30&150"},
   {".v41.2.6"  ,"advYPt_",""},//m2_0to50&&|#phi|>30&150"},
   {".v41.2.7"  ,"advYPt_",""},//m2_0to50&&|#phi|>30&150"},
@@ -56,6 +74,10 @@ gplot gnames[] = {
   {".v41.2.2"  ,"advYPt_","|#phi|>30&150"},
   {".v41.2.3"  ,"advYPt_","|#phi|<30"},
   {".v41.2.0"  ,"advYPt_","|#phi|<150"},
+  {".v5.6"    ,"advYPt_","yaw>0"},
+  {".v5.7"    ,"advYPt_","yaw<0"},
+  {".v5.8"    ,"advYPt_","pitch>0"},
+  {".v5.9"    ,"advYPt_","pitch<0"},
 };
 
 TString sVer[nmax];
@@ -117,6 +139,7 @@ TLegend      *lg2[ybin2];
 void RapidityShift(TGraphErrors *gv);
 void ShiftX(TGraphErrors *gv, Double_t off);
 void GetMinimumv2(TGraphErrors *gr, Double_t &min, Double_t &mer);
+void GetAveragev2(TGraphErrors *gr);
 
 Double_t FittingAndIntegral(TGraphErrors *gr)
 {
@@ -141,6 +164,13 @@ void PlotPtDependence()
       sVer[i]  = gnames[i].Version;
       sName[i] = gnames[i].fileHeader;
       cmnt[i]  = gnames[i].comment;
+
+      if( gnames[i].Version == "" ) {
+	std::cout << " Version? v##.# ";
+	TString svv; 
+	std::cin  >> svv;
+	sVer[i] = ".v" + svv;
+      }
     }
   }
 
@@ -233,7 +263,7 @@ void PlotPtDependence()
 
   UInt_t inx = 0;
   UInt_t nextp = 0;
-  for(UInt_t is = 0; is < 4; is++){
+  for(UInt_t is = 0; is < 5; is++){
 
     for(UInt_t ip = 0; ip < (UInt_t)sizeof(bpid)/sizeof(Bool_t); ip++){
 
@@ -262,7 +292,13 @@ void PlotPtDependence()
 	  index[2].push_back(it); // centrality
 	  index[3].push_back(it+cntw);
 	  index[4].push_back(iz); // version
-	  index[5].push_back(1);
+	  if( is == 4 ) {
+	    index[5].push_back(4);
+	    SimFunction();
+	  }
+	  else
+	    index[5].push_back(1);
+
 
 	  if(ngr == 0)
 	    nextp = 10*is + ip;
@@ -414,15 +450,19 @@ void PlotPtDependence()
     if( ia == 1 ) { //data
       //otitle += cmnt[iz];
       //otitle += sVer[iz]+";"+cmnt[iz];
-      // otitle += "DATA"+sVer[iz]+";"+cmnt[iz];
+      otitle += "DATA"+sVer[iz]+";"+cmnt[iz];
       //otitle += "data";
-      otitle += "("+ lpid[ip]+")";
+      //      otitle += "("+ lpid[ip]+")";
     }
     else if( ia == 2 ) //amd
       //      otitle += amdHeader[is](4,5) + amdName[it];
       otitle += "AMD " + amdName[it];
     else if( ia == 3 ) {// pBUU
       otitle += pBUUConfig[ik].comment; 
+    }
+    else if( ia == 4 ) {// simulation
+      otitle = "Sim"+sVer[iz]+";"+cmnt[iz];
+      bstyle[2] = kTRUE;
     }
 
     //otitle  = ohtitle;
@@ -481,7 +521,7 @@ void PlotPtDependence()
 	yv1->SetMarkerColor(icolor);
 	yv1->SetMarkerStyle(imark[is]);
 	
-	yv1->RemovePoint(10);
+	//	yv1->RemovePoint(10);
 	// yv1->RemovePoint(9);
 	// yv1->RemovePoint(8);
 	// yv1->RemovePoint(7);
@@ -560,9 +600,10 @@ void PlotPtDependence()
 	
 	Double_t v2x, v2y, v2ye;
 	GetMinimumv2(yv2, v2y, v2ye);
-
 	cout << " v2y " << v2y << " +- " << v2ye << endl;
 	
+	GetAveragev2(yv2);
+
 	if( hmult != NULL ){
 
 	  Double_t mmean = hmult->GetMean();
@@ -765,18 +806,26 @@ void PlotPtDependence()
     aLineY1->SetLineColor(1);
     aLineY1->SetLineStyle(3);
     aLineY1->Draw();
+
+    if( bstyle[2] )
+      fv1y->Draw("same");
+
   
     //--- v2 vs rapidity ---
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
-    
+
     if( bstyle[0] )
       mrv2->GetXaxis()->SetRangeUser(-0.55,1.2);
     else if( bstyle[1] ) {
       mrv2->GetXaxis()->SetRangeUser(-1.2,1.2);
       mrv2->GetYaxis()->SetRangeUser(-0.07, 0.05);
     }
+    
     mrv2->Draw("ALP");
     lgr2->Draw();
+
+    if( bstyle[2] )
+      fv2y->Draw("same");
 
     Ymin = mrv2->GetYaxis()->GetXmin();
     Ymax = mrv2->GetYaxis()->GetXmax();
@@ -787,6 +836,9 @@ void PlotPtDependence()
     aLineX2->SetLineColor(1);
     aLineX2->SetLineStyle(3);
     aLineX2->Draw();
+
+
+
   }
 
   if( bplot[0] && bplot[5] ) {
@@ -1111,11 +1163,48 @@ void GetMinimumv2(TGraphErrors *gr, Double_t &min, Double_t &mer)
   UInt_t mid = 0;
   for(UInt_t i = 0; i < gr->GetN(); i++) {
     gr->GetPoint(i, x, y);
+    if( abs(y) > 0.2 ) {
+      gr->RemovePoint(i);
+      i = 0;
+      continue;
+    }
+
     if( y < min ) {
       min = y;
       mid = i;
     }
   }
 
+
   mer = gr->GetErrorY(mid);
+}
+
+void GetAveragev2(TGraphErrors *gr)
+{
+  Double_t x, y;
+  Double_t sum = 0.;
+  for(UInt_t i = 1; i < gr->GetN(); i++) {
+    gr->GetPoint(i, x, y);
+
+    sum += y;
+    
+  }
+
+  Double_t ave = sum/(Double_t)(gr->GetN()-1);
+
+  double v2in;
+  std::cout << " What is initial v2? " ;
+  cin  >> v2in;
+
+  std::cout << " Average v2 " << ave 
+	    << setprecision(4) 
+	    << " Deviation " << (ave - v2in)/v2in *100. << " % "
+	    << " Original v2 " << v2in
+	    << std::endl;
+
+  fv2y->SetParameter(0,  v2in);
+  fv2y->SetParameter(1,  0.);
+  fv2y->SetParameter(2,  0.);
+
+
 }

@@ -13,6 +13,7 @@ UInt_t  iRun;
 TString sRun;
 TString sSuf;
 TString sVer;
+TString oVer;
 TString dVer;
 Bool_t  bRedo;
 
@@ -33,6 +34,10 @@ TClonesArray     *anewFlow;
 
 STFlowTask       *aFlowTask;
 
+STFlowInfo       *aFlowInfo;
+UInt_t            beamPID;
+
+Double_t          RPPsi;
 
 Long64_t  nEntry;
 TTree    *mflw;

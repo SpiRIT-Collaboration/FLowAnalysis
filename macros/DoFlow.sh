@@ -2,11 +2,23 @@
 
 source setup.sh
 
-##---->>> EDIT here
 export MNMACRO=DoFlow_adv.C        ##<--- MACRO name
-export MNRNF={$RNFSIM}             ##<--- 
-export MNDB=rpsim ##BTt                    ##<---
-export MNVERSION=0              ##   <------@@ input 
+
+##---->>> EDIT here
+##<----------- data
+export MNRNF={$RNF132}             ##<--- 
+export MNDB=BTt                    ##<---
+export MNVERSION=41.2              ##   <------@@ input 
+##<----
+
+##------------- RPSim
+export MNDB=rpsim                  ##<---
+
+export MNVERSION=19                ##   <------@@ input 
+export MNDBVERSION=$MNVERSION
+
+source SetEnvRPSim.sh
+
 export MNOVER=0
 ##<-----------
 
@@ -36,23 +48,28 @@ function doflowmulti()
 
 function doflowbatch() 
 {
-    LC=0 UC=40 RUN=$MNRNF VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($1\)
+    LC=0 UC=40 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($1\)
 }
 
 function doflow() 
 {
-    if [ -n "$2" ]; then
-	export MNOVER=$2
+    if [ -n "$3" ]; then
+	export MNOVER=$3
 	echo "output version -> "  $MNOVER
+    elif [ -n "$2" ]; then
+	export MNOVER=$2
     fi
 
-    LC=0 UC=40 RUN=$MNRNF VER=$MNVERSION OUTVER=$MNOVER root $MNMACRO\($1\)
+    LC=0 UC=80 RPBS=$2 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNOVER root $MNMACRO\($1\)
 }
 
 echo $MNVERSION to $MNOVER
 cat DoFlow.sh |grep function
 env|grep MN
+
 echo "doflow -2   :: Get centrality and Psi dependent correction"
+echo "doflow -4   :: Get Psi dependent correction parameter"
+echo "doflow -3   :: Get overall correction factor"
 echo "doflow      :: open files "
 echo "doflow 2 0(output version#) :: DoFlow_adv.C"
 echo "-1:pi- 1:pi+, 2:p, 3:d, 4:t, 5:3He, 6: 4He, 7:n, 8:H" 

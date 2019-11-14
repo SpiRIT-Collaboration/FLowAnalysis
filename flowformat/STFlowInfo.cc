@@ -108,9 +108,7 @@ void STFlowInfo::SetNTrack(UInt_t nval, UInt_t idx) {
 
 void STFlowInfo::AllClear()
 {
-\
   evt = 0;
-  beamPID = 0;
 
   for(UInt_t i = 0; i < 7; i++)
     ntrack[i] = 0;

@@ -9,7 +9,12 @@ auto mp   =    938.2720813;
 void RPSim(UInt_t irun=5, UInt_t maxevt=100)
 {
   UInt_t mevent = maxevt;
+
+  //@@@@@
+  // UInt_t mlt = 50;
   UInt_t mlt = 40;
+  //UInt_t mlt = 30;
+  //UInt_t mlt = 10;
 
   Bool_t bSingle = kFALSE;
   Bool_t bRPRand = kTRUE;   // 1: Reaction plane is romdom direction
@@ -17,6 +22,23 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
   TDatime dtime;
   TRandom3 grnd(dtime.GetSecond());
   gRandom->SetSeed(dtime.GetSecond());
+
+  auto fgcut = TFile::Open("data/RPSim_AnglegCut.root");
+  auto gcang = (TCutG*)fgcut->Get("gCutAngle");
+  if( gcang == NULL )
+    std::cout << " Angle cut data is not opned. " << std::endl;
+  fgcut->Close();
+
+  fgcut = TFile::Open("data/hyawpitch_prt_v41.2.10.root");
+  auto hyp = (TH2D*)fgcut->Get("hyawpitch");
+  TH1D *hyp_x;
+  TH1D *hyp_y;
+  if( hyp != NULL ) {
+    hyp_x = hyp->ProjectionX();
+    hyp_y = hyp->ProjectionY();
+  }    
+  fgcut->Close();
+
 
   TFile *fout = new TFile(Form("data/run%04d_rpsim.v0.root",irun),"recreate");
   TTree *ftree= new TTree("cbmsim","Flow simulation");
@@ -76,7 +98,8 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
   auto hcos_yb       = new TH1D("hcos_yb"   ,"y<( 0.5,1.0); #phi",100,-1., 1.);
   auto hcos_yt       = new TH1D("hcos_yt"   ,"y<(-1.,-0.5); #phi",100,-1., 1.);
   auto hcos_ym       = new TH1D("hcos_ym"   ,"y<(-0.2,0.2); #phi",100,-1., 1.);
-  
+  auto hyawpitch     = new TH2D("hyawpitch" ,"; pitch; yaw",100,-TMath::Pi()/2., TMath::Pi()/2.,100,-TMath::Pi()/2., TMath::Pi()/2.);
+
   //---- Flow parameter -----
   //-----------------------------------------
   auto fazim = new TF1("fazim","1+2.*[0]*cos(x-[2]) + 2.*[1]*cos(2.* (x-[2]))",-TMath::Pi(), TMath::Pi());
@@ -88,10 +111,15 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
   fv1y->SetParameter(1,5.18056e-01);
   fv1y->SetParameter(2,-1.84025e-01);
 
+  //@@@@@
   auto fv2y = new TF1("fv2y","[0]+[1]*x^2+[2]*x^4",-1.,1.);
   fv2y->SetParameter(0, -0.08);
   fv2y->SetParameter(1,  0.1);
   fv2y->SetParameter(2, -0.02);
+
+  fv2y->SetParameter(0, -0.12);
+  fv2y->SetParameter(1,  0.);
+  fv2y->SetParameter(2,  0.);
 
   if( bSingle ) {
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic)); }
@@ -107,6 +135,7 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
   fv2y->Draw("");
 
   TClonesArray    aPartArray("STParticle",80);
+  TClonesArray    aFlow("STFlowInfo",1);
   STParticle*     aParticle = new STParticle();
   STFlowInfo*     aFlowInfo = new STFlowInfo();
   STFlowTask*     aFlowTask = new STFlowTask(kFALSE, kTRUE, kFALSE);
@@ -115,7 +144,7 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
   Double_t        RPPsi = 0.;
 
   ftree->Branch("STParticle",&aPartArray);
-  ftree->Branch("STFlow"    ,&aFlowInfo);
+  ftree->Branch("STFlow"    ,&aFlow);
   ftree->Branch("RPPsi"     ,&RPPsi);
 
   for( UInt_t j = 0; j < mevent; j++) {
@@ -123,14 +152,14 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
     ProcessInfo((Long64_t)mevent, (Long64_t)j);
 
     aPartArray.Clear();
+    aFlow.Clear();
     aFlowInfo->Clear();
 
-    aFlowInfo->goodEventf = 1;
-    aFlowInfo->SetBeamPID(132);
     
     RPPsi = bRPRand == kTRUE ? 2.*TMath::Pi()*(grnd.Rndm() - 0.5) : 0.;
 
-    for( UInt_t i = 0; i < mlt; i++ ){
+    UInt_t i = 0;
+    while( i < mlt ){
 
       aParticle->Clean();
 
@@ -146,8 +175,8 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
 
 
       //Lab frame
-      Double_t aPt  = fdndpt->GetRandom()*1000.;
-      Double_t aRap = (aRapcm + 1.0)*y_cm[0];  
+      Double_t aPt    = fdndpt->GetRandom()*1000.;
+      Double_t aRap   = (aRapcm + 1.0)*y_cm[0];  
       Double_t aEovPz = (exp(2.*aRap) + 1.)/(exp(2.*aRap) - 1.);
       Double_t aTan   = sqrt( aPt*aPt * ( aEovPz*aEovPz - 1.)/(mp*mp + aPt*aPt) );
       Double_t aTheta = TMath::ATan(aTan);
@@ -156,17 +185,24 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
       Double_t aPy  = aPt*sin(aPhi);
       Double_t aPz  = aPt/aTan;
 
+      aParticle->SetTrackID(i);
+      aParticle->SetPID(2212);
+      aParticle->SetPIDLoose(2212);
+      aParticle->SetMass(2212);      
+      aParticle->SetRotatedMomentum( TVector3(aPx, aPy, aPz ) );
 
+      auto yaw   = aParticle->GetYawAngle();
+      auto pitch = aParticle->GetPitchAngle();
+
+      //@@@@@
+      //      if( !gcang->IsInside( yaw, pitch ) )continue; //v5
+      //      if( !gcang->IsInside( pitch, yaw ) )continue; //v7, v8 OK
+      
+      hyawpitch->Fill(yaw, pitch);
       hThetaPhi->Fill(aTheta, aPhi);
       hRapPx->Fill(aRapcm, aPx); 
       hRapPt->Fill(aRapcm, aPt);
 
-      aParticle->SetTrackID(i);
-      aParticle->SetPID(2212);
-      aParticle->SetPIDLoose(2212);
-      aParticle->SetMass(2212);
-      
-      aParticle->SetRotatedMomentum( TVector3(aPx, aPy, aPz ) );
       aParticle->SetFromTargetFlag(1);
       aParticle->SetDistanceAtVertex(0.);
       aParticle->SetGoodTrackFlag(1);
@@ -193,17 +229,24 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
 	hphi_ym->Fill(aParticle->GetRotatedMomentum().Phi());
 	hcos_ym->Fill(cos(2.*aParticle->GetRotatedMomentum().Phi()));
       }      
-    } 
+
+      i++;
+    }
 
     aFlowTask->SetFlowTask( aPartArray );
     aFlowTask->FinishEvent();
     aFlowInfo = aFlowTask->GetFlowInfo();
+    aFlowInfo->goodEventf = 1;
+    aFlowInfo->SetBeamPID(100);
+    aFlowInfo->evt = j;
 
     hsub_phi ->Fill(aFlowInfo->unitP.Phi());
     hsub1_phi->Fill(aFlowInfo->unitP_1.Phi());
     hsub_dphi->Fill(TVector2::Phi_mpi_pi(aFlowInfo->unitP_1.Phi()-aFlowInfo->unitP_2.Phi()));
 
     hsub_12phi->Fill(aFlowInfo->unitP_1.Phi(),aFlowInfo->unitP_2.Phi());
+
+    new( aFlow[0] ) STFlowInfo(*aFlowInfo); 
 
     ftree->Fill();
   }
@@ -270,10 +313,14 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
   else { 
     cc->cd(id); id++;}
 
-  hThetaPhi_cm->Draw("colz");
+  hyawpitch->Draw("colz");
   
   ftree->Write();
+  fv1y->Write();
+  fv2y->Write();
+  hThetaPhi->Write();
+  hyawpitch->Write();
 
-  std::cout << fout.GetName() << " is created. " << std::endl;
+  std::cout << fout->GetName() << " is created. " << std::endl;
 
 }

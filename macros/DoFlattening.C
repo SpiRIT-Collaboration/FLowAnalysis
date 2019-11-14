@@ -170,7 +170,7 @@ void Flatten_Psi_ntrack(UInt_t isel)
 
   if( isel >= 10) {
     rChain->SetBranchAddress("STFlow"  ,&aFlowArray);
-    rChain->SetBranchAddress("STBDC"   ,&aBDCArray);
+    //    rChain->SetBranchAddress("STBDC"   ,&aBDCArray);
   }
 
 
@@ -221,9 +221,9 @@ void Flatten_Psi_ntrack(UInt_t isel)
 
     if( aFlow->goodEventf == 0 || aFlow->beamPID == 0 ) continue;
     
-    STBDC      *aBDC  = (STBDC*)aBDCArray->At(0);
-    if( aBDC == NULL ) continue;
-    hbdcXY->Fill(aBDC->ProjX,aBDC->ProjY);
+    //    STBDC      *aBDC  = (STBDC*)aBDCArray->At(0);
+    //    if( aBDC == NULL ) continue;
+    //    hbdcXY->Fill(aBDC->ProjX,aBDC->ProjY);
 
 
     if( isys == 2 ) {
@@ -254,7 +254,6 @@ void Flatten_Psi_ntrack(UInt_t isel)
     }
     
     //------------------------
-
     // see -> SetPsiCorrectionFileHeader()
     TVector3 vec = TVector3(unitP.X(),      unitP.Y(),      0.);
     if(isel ==11) vec = TVector3(unitP_1.X(),    unitP_1.Y(),    0.);
@@ -273,7 +272,7 @@ void Flatten_Psi_ntrack(UInt_t isel)
   //----------  get corrrection parameters
   for(UInt_t j = 0; j < ntrknbin+1; j++){   
 
-    if(flowcorr[j]->GetNPhi() == 0 ) continue;
+    //    if(flowcorr[j]->GetNPhi() == 0 ) continue;
     UInt_t nphi = flowcorr[j]->ReCenteringFourierCorrection();
     std::cout << " At " << ntrkbin[j]  << " nphi " << nphi <<  std::endl;
       

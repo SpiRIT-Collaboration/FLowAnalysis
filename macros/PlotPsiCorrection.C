@@ -7,18 +7,30 @@ struct gplot{
   TString comment;
 };
 
+TString  bName[]   = {"132Sn", "108Sn", "124Sn", "112Sn", "100Sn"};
+Double_t sysdlt[]  = {0.22,    0.09,      0.15,   0.15   , 0.22};
+Double_t sysA[]    = {256.,    220.,      236.,   236.   ,  256.};
 
-TString  bName[]   = {"132Sn","108Sn","124Sn","112Sn"};
-Double_t sysdlt[]  = {0.22,    0.09,      0.15,   0.15};
-Double_t sysA[]    = {256.,    220.,      236.,   236};
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn
+Bool_t bsys[]  = { 0, 0, 0, 0, 1};    //132Sn, 108Sn, 124Sn, 112Sn
 //-----------
-UInt_t  bver[]  = {1, 0, 0, 0};
+UInt_t  bver[]  = {1, 1, 1, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
+  {".v13_0","advYPt_",".m00to80"},//:1.6e+6"},
+  {".v13_1","advYPt_",".m00to80"},//:1.6e+6"},
+  {".v13_2","advYPt_",".m00to80"},//:1.6e+6"},
+  {".v8"  ,"advYPt_",".m00to40"},//:1.6e+6"},
+  {".v7"  ,"advYPt_",".m00to40"},//:1.6e+6"},
+  {".v5"  ,"advYPt_",".m00to40"},//:1.6e+6"},
+  {".v3"  ,"advYPt_",".m00to40"},//:1.6e+6"},
+  {".v1"  ,"advYPt_",".m00to40"},//:5e+5"},
+  {".v0"  ,"advYPt_",".m00to40"},//:5e+5"},
+  {".v0.6"  ,"advYPt_",".m00to40"},//"ExB&S.C."},
+  {".v0.1"  ,"advYPt_",".m00to40"},//"ExB&S.C."},
+  {".v0.2"  ,"advYPt_",".m00to40"},//"ExB&S.C."},
   {".v41.2"  ,"advYPt_",".m30to40"},//"ExB&S.C."},
   {".v41.0"  ,"advYPt_",""},//"ExB&S.C."},
   {".v41.1"  ,"advYPt_",""},//"ExB&S.C."},
@@ -69,7 +81,7 @@ void PlotPsiCorrection(UInt_t bmp = 0) // 0: phi, 1:mlt
   
   UInt_t itt = 0;
 
-  for(UInt_t is = 0; is < 4; is++){
+  for(UInt_t is = 0; is < 5; is++){
 
     if( !bsys[is] ) continue;
 
@@ -91,9 +103,9 @@ void PlotPsiCorrection(UInt_t bmp = 0) // 0: phi, 1:mlt
       if( bmp == 0 ) {
 	gv_psi1[itt] = (TGraphErrors*)fOpen->Get("gv_psi1");
 	gv_psi2[itt] = (TGraphErrors*)fOpen->Get("gv_psi2");
+	gv_psi2[itt]->Print();
 	  
 	cout << " itt " << itt << endl;
-	gv_psi1[itt]->Print();
 
       }
       else {
@@ -111,8 +123,8 @@ void PlotPsiCorrection(UInt_t bmp = 0) // 0: phi, 1:mlt
       mrpsi1->Add( gv_psi1[itt] );
       mrpsi2->Add( gv_psi2[itt] );
 
-      lgr1->AddEntry( gv_psi1[itt], fsys[is] );
-      lgr2->AddEntry( gv_psi2[itt], fsys[is] );
+      lgr1->AddEntry( gv_psi1[itt], sVer[it]); //fsys[is] );
+      lgr2->AddEntry( gv_psi2[itt], sVer[it]); //fsys[is] );
 	  
       itt++;
 
@@ -128,13 +140,13 @@ void PlotPsiCorrection(UInt_t bmp = 0) // 0: phi, 1:mlt
   
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     if( bmp == 0 )
-      mrpsi1->GetYaxis()->SetRangeUser(0.62,0.76);
+      //      mrpsi1->GetYaxis()->SetRangeUser(0.62,0.76);
     mrpsi1->Draw("ALP");
     lgr1->Draw();
 
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     if( bmp == 0)
-      mrpsi2->GetYaxis()->SetRangeUser(0.26,0.45);
+      //      mrpsi2->GetYaxis()->SetRangeUser(0.26,0.45);
     mrpsi2->Draw("ALP");
     lgr2->Draw();
   }

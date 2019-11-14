@@ -1,9 +1,6 @@
 #ifndef OPENFLW_H
 #define OPENFLW_H
 
-UInt_t  isys;
-TString sysName;
-
 TChain *rChain;
 
 TString printHeader="";
@@ -17,5 +14,5 @@ TClonesArray *aArray;
 TClonesArray *aFlowArray;
 TClonesArray *aNLClusterArray;
 
-
+Double_t RPPsi;
 #endif

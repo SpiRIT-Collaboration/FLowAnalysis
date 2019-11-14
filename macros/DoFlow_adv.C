@@ -1,6 +1,8 @@
 #include "openRunAna.C"
 #include "DoFlow.h"
 #include "GetLorentzBoost.C"
+#include "SimFunction.C"
+#include "RunToSystemID.h"
 
 auto *fcos1 = new TF1("fcos1","[0]+2.*[1]*cos(x)"   ,-1.*TMath::Pi(),TMath::Pi());
 
@@ -59,12 +61,8 @@ void     CentralityDependence();
 void     PsiAngleDependence(); 
 TString  GetPsiRPFileName();
 void     GetResolution();
-Double_t  GetError(Double_t x, Double_t y, Double_t xe, Double_t ye)
-{
-  if( y == 0 && ye == 0 ) return 0.;
-  Double_t xc = abs(x/y);
-  return  xc * sqrt(pow(xe/x,2) + pow(ye/y,2));
-}
+Double_t GetRPBaseAngle(STFlowInfo *aflow);
+Double_t  GetError(Double_t x, Double_t y, Double_t xe, Double_t ye);
 
 
 //-------------------//
@@ -102,6 +100,12 @@ void DoFlow_adv(Int_t isel = 0)
 
   std::cout << " Multiplicity :: " << Lcent << " to " << Ucent << std::endl;
 
+  //--------------------------------------------------
+  TString rpBase = gSystem -> Getenv("RPBS");
+  RPBase = rpBase != "" ? atoi(rpBase): 9;
+
+  std::cout << " Reaction plane base is " << RPBase << std::endl;
+
   //==================================================
   if( isel > -1 )
     std::cout << " Output Version v" << sVer << "." << gSystem->Getenv("OUTVER") << std::endl;
@@ -128,6 +132,8 @@ void DoFlow_adv(Int_t isel = 0)
 
 void GetResolution()
 {
+  // Averaged resolution is calculated.
+
   TH1I *hmult = new TH1I("hmult",";Multiplicity",100,0,100);
   TH1D *hphi0_180  = new TH1D("hphi0_180" , "0to180",100,0.,3.2);
   TH1D *hphi90_180 = new TH1D("hphi90_180","90to180",100,0.,3.2);
@@ -210,7 +216,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
   auto GraphSave  = new TFile(fName,"recreate");
 
-
   std::cout << " Rapidity binning " << ybin1 << std::endl;
 
   //------------------------------
@@ -225,6 +230,12 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   auto huy        = new TH2D("huy","; y_{cm}/y_{beam}; u_{t0} ", 200,-1., 1.8, 200,0.,1.8);
   auto hpsi       = new TH2D("hpsi",";#Psi;",100, -3.14,3.14, 200,0.,1.);
   auto hpsi1      = new TH1D("hpsi1",";#Psi",200,0.,1.);
+  auto hpsindx    = new TH2D("hpsindx",";#Psi ;index ",100,-TMath::Pi(),TMath::Pi(),20,0.,20.);
+  auto hiphi      = new TH1I("hiphi","hiphi",13,0,13);
+  auto hPsi       = new TH1D("hPsi" ,";RP #Psi"  ,100,-TMath::Pi(),TMath::Pi());
+  auto hRPPsi     = new TH1D("hRPPsi",";Indiv. #Psi"  ,100,-TMath::Pi(),TMath::Pi());
+  auto hRPPsipsi  = new TH2D("hRPPsipsi",";RP #Psi; Indiv #Psi"  ,100,-TMath::Pi(),TMath::Pi(),100,-TMath::Pi(),TMath::Pi());
+  auto hphi       = new TH1D("hphi",     ";#phi"  ,100,-TMath::Pi(),TMath::Pi());
 
   TH1I *hmult = new TH1I("hmult",";Multiplicity",100,0,100);
   TH1F *hdydptcos1[ybin1][ptbin1][mbin];
@@ -321,7 +332,14 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   //--------------------------------------------------
   //--- Event Loop
   //--------------------------------------------------
-  for(Int_t i = 0; i < nevt; i++){
+  Int_t nevt_begin = 0;
+  //  Int_t maxevt = nevt_begin+1e+7; 
+  Int_t maxevt = nevt_begin+1000000; 
+  nevt = maxevt < nevt ? maxevt : nevt;
+
+  cout << " NOTICE !!!! " << nevt_begin << " to " << nevt << endl;
+
+  for(Int_t i = nevt_begin; i < nevt; i++){
 
     rChain->GetEntry(i);
     STFlowInfo *aflow = (STFlowInfo*)aFlowArray->At(0);
@@ -353,8 +371,11 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     Double_t subevt_phi = abs(TVector2::Phi_mpi_pi((aflow->unitP_1fc).Phi()-
 						   (aflow->unitP_2fc).Phi()));
       
-    UInt_t ipsi = GetPsiRPIndex(aflow->unitP_fc.Phi());
+    auto RPangle = GetRPBaseAngle(aflow);
 
+    UInt_t ipsi = GetPsiRPIndex( TVector2::Phi_mpi_pi(RPangle) );
+    if( ipsi >= npsi ) continue;
+    
 
     TIter next(aArray);
     STParticle *aPart = NULL;
@@ -418,24 +439,35 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	}
       }
 
-
       //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       if( !bpart ) continue; //default
       //-----------------
-      //if( abs( phi ) > 30.*TMath::DegToRad() ) continue;
+      // if( abs( phi ) > 30.*TMath::DegToRad() ) continue;
       //if( abs( phi ) < 150.*TMath::DegToRad() ) continue;
-      if( abs( phi ) > 30.*TMath::DegToRad() && abs( phi ) < 150.*TMath::DegToRad() ) continue;
+      //      if( abs( phi ) > 30.*TMath::DegToRad() && abs( phi ) < 150.*TMath::DegToRad() ) continue;
+      //if( theta < 0.05 ) continue;
+      //if( yaw < 0 ) continue;
+      //if( yaw > 0 ) continue;
+      //if( pitch > 0 ) continue;
+      //if( yaw == 0.0 ) continue;
+      //if( abs( pitch / yaw ) > 1. ) continue;
+      // if( abs( pitch / yaw ) <= 1. ) continue;
       //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
       bFill = kTRUE;
+      auto dphi   = aPart->GetAzmAngle_wrt_RP();
+      auto rapid  = aPart->GetRapiditycm();;	
+      auto rapidn = rapid / y_cm[isys];
+      auto rpphi  = aPart->GetIndividualRPAngle();
 
+      hPsi->Fill(RPPsi);
+      hRPPsi->Fill(rpphi);
+      hphi->Fill(phi);
+      hRPPsipsi->Fill(RPPsi, rpphi);
       rppsires = GetPsiRPResolution(ipsi);
       hpsi1->Fill(rppsires[4]);
-      hpsi->Fill(aflow->unitP_fc.Phi(), rppsires[4]);
-      
-      auto dphi  = aPart->GetAzmAngle_wrt_RP();
-      auto rapid = aPart->GetRapiditycm();;	
-      auto rapidn = rapid / y_cm[isys];
+      hpsi->Fill(RPangle, rppsires[4]);
+      hpsindx->Fill(RPangle, (Double_t)ipsi);
 
       Double_t u_t0  = aPart->GetRotatedMomentum().Pt()/aPart->GetMass()/u_p;
       Double_t ou_t0 = aPart->GetMomentumAtTarget().Pt()/aPart->GetMass()/u_p;
@@ -862,8 +894,12 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   huy      ->Write();
   hpsi     ->Write();
   hpsi1    ->Write();
-
-
+  hpsindx  ->Write();
+  hiphi    ->Write();
+  hPsi     ->Write();
+  hRPPsi    ->Write();
+  hRPPsipsi ->Write();
+  hphi      ->Write();
   //--------------------------------------------------
   //--- Plotting
   //--------------------------------------------------
@@ -909,7 +945,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
 
 
-
   if( bEffCorr && corrPt_v2[0] != NULL ){
     id=1;
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),2000,500);
@@ -927,6 +962,10 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
   gu_v1->Draw("ALP");
+  if( isys == 4 ) {
+    SimFunction();
+    fv1y->Draw("same");
+  }
 
   auto LineV = new TLine(0.,gv_v1->GetYaxis()->GetXmin(), 0., gv_v1->GetYaxis()->GetXmax());
   auto LineH = new TLine(gv_v1->GetXaxis()->GetXmin(),    0., gv_v1->GetXaxis()->GetXmax(), 0.);
@@ -940,10 +979,9 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
   gu_v2->Draw("ALP");
+  if(isys == 4)
+    fv2y->Draw("same");
 
-
-  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
-  hmass->Draw("colz");
 
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
   hpsi->Draw("colz");
@@ -952,17 +990,36 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
   huy->Draw("colz");
 
+  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
+  hpsindx->Draw("colz");
+
+
+  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
+  cc->Divide(2,2);
+  cc->cd(1);
+  hRPPsi->Draw();
+  cc->cd(2);
+  hPsi->Draw();
+  cc->cd(3);
+  hRPPsipsi->Draw("colz");
+  cc->cd(4);
+  hphi->Draw();
+
   //--------------------------------------------------
   //--- Debug plotting
   // id=1;
   // ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),2000,500);
   // cc->Divide(ybin2, psibin);
-  // for( UInt_t iy = 0; iy < ybin2; iy++ ) {
-  //   for( UInt_t ips = 0; ips < psibin; ips++) {
-  //     cc->cd(id); id++;
-  //     hdydutcos2[iy][2][ips]->Draw();
-  //   }
-  // }
+  //   for( UInt_t iy = 0; iy < ybin2; iy++ ) {
+     for( UInt_t ips = 0; ips < psibin; ips++) {
+       //       cc->cd(id); id++;
+       //       hdydutcos2[iy][2][ips]->Draw();
+       auto mm = hdydutcos2[3][2][ips]->GetMean();
+       cout << " ips " << ips << " " << mm << endl;;
+
+
+     }
+     //   }
 
 
   // id=1;
@@ -1012,351 +1069,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   // }
 
   gSystem->cd("..");
-}
-
-
-UInt_t GetV1RapidityIndex(Double_t y)
-{
-  UInt_t irapid1 = ybin1-1;
-  for( UInt_t i = 1; i < ybin1; i++){
-    if( y < yrange1[i]){
-      irapid1 = i-1;
-      break;
-    }
-  }
-  return irapid1;
-}
-UInt_t GetV1cmRapidityIndex(Double_t y)
-{
-  UInt_t irapid1 = ybin1-1;
-  for( UInt_t i = 1; i < ybin1; i++){
-    if( y < yrange1[i]/y_cm[isys] ){
-      irapid1 = i-1;
-      break;
-    }
-  }
-  return irapid1;
-}
-
-UInt_t GetV2RapidityIndex(Double_t y)
-{
-  UInt_t irapid2 = ybin2-1;
-  for( UInt_t i = 1; i < ybin2; i++){
-    if( y < yrange2[i]){
-      irapid2 = i-1;
-      break;
-    }
-  }
-  return irapid2;
-}
-UInt_t GetV2cmRapidityIndex(Double_t y)
-{
-  UInt_t irapid2 = ybin2-1;
-  for( UInt_t i = 1; i < ybin2; i++){
-    if( y < yrange2[i]/y_cm[isys]){
-      irapid2 = i-1;
-      break;
-    }
-  }
-  return irapid2;
-}
-
-UInt_t GetV1PtIndex(Double_t val)
-{
-  UInt_t ipt = ptbin1 - 1;
-  for(UInt_t i = 0; i < ptbin1; i++){
-    if( val < dpt1*(i+1)) {
-      ipt = i;
-      break;
-    }
-  }
-  return ipt;
-}
-
-UInt_t GetV2PtIndex(Double_t val)
-{
-  UInt_t ipt = ptbin2 - 1;
-  for(UInt_t i = 0; i < ptbin2; i++){
-    if( val < dpt2*(i+1)) {
-      ipt = i;
-      break;
-    }
-  }
-  return ipt;
-}
-
-
-
-
-  //**************************************************
-UInt_t GetRPCorrIndex(Double_t aVal)
-{
-  UInt_t xn = v1x.size() - 1;
-
-  if( aVal <= v1x.at( v1x.size() - 1 ) ) {
-    xn = (UInt_t)itrpvx->Eval( (Double_t)aVal ) ;
-  
-    if( abs(v1x.at(xn) - aVal) > abs(v1x.at(xn+1) - aVal) )
-      xn += 1;
-  }
-
-  return xn;
-}
-
-Double_t *GetRPResolution(UInt_t vn, UInt_t xn)
-{
-
-  Double_t *rpcor = new Double_t[3];
-  rpcor[0] = 0.;
-  rpcor[1] = 0.;
-  rpcor[2] = 0.;
-
-  if( xn < v1x.size() ) {
-
-    if( vn == 1 ){
-      rpcor[0] = v1x.at(xn);   // multiplicity
-      rpcor[1] = v1y.at(xn);   // v1 corr 
-      rpcor[2] = v1ye.at(xn);  // v1 corr error
-    }
-    else { //v2
-      rpcor[0] = v2x.at(xn);
-      rpcor[1] = v2y.at(xn);
-      rpcor[2] = v2ye.at(xn);
-    }
-  }
-  return rpcor;
-
-}
-
-
-  //**************************************************
-UInt_t GetPsiRPIndex(Double_t aVal)
-{
-  auto xn = 0;
-  if( aVal >= v1psix.at( v1psix.size() - 1 ) )
-    xn = v1psix.size() - 1;
-  else if ( aVal <= v1psix.at(0) )
-    xn = 0;
-  else
-    xn = (UInt_t)itrpvpsix->Eval( (Double_t)aVal );
-
-  return xn;
-}
-
-Double_t *GetPsiRPResolution(UInt_t ival)
-{
-  Double_t *rpcor = new Double_t[6];
-  for( UInt_t i = 0; i < 7; i++ ) 
-    rpcor[i] = 0.;
-
-
-  rpcor[0] = v1psix.at(ival);   // Psi angle
-  rpcor[1] = v1psiy.at(ival);   // v1 corr 
-  rpcor[2] = v1psiye.at(ival);  // v1 corr error
-
-  rpcor[3] = v2psix.at(ival);
-  rpcor[4] = v2psiy.at(ival);    // v2 corr
-  rpcor[5] = v2psiye.at(ival);   // v2 corr error
-
-  return rpcor;
-}
-
-  //**************************************************
-TString GetPsiRPFileName()
-{
-  return  Form("data/bpsi_"+ sysName + ".v"+sVer+".m%02dto%02d.root",Lcent,Ucent);
-}
-
-Bool_t SetPsiRPResolution()
-{
-  itrpvpsix = new ROOT::Math::Interpolator(20, ROOT::Math::Interpolation::kPOLYNOMIAL);
-
-  TString fname = GetPsiRPFileName(); 
-  TFile *fOpen = TFile::Open(fname);
-  if( fOpen == NULL ) return kFALSE;
-  
-  LOG(INFO) << fname << " is opened. " << FairLogger::endl;
-
-  auto hgv_psi1 = (TGraphErrors*)fOpen->Get("gv_psi1");
-  auto hgv_psi2 = (TGraphErrors*)fOpen->Get("gv_psi2");
-
-  if( hgv_psi1 == NULL || hgv_psi2 == NULL ) return kFALSE;
-
-  std::vector< Double_t > ix;
-    
-  Double_t x, y, xe, ye;
-  UInt_t k = 0;
-
-  for( Int_t i = 0; i < (Int_t)hgv_psi1->GetN(); i++ ) {
-
-    hgv_psi1->GetPoint(i, x, y);
-    xe = hgv_psi1->GetErrorX(i);
-    ye = hgv_psi1->GetErrorY(i);
-
-    ix.push_back(k); 
-    v1psix.push_back(x);
-    v1psiy.push_back(y);
-    v1psixe.push_back(xe);
-    v1psiye.push_back(ye);
-
-    k++;
-  }
-
-  
-
-
-  for(UInt_t j = 0; j < (UInt_t)v1psix.size(); j++) {
-    LOG(INFO) << "v1 resolution:"<< j << " th " << v1psix.at(j) << " vs " << v1psiy.at(j) << " +- " << v1psiye.at(j) << FairLogger::endl; 
-  }
-
-  itrpvpsix->SetData(v1psix,ix);
-
-  k = 0;
-  for( Int_t i = 0; i < (Int_t)hgv_psi2->GetN(); i++ ) {
-    hgv_psi2->GetPoint(i, x, y);
-    xe = hgv_psi2->GetErrorX(i);
-    ye = hgv_psi2->GetErrorY(i);
-
-    v2psix.push_back(x);
-    v2psiy.push_back(y);
-    v2psixe.push_back(xe);
-    v2psiye.push_back(ye);
-    k++;
-  }
-
-  for(UInt_t j = 0; j < (UInt_t)v2psix.size(); j++) {
-    LOG(INFO) << "v2 resolution: "<< j << " th " << v2psix.at(j) << " vs " << v2psiy.at(j) << " +- " << v2psiye.at(j) << FairLogger::endl; 
-  }
-
-
-  fOpen->Close();
-
-  return kTRUE;
-}
-
-  //**************************************************
-Bool_t SetRPResolution()
-{
-  itrpvx = new ROOT::Math::Interpolator(20, ROOT::Math::Interpolation::kPOLYNOMIAL);
-
-  TString fname = "data/mlt_"+ sysName + ".v" + sVer + ".root";
-  TFile *fOpen = TFile::Open(fname);
-  if( fOpen == NULL ) {
-    LOG(ERROR) << "Please do it doflow -2 " << FairLogger::endl;
-    return kFALSE;
-  }
-  
-  std::cout << fname << " is opened. " << std::endl;
-
-  auto hgv_mcos1 = (TGraphErrors*)fOpen->Get("gv_mcos1");
-  auto hgv_mcos2 = (TGraphErrors*)fOpen->Get("gv_mcos2");
-
-  std::vector< Double_t > ix;
-    
-  Double_t x, y, xe, ye;
-  UInt_t k = 0;
-  ix.push_back(k); 
-  v1x.push_back(0.); v1xe.push_back(0.);
-  v1y.push_back(0.); v1ye.push_back(0.);
-  k++;
-  for( Int_t i = (Int_t)hgv_mcos1->GetN()-1; i > -1; i-- ) {
-    hgv_mcos1->GetPoint(i, x, y);
-    xe = hgv_mcos1->GetErrorX(i);
-    ye = hgv_mcos1->GetErrorY(i);
-
-    ix.push_back(k); 
-    v1x.push_back(x);
-    v1y.push_back(y);
-    v1xe.push_back(xe);
-    v1ye.push_back(ye);
-
-    k++;
-  }
-  itrpvx->SetData(v1x,ix);
-
-
-  v2x.push_back(0.); v2xe.push_back(0.);
-  v2y.push_back(0.); v2ye.push_back(0.);
-
-  k = 0;
-  for( Int_t i = (Int_t)hgv_mcos2->GetN()-1; i > -1; i-- ) {
-    hgv_mcos2->GetPoint(i, x, y);
-    xe = hgv_mcos2->GetErrorX(i);
-    ye = hgv_mcos2->GetErrorY(i);
-
-    v2x.push_back(x);
-    v2y.push_back(y);
-    v2xe.push_back(xe);
-    v2ye.push_back(ye);
-
-    LOG(DEBUG) << "v2 resolution "<< k << " th " << v2x.at(k) << " vs " << v2y.at(k) << " +- " << v2ye.at(k) << FairLogger::endl; 
-    k++;
-  }
-
-  fOpen->Close();
-
-  return kTRUE;
-}
-
-  //**************************************************
-Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)            //%% Executable : 
-{
-  hphi90_180->SetLineColor(2);
-
-  Double_t m0 = hphi0_180->GetEntries();
-  Double_t m1 = hphi90_180->GetEntries();
-
-  if( m0 == 0 ) {
-    std::cout << " No entry in hphi0_180 " << endl;
-    return 0;
-  }
-
-  //  Double_t chi = sqrt(-2.* log(2.* m1/m0));
-  Double_t mr    = m1/m0;
-  Double_t mre2  = m1/m0 * (1./m0 + 1./m1);
-  Double_t chi   = sqrt(-4.* log(2.* mr));
-  Double_t chie2 = -4.*log(2.*mr)/pow(mr,2)* mre2;
-
-  Double_t *rpres = new Double_t[4];
-  //v1
-  if( chi > 0. ) {
-
-    //v1
-    rpres[0] = 0.626657*chi - 0.09694*pow(chi,3) + 0.02754 * pow(chi,4) - 0.002283*pow(chi,5);
-  
-    Double_t err2 = pow(0.626657,2) * chie2;
-    err2 += pow(0.09694,2) *  6.* pow(chi,4) * chie2;
-    err2 += pow(0.02754,2) * 16.* pow(chi,6) * chie2;
-    err2 += pow(0.002283,2)* 25.* pow(chi,8) * chie2;
-    rpres[1] = sqrt( err2 );
-
-    //v2
-    rpres[2] = 0.25*pow(chi,2) - 0.011414*pow(chi,3) - 0.034726*pow(chi,4) + 0.006815*pow(chi,5);
-    err2  = pow(0.25,2) * chie2;
-    err2 += pow(0.011414,2) *  9.* pow(chi,4) * chie2;
-    err2 += pow(0.034726,2) * 16.* pow(chi,6) * chie2;
-    err2 += pow(0.006815,2) * 25.* pow(chi,5) * chie2;
-    rpres[3] = sqrt( err2 );
-  }
-
-  else {
-    Double_t chie = sqrt(chie2);
-    rpres[0] = sqrt(TMath::Pi())/(2.*sqrt(2))*chi*exp(-chi*chi/4.)*
-      (ROOT::Math::cyl_bessel_i(0,chi*chi/4.)+ROOT::Math::cyl_bessel_i(1,chi*chi/4.));
-    rpres[1] = 0.;
-    rpres[2] = sqrt(TMath::Pi())/(2.*sqrt(2))*chi*exp(-chi*chi/4.)*
-      (ROOT::Math::cyl_bessel_i(0.5,chi*chi/4.)+ROOT::Math::cyl_bessel_i(1.5,chi*chi/4.));
-    rpres[3] = 0.;
-  }
-
-  LOG(INFO) << " Getting correction factor " 
-   	    << std::setw(14) << rpres[0] << " +- " << std::setw(10) << rpres[1]
-   	    << " v2 "
-   	    << std::setw(14) << rpres[2] << " +- " << std::setw(10) << rpres[3]
-   	    << FairLogger::endl;
-
-  return rpres;
-}
+} //
 
 
 void FlatteningCheck()            
@@ -1406,155 +1119,6 @@ void FlatteningCheck()
   hphimtrck->Draw("colz");
 
 }
-
-
-
-
-void PlotSubEvent(Double_t ml=30, Double_t mu=80)   
-{
-
-  Double_t mlt[] = {ml, mu};
-  //    Double_t mlt[2] = {0., 8.};
-  //Double_t mlt[2] = {8., 16.};
-  // Double_t mlt[2] = {16., 24.};
-  // Double_t mlt[2] = {24., 32.};
-  // Double_t mlt[2] = {32., 40.};
-  // Double_t mlt[2] = {40., 100.};
-
-  TCut mcrot = Form("aFlow->mtrack4>%f&&aFlow->mtrack4<%f",mlt[0]*2.,mlt[1]*2.);
-  TCut mc1r  = Form("mtrack_1>%f&&mtrack_1<%f"  ,mlt[0],mlt[1]);
-  TCut mc2r  = Form("mtrack_2>%f&&mtrack_2<%f"  ,mlt[0],mlt[1]);
-
-  TString sname;
-  
-  sname = mcrot.GetTitle();
-  auto *hrotx = new TH1D("hrotx","All   "+sname+ ";Qx" ,100,-12.,12.);
-  auto *h1rx  = new TH1D("h1rx", "sub_1 "+sname+ ";Qx" ,100,-12.,12.);
-  auto *h2rx  = new TH1D("h2rx", "sub_2 "+sname+ ";Qx" ,100,-12.,12.);
-  auto *hroty = new TH1D("hroty","All   "+sname+ ";Qy" ,100,-12.,12.);
-  auto *h1ry  = new TH1D("h1ry", "sub_1 "+sname+ ";Qy" ,100,-12.,12.);
-  auto *h2ry  = new TH1D("h2ry", "sub_2 "+sname+ ";Qy" ,100,-12.,12.);
- 
-
-  rChain->Project("hrotx","unitP2_fc.X()",mcrot);
-  rChain->Project("h1rx" ,"unitP_1fc.X()"  ,mc1r);
-  rChain->Project("h2rx" ,"unitP_2fc.X()"  ,mc2r);
-					      
-  rChain->Project("hroty","unitP2_fc.Y()",mcrot);
-  rChain->Project("h1ry" ,"unitP_1fc.Y()"  ,mc1r);
-  rChain->Project("h2ry" ,"unitP_2fc.Y()"  ,mc2r);
-
-
-  //----- Drawing       
-  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
-
-  hrotx->SetLineColor(2);
-  hrotx->SetNormFactor(1);
-  h1rx ->SetLineColor(4);
-  h1rx ->SetNormFactor(1);
-  h2rx ->SetLineColor(6);
-  h2rx ->SetNormFactor(1);
-
-  h1rx->Draw();
-  h2rx->Draw("same");
-  hrotx->Draw("same");
-
-  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
-
-  hroty->SetLineColor(2);
-  hroty->SetNormFactor(1);
-  h1ry ->SetLineColor(4);
-  h1ry ->SetNormFactor(1);
-  h2ry ->SetLineColor(6);
-  h2ry ->SetNormFactor(1);
-
-  h1ry->Draw();
-  h2ry->Draw("same");
-  hroty->Draw("same");
-}
-
-
-void GetFittingParameters(TH1D &h1, Double_t pp[6])
-{
-  for(UInt_t i = 0; i < 6; i++)
-    pp[i] = 0.;
-
-
-  Double_t nbin = h1.GetNbinsX();
-  Double_t scf  = h1.GetEntries();
-  h1.SetNormFactor(nbin);
-  // h1.SetMaximum(1.2);
-  // h1.SetMinimum(0.8);
-  fcos1->SetParameter(0, 1.);
-  fcos1->SetParameter(1, 0.1);
-
-  h1.Fit("fcos1","","",-3.1,3.1);
-
-  pp[0] = fcos1->GetParameter(0);
-  pp[1] = fcos1->GetParameter(1);
-  pp[2] = fcos1->GetParError(0);
-  pp[3] = fcos1->GetParError(1);
-  pp[3] = pp[1]*sqrt(pp[2]/pp[0]*pp[2]/pp[0] + pp[3]/pp[1]*pp[3]/pp[1]);
-  pp[1] = pp[1]/pp[0];
-  
-  
-
-  h1.SetNormFactor(-1);
-}
-void GetFittingParameters(TH1D &h1, Double_t pp[6], Double_t corr[2])
-{
-  GetFittingParameters(h1,pp);
-  
-  if( corr[0] != 0 && corr[1] != 0 ) {
-    pp[4] = pp[1]/corr[0];
-    pp[5] = sqrt( pow(pp[4],2)*( pow(pp[3]/pp[1],2) + pow(corr[1]/corr[0], 2) ));
-  }
-  else {
-    pp[4] = 0.;
-    pp[5] = 0.;
-  }
-}
-
-void DetectorBias()
-{
-  UInt_t m = 0;
-
-  SetBranch();
-  Int_t nEntry = rChain->GetEntries();
-
-
-  Double_t  cosphi = 0.;
-  Double_t  sinphi = 0.;
-  Double_t  cos2phi= 0.;
-  Double_t  sin2phi= 0.;
-
-  Double_t count = 0.;
-  for(Int_t i = 0; i < nEntry; i++){
-
-    rChain->GetEntry(i);
-    STFlowInfo *aflow = (STFlowInfo*)aFlowArray->At(0);
-
-    
-    if(aflow->mtrack1 > Ucent || aflow->mtrack1 <= Lcent ) continue;
-    count++;
-
-    cosphi += cos( (aflow->unitP_fc).Phi());      
-    sinphi += sin( (aflow->unitP_fc).Phi());
-
-    cos2phi += cos(2.*(aflow->unitP_fc).Phi());      
-    sin2phi += sin(2.*(aflow->unitP_fc).Phi());
-
-  }
-  
-  std::cout << " <cos Phi> " << cosphi/count 
-	    << " <sin phi> " << sinphi/count << std::endl;
-
-  std::cout << " <cos 2Phi> " << cos2phi/count 
-	    << " <sin 2phi> " << sin2phi/count << std::endl;
-
-
-}
-
 
 
 void AzimuthalAngleDependence()            //%% Executable :
@@ -1682,7 +1246,7 @@ void PsiAngleDependence()            //%% Executable :
   TString fName = GetPsiRPFileName();
   auto GraphSave = new TFile(fName,"recreate");
 
-  TH1I *hmult  = new TH1I("hmult","multiplicity",100,0,100);
+  TH1I *hmult  = new TH1I("hmult" ,"multiplicity",100,0,100);
   TH1I *hmult1 = new TH1I("hmult1","multiplicity",100,0,100);
   TH1I *hmult2 = new TH1I("hmult2","multiplicity",100,0,100);
 
@@ -1690,6 +1254,7 @@ void PsiAngleDependence()            //%% Executable :
   TH1D *hphi0_180[npsi];
   TH1D *hphi90_180[npsi];
   TH1D *hpsi[npsi];
+  Double_t vpsi[npsi];
   
   for(UInt_t k = 0; k < npsi; k++){
     TString htitle = Form("hphi0_180_%d",k);
@@ -1727,19 +1292,23 @@ void PsiAngleDependence()            //%% Executable :
     TIter next(aArray);
     STParticle *aPart = NULL;
 
+    Double_t dphi = 2.*TMath::Pi()/ (Double_t)npsi ;
 
-    auto phi   = TVector2::Phi_0_2pi(aflow->unitP_fc.Phi());
-    UInt_t iphi = UInt_t(phi/(TMath::Pi()/Double_t(npsi/2)));
+    auto RPangle = GetRPBaseAngle(aflow);
+    UInt_t iphi = UInt_t( TVector2::Phi_0_2pi(RPangle)/dphi);
+    vpsi[iphi]  = TVector2::Phi_mpi_pi( (Double_t)iphi * dphi );
 
-    hpsi[iphi] ->Fill( TVector2::Phi_mpi_pi(phi) );
+    //    cout << " phi " << phi << " ipsi " << iphi << " --> " << vpsi[iphi] << endl;
+
+    hpsi[iphi] ->Fill( TVector2::Phi_mpi_pi(RPangle) );
     hiphi->Fill( iphi );
 
     Double_t subdphi = abs(TVector2::Phi_mpi_pi((aflow->unitP_1fc).Phi() - (aflow->unitP_2fc).Phi()));
     hphi0_180[iphi] ->Fill(subdphi);
     if( subdphi > TMath::Pi()/2. )
+
       hphi90_180[iphi]->Fill(subdphi);
   }
-
 
   auto gv_psi1 = new TGraphErrors();
   gv_psi1->SetName("gv_psi1");
@@ -1774,7 +1343,8 @@ void PsiAngleDependence()            //%% Executable :
 
     
       if( hphi90_180[i]->GetEntries() > 15 && !std::isnan(rpres[0])) {
-	Double_t psi = hpsi[i]->GetMean();
+	//	Double_t psi = hpsi[i]->GetMean();
+	Double_t psi = vpsi[i];
 	gv_psi1->SetPoint(ip, psi, rpres[0]);
 	gv_psi1->SetPointError(ip, 0., rpres[1]);
       
@@ -1806,7 +1376,7 @@ void PsiAngleDependence()            //%% Executable :
 
   std::cout << GraphSave->GetName() << " is created. " << std::endl;
 
-}
+} // void PsiAngleDependence() 
 
 void CentralityDependence()            //%% Executable :
 {
@@ -1940,61 +1510,6 @@ void CentralityDependence()            //%% Executable :
 
 
 
-TString SetupOutputFile(TString fopt)
-{
-  //--------------------------------------------------
-  //----- SETUP OUTPUT FILE --------------------------
-  //--------------------------------------------------
-  gSystem->cd("data");
-  TString oVer = gSystem->Getenv("OUTVER");
-  TString fName = fopt + oVer;
-
-  if( oVer == "" ) {
-    UInt_t kVer = 0; 
-    TString checkName;
-
-    while( kTRUE ) {
-      checkName = Form(fName + "%d.root", kVer);
-      if( !gSystem->FindFile(".",checkName) ) {
-	break;
-      }
-      else
-	kVer++;
-    }
-    fName = Form(fName + "%d.root", kVer);
-  }
-  else {
-    TString checkName = fName + ".root";;
-    if( !gROOT->IsBatch() && gSystem->FindFile(".",checkName) ) {
-      std::cout << checkName << " is existing. Do you recreate? (y/n)" << std::endl;
-      TString sAns;
-      std::cin >> sAns;
-      if(sAns == "N" || sAns == "n") {
-	std::cout << " Retry" << std::endl;
-	exit(0);
-      }
-    }
-    fName += ".root";
-  }
-
-  std::cout << "File " << fName << " will be created. " << std::endl;  
-
-  
-  return fName;
-  //--------------------------------------------------
-}
-
-Bool_t SetupEffCorrection()
-{
-  fefffile = TFile::Open("correctedPt.phi60.nomultcut.root");
-
-  if( fefffile != NULL ) return kTRUE;
-  else
-    return kFALSE;
-}
-
-
-//---------------------------------------------------
 void PtDistribution(UInt_t selid)
 {
   TH1D *hut[ybin1][2];
@@ -2055,3 +1570,592 @@ void PtDistribution(UInt_t selid)
   }
 
 }
+
+
+///######################################################################
+/// sub functions
+///######################################################################
+Double_t  GetError(Double_t x, Double_t y, Double_t xe, Double_t ye)
+{
+  if( y == 0 && ye == 0 ) return 0.;
+  Double_t xc = abs(x/y);
+  return  xc * sqrt(pow(xe/x,2) + pow(ye/y,2));
+}
+
+Double_t GetRPBaseAngle(STFlowInfo *aflow) {
+  auto RPangle   = aflow->unitP_fc.Phi();
+
+  if( isys == 4 && RPBase == 2)
+    RPangle   = RPPsi;
+  else if( RPBase == 1 )
+    RPangle   = aflow->unitP.Phi();      
+
+  return RPangle;
+}
+
+
+Double_t *GetRPResolution(UInt_t vn, UInt_t xn)
+{
+
+  Double_t *rpcor = new Double_t[3];
+  rpcor[0] = 0.;
+  rpcor[1] = 0.;
+  rpcor[2] = 0.;
+
+  if( xn < v1x.size() ) {
+
+    if( vn == 1 ){
+      rpcor[0] = v1x.at(xn);   // multiplicity
+      rpcor[1] = v1y.at(xn);   // v1 corr 
+      rpcor[2] = v1ye.at(xn);  // v1 corr error
+    }
+    else { //v2
+      rpcor[0] = v2x.at(xn);
+      rpcor[1] = v2y.at(xn);
+      rpcor[2] = v2ye.at(xn);
+    }
+  }
+  return rpcor;
+
+}
+
+//**************************************************
+UInt_t GetPsiRPIndex(Double_t aVal)
+{
+  if( abs( aVal ) > TMath::Pi() ) return (UInt_t)v1psix.size();
+
+  for(auto i = 1; i < (UInt_t)v1psix.size(); i++ ) {
+    if( aVal < v1psix.at(i) )
+      return i - 1;
+  }
+
+  return (UInt_t)v1psix.size() - 1;
+}
+//**************************************************
+UInt_t GetRPCorrIndex(Double_t aVal) //???
+{
+  UInt_t xn = v1x.size() - 1;
+
+  if( xn == 1 )
+    return 0;
+
+  if( aVal <= v1x.at( v1x.size() - 1 ) ) {
+    xn = (UInt_t)itrpvx->Eval( (Double_t)aVal ) ;
+  
+    if( abs(v1x.at(xn) - aVal) > abs(v1x.at(xn+1) - aVal) )
+      xn += 1;
+  }
+
+  return xn;
+}
+
+Double_t *GetPsiRPResolution(UInt_t ival)
+{
+  Double_t *rpcor = new Double_t[6];
+  for( UInt_t i = 0; i < 7; i++ ) 
+    rpcor[i] = 0.;
+
+
+  rpcor[0] = v1psix.at(ival);   // Psi angle
+  rpcor[1] = v1psiy.at(ival);   // v1 corr 
+  rpcor[2] = v1psiye.at(ival);  // v1 corr error
+
+  rpcor[3] = v2psix.at(ival);
+  rpcor[4] = v2psiy.at(ival);    // v2 corr
+  rpcor[5] = v2psiye.at(ival);   // v2 corr error
+
+  // rpcor[0] = v1psix.at(ival);  // Psi angle
+  // rpcor[1] = 1.;  // v1 corr 
+  // rpcor[2] = 0.;  // v1 corr error
+	     
+  // rpcor[3] = v2psix.at(ival);
+  // rpcor[4] = 1.;   // v2 corr
+  // rpcor[5] = 0.;   // v2 corr error
+
+  return rpcor;
+}
+
+//**************************************************
+TString GetPsiRPFileName()
+{
+  TString fn = "data/bpsi_"+ sysName + ".v" + sVer;
+  if( RPBase < 3 )
+    fn += Form("_%d", RPBase);
+
+  fn += Form(".m%02dto%02d.root",Lcent,Ucent);
+
+  return fn;
+}
+
+//**************************************************
+Bool_t SetPsiRPResolution()
+{
+  itrpvpsix = new ROOT::Math::Interpolator(20, ROOT::Math::Interpolation::kPOLYNOMIAL);
+
+  TString fname = GetPsiRPFileName(); 
+  TFile *fOpen = TFile::Open(fname);
+  if( fOpen == NULL ) return kFALSE;
+  
+  LOG(INFO) << fname << " is opened. " << FairLogger::endl;
+
+  auto hgv_psi1 = (TGraphErrors*)fOpen->Get("gv_psi1");
+  auto hgv_psi2 = (TGraphErrors*)fOpen->Get("gv_psi2");
+
+  if( hgv_psi1 == NULL || hgv_psi2 == NULL ) return kFALSE;
+
+  std::vector< Double_t > ix;
+    
+  Double_t x, y, xe, ye;
+  UInt_t k = 0;
+
+  for( Int_t i = 0; i < (Int_t)hgv_psi1->GetN(); i++ ) {
+
+    hgv_psi1->GetPoint(i, x, y);
+    xe = hgv_psi1->GetErrorX(i);
+    ye = hgv_psi1->GetErrorY(i);
+
+    ix.push_back(k); 
+    v1psix.push_back(x);
+    v1psiy.push_back(y);
+    v1psixe.push_back(xe);
+    v1psiye.push_back(ye);
+
+    k++;
+  }
+
+  for(UInt_t j = 0; j < (UInt_t)v1psix.size(); j++) {
+    LOG(INFO) << "v1 resolution:"<< j << " th " << v1psix.at(j) << " vs " << v1psiy.at(j) << " +- " << v1psiye.at(j) << FairLogger::endl; 
+  }
+
+  itrpvpsix->SetData(v1psix,ix);
+
+  k = 0;
+  for( Int_t i = 0; i < (Int_t)hgv_psi2->GetN(); i++ ) {
+    hgv_psi2->GetPoint(i, x, y);
+    xe = hgv_psi2->GetErrorX(i);
+    ye = hgv_psi2->GetErrorY(i);
+
+    v2psix.push_back(x);
+    v2psiy.push_back(y);
+    v2psixe.push_back(xe);
+    v2psiye.push_back(ye);
+    k++;
+  }
+
+  for(UInt_t j = 0; j < (UInt_t)v2psix.size(); j++) {
+    LOG(INFO) << "v2 resolution: "<< j << " th " << v2psix.at(j) << " vs " << v2psiy.at(j) << " +- " << v2psiye.at(j) << FairLogger::endl; 
+  }
+
+
+  fOpen->Close();
+
+  return kTRUE;
+}
+//**************************************************
+Bool_t SetRPResolution()
+{
+  itrpvx = new ROOT::Math::Interpolator(20, ROOT::Math::Interpolation::kPOLYNOMIAL);
+
+  TString fname = "data/mlt_"+ sysName + ".v" + sVer + ".root";
+  TFile *fOpen = TFile::Open(fname);
+  if( fOpen == NULL ) {
+    LOG(ERROR) << "Please do it doflow -2 " << FairLogger::endl;
+    return kFALSE;
+  }
+  
+  std::cout << fname << " is opened. " << std::endl;
+
+  auto hgv_mcos1 = (TGraphErrors*)fOpen->Get("gv_mcos1");
+  auto hgv_mcos2 = (TGraphErrors*)fOpen->Get("gv_mcos2");
+
+  std::vector< Double_t > ix;
+    
+  Double_t x, y, xe, ye;
+  UInt_t k = 0;
+  ix.push_back(k); 
+  v1x.push_back(0.); v1xe.push_back(0.);
+  v1y.push_back(0.); v1ye.push_back(0.);
+  k++;
+  for( Int_t i = (Int_t)hgv_mcos1->GetN()-1; i > -1; i-- ) {
+    hgv_mcos1->GetPoint(i, x, y);
+    xe = hgv_mcos1->GetErrorX(i);
+    ye = hgv_mcos1->GetErrorY(i);
+
+    ix.push_back(k); 
+    v1x.push_back(x);
+    v1y.push_back(y);
+    v1xe.push_back(xe);
+    v1ye.push_back(ye);
+
+    k++;
+  }
+  itrpvx->SetData(v1x,ix);
+
+
+  v2x.push_back(0.); v2xe.push_back(0.);
+  v2y.push_back(0.); v2ye.push_back(0.);
+
+  k = 0;
+  for( Int_t i = (Int_t)hgv_mcos2->GetN()-1; i > -1; i-- ) {
+    hgv_mcos2->GetPoint(i, x, y);
+    xe = hgv_mcos2->GetErrorX(i);
+    ye = hgv_mcos2->GetErrorY(i);
+
+    v2x.push_back(x);
+    v2y.push_back(y);
+    v2xe.push_back(xe);
+    v2ye.push_back(ye);
+
+    LOG(DEBUG) << "v2 resolution "<< k << " th " << v2x.at(k) << " vs " << v2y.at(k) << " +- " << v2ye.at(k) << FairLogger::endl; 
+    k++;
+  }
+
+  fOpen->Close();
+
+  return kTRUE;
+}
+//**************************************************
+Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)            //%% Executable : 
+{
+  Double_t *rpres = new Double_t[4];
+  hphi90_180->SetLineColor(2);
+
+  Double_t m0 = hphi0_180->GetEntries();
+  Double_t m1 = hphi90_180->GetEntries();
+
+  if( m0 == 0 ) {
+    std::cout << " No entry in hphi0_180 " << endl;
+    rpres[0] = 1.;
+    rpres[1] = 0.;
+    rpres[2] = 1.;
+    rpres[3] = 0.;
+    return rpres;
+  }
+
+  //  Double_t chi = sqrt(-2.* log(2.* m1/m0));
+  Double_t mr    = m1/m0;
+  Double_t mre2  = 1./m0;
+  Double_t chi   = sqrt(-4.* log(2.* mr));
+  Double_t dchin = sqrt(-4.* log(2.*(mr-1./sqrt(m1))));
+  Double_t chie2 = pow( chi - dchin, 2 );
+
+
+  //v1
+  if( chi > 0. ) {
+
+    //v1
+    Double_t par1[] = {0.626657, -0.09694, 0.02754, -0.002283};
+    rpres[0] = par1[0]*chi + par1[1]*pow(chi,3) + par1[2] * pow(chi,4) + par1[3]*pow(chi,5);  
+
+    //v2
+    Double_t par2[] = {0.25,  -0.011414, -0.034726, 0.006815};
+    rpres[2] = par2[0]*pow(chi,2) + par2[1]*pow(chi,3) + par2[2]*pow(chi,4) + par2[3]*pow(chi,5);
+
+    // errors
+    Double_t err2 = chie2*pow( par1[0] + 2.*par1[1]*chi + 4.*par1[2]*chi + 5.*par1[3]*chi, 2);
+    rpres[1] = sqrt( err2 );
+
+    err2          = chie2*pow( par2[0] + 2.*par2[1]*chi + 4.*par2[2]*chi + 5.*par2[3]*chi, 2);
+    rpres[3] = sqrt( err2 );
+  }
+
+  else {
+    Double_t chie = sqrt(chie2);
+    rpres[0] = sqrt(TMath::Pi())/(2.*sqrt(2))*chi*exp(-chi*chi/4.)*
+      (ROOT::Math::cyl_bessel_i(0,chi*chi/4.)+ROOT::Math::cyl_bessel_i(1,chi*chi/4.));
+    rpres[1] = 0.;
+    rpres[2] = sqrt(TMath::Pi())/(2.*sqrt(2))*chi*exp(-chi*chi/4.)*
+      (ROOT::Math::cyl_bessel_i(0.5,chi*chi/4.)+ROOT::Math::cyl_bessel_i(1.5,chi*chi/4.));
+    rpres[3] = 0.;
+  }
+ 
+  LOG(INFO) << " Getting correction factor " 
+   	    << std::setw(14) << rpres[0] << " +- " << std::setw(10) << rpres[1]
+   	    << " v2 "
+   	    << std::setw(14) << rpres[2] << " +- " << std::setw(10) << rpres[3]
+   	    << FairLogger::endl;
+
+  return rpres;
+} //Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)
+
+
+UInt_t GetV1RapidityIndex(Double_t y)
+{
+  UInt_t irapid1 = ybin1-1;
+  for( UInt_t i = 1; i < ybin1; i++){
+    if( y < yrange1[i]){
+      irapid1 = i-1;
+      break;
+    }
+  }
+  return irapid1;
+}
+UInt_t GetV1cmRapidityIndex(Double_t y)
+{
+  UInt_t irapid1 = ybin1-1;
+  for( UInt_t i = 1; i < ybin1; i++){
+    if( y < yrange1[i]/y_cm[isys] ){
+      irapid1 = i-1;
+      break;
+    }
+  }
+  return irapid1;
+}
+
+UInt_t GetV2RapidityIndex(Double_t y)
+{
+  UInt_t irapid2 = ybin2-1;
+  for( UInt_t i = 1; i < ybin2; i++){
+    if( y < yrange2[i]){
+      irapid2 = i-1;
+      break;
+    }
+  }
+  return irapid2;
+}
+UInt_t GetV2cmRapidityIndex(Double_t y)
+{
+  UInt_t irapid2 = ybin2-1;
+  for( UInt_t i = 1; i < ybin2; i++){
+    if( y < yrange2[i]/y_cm[isys]){
+      irapid2 = i-1;
+      break;
+    }
+  }
+  return irapid2;
+}
+
+UInt_t GetV1PtIndex(Double_t val)
+{
+  UInt_t ipt = ptbin1 - 1;
+  for(UInt_t i = 0; i < ptbin1; i++){
+    if( val < dpt1*(i+1)) {
+      ipt = i;
+      break;
+    }
+  }
+  return ipt;
+}
+
+UInt_t GetV2PtIndex(Double_t val)
+{
+  UInt_t ipt = ptbin2 - 1;
+  for(UInt_t i = 0; i < ptbin2; i++){
+    if( val < dpt2*(i+1)) {
+      ipt = i;
+      break;
+    }
+  }
+  return ipt;
+}
+
+//--------------------------------------------------
+
+
+TString SetupOutputFile(TString fopt)
+{
+  //--------------------------------------------------
+  //----- SETUP OUTPUT FILE --------------------------
+  //--------------------------------------------------
+  gSystem->cd("data");
+  TString oVer  = gSystem->Getenv("OUTVER");
+  TString fName = fopt + oVer;
+
+  if( oVer == "" ) {
+    UInt_t kVer = 0; 
+    TString checkName;
+
+    while( kTRUE ) {
+      checkName = Form(fName + "%04d.root", kVer);
+      if( !gSystem->FindFile(".",checkName) ) {
+	break;
+      }
+      else
+	kVer++;
+    }
+    fName = Form(fName + "%d.root", kVer);
+  }
+  else {
+    TString checkName = fName + ".root";;
+    if( !gROOT->IsBatch() && gSystem->FindFile(".",checkName) ) {
+      std::cout << checkName << " is existing. Do you recreate? (y/n)" << std::endl;
+      TString sAns;
+      std::cin >> sAns;
+      if(sAns == "N" || sAns == "n") {
+	std::cout << " Retry" << std::endl;
+	exit(0);
+      }
+    }
+    fName += ".root";
+  }
+
+  std::cout << "File " << fName << " will be created. " << std::endl;  
+
+  
+  return fName;
+}
+//--------------------------------------------------
+
+Bool_t SetupEffCorrection()
+{
+  fefffile = TFile::Open("correctedPt.phi60.nomultcut.root");
+
+  if( fefffile != NULL ) return kTRUE;
+  else
+    return kFALSE;
+}
+
+
+//---------------------------------------------------
+
+void DetectorBias()
+{
+  UInt_t m = 0;
+
+  SetBranch();
+  Int_t nEntry = rChain->GetEntries();
+
+
+  Double_t  cosphi = 0.;
+  Double_t  sinphi = 0.;
+  Double_t  cos2phi= 0.;
+  Double_t  sin2phi= 0.;
+
+  Double_t count = 0.;
+  for(Int_t i = 0; i < nEntry; i++){
+
+    rChain->GetEntry(i);
+    STFlowInfo *aflow = (STFlowInfo*)aFlowArray->At(0);
+
+    
+    if(aflow->mtrack1 > Ucent || aflow->mtrack1 <= Lcent ) continue;
+    count++;
+
+    cosphi += cos( (aflow->unitP_fc).Phi());      
+    sinphi += sin( (aflow->unitP_fc).Phi());
+
+    cos2phi += cos(2.*(aflow->unitP_fc).Phi());      
+    sin2phi += sin(2.*(aflow->unitP_fc).Phi());
+
+  }
+  
+  std::cout << " <cos Phi> " << cosphi/count 
+	    << " <sin phi> " << sinphi/count << std::endl;
+
+  std::cout << " <cos 2Phi> " << cos2phi/count 
+	    << " <sin 2phi> " << sin2phi/count << std::endl;
+
+}
+//---------------------------------------------------
+
+
+void GetFittingParameters(TH1D &h1, Double_t pp[6])
+{
+  for(UInt_t i = 0; i < 6; i++)
+    pp[i] = 0.;
+
+
+  Double_t nbin = h1.GetNbinsX();
+  Double_t scf  = h1.GetEntries();
+  h1.SetNormFactor(nbin);
+  // h1.SetMaximum(1.2);
+  // h1.SetMinimum(0.8);
+  fcos1->SetParameter(0, 1.);
+  fcos1->SetParameter(1, 0.1);
+
+  h1.Fit("fcos1","","",-3.1,3.1);
+
+  pp[0] = fcos1->GetParameter(0);
+  pp[1] = fcos1->GetParameter(1);
+  pp[2] = fcos1->GetParError(0);
+  pp[3] = fcos1->GetParError(1);
+  pp[3] = pp[1]*sqrt(pp[2]/pp[0]*pp[2]/pp[0] + pp[3]/pp[1]*pp[3]/pp[1]);
+  pp[1] = pp[1]/pp[0];
+  
+  
+
+  h1.SetNormFactor(-1);
+}
+//---------------------------------------------------
+
+void GetFittingParameters(TH1D &h1, Double_t pp[6], Double_t corr[2])
+{
+  GetFittingParameters(h1,pp);
+  
+  if( corr[0] != 0 && corr[1] != 0 ) {
+    pp[4] = pp[1]/corr[0];
+    pp[5] = sqrt( pow(pp[4],2)*( pow(pp[3]/pp[1],2) + pow(corr[1]/corr[0], 2) ));
+  }
+  else {
+    pp[4] = 0.;
+    pp[5] = 0.;
+  }
+}
+//---------------------------------------------------
+void PlotSubEvent(Double_t ml=30, Double_t mu=80)   
+{
+
+  Double_t mlt[] = {ml, mu};
+  //    Double_t mlt[2] = {0., 8.};
+  //Double_t mlt[2] = {8., 16.};
+  // Double_t mlt[2] = {16., 24.};
+  // Double_t mlt[2] = {24., 32.};
+  // Double_t mlt[2] = {32., 40.};
+  // Double_t mlt[2] = {40., 100.};
+
+  TCut mcrot = Form("aFlow->mtrack4>%f&&aFlow->mtrack4<%f",mlt[0]*2.,mlt[1]*2.);
+  TCut mc1r  = Form("mtrack_1>%f&&mtrack_1<%f"  ,mlt[0],mlt[1]);
+  TCut mc2r  = Form("mtrack_2>%f&&mtrack_2<%f"  ,mlt[0],mlt[1]);
+
+  TString sname;
+  
+  sname = mcrot.GetTitle();
+  auto *hrotx = new TH1D("hrotx","All   "+sname+ ";Qx" ,100,-12.,12.);
+  auto *h1rx  = new TH1D("h1rx", "sub_1 "+sname+ ";Qx" ,100,-12.,12.);
+  auto *h2rx  = new TH1D("h2rx", "sub_2 "+sname+ ";Qx" ,100,-12.,12.);
+  auto *hroty = new TH1D("hroty","All   "+sname+ ";Qy" ,100,-12.,12.);
+  auto *h1ry  = new TH1D("h1ry", "sub_1 "+sname+ ";Qy" ,100,-12.,12.);
+  auto *h2ry  = new TH1D("h2ry", "sub_2 "+sname+ ";Qy" ,100,-12.,12.);
+ 
+
+  rChain->Project("hrotx","unitP2_fc.X()",mcrot);
+  rChain->Project("h1rx" ,"unitP_1fc.X()"  ,mc1r);
+  rChain->Project("h2rx" ,"unitP_2fc.X()"  ,mc2r);
+					      
+  rChain->Project("hroty","unitP2_fc.Y()",mcrot);
+  rChain->Project("h1ry" ,"unitP_1fc.Y()"  ,mc1r);
+  rChain->Project("h2ry" ,"unitP_2fc.Y()"  ,mc2r);
+
+
+  //----- Drawing       
+  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+
+  hrotx->SetLineColor(2);
+  hrotx->SetNormFactor(1);
+  h1rx ->SetLineColor(4);
+  h1rx ->SetNormFactor(1);
+  h2rx ->SetLineColor(6);
+  h2rx ->SetNormFactor(1);
+
+  h1rx->Draw();
+  h2rx->Draw("same");
+  hrotx->Draw("same");
+
+  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+
+  hroty->SetLineColor(2);
+  hroty->SetNormFactor(1);
+  h1ry ->SetLineColor(4);
+  h1ry ->SetNormFactor(1);
+  h2ry ->SetLineColor(6);
+  h2ry ->SetNormFactor(1);
+
+  h1ry->Draw();
+  h2ry->Draw("same");
+  hroty->Draw("same");
+}
+
+
+///######################################################################
+
+
