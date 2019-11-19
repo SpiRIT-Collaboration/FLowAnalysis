@@ -383,7 +383,11 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     //--------------------------------------------------
     //----- Main loop 
     //--------------------------------------------------
+    UInt_t mtk = 0;
     while( (aPart = (STParticle*)next()) ) {
+
+      mtk++;
+      if( isys == 4 && mtk > (UInt_t)aflow->mtrack4*0.6 ) break; 
 
       // ---- track quality selection ---
       if( aPart->GetGoodTrackFlag() != 11 ) continue;

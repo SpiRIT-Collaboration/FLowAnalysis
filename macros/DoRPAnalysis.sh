@@ -14,7 +14,7 @@ export REDO=0
 
 export MNINVERSION=0
 
-export MNVERSION=19              ##   <------@@ input 
+export MNVERSION=21              ##   <------@@ input 
 export MNDBVERSION=$MNVERSION
 
 source SetEnvRPSim.sh

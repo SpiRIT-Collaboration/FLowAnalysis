@@ -5,22 +5,20 @@ source setup.sh
 export MNMACRO=DoFlow_adv.C        ##<--- MACRO name
 
 ##---->>> EDIT here
+
+##------------- RPSim  //Simulation
+export MNDB=rpsim                  ##<---
+export MNVERSION=8                ##   <------@@ input 
+export MNDBVERSION=$MNVERSION
+source SetEnvRPSim.sh
+export MNOVER=0
+##<-----------
+
 ##<----------- data
-export MNRNF={$RNF132}             ##<--- 
+export MNRNF=$RNF132               ##<--- 
 export MNDB=BTt                    ##<---
 export MNVERSION=41.2              ##   <------@@ input 
 ##<----
-
-##------------- RPSim
-export MNDB=rpsim                  ##<---
-
-export MNVERSION=19                ##   <------@@ input 
-export MNDBVERSION=$MNVERSION
-
-source SetEnvRPSim.sh
-
-export MNOVER=0
-##<-----------
 
 
 export SUFX=$MNDB
@@ -60,7 +58,8 @@ function doflow()
 	export MNOVER=$2
     fi
 
-    LC=0 UC=80 RPBS=$2 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNOVER root $MNMACRO\($1\)
+#    LC=0 UC=80 RPBS=$2 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNOVER root $MNMACRO\($1\)
+    LC=0 UC=40 RPBS=$2 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNOVER root $MNMACRO\($1\)
 }
 
 echo $MNVERSION to $MNOVER
