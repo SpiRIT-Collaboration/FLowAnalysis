@@ -19,6 +19,8 @@ namespace STLorentzBoostVector
 
 TVector3 STLorentzBoostVector::GetBoostVector(UInt_t sysid = 4)
 {
+  if( sysid == 5 ) sysid = 0; // For Simulation
+
   Double_t EkB_lb    = eB_lb[sysid]  * mB[sysid];
   Double_t beamMass  = mB[sysid] * amu;
   Double_t targetMass= mT[sysid] * amu;

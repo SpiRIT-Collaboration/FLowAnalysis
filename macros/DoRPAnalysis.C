@@ -1,5 +1,5 @@
 #include "DoRPAnalysis.h"
-#include "RunToSystemID.h"
+#include  "../analysisformat/STRunToBeamA.hh"
 //----------------------------------------------------------------------
 // DoFlowAnalysis.C 
 // input: 
@@ -27,6 +27,8 @@ void DoRPAnalysis(Long64_t nmax = -1)
     std::cout << " A flow correction dbase is not fond. " << std::endl;
     exit(0);
   }
+  
+
 
   Open();
 
@@ -54,8 +56,9 @@ void DoRPAnalysis(Long64_t nmax = -1)
       if( (aFlowInfo->mtrack1*0.8-20) > aFlowInfo->mtrack4 ) continue;
     }
     //------ end of event selection
-
     fflowtask->SetFlowInfo( aFlowInfo );
+    fflowtask->SetRPMidRapidityCut(dMct);
+
     fflowtask->SetParticleArray( *aParticleArray );
 
     if( !bRedo ) { 
@@ -69,7 +72,6 @@ void DoRPAnalysis(Long64_t nmax = -1)
       while( (apart = (STParticle*)next()) ) {
 
 	//	cout << "bef  ->" << apart->GetIndividualRPVector().Phi() << endl;
-
 	fflowtask->SetIndividualReactionPlane( *apart );
 	TVector3 rpvec = apart->GetIndividualRPVector();
 	apart->SetAzmAngle_wrt_RP( TVector2::Phi_mpi_pi( apart->GetRotatedMomentum().Phi() - rpvec.Phi() ) );
@@ -93,15 +95,18 @@ void DoRPAnalysis(Long64_t nmax = -1)
     TClonesArray &aflow = *anewFlow;
     new( aflow[0] ) STFlowInfo( *aFlowInfo );
 
-
     mflw->Fill();
 
     if( ievt > nmax && nmax != -1 ) break;
-
   }
 
+  
+  
+
   fout->cd();
-  fout->Write();
+  fout->Write("",TObject::kWriteDelete);
+  fv1y->Write();
+  fv2y->Write();
   std::cout << fout->GetName() << std::endl;
 
   if(gROOT->IsBatch()) {
@@ -115,11 +120,15 @@ void DoRPAnalysis(Long64_t nmax = -1)
 void SetEnvironment()
 {
 
-  sRun   = gSystem -> Getenv("RUN");  // RUN number
+  sRun   = gSystem -> Getenv("RUN");         // RUN number
   sSuf   = gSystem -> Getenv("SUFX");
-  sVer   = gSystem -> Getenv("VER");  // input version
-  oVer   = gSystem -> Getenv("OVER"); // output version
-  dVer   = gSystem -> Getenv("DBVER");// database version
+  sVer   = gSystem -> Getenv("VER");         // input version
+  oVer   = gSystem -> Getenv("OVER");        // output version
+  dVer   = gSystem -> Getenv("DBVER");       // database version
+
+  TString sMct   = gSystem -> Getenv("MDCUT"); // mid-rapidity cut abs(y_cm)< MDCUT
+  if( sMct != "")
+    dMct = atof(sMct);
 
   TString sRedo  = gSystem -> Getenv("REDO");
   
@@ -133,8 +142,8 @@ void SetEnvironment()
   foutname = "run"+sRun+"_"+sSuf+".v"+oVer + ".root"; 
 
   // Set RUN number
-  iRun = atoi(sRun);
-  RunToSystemID(iRun);
+  iRun    =  atoi(sRun);
+  isys    =  STRunToBeamA::GetSystemID(iRun);
 
   // set re calculation flag
   bRedo = sRedo=="1" ? kTRUE : kFALSE;
@@ -145,6 +154,7 @@ void SetEnvironment()
        << " Output file -> " << foutname
        << " flow correction database version -> v." << dVer
        << " ReDo ? " << bRedo
+    
        << endl;
 }
 
@@ -235,14 +245,18 @@ void Open()
   aBDC = new TClonesArray("STBDC", 1);
   aParticleArray = new TClonesArray("STParticle",100);
 
+  rChain->SetBranchAddress("STParticle",&aParticleArray);
+  rChain->SetBranchAddress("STFlow",    &aFlowArray);
   
   if( isys < 4)
     rChain->SetBranchAddress("STBDC"     ,&aBDC);
-  else if( isys == 4 ) 
+  else if( isys == 5 ) { 
     rChain->SetBranchAddress("RPPsi"     ,&RPPsi);
-
-  rChain->SetBranchAddress("STParticle",&aParticleArray);
-  rChain->SetBranchAddress("STFlow",    &aFlowArray);
+    auto fin = TFile::Open(fn);
+    fv1y = (TF1*)fin->Get("fv1y");
+    fv2y = (TF1*)fin->Get("fv2y");
+    fin->Close();
+  }
 
 }
 void OutputTree()
@@ -278,7 +292,7 @@ void OutputTree()
   if( aBDC != NULL && beamPID != 100)  mflw->Branch("STBDC",&aBDC);
   if( aParticleArray != NULL) mflw->Branch("STParticle",&aParticleArray);
   if( anewFlow != NULL)       mflw->Branch("STFlow",&anewFlow);
-  if( isys  == 4 )            mflw->Branch("RPPsi" ,&RPPsi);
+  if( isys  == 5 )            mflw->Branch("RPPsi" ,&RPPsi);
     
  
 }

@@ -29,7 +29,9 @@ private:
   Bool_t fIsSubeventAnalysis;    //!< Subevent analysis flag  
   UInt_t selReactionPlanef;      //! track quality for reaction plane 
   UInt_t iSystem;                //!  system ID {"(132Sn + 124Sn)", "(108Sn + 112Sn)", "(124Sn + 112Sn)", "(112Sn + 124Sn)", "(p + p)"}
+  Float_t fRPMidCut;             //!  exclude mid-rapidity reation from the RP calculation abs(y_cm)<fRPMidCut
   
+
   TString sVer; //!
 
   STFlowInfo     *fflowinfo;    //!
@@ -102,6 +104,7 @@ public:
   void    SetGoodEventFlag(UInt_t val){fflowinfo->SetGoodEventFlag(val);}
   UInt_t  GetGoodEventFlag(){return fflowinfo->GetGoodEventFlag();}
 
+  void    SetRPMidRapidityCut(Float_t val) {fRPMidCut = val; fflowinfo->fRPMidCut = fRPMidCut;}
 };
 
 #endif

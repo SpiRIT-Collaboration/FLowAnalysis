@@ -5,21 +5,21 @@ source setup.sh
 export MNMACRO=DoFlow_adv.C        ##<--- MACRO name
 
 ##---->>> EDIT here
-
-##------------- RPSim  //Simulation
-export MNDB=rpsim                  ##<---
-export MNVERSION=8                ##   <------@@ input 
-export MNDBVERSION=$MNVERSION
-source SetEnvRPSim.sh
-export MNOVER=0
-##<-----------
-
 ##<----------- data
 export MNRNF=$RNF132               ##<--- 
 export MNDB=BTt                    ##<---
 export MNVERSION=41.2              ##   <------@@ input 
 ##<----
 
+##------------- RPSim  //Simulation
+export MNDB=rpsim                  ##<---
+export MNVERSION=49                 ##   <------@@ input 
+export MNDBVERSION=$MNVERSION
+source SetEnvRPSim.sh
+export MNOVER=0
+##<-----------
+
+echo $MNDBVERSION
 
 export SUFX=$MNDB
 export MNrunOne='SUFX=$MNDB  VER=$MNVERSION root $MACRO.C'
@@ -49,28 +49,36 @@ function doflowbatch()
     LC=0 UC=40 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($1\)
 }
 
+function dorpres()
+{
+    RPBS=0 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNVERSION root DoRPRes.C\($1\)
+}
+
+
 function doflow() 
 {
-    if [ -n "$3" ]; then
-	export MNOVER=$3
-	echo "output version -> "  $MNOVER
-    elif [ -n "$2" ]; then
+    if [ -n "$2" ]; then
 	export MNOVER=$2
+	echo "output version -> "  $MNOVER
+    elif [ -n "$3" ]; then
+	export MNDBVERSION=$3
     fi
 
-#    LC=0 UC=80 RPBS=$2 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNOVER root $MNMACRO\($1\)
-    LC=0 UC=40 RPBS=$2 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNOVER root $MNMACRO\($1\)
+#    LC=0 UC=500 RPBS=$3 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNOVER root $MNMACRO\($1\)
+#    LC=0 UC=80 RPBS=$3 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNOVER root $MNMACRO\($1\)
+#    LC=0 UC=40 RPBS=$3 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNOVER root $MNMACRO\($1\)
+    RPBS=0 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNOVER DBVER=$MNDBVERSION root $MNMACRO\($1\)
 }
 
 echo $MNVERSION to $MNOVER
 cat DoFlow.sh |grep function
 env|grep MN
 
-echo "doflow -2   :: Get centrality and Psi dependent correction"
-echo "doflow -4   :: Get Psi dependent correction parameter"
-echo "doflow -3   :: Get overall correction factor"
+echo "dorpres 0   :: Get centrality and Psi dependent correction"
+echo "dorpres 1   :: Get Psi dependent correction parameter"
+echo "dorpres 2   :: Get overall correction factor"
 echo "doflow      :: open files "
-echo "doflow 2 0(output version#) :: DoFlow_adv.C"
+echo "doflow 2  0(output version#) 1(Corretion versoin):: DoFlow_adv.C"
 echo "-1:pi- 1:pi+, 2:p, 3:d, 4:t, 5:3He, 6: 4He, 7:n, 8:H" 
 echo "Type  run #(partid) #(Output version)"
 

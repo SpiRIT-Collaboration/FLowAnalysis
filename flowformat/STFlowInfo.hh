@@ -54,6 +54,8 @@ public:
   
   UInt_t   goodEventf;
   
+  Float_t  fRPMidCut;
+
 public:
 
   void Clear();
@@ -79,7 +81,7 @@ public:
   Double_t  GetRPSigma() {return rpSigma;}
   void      SetRPChi(Double_t val, UInt_t n){n < 1 ? rpChi[n] = val : rpChi[0] = val;}
 
-  ClassDef(STFlowInfo,4);
+  ClassDef(STFlowInfo,5);
 };
 
 #endif

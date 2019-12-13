@@ -5,6 +5,7 @@ struct gplot{
   TString Version;
   TString fileHeader;
   TString comment;
+  TString label;
 };
 
 TString  bName[]   = {"132Sn", "108Sn", "124Sn", "112Sn", "100Sn"};
@@ -16,27 +17,40 @@ Double_t sysA[]    = {256.,    220.,      236.,   236.   ,  256.};
 //--- Data
 Bool_t bsys[]  = { 0, 0, 0, 0, 1};    //132Sn, 108Sn, 124Sn, 112Sn
 //-----------
-UInt_t  bver[]  = {1, 1, 1, 0};
+UInt_t  bver[]  = {1, 1, 1, 1};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v13_0","advYPt_",".m00to80"},//:1.6e+6"},
-  {".v13_1","advYPt_",".m00to80"},//:1.6e+6"},
-  {".v13_2","advYPt_",".m00to80"},//:1.6e+6"},
-  {".v8"  ,"advYPt_",".m00to40"},//:1.6e+6"},
-  {".v7"  ,"advYPt_",".m00to40"},//:1.6e+6"},
-  {".v5"  ,"advYPt_",".m00to40"},//:1.6e+6"},
-  {".v3"  ,"advYPt_",".m00to40"},//:1.6e+6"},
-  {".v1"  ,"advYPt_",".m00to40"},//:5e+5"},
-  {".v0"  ,"advYPt_",".m00to40"},//:5e+5"},
-  {".v0.6"  ,"advYPt_",".m00to40"},//"ExB&S.C."},
-  {".v0.1"  ,"advYPt_",".m00to40"},//"ExB&S.C."},
-  {".v0.2"  ,"advYPt_",".m00to40"},//"ExB&S.C."},
-  {".v41.2"  ,"advYPt_",".m30to40"},//"ExB&S.C."},
-  {".v41.0"  ,"advYPt_",""},//"ExB&S.C."},
-  {".v41.1"  ,"advYPt_",""},//"ExB&S.C."},
-  {".v42.0"  ,"advYPt_","ExB&S.C. NDF>20"},
-  {".v40.0"  ,"advYPt_","ExB"},
-  {".v38.0"  ,"advYPt_","no corr*"},
+  {".v13"    ,"advYPt_",".m00to80",""},
+  {".v6"     ,"advYPt_",".m00to80",""},
+  {".v22"    ,"advYPt_",".m00to80",""},
+  {".v3"    ,"advYPt_",".m00to40",""},
+  //  {".v22"     ,"advYPt_",".m00to80",""},
+  //  {".v22"     ,"advYPt_",".m00to80",""},
+  //
+  //
+  {".v400"     ,"advYPt_",".m00to80",""},
+  {".v4"     ,"advYPt_",".m00to80",""},
+  {".v14"    ,"advYPt_",".m00to80","all again"},
+  {".v14_4"  ,"advYPt_",".m00to80","all"},
+  {".v43"    ,"advYPt_",".m00to80","|y_cm|>0.005"},
+  {".v42"    ,"advYPt_",".m00to80","|y_cm|>0.01"},
+  {".v41_0"  ,"advYPt_",".m00to80","|y_cm|>0.05"},
+  {".v13_1"  ,"advYPt_",".m00to80",""},
+  {".v13_2"  ,"advYPt_",".m00to80",""},
+  {".v8"     ,"advYPt_",".m00to40",""},
+  {".v7"     ,"advYPt_",".m00to40",""},
+  {".v5"     ,"advYPt_",".m00to40",""},
+  {".v1"     ,"advYPt_",".m00to40",""},
+  {".v0"     ,"advYPt_",".m00to40",""},//:5e+5"},
+  {".v0.6"   ,"advYPt_",".m00to40",""},//"ExB&S.C."},
+  {".v0.1"   ,"advYPt_",".m00to40",""},//"ExB&S.C."},
+  {".v0.2"   ,"advYPt_",".m00to40",""},//"ExB&S.C."},
+  {".v41.2"  ,"advYPt_",".m30to40",""},//"ExB&S.C."},
+  {".v41.0"  ,"advYPt_",""        ,""},//"ExB&S.C."},
+  {".v41.1"  ,"advYPt_",""        ,""},//"ExB&S.C."},
+  {".v42.0"  ,"advYPt_",""        ,"ExB&S.C. NDF>20"},
+  {".v40.0"  ,"advYPt_",""        ,"ExB"     },
+  {".v38.0"  ,"advYPt_",""        ,"no corr*"},
 };
 
 TString sVer[nmax];
@@ -65,8 +79,6 @@ void PlotPsiCorrection(UInt_t bmp = 0) // 0: phi, 1:mlt
     }
   }
 
-  TString ltitle;
-
 
   TGraphErrors *gv_psi1[5];
   TGraphErrors *gv_psi2[5];
@@ -92,7 +104,9 @@ void PlotPsiCorrection(UInt_t bmp = 0) // 0: phi, 1:mlt
       TString fname = "data/bpsi_" + bName[is] + sVer[it] + cmnt[it] + ".root";
       if( bmp == 1 )
 	fname = "data/mlt_" + bName[is] + sVer[it] + ".root";
-
+      
+      
+      TString ltitle = sVer[it] + ":" + gnames[it].label;
 
       auto fOpen = TFile::Open(fname); 
 	
@@ -104,8 +118,10 @@ void PlotPsiCorrection(UInt_t bmp = 0) // 0: phi, 1:mlt
 	gv_psi1[itt] = (TGraphErrors*)fOpen->Get("gv_psi1");
 	gv_psi2[itt] = (TGraphErrors*)fOpen->Get("gv_psi2");
 	gv_psi2[itt]->Print();
-	  
-	cout << " itt " << itt << endl;
+
+	auto mlt = (TH1I*)fOpen->Get("hmult");
+
+	cout << " itt " << itt << " --> # of events = " << mlt->GetEntries() << endl;
 
       }
       else {
@@ -123,8 +139,8 @@ void PlotPsiCorrection(UInt_t bmp = 0) // 0: phi, 1:mlt
       mrpsi1->Add( gv_psi1[itt] );
       mrpsi2->Add( gv_psi2[itt] );
 
-      lgr1->AddEntry( gv_psi1[itt], sVer[it]); //fsys[is] );
-      lgr2->AddEntry( gv_psi2[itt], sVer[it]); //fsys[is] );
+      lgr1->AddEntry( gv_psi1[itt], ltitle);
+      lgr2->AddEntry( gv_psi2[itt], ltitle);
 	  
       itt++;
 

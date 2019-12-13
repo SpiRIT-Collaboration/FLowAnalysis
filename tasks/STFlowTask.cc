@@ -4,7 +4,8 @@ STFlowTask::STFlowTask(Bool_t bfltn, Bool_t bsub, Bool_t bbst) :
   fIsFlowCorrection(bfltn),
   fIsSubeventAnalysis(bsub),
   fIsBootStrap(bbst),
-  selReactionPlanef(1000)
+  selReactionPlanef(1000),
+  fRPMidCut(0.)
 {
 
   TDatime dtime;
@@ -51,6 +52,7 @@ void STFlowTask::SetFlowTask()
   ntrack[2] = 0;
   ntrack[4] = 0;
   ntrack[5] = 0;
+  ntrack[6] = 0;
 
   fflowinfo->Clear();
 
@@ -81,16 +83,21 @@ Bool_t STFlowTask::Init(UInt_t irun, TString sver)
   sVer = sver;
   iRun = irun;
 
-  iSystem = 4;
-  if(iRun >= 2841 && iRun <= 3039)
-    iSystem = 0; // 132            
-  else if(iRun >= 2261 && iRun <= 2509)
-    iSystem = 1; // 108
-  else if(iRun >= 3059 && iRun <= 3184)
-    iSystem = 2; // 124
-  else if(iRun >= 2520 && iRun <= 2653)
-    iSystem = 3; // 112 
 
+  iSystem =  STRunToBeamA::GetSystemID(irun);
+  LOG(INFO) << " Irun " << irun << " system " << iSystem << FairLogger::endl;
+
+  // iSystem = 4;
+  // if(iRun >= 2841 && iRun <= 3039)
+  //   iSystem = 0; // 132            
+  // else if(iRun >= 2261 && iRun <= 2509)
+  //   iSystem = 1; // 108
+  // else if(iRun >= 3059 && iRun <= 3184)
+  //   iSystem = 2; // 124
+  // else if(iRun >= 2520 && iRun <= 2653)
+  //   iSystem = 3; // 112 
+  // else if(iRun <= 1000 )
+  //   iSystem = 5; //Simulation
 
   fflowinfo->SetRun( irun );  
   
@@ -110,7 +117,6 @@ Bool_t STFlowTask::Init(UInt_t irun, TString sver)
 void STFlowTask::SetFlowInfo(STFlowInfo *aflowinfo) 
 {
   fflowinfo = aflowinfo;
-
 
   ntrack[0] = fflowinfo->mtrack0;
   ntrack[1] = fflowinfo->mtrack1;
@@ -435,12 +441,11 @@ void STFlowTask::SetupFlow(STParticle &apart)
 {
   // Setup for flow analysis
 
-
   auto pid    =  apart.GetPIDLoose();
   if( pid == 211 )
     apart.SetReactionPlaneFlag(10);
 
-  else if( apart.GetReactionPlaneFlag() == 1111 || // for simulation
+  else if( iSystem == 5 || // for simulation
 	  ( pid > 2000 &&  
 	    apart.GetdEdxFlag()       &&  // dedx <= maxdEdx
 	    apart.GetMomentumFlag()   &&    // p <= maxMomentum
@@ -449,8 +454,9 @@ void STFlowTask::SetupFlow(STParticle &apart)
 	    apart.GetVertexAtTargetFlag() && 
 	    apart.GetDistanceAtVertex() <= 20 )) {
 
-    apart.SetReactionPlaneFlag(1000);
+    apart.SetReactionPlaneFlag(1001);
 
+    ntrack[6]++;    
   }
   else
     apart.SetReactionPlaneFlag(0);
@@ -458,9 +464,7 @@ void STFlowTask::SetupFlow(STParticle &apart)
 
   // Pt weight
   TLorentzVector lrnzVec =  apart.GetLorentzVector();
-  
   TVector3 boostVec = STLorentzBoostVector::GetBoostVector(iSystem); 
-
   lrnzVec.Boost(-boostVec);
 
   auto rapiditycm = lrnzVec.Rapidity();
@@ -472,6 +476,10 @@ void STFlowTask::SetupFlow(STParticle &apart)
   else
     apart.SetRPWeight(1);
 
+
+  if( abs( apart.GetRapiditycm() ) < fRPMidCut ) 
+    apart.AddReactionPlaneFlag(3);
+
 }
 
 void STFlowTask::DoFlowAnalysis(STParticle &apart)
@@ -479,10 +487,8 @@ void STFlowTask::DoFlowAnalysis(STParticle &apart)
   
   //  SetupFlow( apart );
 
-  if( apart.GetReactionPlaneFlag() >= selReactionPlanef ){
+  if( apart.GetReactionPlaneFlag()%2 == 1 ){
     ntrack[4]++;
-
-    apart.AddReactionPlaneFlag(1);
 
     TVector2 upt = apart.GetRotatedPt().Unit();
     fflowinfo->unitP += apart.GetRPWeight() * TVector3( upt.X(), upt.Y(), 0.);

@@ -1,5 +1,5 @@
 #include "./thermalFunction.h"
-#include "GetLorentzBoost.C"
+#include "../tasks/STLorentzBoostVector.hh"
 #include "ProcessInfo.C"
 
 Double_t y_cm[]  = { 0.382453, 0.364873, 0.390302, 0.354066};
@@ -11,9 +11,9 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
   UInt_t mevent = maxevt;
 
   //@@@@@
-  // UInt_t mlt = 50;
-  UInt_t mlt = 40;
-  //UInt_t mlt = 30;
+  //UInt_t mlt = 100;
+  //  UInt_t mlt = 30;
+  UInt_t mlt = 80;
   //UInt_t mlt = 10;
 
   Bool_t bSingle = kFALSE;
@@ -39,7 +39,6 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
   }    
   fgcut->Close();
 
-
   TFile *fout = new TFile(Form("data/run%04d_rpsim.v0.root",irun),"recreate");
   TTree *ftree= new TTree("cbmsim","Flow simulation");
 
@@ -49,7 +48,8 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,1400);
   cc->Divide(3,4);
   
-  auto vboost = LorentzBoost(0);
+  //  auto vboost = LorentzBoost(0);
+  auto vboost = STLorentzBoostVector::GetBoostVector(5);
 
   //---- 
   auto fdndy  = new TF1("fdndy" ,"gaus",-1.,1.);
@@ -117,9 +117,9 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
   fv2y->SetParameter(1,  0.1);
   fv2y->SetParameter(2, -0.02);
 
-  fv2y->SetParameter(0, -0.12);
-  fv2y->SetParameter(1,  0.);
-  fv2y->SetParameter(2,  0.);
+  // fv2y->SetParameter(0, -0.08);
+  // fv2y->SetParameter(1,  0.);
+  // fv2y->SetParameter(2,  0.);
 
   if( bSingle ) {
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic)); }
@@ -139,7 +139,7 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
   STParticle*     aParticle = new STParticle();
   STFlowInfo*     aFlowInfo = new STFlowInfo();
   STFlowTask*     aFlowTask = new STFlowTask(kFALSE, kTRUE, kFALSE);
-  aFlowTask -> Init(2841, "0");
+  aFlowTask -> Init(irun, "0");
   
   Double_t        RPPsi = 0.;
 
@@ -173,6 +173,9 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
       fazim->SetParameter(2, RPPsi);
       Double_t aPhi = fazim->GetRandom();
 
+      //@@@@
+      // if( i >= mlt*0.9 )
+      //  	aPhi = 2.*TMath::Pi()*(grnd.Rndm() - 0.5);
 
       //Lab frame
       Double_t aPt    = fdndpt->GetRandom()*1000.;
@@ -196,7 +199,7 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
 
       //@@@@@
       //      if( !gcang->IsInside( yaw, pitch ) )continue; //v5
-      //      if( !gcang->IsInside( pitch, yaw ) )continue; //v7, v8 OK
+      //   if( !gcang->IsInside( pitch, yaw ) )continue; //v7, v8 OK
       
       hyawpitch->Fill(yaw, pitch);
       hThetaPhi->Fill(aTheta, aPhi);
@@ -315,7 +318,7 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
 
   hyawpitch->Draw("colz");
   
-  ftree->Write();
+  ftree->Write("",TObject::kWriteDelete);
   fv1y->Write();
   fv2y->Write();
   hThetaPhi->Write();

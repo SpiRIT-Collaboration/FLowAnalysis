@@ -46,11 +46,19 @@ UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {1, 0, 0, 0, 0, 0, 0, 0, 0};
+UInt_t  bver[]  = {1, 1}; //{1, 1, 1, 1, 1, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
   {""         ,"advYPt_",""},
-  {".v11.0"   ,"advYPt_",""},
+  {""         ,"advYPt_",""},
+  {".v3.0"   ,"advYPt_","all"},
+  {".v3.1"    ,"advYPt_","all"},
+  {".v43.0"   ,"advYPt_","|y_cm|>0.005"},
+  {".v42.0"   ,"advYPt_","|y_cm|>0.01"},
+  {".v41.0"   ,"advYPt_","|y_cm|>0.05"},
+  {".v13.0"   ,"advYPt_","all"},
+  {".v13.4"   ,"advYPt_","all"},
+  {".v41.2.10" ,"advYPt_","All Phi"},//m2_0to50&&|#phi|>30&150"},
   {".v7.4"    ,"advYPt_","fc-All"},
   {".v7.2"    ,"advYPt_","fc-#phi<45"},
   {".v7.3"    ,"advYPt_","fc-#fc>45"},
@@ -64,7 +72,6 @@ gplot gnames[] = {
   {".v3.1"    ,"advYPt_","1.6e+6"},
   {".v3.2"    ,"advYPt_","1e+6"},
   {".v3.3"    ,"advYPt_","1e+6"},
-  {".v41.2.10" ,"advYPt_","All Phi"},//m2_0to50&&|#phi|>30&150"},
   {".v41.2.4"  ,"advYPt_","|#phi|>30&150"},
   {".v41.2.5"  ,"advYPt_",""},//m2_0to50&&|#phi|>30&150"},
   {".v41.2.6"  ,"advYPt_",""},//m2_0to50&&|#phi|>30&150"},
@@ -239,7 +246,7 @@ void PlotPtDependence()
   // Rapidity dependence 
   TH2D *hyptacp[10];
 
-  auto mrv1  = new TMultiGraph("mrv1"  ,";y/y_{cm}; v1");
+  auto mrv1  = new TMultiGraph("mrv1"  ,";y_{cm}/y_{beam}; v1");
   auto mrv2  = new TMultiGraph("mrv2"  ,";y/y_{cm}; v2");
   auto mv1sl = new TMultiGraph("mv1sl" ,";Centrality; v1 slope");
   auto mv1slp= new TMultiGraph("mv1slp","; Particle ; v1 slope");
@@ -450,9 +457,10 @@ void PlotPtDependence()
     if( ia == 1 ) { //data
       //otitle += cmnt[iz];
       //otitle += sVer[iz]+";"+cmnt[iz];
-      otitle += "DATA"+sVer[iz]+";"+cmnt[iz];
+      //otitle += "DATA"+sVer[iz]+";"+cmnt[iz];
       //otitle += "data";
       //      otitle += "("+ lpid[ip]+")";
+      otitle = fpid[ip] ;
     }
     else if( ia == 2 ) //amd
       //      otitle += amdHeader[is](4,5) + amdName[it];
@@ -521,10 +529,14 @@ void PlotPtDependence()
 	yv1->SetMarkerColor(icolor);
 	yv1->SetMarkerStyle(imark[is]);
 	
-	//	yv1->RemovePoint(10);
-	// yv1->RemovePoint(9);
-	// yv1->RemovePoint(8);
-	// yv1->RemovePoint(7);
+	// --- check it
+		yv1->RemovePoint(10);
+	 yv1->RemovePoint(9);
+	 yv1->RemovePoint(8);
+	 yv1->RemovePoint(7);
+	 yv1->RemovePoint(0);
+	 yv1->RemovePoint(0);
+
 
 	if( ip == 5 )
 	  yv1->SetMarkerStyle(imark[is]+4);
@@ -602,7 +614,8 @@ void PlotPtDependence()
 	GetMinimumv2(yv2, v2y, v2ye);
 	cout << " v2y " << v2y << " +- " << v2ye << endl;
 	
-	GetAveragev2(yv2);
+	// if( ia == 4 )
+	//   GetAveragev2(yv2);
 
 	if( hmult != NULL ){
 
@@ -800,12 +813,12 @@ void PlotPtDependence()
     auto aLineX1 = new TLine(Xmin, 0., Xmax, 0.);
     aLineX1->SetLineColor(1);
     aLineX1->SetLineStyle(3);
-    aLineX1->Draw();
+    //    aLineX1->Draw();
 
     auto aLineY1 = new TLine(0., Ymin, 0., Ymax);
     aLineY1->SetLineColor(1);
     aLineY1->SetLineStyle(3);
-    aLineY1->Draw();
+    //    aLineY1->Draw();
 
     if( bstyle[2] )
       fv1y->Draw("same");
@@ -1158,6 +1171,8 @@ void integ()
 
 void GetMinimumv2(TGraphErrors *gr, Double_t &min, Double_t &mer)
 {
+  gr->Print();
+
   Double_t x, y;
   min = 999.;
   UInt_t mid = 0;
@@ -1192,19 +1207,19 @@ void GetAveragev2(TGraphErrors *gr)
 
   Double_t ave = sum/(Double_t)(gr->GetN()-1);
 
-  double v2in;
-  std::cout << " What is initial v2? " ;
-  cin  >> v2in;
+  //  double v2in;
+  //  std::cout << " What is initial v2? " ;
+  //  cin  >> v2in;
 
   std::cout << " Average v2 " << ave 
 	    << setprecision(4) 
-	    << " Deviation " << (ave - v2in)/v2in *100. << " % "
-	    << " Original v2 " << v2in
+    //	    << " Deviation " << (ave - v2in)/v2in *100. << " % "
+    //	    << " Original v2 " << v2in
 	    << std::endl;
 
-  fv2y->SetParameter(0,  v2in);
-  fv2y->SetParameter(1,  0.);
-  fv2y->SetParameter(2,  0.);
+  //  fv2y->SetParameter(0,  v2in);
+  //  fv2y->SetParameter(1,  0.);
+  //  fv2y->SetParameter(2,  0.);
 
 
 }

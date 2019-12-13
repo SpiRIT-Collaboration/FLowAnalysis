@@ -16,6 +16,9 @@ TString sVer;
 TString oVer;
 TString dVer;
 Bool_t  bRedo;
+Float_t dMct;
+UInt_t  isys;
+
 
 void      SetEnvironment();
 Bool_t    DefineVersion();
@@ -43,5 +46,7 @@ Long64_t  nEntry;
 TTree    *mflw;
 TFile    *fout;
 TChain   *rChain;
+TF1      *fv1y;
+TF1      *fv2y;
 
 #endif

@@ -10,14 +10,14 @@ source runList.sh
 
 ##------>>> EDIT HERE 
 export MNSFX=rpsim
-export REDO=0
+#export REDO=0
 
-export MNINVERSION=0
-
-export MNVERSION=21              ##   <------@@ input 
+export MNINVERSION=0             ##   <------@@ input
+export MNVERSION=49              ##   <------@@ output 
 export MNDBVERSION=$MNVERSION
-
+export MDCUT=0.0                 ##   <------@@ mid-rapidity cut
 source SetEnvRPSim.sh
+export MXEVT=
 ##<----
 
  
@@ -30,6 +30,12 @@ RUNNUMBER1=(${MNRNF})
 
 function corr(){    ## only the first run
     RUN=${RUNNUMBER1[0]} SUFX=$MNSFX VER=$MNINVERSION OVER=$MNVERSION DBVER=$MNDBVERSION root DoRPAnalysis.C\($MXEVT\)
+}
+
+function recorr(){    ## only the first run
+    export REDO=1
+    RUN=${RUNNUMBER1[0]} SUFX=$MNSFX VER=$MNINVERSION OVER=$MNVERSION DBVER=$MNDBVERSION root DoRPAnalysis.C\($MXEVT\)
+    export REDO=
 }
 
 
@@ -80,6 +86,7 @@ env | grep MN
 
 echo "type flattenandcorrection <- all full process"
 echo "type correction <- correction only"
+echo "type flattening <- flatening "
 
 function flattenandcorrection() {
     export REDO=0

@@ -8,6 +8,10 @@ TString aRun;
 TString sSuf;
 TString sVer;
 TString dVer;
+TString oVer;
+
+UInt_t  isys;
+TString sysName;
 
 // Retrivew tree
 TClonesArray *aArray; 

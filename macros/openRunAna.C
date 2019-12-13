@@ -1,5 +1,5 @@
 #include "openRunAna.h"
-#include "RunToSystemID.h"
+#include  "../analysisformat/STRunToBeamA.hh"
 
 void OpenChain();
 
@@ -12,6 +12,7 @@ void openRunAna()
   sSuf = gSystem -> Getenv("SUFX");
   sVer = gSystem -> Getenv("VER");  
   dVer = gSystem -> Getenv("DBVER");
+  oVer = gSystem -> Getenv("OUTVER");
 
   if( aRun != "" || sSuf != "" || sVer != "" || dVer != ""){ 
     std::cout << " system " << sysName
@@ -23,36 +24,6 @@ void openRunAna()
     OpenChain();
   }
 }
-
-// void GetSystem(UInt_t ival)
-// {
-//   // system selection
-//   // 0: 132Sn + 124Sn : 2841 ~ 3039 
-//   // 1: 108Sn + 112Sn : 2261 ~ 2509
-//   // 2: 124Sn + 112Sn : 2520 - 2653
-//   // 3: 112Sn + 124Sn
-
-//   if(ival >= 2841 && ival <= 3039){
-//     isys = 0; // 132
-//     sysName = "132Sn";
-//   }    
-//   else if(ival >= 2261 && ival <= 2509){
-//     isys = 1; // 108
-//     sysName = "108Sn";
-//   }
-//   else if(ival >= 3059 && ival <= 3184){
-//     isys = 2; // 124
-//     sysName = "124Sn";
-//   }
-//   else if(ival >= 2520 && ival <= 2653){
-//     isys = 3; // 112
-//     sysName = "112Sn";
-//   }
-//   else { 
-//     isys = 4;
-//     sysName = "100Sn";
-//   }
-// }
 
 void OpenChain()
 {
@@ -78,7 +49,10 @@ void OpenChain()
     ist+=5;
   }
 
-  RunToSystemID(lrun.at(0));
+
+  //  RunToSystemID(lrun.at(0));
+  isys    =  STRunToBeamA::GetSystemID(lrun.at(0));
+  sysName =  STRunToBeamA::GetSystemName(lrun.at(0)); 
   cout << " system " << isys << " : " << sysName << endl;
 
   
