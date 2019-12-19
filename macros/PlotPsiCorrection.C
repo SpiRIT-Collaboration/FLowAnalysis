@@ -15,42 +15,16 @@ Double_t sysA[]    = {256.,    220.,      236.,   236.   ,  256.};
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 0, 0, 0, 0, 1};    //132Sn, 108Sn, 124Sn, 112Sn
+Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn
 //-----------
-UInt_t  bver[]  = {1, 1, 1, 1};
+UInt_t  bver[]  = {1, 1, 1};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v13"    ,"advYPt_",".m00to80",""},
-  {".v6"     ,"advYPt_",".m00to80",""},
-  {".v22"    ,"advYPt_",".m00to80",""},
-  {".v3"    ,"advYPt_",".m00to40",""},
-  //  {".v22"     ,"advYPt_",".m00to80",""},
-  //  {".v22"     ,"advYPt_",".m00to80",""},
-  //
-  //
-  {".v400"     ,"advYPt_",".m00to80",""},
-  {".v4"     ,"advYPt_",".m00to80",""},
-  {".v14"    ,"advYPt_",".m00to80","all again"},
-  {".v14_4"  ,"advYPt_",".m00to80","all"},
-  {".v43"    ,"advYPt_",".m00to80","|y_cm|>0.005"},
-  {".v42"    ,"advYPt_",".m00to80","|y_cm|>0.01"},
-  {".v41_0"  ,"advYPt_",".m00to80","|y_cm|>0.05"},
-  {".v13_1"  ,"advYPt_",".m00to80",""},
-  {".v13_2"  ,"advYPt_",".m00to80",""},
-  {".v8"     ,"advYPt_",".m00to40",""},
-  {".v7"     ,"advYPt_",".m00to40",""},
-  {".v5"     ,"advYPt_",".m00to40",""},
-  {".v1"     ,"advYPt_",".m00to40",""},
-  {".v0"     ,"advYPt_",".m00to40",""},//:5e+5"},
-  {".v0.6"   ,"advYPt_",".m00to40",""},//"ExB&S.C."},
-  {".v0.1"   ,"advYPt_",".m00to40",""},//"ExB&S.C."},
-  {".v0.2"   ,"advYPt_",".m00to40",""},//"ExB&S.C."},
-  {".v41.2"  ,"advYPt_",".m30to40",""},//"ExB&S.C."},
-  {".v41.0"  ,"advYPt_",""        ,""},//"ExB&S.C."},
-  {".v41.1"  ,"advYPt_",""        ,""},//"ExB&S.C."},
-  {".v42.0"  ,"advYPt_",""        ,"ExB&S.C. NDF>20"},
-  {".v40.0"  ,"advYPt_",""        ,"ExB"     },
-  {".v38.0"  ,"advYPt_",""        ,"no corr*"},
+  {".v41.2"    ,"cpsi_",".m00to40",""},
+  {".v41.2"    ,"dpsi_",".m00to40",""},
+  {".v41.2"    ,"bpsi_",".m00to40",""},
+  {".v41.2"    ,"bpsi_",".m00to60",""},
+  {".v41.0"    ,"bpsi_","",""},
 };
 
 TString sVer[nmax];
@@ -101,12 +75,12 @@ void PlotPsiCorrection(UInt_t bmp = 0) // 0: phi, 1:mlt
 
       if( !bver[it] ) continue;
 
-      TString fname = "data/bpsi_" + bName[is] + sVer[it] + cmnt[it] + ".root";
+      TString fname = "data/"+ sName[it] + bName[is] + sVer[it] + cmnt[it] + ".root";
       if( bmp == 1 )
 	fname = "data/mlt_" + bName[is] + sVer[it] + ".root";
       
       
-      TString ltitle = sVer[it] + ":" + gnames[it].label;
+      TString ltitle = sVer[it] + ":" + sName[it];
 
       auto fOpen = TFile::Open(fname); 
 	

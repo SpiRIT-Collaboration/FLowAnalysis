@@ -20,7 +20,7 @@ Bool_t bplot[] =
   { 0, // 0 data   It should be set to 1 in the code.
     0, // 1 model  It should be set to 1 in the code.
     1, // 2 v1 and v2 rapidity 
-    0, // 3 v1 and v2 on pt in one window
+    1, // 3 v1 and v2 on pt in one window
     0, // 4 v1 and v2 in individual windows
     0, // 5 Acceptance ypt
     0, // 6 <px>/A
@@ -39,18 +39,18 @@ Bool_t bstyle[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 0, 0, 0, 0, 1};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
-Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bsys[]  = { 1, 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
+Bool_t bpid[]  = { 0, 0, 0, 0, 0, 0, 1}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {1, 1}; //{1, 1, 1, 1, 1, 0, 0, 0, 0};
+UInt_t  bver[]  = {1, 0}; //{1, 1, 1, 1, 1, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {""         ,"advYPt_",""},
-  {""         ,"advYPt_",""},
+  {".v41.2.14"   ,"advYPt_",""},
+  {".v41.2.10"   ,"advYPt_",""},
   {".v3.0"   ,"advYPt_","all"},
   {".v3.1"    ,"advYPt_","all"},
   {".v43.0"   ,"advYPt_","|y_cm|>0.005"},
@@ -247,7 +247,7 @@ void PlotPtDependence()
   TH2D *hyptacp[10];
 
   auto mrv1  = new TMultiGraph("mrv1"  ,";y_{cm}/y_{beam}; v1");
-  auto mrv2  = new TMultiGraph("mrv2"  ,";y/y_{cm}; v2");
+  auto mrv2  = new TMultiGraph("mrv2"  ,";y_{cm}/y_{beam}; v2");
   auto mv1sl = new TMultiGraph("mv1sl" ,";Centrality; v1 slope");
   auto mv1slp= new TMultiGraph("mv1slp","; Particle ; v1 slope");
   auto mmpx  = new TMultiGraph("mmpx","; y/y_{cm} ; <px>/A");
@@ -459,8 +459,8 @@ void PlotPtDependence()
       //otitle += sVer[iz]+";"+cmnt[iz];
       //otitle += "DATA"+sVer[iz]+";"+cmnt[iz];
       //otitle += "data";
-      //      otitle += "("+ lpid[ip]+")";
-      otitle = fpid[ip] ;
+      otitle += "("+ lpid[ip]+")";
+      //     otitle = fpid[ip] ;
     }
     else if( ia == 2 ) //amd
       //      otitle += amdHeader[is](4,5) + amdName[it];
@@ -597,6 +597,14 @@ void PlotPtDependence()
 	// yv2->RemovePoint(7);
 	// yv2->RemovePoint(6);
 	// yv2->RemovePoint(5);
+
+	for( Int_t iip = (Int_t)yv2->GetN()-1; iip >= 0; iip-- ){
+	  Double_t xpnt, ypnt;
+	  yv2->GetPoint(iip, xpnt, ypnt);
+	  if( xpnt > 1 || xpnt < -0.8)
+	    yv2->RemovePoint(iip);
+	}
+
 	
 	yv2->SetMarkerColor(icolor);
 	yv2->SetMarkerStyle(imark[is]);

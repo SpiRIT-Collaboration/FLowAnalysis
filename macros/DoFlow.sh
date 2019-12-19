@@ -5,19 +5,27 @@ source setup.sh
 export MNMACRO=DoFlow_adv.C        ##<--- MACRO name
 
 ##---->>> EDIT here
+
+##------------- RPSim  //Simulation
+export MNDB=rpsim                  ##<---
+export MNVERSION=48                 ##   <------@@ input 
+export MNDBVERSION=$MNVERSION
+source SetEnvRPSim.sh
+export MNOVER=0
+#export CCPSI=1
+##<-----------
+
 ##<----------- data
 export MNRNF=$RNF132               ##<--- 
 export MNDB=BTt                    ##<---
 export MNVERSION=41.2              ##   <------@@ input 
+export MNDBVERSION=$MNVERSION
 ##<----
 
-##------------- RPSim  //Simulation
-export MNDB=rpsim                  ##<---
-export MNVERSION=49                 ##   <------@@ input 
-export MNDBVERSION=$MNVERSION
-source SetEnvRPSim.sh
-export MNOVER=0
-##<-----------
+export RPBS=0
+export LC=0
+export UC=40
+##------
 
 echo $MNDBVERSION
 
@@ -46,12 +54,12 @@ function doflowmulti()
 
 function doflowbatch() 
 {
-    LC=0 UC=40 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($1\)
+    RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($1\)
 }
 
 function dorpres()
 {
-    RPBS=0 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNVERSION root DoRPRes.C\($1\)
+   RPBS=0 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNVERSION root DoRPRes.C\($1\)
 }
 
 

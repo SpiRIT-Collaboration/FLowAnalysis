@@ -50,7 +50,7 @@ void DoRPRes(Int_t isel = 0)
   openRunAna();
 
   if(rChain != NULL)     
-    std::cout << " System " << isys << "  -> " << sysName << std::endl; 
+    LOG(INFO) << " System " << isys << "  -> " << sysName << FairLogger::endl; 
 
   else
     exit(0);
@@ -75,17 +75,17 @@ void DoRPRes(Int_t isel = 0)
       Lcent = 0;
   }
 
-  std::cout << " Multiplicity :: " << Lcent << " to " << Ucent << std::endl;
+  LOG(INFO) << " Multiplicity :: " << Lcent << " to " << Ucent << FairLogger::endl;
 
   //--------------------------------------------------
   TString rpBase = gSystem -> Getenv("RPBS");
   RPBase = rpBase != "" ? atoi(rpBase): 0;
 
-  std::cout << " Reaction plane base is " << RPBase << std::endl;
+  LOG(INFO) << " Reaction plane base is " << RPBase << FairLogger::endl;
 
   //==================================================
 
-  std::cout << " Output Version v" << oVer << std::endl;
+  LOG(INFO) << " Output Version v" << oVer << FairLogger::endl;
 
 
   if( isel == 0 ) {
@@ -132,7 +132,7 @@ void GetResolution()
 
   auto reaolution = GetRPResolutionwChi(hphi0_180, hphi90_180);
 
-  std::cout << " <cos (d phi) > = " << *reaolution << std::endl;
+  LOG(INFO) << " <cos (d phi) > = " << *reaolution << FairLogger::endl;
 
 
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
@@ -151,6 +151,9 @@ void PsiAngleDependence()            //%% Executable :
 
   gROOT->Reset();
   gROOT->cd();
+
+  TDatime beginTime;
+  TDatime dtime;
 
   TString fName = GetPsiRPFileName();
   auto GraphSave = new TFile(fName,"recreate");
@@ -197,8 +200,21 @@ void PsiAngleDependence()            //%% Executable :
     Bool_t bFill = kFALSE;
     Bool_t bRes  = kFALSE;
 
+    if(i%(UInt_t)(nEntry/50) == 0) {
+      dtime.Set();
+      Int_t ptime = dtime.Get() - beginTime.Get();
+
+      LOG(INFO) << "Processing .... " 
+		<< setw(4) << Int_t(((Double_t)i/(Double_t)nEntry)*100.) << " % = "
+		<< setw(8) << i << "/"<< nEntry
+		<< "--->"
+		<< dtime.AsString() << " ---- "
+		<< FairLogger::endl;
+    }
+
     /// centrality selection   
     if(aflow->mtrack2 > Ucent || aflow->mtrack2 <= Lcent || aflow->mtrack4 < 6) continue;
+
 
     hmult ->Fill( aflow->mtrack4 );
     hmult1->Fill( aflow->mtrack1 );
@@ -293,7 +309,7 @@ void PsiAngleDependence()            //%% Executable :
   gv_psi1->Write();
   gv_psi2->Write();
 
-  std::cout << GraphSave->GetName() << " is created. " << std::endl;
+  LOG(INFO) << GraphSave->GetName() << " is created. " << FairLogger::endl;
 
 } // void PsiAngleDependence() 
 
@@ -406,15 +422,15 @@ void CentralityDependence()            //%% Executable :
     Double_t *rpres = new Double_t[4];
 
     rpres = GetRPResolutionwChi(hphi0_180[i], hphi90_180[i]);
-    std::cout << " Multiplicity " << hmultbin4[i]->GetMean() << " > " << mrange[i]
+    LOG(INFO) << " Multiplicity " << hmultbin4[i]->GetMean() << " > " << mrange[i]
 	      << " <cos(Phi)> = " << rpres[0] << " +- " << rpres[1] 
 	      << " <cos(2Phi)> = "<< rpres[2] << " +- " << rpres[3] 
-	      << std::endl;
+	      << FairLogger::endl;
 
     // rpres = GetRPResolutionwChi(h2phi0_180[i], h2phi90_180[i]);
-    // std::cout << " Multiplicity " << hmultbin4[i]->GetMean() << " > " << mrange[i]
+    // LOG(INFO) << " Multiplicity " << hmultbin4[i]->GetMean() << " > " << mrange[i]
     // 	      << " <cos(2Phi)> = "<< rpres[2] << " +- " << rpres[3] 
-    // 	      << std::endl;
+    // 	      << FairLogger::endl;
      
     if( hphi90_180[i]->GetEntries() > 15 && !std::isnan(rpres[0]) && rpres[1] < 0.1) {
       gv_mcos1->SetPoint(ip, hmultbin4[i]->GetMean(), rpres[0]);
@@ -447,7 +463,7 @@ void CentralityDependence()            //%% Executable :
   hmult1->Write();
   hmult2->Write();
 
-  std::cout <<  GraphSave->GetName() << " is created. " << std::endl;
+  LOG(INFO) <<  GraphSave->GetName() << " is created. " << FairLogger::endl;
  
 }
 
@@ -518,7 +534,10 @@ UInt_t GetRPCorrIndex(Double_t aVal) //???
 //**************************************************
 TString GetPsiRPFileName()
 {
-  TString fn = "data/bpsi_"+ sysName + ".v" + oVer;
+  //  TString fn = "data/bpsi_"+ sysName + ".v" + oVer;
+  TString fn = "data/cpsi_"+ sysName + ".v" + oVer;
+  //  TString fn = "data/dpsi_"+ sysName + ".v" + oVer;
+  //  TString fn = "data/epsi_"+ sysName + ".v" + oVer;
   if( RPBase < 3 && RPBase > 0)
     fn += Form("_%d", RPBase);
 
@@ -539,7 +558,7 @@ Bool_t SetRPResolution()
     return kFALSE;
   }
   
-  std::cout << fname << " is opened. " << std::endl;
+  LOG(INFO) << fname << " is opened. " << FairLogger::endl;
 
   auto hgv_mcos1 = (TGraphErrors*)fOpen->Get("gv_mcos1");
   auto hgv_mcos2 = (TGraphErrors*)fOpen->Get("gv_mcos2");
@@ -604,7 +623,7 @@ Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)            //%%
   Double_t m1 = hphi90_180->GetEntries();
 
   if( m0 == 0 ) {
-    std::cout << " No entry in hphi0_180 " << endl;
+    LOG(INFO) << " No entry in hphi0_180 " << endl;
     rpres[0] = 1.;
     rpres[1] = 0.;
     rpres[2] = 1.;
@@ -612,44 +631,35 @@ Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)            //%%
     return rpres;
   }
 
-  //  Double_t chi = sqrt(-2.* log(2.* m1/m0));
   Double_t mr    = m1/m0;
   Double_t mre2  = 1./m0;
+
   Double_t chi   = sqrt(-4.* log(2.* mr));
   Double_t dchin = sqrt(-4.* log(2.*(mr-1./sqrt(m1))));
   Double_t chie2 = pow( chi - dchin, 2 );
+  Double_t chie = sqrt(chie2);
 
+  Double_t par1[] = {0.626657, -0.09694, 0.02754, -0.002283};
+  Double_t par2[] = {0.25,  -0.011414, -0.034726, 0.006815};
 
   //v1
-  if( chi > 0. ) {
-
-    //v1
-    Double_t par1[] = {0.626657, -0.09694, 0.02754, -0.002283};
+  if( kFALSE ) {
+    // //v1
     rpres[0] = par1[0]*chi + par1[1]*pow(chi,3) + par1[2]*pow(chi,4) + par1[3]*pow(chi,5);  
-
-    //v2
-    Double_t par2[] = {0.25,  -0.011414, -0.034726, 0.006815};
+    // //v2
     rpres[2] = par2[0]*pow(chi,2) + par2[1]*pow(chi,3) + par2[2]*pow(chi,4) + par2[3]*pow(chi,5);
-
-    // errors
-    //    Double_t err2 = chie2*pow( par1[0] + 3.*par1[1]*pow(chi,2) + 4.*par1[2]*pow(chi,3) + 5.*par1[3]*pow(chi,4), 2);
-    Double_t err2 = mre2*pow(par1[0] + 3.*par1[1]*pow(chi,2) + 4.*par1[2]*pow(chi,3) + 5.*par1[3]*pow(chi,4),2);
-    rpres[1] = sqrt( err2 );
-
-    //    err2          = chie2*pow( par2[0] + 2.*par2[1]*chi + 4.*par2[2]*pow(chi,3) + 5.*par2[3]*pow(chi,4), 2);
-    err2          = mre2*pow( par2[0] + 2.*par2[1]*chi + 4.*par2[2]*pow(chi,3) + 5.*par2[3]*pow(chi,4),2);
-    rpres[3] = sqrt( err2 );
   }
-
   else {
-    Double_t chie = sqrt(chie2);
     rpres[0] = sqrt(TMath::Pi())/(2.*sqrt(2))*chi*exp(-chi*chi/4.)*
       (ROOT::Math::cyl_bessel_i(0,chi*chi/4.)+ROOT::Math::cyl_bessel_i(1,chi*chi/4.));
-    rpres[1] = 0.;
     rpres[2] = sqrt(TMath::Pi())/(2.*sqrt(2))*chi*exp(-chi*chi/4.)*
       (ROOT::Math::cyl_bessel_i(0.5,chi*chi/4.)+ROOT::Math::cyl_bessel_i(1.5,chi*chi/4.));
-    rpres[3] = 0.;
   }
+
+  Double_t err2 = mre2*pow(par1[0] + 3.*par1[1]*pow(chi,2) + 4.*par1[2]*pow(chi,3) + 5.*par1[3]*pow(chi,4),2);
+  rpres[1] = sqrt( err2 );
+  err2     = mre2*pow( par2[0] + 2.*par2[1]*chi + 4.*par2[2]*pow(chi,3) + 5.*par2[3]*pow(chi,4),2);
+  rpres[3] = sqrt( err2 );
  
   LOG(INFO) << " Getting correction factor " 
 	    << std::setw(6)  << m1 << "/" << m0 << " = " << mr << " chi = " << chi 

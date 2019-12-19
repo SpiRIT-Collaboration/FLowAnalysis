@@ -53,12 +53,10 @@ void OpenChain()
   //  RunToSystemID(lrun.at(0));
   isys    =  STRunToBeamA::GetSystemID(lrun.at(0));
   sysName =  STRunToBeamA::GetSystemName(lrun.at(0)); 
-  cout << " system " << isys << " : " << sysName << endl;
-
-  
+  cout << " system ID >> " << isys << " systemName >> " << sysName << endl;
+ 
   // set tree
   TString treename = "cbmsim";  
-
 
   // loading file
   TString fform = "_" +sSuf+ ".v" +sVer+ ".root";

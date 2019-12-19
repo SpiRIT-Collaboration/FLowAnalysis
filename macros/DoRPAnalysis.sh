@@ -13,7 +13,7 @@ export MNSFX=rpsim
 #export REDO=0
 
 export MNINVERSION=0             ##   <------@@ input
-export MNVERSION=49              ##   <------@@ output 
+export MNVERSION=46              ##   <------@@ output 
 export MNDBVERSION=$MNVERSION
 export MDCUT=0.0                 ##   <------@@ mid-rapidity cut
 source SetEnvRPSim.sh

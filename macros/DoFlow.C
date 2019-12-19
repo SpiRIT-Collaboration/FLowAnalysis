@@ -213,9 +213,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     
   
 
-
   Int_t nevt = SetBranch();
-  cout << " Number of events " << nevt << endl;
+  LOG(INFO) << " Number of events " << nevt << FairLogger::endl;
   
   //--------------------------------------------------
   //--- Event Loop

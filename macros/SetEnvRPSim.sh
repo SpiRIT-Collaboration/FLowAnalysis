@@ -5,9 +5,9 @@ if [ $MNVERSION -eq 3 ]; then
     export MNRNF="0016"  
     export MNDBVERSION=2
 elif [ $MNVERSION -eq 4 ]; then
-#    export MNRNF="0016"  
+    export MNRNF="0016"  
 #    export MNDBVERSION=2
-    export MNRNF="0016,0020,0021"  
+#    export MNRNF="0016,0020,0021"  
 #    export MNRNF="0014,0015"  
 #    export MNRNF="0014,0015,0020,0021"  
 elif [ $MNVERSION -eq 5 ]; then
