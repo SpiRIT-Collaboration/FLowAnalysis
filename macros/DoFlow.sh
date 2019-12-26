@@ -6,17 +6,18 @@ export MNMACRO=DoFlow_adv.C        ##<--- MACRO name
 
 ##---->>> EDIT here
 
+
+
 ##------------- RPSim  //Simulation
 export MNDB=rpsim                  ##<---
-export MNVERSION=48                 ##   <------@@ input 
+export MNVERSION=50                 ##   <------@@ input 
 export MNDBVERSION=$MNVERSION
 source SetEnvRPSim.sh
 export MNOVER=0
 #export CCPSI=1
 ##<-----------
-
 ##<----------- data
-export MNRNF=$RNF132               ##<--- 
+export MNRNF=$RNF108               ##<--- 
 export MNDB=BTt                    ##<---
 export MNVERSION=41.2              ##   <------@@ input 
 export MNDBVERSION=$MNVERSION
@@ -32,19 +33,28 @@ echo $MNDBVERSION
 export SUFX=$MNDB
 export MNrunOne='SUFX=$MNDB  VER=$MNVERSION root $MACRO.C'
 
+function dorpres()
+{
+   RPBS=0 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNVERSION root DoRPRes.C\($1\)
+}
+
+
 function doflowmulti()
 {
     if [ -n "$1" ]; then
 	export MNOVER=$1
+	echo "output version -> "  $MNOVER
+    elif [ -n "$2" ]; then
+	export MNDBVERSION=$2
     fi
-    echo Output Version is  $MNOVER
 
-    PARTICLES=("3" "4" "5" "6" "8")
+    PARTICLES=("4" "5" "6" "8")
+    ##PARTICLES=("3")
     typeset -i I=0;
     while(( $I < ${#PARTICLES[@]} ))
     do
 	echo $I 
-	doflowbatch ${PARTICLES[I]}
+	doflowbatch ${PARTICLES[I]}  
 	let I++;
 	if [ $I -ge ${#PARTICLES[@]} ]; then
 	    break;
@@ -54,14 +64,9 @@ function doflowmulti()
 
 function doflowbatch() 
 {
-    RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNOVER root -b -q $MNMACRO\($1\)
-}
 
-function dorpres()
-{
-   RPBS=0 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNVERSION root DoRPRes.C\($1\)
+    RPBS=0 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNOVER DBVER=$MNDBVERSION root -b -q $MNMACRO\($1\)
 }
-
 
 function doflow() 
 {

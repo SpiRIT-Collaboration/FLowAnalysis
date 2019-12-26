@@ -72,6 +72,8 @@ elif [ $MNVERSION -eq 48 ]; then
     export MNRNF="0302"       
 elif [ $MNVERSION -eq 49 ]; then
     export MNRNF="0112"       
+elif [ $MNVERSION -eq 50 ]; then
+    export MNRNF="0400"       
 fi
 
 #export MNDBVERSION=$MNVERSION

@@ -20,12 +20,12 @@ Bool_t bplot[] =
   { 0, // 0 data   It should be set to 1 in the code.
     0, // 1 model  It should be set to 1 in the code.
     1, // 2 v1 and v2 rapidity 
-    1, // 3 v1 and v2 on pt in one window
+    0, // 3 v1 and v2 on pt in one window
     0, // 4 v1 and v2 in individual windows
     0, // 5 Acceptance ypt
     0, // 6 <px>/A
-    0, // 7 v1 vs part system dependence
-    0, // 8 v2_min system dependence 
+    1, // 7 v1 vs part system dependence
+    1, // 8 v2_min system dependence 
     0  // 9 v1 slope and v2 max dependence on m
   };
 
@@ -39,18 +39,20 @@ Bool_t bstyle[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
-Bool_t bpid[]  = { 0, 0, 0, 0, 0, 0, 1}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bsys[]  = { 1, 1, 0, 1, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
+Bool_t bpid[]  = { 0, 0, 1, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {1, 0}; //{1, 1, 1, 1, 1, 0, 0, 0, 0};
+UInt_t  bver[]  = {1, 0, 0, 0}; //{1, 1, 1, 1, 1, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v41.2.14"   ,"advYPt_",""},
-  {".v41.2.10"   ,"advYPt_",""},
+  {".v41.2.20"   ,"advYPt_",""}, //"p/y<=1"},
+  {".v41.2.21"   ,"advYPt_","All"},
+  {".v41.2.23"   ,"advYPt_","p/y<=1&&y>0"},
+  {".v41.2.24"   ,"advYPt_","p/y<=1&&y<0"},
   {".v3.0"   ,"advYPt_","all"},
   {".v3.1"    ,"advYPt_","all"},
   {".v43.0"   ,"advYPt_","|y_cm|>0.005"},
@@ -459,7 +461,7 @@ void PlotPtDependence()
       //otitle += sVer[iz]+";"+cmnt[iz];
       //otitle += "DATA"+sVer[iz]+";"+cmnt[iz];
       //otitle += "data";
-      otitle += "("+ lpid[ip]+")";
+      otitle += "("+ lpid[ip]+")"+cmnt[iz];
       //     otitle = fpid[ip] ;
     }
     else if( ia == 2 ) //amd
@@ -591,13 +593,6 @@ void PlotPtDependence()
 	yv2 = (TGraphErrors*)fOpen->Get("gv_v2");
 
       if( yv2 != NULL ) {
-	//    ShiftX(yv2, 0.01*iz);
-	//    RemoveYPoint(yv2);
-
-	// yv2->RemovePoint(7);
-	// yv2->RemovePoint(6);
-	// yv2->RemovePoint(5);
-
 	for( Int_t iip = (Int_t)yv2->GetN()-1; iip >= 0; iip-- ){
 	  Double_t xpnt, ypnt;
 	  yv2->GetPoint(iip, xpnt, ypnt);
@@ -821,12 +816,12 @@ void PlotPtDependence()
     auto aLineX1 = new TLine(Xmin, 0., Xmax, 0.);
     aLineX1->SetLineColor(1);
     aLineX1->SetLineStyle(3);
-    //    aLineX1->Draw();
+    aLineX1->Draw();
 
     auto aLineY1 = new TLine(0., Ymin, 0., Ymax);
     aLineY1->SetLineColor(1);
     aLineY1->SetLineStyle(3);
-    //    aLineY1->Draw();
+    aLineY1->Draw();
 
     if( bstyle[2] )
       fv1y->Draw("same");
@@ -1028,6 +1023,7 @@ void PlotPtDependence()
 
 	lgv2sys->AddEntry(g_v2maxsys[jj],lpid[jj],"lp");	
 	m_v2sys->Add(g_v2maxsys[jj]);
+
       }
     }
     m_v2sys->Draw("AP");

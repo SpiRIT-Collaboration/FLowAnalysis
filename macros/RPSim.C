@@ -5,6 +5,7 @@
 Double_t y_cm[]  = { 0.382453, 0.364873, 0.390302, 0.354066};
 Double_t y_bm[]  = { 0.360199, 0.377779, 0.354065, 0.390301};
 auto mp   =    938.2720813;
+Bool_t bRandMult = kTRUE;
 
 void RPSim(UInt_t irun=5, UInt_t maxevt=100)
 {
@@ -12,9 +13,20 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
 
   //@@@@@
   //UInt_t mlt = 100;
-  //  UInt_t mlt = 30;
-  UInt_t mlt = 80;
+  UInt_t mlt = 40;
+  //  UInt_t mlt = 80;
   //UInt_t mlt = 10;
+
+  auto fmult  = TFile::Open("data/mlt108Sn.v41.1.root");
+  auto hmult = (TH1I*)fmult->Get("hmult");
+
+  if( hmult != NULL ) {
+    std::cout << " Multiplicity distribution is taken from data " << std::endl;
+    hmult->Print();
+  }
+  else
+    bRandMult = kFALSE; 
+
 
   Bool_t bSingle = kFALSE;
   Bool_t bRPRand = kTRUE;   // 1: Reaction plane is romdom direction
@@ -23,11 +35,20 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
   TRandom3 grnd(dtime.GetSecond());
   gRandom->SetSeed(dtime.GetSecond());
 
-  auto fgcut = TFile::Open("data/RPSim_AnglegCut.root");
-  auto gcang = (TCutG*)fgcut->Get("gCutAngle");
+  //@@-->
+  // fgcut = TFile::Open("data/RPSim_AnglegCut.root");
+  // auto gcang = (TCutG*)fgcut->Get("gCutAngle");
+  // if( gcang == NULL )
+  //   std::cout << " Angle cut data is not opned. " << std::endl;
+  // fgcut->Close();
+
+  //@@
+  auto fgcut = TFile::Open("data/gThetaPhiCut.root");
+  auto gcang = (TCutG*)fgcut->Get("gThetaPhiCut");
   if( gcang == NULL )
     std::cout << " Angle cut data is not opned. " << std::endl;
   fgcut->Close();
+  //@@<--
 
   fgcut = TFile::Open("data/hyawpitch_prt_v41.2.10.root");
   auto hyp = (TH2D*)fgcut->Get("hyawpitch");
@@ -155,8 +176,14 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
     aFlow.Clear();
     aFlowInfo->Clear();
 
-    
+    // Random reaction plane angle
     RPPsi = bRPRand == kTRUE ? 2.*TMath::Pi()*(grnd.Rndm() - 0.5) : 0.;
+
+    if( bRandMult ) { 
+      mlt = (Int_t)hmult->GetRandom();
+      if( mlt < 10 ) continue;
+    }
+
 
     UInt_t i = 0;
     while( i < mlt ){
@@ -196,10 +223,12 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
 
       auto yaw   = aParticle->GetYawAngle();
       auto pitch = aParticle->GetPitchAngle();
+      auto vecP   = aParticle->GetRotatedMomentum();
 
       //@@@@@
       //      if( !gcang->IsInside( yaw, pitch ) )continue; //v5
       //   if( !gcang->IsInside( pitch, yaw ) )continue; //v7, v8 OK
+      if( !gcang->IsInside(vecP.Theta() , vecP.Phi() )) continue; //v7, v8 OK
       
       hyawpitch->Fill(yaw, pitch);
       hThetaPhi->Fill(aTheta, aPhi);
