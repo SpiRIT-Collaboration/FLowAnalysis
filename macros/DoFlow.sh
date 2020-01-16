@@ -19,12 +19,12 @@ export MNOVER=0
 ##<----------- data
 export MNRNF=$RNF108               ##<--- 
 export MNDB=BTt                    ##<---
-export MNVERSION=41.2              ##   <------@@ input 
+export MNVERSION=43.0              ##   <------@@ input 
 export MNDBVERSION=$MNVERSION
 ##<----
 
 export RPBS=0
-export LC=0
+export LC=20
 export UC=40
 ##------
 
@@ -48,7 +48,7 @@ function doflowmulti()
 	export MNDBVERSION=$2
     fi
 
-    PARTICLES=("4" "5" "6" "8")
+    PARTICLES=("2" "3" "4" "5" "6" "8")
     ##PARTICLES=("3")
     typeset -i I=0;
     while(( $I < ${#PARTICLES[@]} ))

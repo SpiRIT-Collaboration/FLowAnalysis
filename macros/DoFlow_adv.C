@@ -138,7 +138,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   LOG(INFO) << " v1 BIN y " << ybin1 << " pt " << ptbin1 << " mult " << mbin << FairLogger::endl;
   LOG(INFO) << " v2 BIN y " << ybin2 << " pt " << ptbin2 << " mult " << mbin << FairLogger::endl;
 
-
+  auto hpid       = new TH2D("hpid",   "; P/Z[MeV/c]; dEdx[ADC/mm]",400,-800.,3000.,300,0.,1500);
+  auto hpidsel    = new TH2D("hpidsel","; P/Z[MeV/c]; dEdx[ADC/mm]",400,-800.,3000.,300,0.,1500);
   auto hyawpitch  = new TH2D("hyawpitch","; Yaw angle; Pitch angle",200,-1.5,1.5,200,-1.5,1.5);
   auto hmass      = new TH2D("hmass",   ";P/Q; Mass [MeV/c^2]"     ,200,  0.,2500., 200, 0.,7000);
   TString hlabel  = (TString)Form("mtrack1 %2d to %2d ; Y_{cm}; Pt [MeV/c]",Lcent,Ucent);
@@ -325,8 +326,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       auto theta = aPart->GetRotatedMomentum().Theta();
       auto charge= aPart->GetCharge();
 
-      // auto pid   = aPart->GetPIDTight();  // = GetPID()
-      auto pid   = aPart->GetPIDLoose();  
+      auto pid   = aPart->GetPIDTight();  // = GetPID()
+      // auto pid   = aPart->GetPIDLoose();  
       //auto pid   = aPart->GetPIDNorm();  
 
       //----- Particle Selection -----
@@ -353,30 +354,36 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	  bpart = kTRUE;
 	}
       }
-      else if( selid < 8 ) { //pi- pi+ p d t 3He 4He
-	if(pid == partid[selid] ){
-	  MassNumber = partA[selid];
-	  bpart = kTRUE;
+      else if( selid == 0 && charge == 1 && pid == partid[0] ) //pi+
+	bpart = kFALSE;
 
-	  if(selid == 0 && charge == 1 )
-	    bpart = kFALSE;
-	  else if( selid == 1 && charge == -1 )
-	    bpart = kFALSE;
+      else if( selid == 1 && charge == -1 && pid == partid[0] ) //pi-
+	bpart = kFALSE;
 
-	}
+      else if( selid < 8  && pid == partid[selid] && charge == 1 ){ //p,d,t,3He,4He
+	MassNumber = partA[selid];
+	bpart = kTRUE;
       }
 
-      //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-      if( !bpart ) continue; //default
-      //-----------------
+   
+
+      //@@****************************************
       // if( abs( phi ) > 30.*TMath::DegToRad() ) continue;
       //if( abs( phi ) < 150.*TMath::DegToRad() ) continue;
       //      if( abs( phi ) > 30.*TMath::DegToRad() && abs( phi ) < 150.*TMath::DegToRad() ) continue;
       if ( abs( pitch / yaw ) > 1. ) continue;
-      //      if( abs( pitch / yaw ) <= 1. ) continue;
+      // if( abs( pitch / yaw ) <= 1. ) continue;
       //if( (pitch/yaw) > 1. || yaw < 0 ) continue;
       //if( (pitch/yaw) > 1. || yaw > 0 ) continue;
-      //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+      //*********************************************
+      hpid->Fill(aPart->GetRotatedMomentum().Mag()*aPart->GetCharge(), aPart->GetdEdx());
+
+      //-----------------
+      if( !bpart ) continue; //default
+      //-----------------
+      hpidsel->Fill(aPart->GetRotatedMomentum().Mag()*aPart->GetCharge(), aPart->GetdEdx());
+
+
 
       bFill = kTRUE;
       auto dphi   = aPart->GetAzmAngle_wrt_RP();
@@ -445,6 +452,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	hut[irapid1][1] -> Fill( u_t0 );
 
       //      if( u_t0 > 0. ) {
+      //      if( u_t0 > 0.4 && u_t0 < 1.5) {
       if( u_t0 > 0.4 ) {
 	hdyucos1[irapid1][ipsi]->Fill( cos(dphi) );
 	hdyucos2[irapid2][ipsi]->Fill( cos(2.*dphi) );
@@ -797,7 +805,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   hRPPsi    ->Write();
   hRPPsipsi ->Write();
   hphi      ->Write();
-
+  hpid      ->Write();
+  hpidsel   ->Write();
   //--------------------------------------------------
   //--- Plotting
   //--------------------------------------------------
@@ -876,6 +885,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
   huy->Draw("colz");
+
   
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
   cc->Divide(2,2);
@@ -888,125 +898,12 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   cc->cd(4);
   hphi->Draw();
   
+  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
+  hpid->Draw("colz");
+  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
+  hpidsel->Draw("colz");
+
   gSystem->cd("..");
-}
-
-
-void AzimuthalAngleDependence()            //%% Executable :
-{
-  TString fHeader = "azm_"+ sysName + ".v"+sVer+".";
-  auto fName = SetupOutputFile( fHeader );
-  auto GraphSave = new TFile(fName,"recreate");
-
-  TH1I *hmult = new TH1I("hmult","multiplicity",100,0,100);
-
-  const UInt_t nphi = 12;
-  TH1I *hphibin[nphi];
-  TH1D *hphi0_180[nphi];
-  TH1D *hphi90_180[nphi];
-  
-  for(UInt_t k = 0; k < mbin; k++){
-    TString htitle = Form("hphi0_180_%d",k);
-    hphi0_180[k]  = new TH1D(htitle, "",100,0.,3.2);
-    htitle = Form("hphi90_180_%d",k);
-    hphi90_180[k] = new TH1D(htitle,"",100,0.,3.2);
-  }
-
-  auto hiphi = new TH1I("hiphi","hiphi",15,0,15);
-
-
-  //-------------------------------------------------- 
-  //--- Event Loop 
-  //--------------------------------------------------                                                                                                  
-  Long64_t nEntry = SetBranch();
- 
-  for(Int_t i = 0; i < nEntry; i++){
-
-    rChain->GetEntry(i);
-    STFlowInfo *aflow = (STFlowInfo*)aFlowArray->At(0);
-
-    /// for reaction plane resolution  
-    Bool_t bFill = kFALSE;
-    Bool_t bRes  = kFALSE;
-
-    /// centrality selection   
-    if(aflow->mtrack1 > Ucent || aflow->mtrack1 <= Lcent || aflow->mtrack4 < 6) continue;
-
-    hmult->Fill( aflow->mtrack2 );
-    bRes = kTRUE; 
-    TIter next(aArray);
-    STParticle *aPart = NULL;
-
-    //--------------------------------------------------
-    //----- Main loop
-    //--------------------------------------------------       
-    while( (aPart = (STParticle*)next()) ) {
-
-      auto pid   = aPart->GetPIDTight();  // = GetPID()   
-
-      //@@@@
-      // ---- quality selection ---
-      if( !aPart->GetNDFFlag() ) continue;
-      //@@@@
-      
-      bFill = kTRUE;
-
-      auto yaw   = aPart->GetYawAngle();
-      auto pitch = aPart->GetPitchAngle();
-      auto phi   = TVector2::Phi_0_2pi(aPart->GetRotatedMomentum().Phi());
-      auto theta = aPart->GetRotatedMomentum().Theta();
-
-      UInt_t iphi = UInt_t(phi/(TMath::Pi()/6.));
-
-      hiphi->Fill(iphi);
-
-      Double_t subdphi = abs(TVector2::Phi_mpi_pi((aflow->unitP_1fc).Phi() - (aflow->unitP_2fc).Phi()));
-      hphi0_180[iphi] ->Fill(subdphi);
-      if( subdphi > TMath::Pi()/2. )
-	hphi90_180[iphi]->Fill(subdphi);
-    }
-  }
-
-  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
-  hiphi->Draw();
-
-
-  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),500,1000);
-  cc->Divide(2,nphi/2);
-
-  auto gv_phi1 = new TGraphErrors();
-  gv_phi1->SetName("gv_phi1");
-  gv_phi1->SetTitle("; #phi; <cos(#Delta #Psi)>");
-   
-  UInt_t id = 1;
-  UInt_t ip = 0;
-  for(UInt_t i = 0; i < nphi; i++) {
-    cc->cd(id); id++;
-
-    if( hphi0_180[i]->GetEntries() < 5 ) continue;
-
-    hphi0_180[i] ->Draw();
-    hphi90_180[i]->Draw("same");
-
-    Double_t *rpres = new Double_t[4];
-    rpres = GetRPResolutionwChi(hphi0_180[i], hphi90_180[i]);
-
-    if( hphi90_180[i]->GetEntries() > 15 && !std::isnan(rpres[0])) {
-      gv_phi1->SetPoint(ip, TVector2::Phi_mpi_pi(i*TMath::Pi()/6.), rpres[0]);
-      gv_phi1->SetPointError(ip, 0., rpres[1]);
-      ip++;
-    }
-  }
-
-  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));  
-  gv_phi1->Draw("AP");
-
-  hmult->Write();
-  hiphi->Write();
-  gv_phi1->Write();
-
-
-  LOG(INFO) << " FILE output is " << fName << FairLogger::endl;
 }
 
 

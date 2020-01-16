@@ -9,17 +9,20 @@ source ../build/config.sh
 source runList.sh
 
 ##------>>> EDIT HERE 
-export MNSFX=rpsim
+export MNRNF=$RNF132
+export MNSFX=BTt
 #export REDO=0
 
-export MNINVERSION=0             ##   <------@@ input
-export MNVERSION=50              ##   <------@@ output 
+export MNINVERSION=43            ##   <------@@ input
+export MNVERSION=43.0              ##   <------@@ output 
 export MNDBVERSION=$MNVERSION
 export MDCUT=0.0                 ##   <------@@ mid-rapidity cut
-source SetEnvRPSim.sh
 export MXEVT=
 ##<----
 
+##-- for simulation
+#source SetEnvRPSim.sh
+##---
  
 function flattening() {
     RUN={$MNRNF} SUFX=$MNSFX VER=$MNINVERSION DBVER=$MNDBVERSION root -q -b DoFlattening.C\(11\)

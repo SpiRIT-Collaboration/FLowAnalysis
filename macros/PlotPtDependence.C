@@ -24,8 +24,8 @@ Bool_t bplot[] =
     0, // 4 v1 and v2 in individual windows
     0, // 5 Acceptance ypt
     0, // 6 <px>/A
-    1, // 7 v1 vs part system dependence
-    1, // 8 v2_min system dependence 
+    0, // 7 v1 vs part system dependence
+    0, // 8 v2_min system dependence 
     0  // 9 v1 slope and v2 max dependence on m
   };
 
@@ -39,17 +39,22 @@ Bool_t bstyle[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 1, 0, 1, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
-Bool_t bpid[]  = { 0, 0, 1, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bsys[]  = { 1, 0, 0, 1, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
+Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {1, 0, 0, 0}; //{1, 1, 1, 1, 1, 0, 0, 0, 0};
+UInt_t  bver[]  = {0, 1, 0, 1}; //{1, 1, 1, 1, 1, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v41.2.20"   ,"advYPt_",""}, //"p/y<=1"},
+  {".v43.0.9"   ,"advYPt_","v9"}, //"p/y<=1"},
+  {".v43.0.7"   ,"advYPt_","v7"}, //"p/y<=1"},
+  {".v43.0.8"   ,"advYPt_","v8"}, //"p/y<=1"},
+  {".v43.0.6"   ,"advYPt_","v6"}, //"p/y<=1"},
+  {".v43.0.4"   ,"advYPt_","ut<1.5"}, //"p/y<=1"},
+  {".v43.0.1"   ,"advYPt_","loose"}, //"p/y<=1"},
   {".v41.2.21"   ,"advYPt_","All"},
   {".v41.2.23"   ,"advYPt_","p/y<=1&&y>0"},
   {".v41.2.24"   ,"advYPt_","p/y<=1&&y<0"},

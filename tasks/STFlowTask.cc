@@ -87,18 +87,6 @@ Bool_t STFlowTask::Init(UInt_t irun, TString sver)
   iSystem =  STRunToBeamA::GetSystemID(irun);
   LOG(INFO) << " Irun " << irun << " system " << iSystem << FairLogger::endl;
 
-  // iSystem = 4;
-  // if(iRun >= 2841 && iRun <= 3039)
-  //   iSystem = 0; // 132            
-  // else if(iRun >= 2261 && iRun <= 2509)
-  //   iSystem = 1; // 108
-  // else if(iRun >= 3059 && iRun <= 3184)
-  //   iSystem = 2; // 124
-  // else if(iRun >= 2520 && iRun <= 2653)
-  //   iSystem = 3; // 112 
-  // else if(iRun <= 1000 )
-  //   iSystem = 5; //Simulation
-
   fflowinfo->SetRun( irun );  
   
   if( fIsFlowCorrection) {
@@ -110,6 +98,8 @@ Bool_t STFlowTask::Init(UInt_t irun, TString sver)
     else
       LOG(INFO) << "STFlowTask:: Flow database are ready. " << FairLogger::endl;
   }
+  
+  fflowinfo->SetRPMidCut(fRPMidCut);
 
   return kTRUE;
 }

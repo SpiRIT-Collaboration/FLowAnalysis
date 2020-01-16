@@ -42,15 +42,15 @@ TString STRunToBeamA::GetBeamSnA(Int_t irun)
 UInt_t STRunToBeamA::GetSystemID(Int_t irun)
 {
   UInt_t id = 4;
-  if(irun >= 2841 && irun <= 3039)
-    id = 0;
-  else if(irun >= 2261 && irun <= 2509)
+  if(irun >= 2841 && irun <= 3039) //132Sn
+    id = 0; 
+  else if(irun >= 2261 && irun <= 2509) //108Sn
     id = 1;
-  else if(irun >= 3059 && irun <= 3184)
+  else if(irun >= 3059 && irun <= 3184) //124Sn
     id = 2;
-  else if(irun >= 2520 && irun <= 2653)
+  else if(irun >= 2520 && irun <= 2653) //112Sn
     id = 3;
-  else if(irun <= 1000 )
+  else if(irun <= 1000 ) //Simulation
     id = 5; // Simulation
 
   return id;

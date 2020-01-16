@@ -280,7 +280,6 @@ void PsiAngleDependence()            //%% Executable :
       gv_psi1->SetPoint(ip, psi, rpres[0]);
       gv_psi1->SetPointError(ip, 0., rpres[1]);
       
-
       //      rpres = GetRPResolutionwChi(h2phi0_180[i], h2phi90_180[i]);
 
       gv_psi2->SetPoint(ip, psi, rpres[2]);

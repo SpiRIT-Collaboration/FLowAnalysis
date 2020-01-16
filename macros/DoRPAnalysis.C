@@ -29,7 +29,6 @@ void DoRPAnalysis(Long64_t nmax = -1)
   }
   
 
-
   Open();
 
   OutputTree();
@@ -105,8 +104,8 @@ void DoRPAnalysis(Long64_t nmax = -1)
 
   fout->cd();
   fout->Write("",TObject::kWriteDelete);
-  fv1y->Write();
-  fv2y->Write();
+  if( fv1y != NULL ) fv1y->Write();
+  if( fv2y != NULL ) fv2y->Write();
   std::cout << fout->GetName() << std::endl;
 
   if(gROOT->IsBatch()) {

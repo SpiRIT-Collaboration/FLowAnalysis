@@ -22,7 +22,7 @@ source ../build/config.sh
 #export RCVER=HEAD.1853.e498ace
 #export SUFX=BTt
 
-VERSION=41
+VERSION=43
 export TPCDIR=/data/spdaq01/recoData/20190822/data/
 export RCVER=HEAD.1858.1824743
 export SUFX=BTt
@@ -92,33 +92,34 @@ function execc(){   ## batch job from the second to the end.
     typeset -i I=1
     while(( $I < ${#RUNNUMBER1[@]} ))
     do
-	RUN=${RUNNUMBER1[I]} 
-	LOG=log/p1_${RUN}_v${VERSION}.log
-	echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
-	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
-	let I++
-	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
-            break;
-        fi
 
-	RUN=${RUNNUMBER1[I]} 
-	LOG=log/p1_${RUN}_v${VERSION}.log
-        echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
-	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
-	let I++
-	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
-            break;
-        fi
-
-	RUN=${RUNNUMBER1[I]} 
-	LOG=log/p1_${RUN}_v${VERSION}.log
-        echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
-	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
-	let I++
-	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
-            break;
-        fi
-
+#	RUN=${RUNNUMBER1[I]} 
+#	LOG=log/p1_${RUN}_v${VERSION}.log
+#	echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
+#	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
+#	let I++
+#	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
+#            break;
+#        fi
+#
+#	RUN=${RUNNUMBER1[I]} 
+#	LOG=log/p1_${RUN}_v${VERSION}.log
+#        echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
+#	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
+#	let I++
+#	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
+#            break;
+#        fi
+#
+#	RUN=${RUNNUMBER1[I]} 
+#	LOG=log/p1_${RUN}_v${VERSION}.log
+#        echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
+#	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
+#	let I++
+#	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
+#            break;
+#        fi
+#
 	RUN=${RUNNUMBER1[I]} 
 	LOG=log/p1_${RUN}_v${VERSION}.log
         echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG

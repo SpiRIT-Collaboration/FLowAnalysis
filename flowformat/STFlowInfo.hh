@@ -80,6 +80,8 @@ public:
   void      SetRPSigma(Double_t val) {rpSigma = val;}
   Double_t  GetRPSigma() {return rpSigma;}
   void      SetRPChi(Double_t val, UInt_t n){n < 1 ? rpChi[n] = val : rpChi[0] = val;}
+  void      SetRPMidCut(Double_t val) {fRPMidCut = val;}
+  Double_t  GetRPMidCut()             {return fRPMidCut;}
 
   ClassDef(STFlowInfo,5);
 };
