@@ -9,22 +9,39 @@ source ../build/config.sh
 source runList.sh
 
 ##------>>> EDIT HERE 
-export MNRNF=$RNF132
+export MNRNF=$RNF112
 export MNSFX=BTt
-#export REDO=0
 
-export MNINVERSION=43            ##   <------@@ input
-export MNVERSION=43.0              ##   <------@@ output 
+export MNINVERSION=44            ##   <------@@ input
+export MNVERSION=44.0            ##   <------@@ output 
 export MNDBVERSION=$MNVERSION
 export MDCUT=0.0                 ##   <------@@ mid-rapidity cut
 export MXEVT=
 ##<----
 
 ##-- for simulation
+export MNSFX=rpsim
+export MXEVT=
+export REDO=
+export MNDBVERSION=$MNINVERSION
+##--
+export MNRNF=0019
+export MNINVERSION=6.0        ##   <------@@ input
+export MNVERSION=6.1          ##   <------@@ output 
+export MNDBVERSION=0
+#---
+#---
+export MNRNF=0404
+export MNINVERSION=0          ##   <------@@ input
+export MNVERSION=54           ##   <------@@ output 
+export MNDBVERSION=
+##--
 #source SetEnvRPSim.sh
 ##---
  
 function flattening() {
+    RUN={$MNRNF} SUFX=$MNSFX VER=$MNINVERSION DBVER=$MNDBVERSION root -q -b DoFlattening.C\(13\)
+    RUN={$MNRNF} SUFX=$MNSFX VER=$MNINVERSION DBVER=$MNDBVERSION root -q -b DoFlattening.C\(12\)
     RUN={$MNRNF} SUFX=$MNSFX VER=$MNINVERSION DBVER=$MNDBVERSION root -q -b DoFlattening.C\(11\)
     RUN={$MNRNF} SUFX=$MNSFX VER=$MNINVERSION DBVER=$MNDBVERSION root -q DoFlattening.C\(10\)
 }
@@ -35,7 +52,7 @@ function corr(){    ## only the first run
     RUN=${RUNNUMBER1[0]} SUFX=$MNSFX VER=$MNINVERSION OVER=$MNVERSION DBVER=$MNDBVERSION root DoRPAnalysis.C\($MXEVT\)
 }
 
-function recorr(){    ## only the first run
+function recorr(){    ## only the first run Redo calculation of the reaction plane
     export REDO=1
     RUN=${RUNNUMBER1[0]} SUFX=$MNSFX VER=$MNINVERSION OVER=$MNVERSION DBVER=$MNDBVERSION root DoRPAnalysis.C\($MXEVT\)
     export REDO=

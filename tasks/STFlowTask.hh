@@ -36,7 +36,7 @@ private:
 
   STFlowInfo     *fflowinfo;    //!
   TClonesArray   *tpcParticle;  //!
-  TClonesArray   *aflowcorrArray[2];
+  TClonesArray   *aflowcorrArray[4];
   
   UInt_t  ntrack[7]; //!
 
@@ -49,11 +49,11 @@ private:
 
 
   // for flow analysis
-  vector<UInt_t> mtkbin[2];		             //!
-  vector< TString > vfname[2];	                     //!
+  vector<UInt_t> mtkbin[4];		             //!
+  vector< TString > vfname[4];	                     //!
   vector< vector<Double_t> >  binmax;	             //!
   vector< vector<Double_t> >  binmin;	             //!
-  vector< pair<Double_t, Double_t> > pbinmin[2];     //!
+  vector< pair<Double_t, Double_t> > pbinmin[4];     //!
   TRandom3 rnd; //!
   STBootStrap *bs_unitP; //!
   
@@ -76,7 +76,7 @@ public:
 
   Bool_t DoFlattening();
   Bool_t DoFlatteningSub();
-  TVector3 DoFlattening(TVector3 mvec, UInt_t ntrk);
+  TVector3 DoFlattening(UInt_t isel, TVector3 mvec, UInt_t ntrk);
   void   DoSubeventAnalysis();
   void   DoSubeventAnalysisFixedMultiplicity(UInt_t val);
 
@@ -84,6 +84,7 @@ public:
   TVector3 Psi_ReCenteringCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
   void     DoIndividualReactionPlaneAnalysis();
   void     SetIndividualReactionPlane( STParticle &apart );
+  void     SetIndividualReactionPlane_recal( STParticle &apart );
 
   void   SetupEventInfo(Long64_t eventid, UInt_t val);
   void   SetFlowTask( TClonesArray &atpcParticle );

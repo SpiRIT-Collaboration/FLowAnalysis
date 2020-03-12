@@ -188,7 +188,6 @@ UInt_t STFlowCorrection::LoadCorrectionFactor(UInt_t val)
       binmin[1] = atof(sget);
       binpara[1] = "theta";
     }
-
     
     else if(sget == header){
       fin >> sget;
@@ -218,9 +217,9 @@ UInt_t STFlowCorrection::LoadCorrectionFactor(UInt_t val)
 
 void STFlowCorrection::ShowBinInformation()
 {
-  LOG(DEBUG) << binpara[0] << " > " << binmin[0] << " && < " << binmax[0] << FairLogger::endl; 
+  LOG(INFO) << binpara[0] << " > " << binmin[0] << " && < " << binmax[0] << FairLogger::endl; 
   if(binpara[1] != "")
-    LOG(DEBUG) << binpara[1] << " > " << binmin[1] << " && < " << binmax[1] << FairLogger::endl; 
+    LOG(INFO) << binpara[1] << " > " << binmin[1] << " && < " << binmax[1] << FairLogger::endl; 
 
 }
 
@@ -229,7 +228,7 @@ void STFlowCorrection::ShowParameters()
   ShowBinInformation();
 
   for(UInt_t k = 0; k < charm; k++){ 
-    LOG(DEBUG) << "->, " << std::setw(5) << indx[k] << ", "
+    LOG(INFO) << "->, " << std::setw(5) << indx[k] << ", "
 	       << std::scientific << std::setprecision(5) << std::right
 	       << std::setw(20) << Bn[k] << ", " << Bn_rms[k] << ", "
 	       << std::setw(20) << An[k] << ", " << An_rms[k]
@@ -279,11 +278,12 @@ void STFlowCorrection::GetCorrection(std::vector<Double_t> &val)
 Double_t STFlowCorrection::GetCorrection(Double_t val)
 {
   Double_t cpphi = val;
-
+  ////@@@@@@@@@@@@@@@@@@@@
   for(UInt_t k = 0; k < charm; k++){
     cpphi += An[k]*cos((Double_t)(k+1) * val);
     cpphi += Bn[k]*sin((Double_t)(k+1) * val);
   } 
+  ///@@@@@@@@@@2
   return cpphi;  
 }
 
@@ -321,6 +321,64 @@ void STFlowCorrection::FourierCorrection(std::vector<Double_t> &val)
 
       fvCos.push_back(cos(findx * val.at(ival)));
       fvSin.push_back(sin(findx * val.at(ival)));
+
+    }
+
+    if( fvCos.size() > 0 ) {
+      std::vector<Double_t>::iterator ibgn = fvCos.begin();
+      std::vector<Double_t>::iterator iend = fvCos.end();
+
+      Bn[ihm]     =  2./findx * TMath::Mean(ibgn, iend); 
+      Bn_rms[ihm] =  2./findx * TMath::RMS(ibgn, iend); 
+
+      ibgn = fvSin.begin();
+      iend = fvSin.end();
+
+      An[ihm]     = -2./findx * TMath::Mean(ibgn, iend);  
+      An_rms[ihm] =  2./findx * TMath::RMS(ibgn, iend);  
+    }
+    else{
+      An[ihm] = 0.;
+      Bn[ihm] = 0.;
+      An_rms[ihm] = 0.;
+      Bn_rms[ihm] = 0.;
+    }
+  }
+
+  for(UInt_t k = 0; k < charm; k++){
+    Double_t findx = (Double_t)(k+1);
+    
+    LOG(DEBUG) << std::setw(5) << std::noshowpos << k+1 
+	       << std::scientific << std::setprecision(5)  << std::right //<< showpos
+	       << std::setw(6) << " Bn<cos> : " <<  std::setw(15) << Bn[k]  << " rms " << Bn_rms[k]
+	       << "    " 
+	       << std::setw(6) << " An<sin> : " <<  std::setw(15) << An[k]  << " rms " << An_rms[k]
+	       << FairLogger::endl;
+    
+  }
+  
+  if(val.size()>0) 
+    GetCorrection(val);
+
+}
+
+void STFlowCorrection::FourierCorrection(Float_t hrm, std::vector<Double_t> &val)
+{
+  LOG(DEBUG) << " harm = " << charm <<  "val.size " << val.size() << FairLogger::endl;
+  std::vector<Double_t> fvCos;
+  std::vector<Double_t> fvSin;
+
+  for(UInt_t ihm = 0; ihm < charm; ihm++){ 
+
+    fvCos.clear();
+    fvSin.clear();
+
+    Double_t findx = (Double_t)(ihm+1);
+
+    for(Int_t ival = 0; ival < (Int_t)val.size(); ival++){
+
+      fvCos.push_back(cos(hrm* findx * val.at(ival)));
+      fvSin.push_back(sin(hrm* findx * val.at(ival)));
 
     }
 

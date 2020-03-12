@@ -41,6 +41,15 @@ public:
   TVector3 unitP_2;
   TVector3 unitP_1fc;
   TVector3 unitP_2fc;
+  Double_t cosdPsi;
+
+  TVector3 unit2P;
+  TVector3 unit2P_1;
+  TVector3 unit2P_2;
+  TVector3 unit2P_fc;
+  TVector3 unit2P_1fc;
+  TVector3 unit2P_2fc;
+  Double_t cos2dPsi;
 
   UInt_t   mtrack_1;
   UInt_t   mtrack_2;
@@ -83,7 +92,7 @@ public:
   void      SetRPMidCut(Double_t val) {fRPMidCut = val;}
   Double_t  GetRPMidCut()             {return fRPMidCut;}
 
-  ClassDef(STFlowInfo,5);
+  ClassDef(STFlowInfo,7);
 };
 
 #endif

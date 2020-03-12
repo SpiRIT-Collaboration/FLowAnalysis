@@ -38,7 +38,8 @@ void STMassCalculator::LoadCalibrationParameters(TString fileName, UInt_t beamA)
   if(fFile) std::cout<<fileName<<" is loaded."<<std::endl;
 
   for(auto pid: ROOT::TSeqI(2)) for(auto par: ROOT::TSeqI(2)) { 
-      g2PIDCalib2[pid][par] = (TGraph2D*)fFile->Get(Form("g2Calib_%dSn_%s_Par%d",beamA, pid==0?"Proton":"Deuteron",par));
+      //      g2PIDCalib2[pid][par] = (TGraph2D*)fFile->Get(Form("g2Calib_%dSn_%s_Par%d",beamA, pid==0?"Proton":"Deuteron",par));
+      g2PIDCalib2[pid][par] = (TGraph2D*)fFile->Get(Form("g2Calib_%dSn_%s_Par%d",beamA, pid==0?"ProtonFit":"DeuteronFit",par));
 
       if( g2PIDCalib2[pid][par] != nullptr ) 
 	LOG(INFO) << " g2PIDCalib::" << g2PIDCalib2[pid][par]->GetName() << " is loaded. " << FairLogger::endl;

@@ -100,8 +100,6 @@ void DoRPAnalysis(Long64_t nmax = -1)
   }
 
   
-  
-
   fout->cd();
   fout->Write("",TObject::kWriteDelete);
   if( fv1y != NULL ) fv1y->Write();

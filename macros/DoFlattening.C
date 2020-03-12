@@ -9,9 +9,6 @@ Int_t  seltrack;
 TCanvas *cc[12];
 UInt_t im = 0;
 
-UInt_t   sys[]              = {10, 10, 10, 10};
-TString  flabel;
-
 Double_t xconst[4];
 Double_t xmean[4];
 Double_t xsig[4];
@@ -27,8 +24,10 @@ Int_t ntrack[7];
 
 Int_t iVer;
 
+TString flabel;
 TString unitpX;
 TString unitpY;
+TString ltrack;
 TString fhead;
 TString fOutName ;
 
@@ -44,6 +43,7 @@ void Initialize();
 void SetPsiCorrectionFileHeader(UInt_t isel);
 void SaveReCenteringData(UInt_t m);
 void Flatten_Psi_ntrack(UInt_t isel = 0);//%% Executable : 
+void ReCentering(UInt_t isel = 10, Int_t nmin=0, Int_t nmax=100);
 
 void DoFlattening(UInt_t isel = 10)
 {
@@ -60,7 +60,7 @@ void DoFlattening(UInt_t isel = 10)
     exit(0);
   }
   
-
+  SetPsiCorrectionFileHeader(isel);
   Flatten_Psi_ntrack(isel);
 
   // later v17
@@ -72,6 +72,13 @@ void DoFlattening(UInt_t isel = 10)
 //________________________________//%% Executable : 
 void ReCentering(UInt_t isel = 10, Int_t nmin=0, Int_t nmax=100) //%% Executable : Recentering calibration
 {
+  constX = 0.;
+  meanX  = 0.;
+  sigX   = 0.;
+  constY = 0.;
+  meanY  = 0.;
+  sigY   = 0.;
+
   auto fgX  = new TF1("fgX","gaus",-30,30);;
   auto fgY  = new TF1("fgY","gaus",-30,30);;
 
@@ -86,27 +93,14 @@ void ReCentering(UInt_t isel = 10, Int_t nmin=0, Int_t nmax=100) //%% Executable
   hQx->SetTitle(htitle);
   hQy->SetTitle(htitle);
 
+  TString cutdef = Form(ltrack+">=%d&&"+ltrack+"<%d",nmin,nmax); 
+  if( isys != 5 ) cutdef += "&&beamPID>0";
 
-  TString cutdef;
-  if(isel == 10)
-    cutdef = Form("mtrack4>=%d && mtrack4<%d",nmin,nmax);
-  else if(isel == 11)
-    cutdef = Form("mtrack_1>=%d   && mtrack_1<%d",nmin,nmax);
-
-  if( isys == 2 ) {
-    if(isel == 10)
-      cutdef = Form("(mtrack1*0.8-20)<mtrack4 && mtrack4>=%d && mtrack4<%d",nmin,nmax);
-    else if(isel == 11)
-      cutdef = Form("(mtrack1*0.8-20)<mtrack4 && mtrack_1>=%d   && mtrack_1<%d",nmin,nmax);
-  }
-
-
-  TCut multcut = TCut(cutdef);
-
-  rChain->Project(Form("hQx%d_%d",nmin,isel), unitpX, multcut&&"beamPID>0");
-  rChain->Project(Form("hQy%d_%d",nmin,isel), unitpY, multcut&&"beamPID>0");
-
+  TCut   multcut = TCut(cutdef);
   multcut.Print();
+
+  rChain->Project(Form("hQx%d_%d",nmin,isel), unitpX, multcut);
+  rChain->Project(Form("hQy%d_%d",nmin,isel), unitpY, multcut);
 
   if(hQx->GetEntries() > 0) {
 
@@ -120,6 +114,8 @@ void ReCentering(UInt_t isel = 10, Int_t nmin=0, Int_t nmax=100) //%% Executable
     constY= fgY->GetParameter(0);
     meanY = fgY->GetParameter(1);
     sigY  = fgY->GetParameter(2);
+
+    LOG(INFO) << " meanX " << meanX << " meanY " << meanY << FairLogger::endl;
   }
 
   //  delete hQx;
@@ -133,7 +129,6 @@ void Flatten_Psi_ntrack(UInt_t isel)
   std::cout << "flatten_Psi_ntrackbin " << isel << std::endl;
 
   Initialize();
-  SetPsiCorrectionFileHeader(isel);
   
   const UInt_t harm      = 5;
   const UInt_t ntrknbin  = 20;
@@ -141,8 +136,8 @@ void Flatten_Psi_ntrack(UInt_t isel)
   // bin setting for multiplicity
   Double_t ntrkbin[ntrknbin+1];
   Double_t ntrk_min = 0;
-  //                      0  1  2     3   4   5  6   7    8   9    10  11  12
-  Double_t ntrk_max[] = {70, 70, 70, 70, 35, 35, 35, 35, 100, 70, 100, 50, 35};
+  //                      0  1  2  3  4  5  6  7  8  9   10  11   12  13
+  Double_t ntrk_max[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 50, 100, 50};
   for(UInt_t n = 0; n < ntrknbin+2; n++)
     ntrkbin[n]   = ntrk_max[isel]/ntrknbin * n;
 
@@ -159,8 +154,6 @@ void Flatten_Psi_ntrack(UInt_t isel)
     
   auto habiphi = new TH2D(Form("habiphi_%d",isel)," ;#Psi_rot; #Psi_fc",200,-3.2,3.2,200,-3.2,3.2);
 
-  auto hbdcXY  = new TH2D(Form("hbdcXY_%d",isel)," ;ProjX;ProjY",100,-20,120,100,-50,50);
-
   //--- retrivewed data
   Double_t bsPhi_1[3];
   Double_t bsPhi_2[3];
@@ -170,7 +163,6 @@ void Flatten_Psi_ntrack(UInt_t isel)
 
   if( isel >= 10) {
     rChain->SetBranchAddress("STFlow"  ,&aFlowArray);
-    //    rChain->SetBranchAddress("STBDC"   ,&aBDCArray);
   }
 
 
@@ -183,8 +175,7 @@ void Flatten_Psi_ntrack(UInt_t isel)
     
     if(j < ntrknbin+1){
 
-      if(isel != 6)
-	ReCentering(isel, ntrkbin[j], ntrkbin[j+1]);
+      ReCentering(isel, ntrkbin[j], ntrkbin[j+1]);
 
       flowcorr[j]->SetBin_max(0, ntrkbin[j+1]);
     }
@@ -200,6 +191,8 @@ void Flatten_Psi_ntrack(UInt_t isel)
     rcY[1] = meanY;
     rcY[2] = sigY;
 
+    LOG(INFO) << " meanX " << meanX << " meanY " << meanY << FairLogger::endl;
+
     flowcorr[j]->SetReCenteringParameter("X",rcX);  
     flowcorr[j]->SetReCenteringParameter("Y",rcY);        
   }   
@@ -213,6 +206,7 @@ void Flatten_Psi_ntrack(UInt_t isel)
   Int_t icout = 0;
   std::vector<Double_t> ophi;
 
+  nevt=100000;
   for(UInt_t i = 0; i < nevt; i++){
     rChain->GetEntry(i);
 
@@ -220,31 +214,31 @@ void Flatten_Psi_ntrack(UInt_t isel)
     if( aFlow == NULL ) continue;
 
     if( aFlow->goodEventf == 0 || aFlow->beamPID == 0 ) continue;
+    if( aFlow->mtrack4 < 5 ) continue;
+      
+    Int_t seltrack;
+    TVector3 vec;
     
-    //    STBDC      *aBDC  = (STBDC*)aBDCArray->At(0);
-    //    if( aBDC == NULL ) continue;
-    //    hbdcXY->Fill(aBDC->ProjX,aBDC->ProjY);
-
-
-    if( isys == 2 ) {
-      if( (aFlow->mtrack1*0.8-20) > aFlow->mtrack4 ) continue;
-      if( aFlow->mtrack4 < 5 ) continue;
+    switch(isel){
+    case 10:
+      seltrack = aFlow->mtrack4;
+      vec      = aFlow->unitP;
+      break;
+    case 11:
+      seltrack = aFlow->mtrack_1;
+      vec      = aFlow->unitP_1;
+      break;
+    case 12:
+      seltrack = aFlow->mtrack4;
+      vec      = aFlow->unit2P;
+      break;
+    case 13:
+      seltrack = aFlow->mtrack_1;
+      vec      = aFlow->unit2P_1;
     }
 
-    auto mtrack4  = aFlow->GetNTrack(4);
-    auto mtrack_1 = aFlow->mtrack_1;
-    auto unitP    = aFlow->unitP;
-    auto unitP_1  = aFlow->unitP_1;
-
     UInt_t intrk  = 0;
-
     UInt_t j = ntrknbin;
-    
-    Int_t seltrack;
-
-    if( isel ==10 )  seltrack = mtrack4;
-    else if( isel ==11 )  seltrack = mtrack_1;
-
     while(1){ 
       if( seltrack >= ntrkbin[j] ){
 	intrk = j;
@@ -253,11 +247,6 @@ void Flatten_Psi_ntrack(UInt_t isel)
       j--;
     }
     
-    //------------------------
-    // see -> SetPsiCorrectionFileHeader()
-    TVector3 vec = TVector3(unitP.X(),      unitP.Y(),      0.);
-    if(isel ==11) vec = TVector3(unitP_1.X(),    unitP_1.Y(),    0.);
-
     hniphi->Fill(vec.Phi());
 
    if(intrk==1)
@@ -289,23 +278,25 @@ void Flatten_Psi_ntrack(UInt_t isel)
 	
 	hantrkiphi ->Fill(mtk.at(k)   , aphi.at(k));
 	haiphi     ->Fill(aphi.at(k));	  
+
+	hbaiphi->Fill(abs(bphi.at(k)), abs(rcphi.at(k)));
 	  
 	if(j == 1)
 	  habiphi  ->Fill(ophi.at(k), aphi.at(k));
+
       }
     }
       
     TString comm1 = sysName + ".v" + dVer + "." + flabel;
     comm1 += Form(".m%d:flatten_Psi_ntrk; ntrack>= %f && ntrack< %f ",
 		  j,ntrkbin[j],ntrkbin[j+1]);
-
+ 
     TString comm2 = unitpX + " && " + unitpY;
     cout << "saving in ...  " << comm1 << endl;
     flowcorr[j]-> SaveCorrectionFactor(comm1, comm2);    
   }
 
-    
-   
+       
   im++;
   cc[im] = new TCanvas(Form("cc%d",im),Form("cc%d",im),700,500);
   
@@ -327,7 +318,8 @@ void Flatten_Psi_ntrack(UInt_t isel)
 
   im++;
   cc[im] = new TCanvas(Form("cc%d",im),Form("cc%d",im),700,500);
-  hbdcXY->Draw();
+  
+  hbaiphi->Draw("colz");
 }
 
 void SaveReCenteringData(UInt_t m)
@@ -376,17 +368,26 @@ void SetPsiCorrectionFileHeader(UInt_t isel){
   case 10: // total Psi
     unitpX = "unitP.X()";
     unitpY = "unitP.Y()";
+    ltrack = "mtrack4";
     flabel = "psi";
     break;
   case 11:
     unitpX = "unitP_1.X()";
     unitpY = "unitP_1.Y()";
+    ltrack = "mtrack_1";
     flabel = "subpsi1";
     break;
   case 12:
-    unitpX = "unitP_2.X()";
-    unitpY = "unitP_2.Y()";
-    flabel = "subpsi2";
+    unitpX = "unit2P.X()";
+    unitpY = "unit2P.Y()";
+    ltrack = "mtrack4";
+    flabel = "2psi";
+    break;
+  case 13:
+    unitpX = "unit2P_1.X()";
+    unitpY = "unit2P_1.Y()";
+    ltrack = "mtrack_1";
+    flabel = "sub2psi";
     break;
   }
 }

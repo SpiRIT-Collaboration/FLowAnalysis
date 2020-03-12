@@ -121,10 +121,9 @@ Bool_t STSpiRITTPCTask::SetupParameters()
 
   if( bmA == 124 )
     bmA = 132;  
-  else if( bmA == 112 )
-    bmA = 108;
 
-  massCal->LoadCalibrationParameters("db/PIDCalib.root",bmA);
+  //  massCal->LoadCalibrationParameters("db/PIDCalib.root",bmA);
+  massCal->LoadCalibrationParameters("db/FlattenPID.root",bmA);
 
   //------------------------------
 

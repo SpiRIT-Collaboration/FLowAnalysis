@@ -39,6 +39,15 @@ STFlowInfo::STFlowInfo(const STFlowInfo &cp)
   unitP_2fc= cp.unitP_2fc;
   mtrack_1 = cp.mtrack_1;
   mtrack_2 = cp.mtrack_2;
+  cosdPsi  = cp.cosdPsi;
+
+  unit2P    = cp.unit2P;
+  unit2P_fc = cp.unit2P_fc;
+  unit2P_1  = cp.unit2P_1;
+  unit2P_2  = cp.unit2P_2;
+  unit2P_1fc= cp.unit2P_1fc;
+  unit2P_2fc= cp.unit2P_2fc;
+  cos2dPsi  = cp.cos2dPsi;
   
   for(UInt_t i = 0; i < 3; i++) {
     bsPhi[i]   = cp.bsPhi[i];
@@ -137,6 +146,15 @@ void STFlowInfo::Clear()
   unitP_2    = TVector3(0.,0., 0.);
   unitP_1fc  = TVector3(0.,0., 0.);
   unitP_2fc  = TVector3(0.,0., 0.);
+  cosdPsi    = 0.;
+
+  unit2P_fc   = TVector3(0.,0.,0.);
+  unit2P      = TVector3(0.,0., 0.);
+  unit2P_1    = TVector3(0.,0., 0.);
+  unit2P_2    = TVector3(0.,0., 0.);
+  unit2P_1fc  = TVector3(0.,0., 0.);
+  unit2P_2fc  = TVector3(0.,0., 0.);
+  cos2dPsi    = 0.;
 
   mtrack_1 = 0;
   mtrack_2 = 0;

@@ -2,31 +2,42 @@
 
 source setup.sh
 
+#export MNMACRO=DoFlow_mod.C        ##<--- MACRO name
 export MNMACRO=DoFlow_adv.C        ##<--- MACRO name
 
 ##---->>> EDIT here
 
 
 
-##------------- RPSim  //Simulation
-export MNDB=rpsim                  ##<---
-export MNVERSION=50                 ##   <------@@ input 
-export MNDBVERSION=$MNVERSION
-source SetEnvRPSim.sh
-export MNOVER=0
-#export CCPSI=1
-##<-----------
 ##<----------- data
 export MNRNF=$RNF108               ##<--- 
 export MNDB=BTt                    ##<---
 export MNVERSION=43.0              ##   <------@@ input 
 export MNDBVERSION=$MNVERSION
 ##<----
-
 export RPBS=0
-export LC=20
-export UC=40
+export LC=
+#20
+export UC=
+#40
+export MNOVER=0
 ##------
+
+##------------- RPSim  //Simulation
+export MNDB=rpsim                  ##<---
+##////----------
+export MNVERSION=53                ##   <------@@ input 
+export MNDBVERSION=$MNVERSION
+export MNRNF=0403                  ##<--- 
+##<-----------
+export MNVERSION=50.7                ##   <------@@ input 
+export MNDBVERSION=$MNVERSION
+export MNRNF=0400                  ##<--- 
+##////----------
+export MNVERSION=22.0                ##   <------@@ input 
+export MNDBVERSION=$MNVERSION
+export MNRNF=0022                  ##<--- 
+##---
 
 echo $MNDBVERSION
 
@@ -35,6 +46,7 @@ export MNrunOne='SUFX=$MNDB  VER=$MNVERSION root $MACRO.C'
 
 function dorpres()
 {
+#   RPBS=0 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNVERSION root DoRPResSubEvent.C\($1\)
    RPBS=0 RUN={$MNRNF} VER=$MNVERSION OUTVER=$MNVERSION root DoRPRes.C\($1\)
 }
 

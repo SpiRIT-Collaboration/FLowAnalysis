@@ -120,14 +120,12 @@ void SaveCanvas(TString fopt = "", Int_t isel=-1)
 }
 
 
-UInt_t SetBranch()
+Long64_t SetBranch()
 {
   if(rChain == NULL) {
     std::cout << " no file is loaded " << std::endl;
     return 0;
   }
-
-  std::cout << " Nentry ->  " << rChain->GetEntries() << std::endl;
 
   if(aArray != NULL)
     aArray->Clear();
@@ -135,8 +133,19 @@ UInt_t SetBranch()
   rChain->SetBranchAddress("STParticle",&aArray);
   rChain->SetBranchAddress("STFlow"    ,&aFlowArray);
 
-  if( isys == 4 )
+  if( isys == 5 )
     rChain->SetBranchAddress("RPPsi",&RPPsi);
-    
-  return rChain->GetEntries();
+
+
+  Long64_t totalevent = rChain->GetEntries() ;
+
+  Long64_t maxevt = totalevent;
+  TString smaxevt = gSystem -> Getenv("MXEVT");
+  if( smaxevt != "" )
+    maxevt = atoi(smaxevt);
+  Long64_t nevt = maxevt < totalevent ? maxevt : totalevent;
+
+  std::cout << " NOTICE !!!! Process to " << nevt << " (" << totalevent << ")" << std::endl;
+
+  return nevt;
 }

@@ -50,10 +50,13 @@ STParticle::STParticle(const STParticle &cp)
   fPxz          = cp.fPxz;
   fPyz          = cp.fPyz;
 
+  fwgt          = cp.fwgt;
   frpv          = cp.frpv;
   frpphi        = cp.frpphi;
   fdeltphi      = cp.fdeltphi;
-  fwgt          = cp.fwgt;
+  frpv2         = cp.frpv2;
+  frpphi2       = cp.frpphi2;
+  fdeltphi2     = cp.fdeltphi2;
 
   //flags
   fBeamonTargetf   = cp.fBeamonTargetf;
@@ -155,10 +158,13 @@ void STParticle::Clear(Option_t *option)
   fmassf       = 1;
 
   // for flow
+  fwgt   = 0.;
   frpv     = TVector3(-9999,-9999,-9999);
   frpphi   = -10.;
   fdeltphi = -10.;
-  fwgt   = 0.;
+  frpv2    = TVector3(-9999,-9999,-9999);
+  frpphi2  = -10.;
+  fdeltphi2= -10.;
   
   fmxevt = -1;
   fmxntrk = -1;

@@ -39,16 +39,20 @@ Bool_t bstyle[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 0, 0, 1, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
+Bool_t bsys[]  = { 0, 0, 0, 0, 1};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
 Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {0, 1, 0, 1}; //{1, 1, 1, 1, 1, 0, 0, 0, 0};
+UInt_t  bver[]  = {1, 1, 0, 0}; //{1, 1, 1, 1, 1, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
+  {".v50.7.1"   ,"advYPt_","(TPC)v50.7.1"},
+  {".v22.0.8"   ,"advYPt_","(Full)22.0.8"},
+  {".v50.0"   ,"advYPt_","(TPC)v50.0"},
+  {".v50.0"     ,"advYPt_","(A)TPC"},
   {".v43.0.9"   ,"advYPt_","v9"}, //"p/y<=1"},
   {".v43.0.7"   ,"advYPt_","v7"}, //"p/y<=1"},
   {".v43.0.8"   ,"advYPt_","v8"}, //"p/y<=1"},
@@ -59,7 +63,6 @@ gplot gnames[] = {
   {".v41.2.23"   ,"advYPt_","p/y<=1&&y>0"},
   {".v41.2.24"   ,"advYPt_","p/y<=1&&y<0"},
   {".v3.0"   ,"advYPt_","all"},
-  {".v3.1"    ,"advYPt_","all"},
   {".v43.0"   ,"advYPt_","|y_cm|>0.005"},
   {".v42.0"   ,"advYPt_","|y_cm|>0.01"},
   {".v41.0"   ,"advYPt_","|y_cm|>0.05"},
@@ -261,7 +264,7 @@ void PlotPtDependence()
   //  mv1slp->GetXaxis()->SetAlphanumeric(kTRUE);
 
   auto lgr1 = new TLegend(0.60, 0.20, 0.85, 0.40, ""); 
-  auto lgr2 = new TLegend(0.16, 0.65, 0.45, 0.9, "");
+  auto lgr2 = new TLegend(0.46, 0.65, 0.65, 0.9, "");
   auto lgr3 = new TLegend(0.35, 0.13, 0.7, 0.33, "");
   auto lgr4 = new TLegend(0.15, 0.63, 0.5, 0.85, "");
   auto lgr5 = new TLegend(0.15, 0.63, 0.5, 0.85, "");
@@ -476,7 +479,8 @@ void PlotPtDependence()
       otitle += pBUUConfig[ik].comment; 
     }
     else if( ia == 4 ) {// simulation
-      otitle = "Sim"+sVer[iz]+";"+cmnt[iz];
+      //      otitle = "Sim"+sVer[iz]+";"+cmnt[iz];
+      otitle = cmnt[iz];
       bstyle[2] = kTRUE;
     }
 
@@ -537,13 +541,14 @@ void PlotPtDependence()
 	yv1->SetMarkerStyle(imark[is]);
 	
 	// --- check it
-		yv1->RemovePoint(10);
-	 yv1->RemovePoint(9);
-	 yv1->RemovePoint(8);
-	 yv1->RemovePoint(7);
-	 yv1->RemovePoint(0);
-	 yv1->RemovePoint(0);
-
+	if( is != 5 ) {
+	  yv1->RemovePoint(10);
+	  yv1->RemovePoint(9);
+	  yv1->RemovePoint(8);
+	  yv1->RemovePoint(7);
+	  yv1->RemovePoint(0);
+	  yv1->RemovePoint(0);
+	}
 
 	if( ip == 5 )
 	  yv1->SetMarkerStyle(imark[is]+4);
@@ -601,8 +606,8 @@ void PlotPtDependence()
 	for( Int_t iip = (Int_t)yv2->GetN()-1; iip >= 0; iip-- ){
 	  Double_t xpnt, ypnt;
 	  yv2->GetPoint(iip, xpnt, ypnt);
-	  if( xpnt > 1 || xpnt < -0.8)
-	    yv2->RemovePoint(iip);
+	  //	  if( (xpnt > 1 || xpnt < -0.8) && is != 5 )
+	  //	    yv2->RemovePoint(iip);
 	}
 
 	
@@ -811,6 +816,11 @@ void PlotPtDependence()
     }
 
     mrv1->Draw("ALP");
+    if( bstyle[2] ) {
+      fv1y->SetLineColor(3);
+      fv1y->Draw("same");
+      lgr1->AddEntry("fv1y","initial","lp");
+    }
     lgr1->Draw();
 
     auto Ymin = mrv1->GetYaxis()->GetXmin();
@@ -828,9 +838,6 @@ void PlotPtDependence()
     aLineY1->SetLineStyle(3);
     aLineY1->Draw();
 
-    if( bstyle[2] )
-      fv1y->Draw("same");
-
   
     //--- v2 vs rapidity ---
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
@@ -845,8 +852,10 @@ void PlotPtDependence()
     mrv2->Draw("ALP");
     lgr2->Draw();
 
-    if( bstyle[2] )
+    if( bstyle[2] ) {
       fv2y->Draw("same");
+    }
+
 
     Ymin = mrv2->GetYaxis()->GetXmin();
     Ymax = mrv2->GetYaxis()->GetXmax();
@@ -859,6 +868,15 @@ void PlotPtDependence()
     aLineX2->Draw();
 
 
+    if( bstyle[2] ) {
+      ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+      fv2y->SetTitle(";y_{cm}/y_{beam}; v2");
+      fv2y->SetLineColor(3);
+      fv2y->Draw("");
+      mrv2->Draw("");
+      lgr2->AddEntry("fv2y","initial","lp");
+      lgr2->Draw();
+    }
 
   }
 

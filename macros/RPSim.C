@@ -27,6 +27,8 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
   else
     bRandMult = kFALSE; 
 
+  bRandMult = kFALSE; 
+
 
   Bool_t bSingle = kFALSE;
   Bool_t bRPRand = kTRUE;   // 1: Reaction plane is romdom direction
@@ -129,12 +131,11 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
   auto fv1y = new TF1("fv1y","[0]+[1]*x+[2]*x^3"  ,-1.,1.);
   fv1y->SetParameter(0,0);
   fv1y->SetParameter(1,5.18056e-01);
-  fv1y->SetParameter(1,5.18056e-01);
   fv1y->SetParameter(2,-1.84025e-01);
 
   //@@@@@
   auto fv2y = new TF1("fv2y","[0]+[1]*x^2+[2]*x^4",-1.,1.);
-  fv2y->SetParameter(0, -0.08);
+  fv2y->SetParameter(0, -0.04);
   fv2y->SetParameter(1,  0.1);
   fv2y->SetParameter(2, -0.02);
 
@@ -228,7 +229,7 @@ void RPSim(UInt_t irun=5, UInt_t maxevt=100)
       //@@@@@
       //      if( !gcang->IsInside( yaw, pitch ) )continue; //v5
       //   if( !gcang->IsInside( pitch, yaw ) )continue; //v7, v8 OK
-      if( !gcang->IsInside(vecP.Theta() , vecP.Phi() )) continue; //v7, v8 OK
+      // if( !gcang->IsInside(vecP.Theta() , vecP.Phi() )) continue; //v7, v8 OK
       
       hyawpitch->Fill(yaw, pitch);
       hThetaPhi->Fill(aTheta, aPhi);

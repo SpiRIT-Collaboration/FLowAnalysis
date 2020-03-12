@@ -92,6 +92,7 @@ class STFlowCorrection : public TObject {
   TVector3 ReCenteringFourierCorrection(TVector3 val);
   UInt_t   FourierCorrection();
   void     FourierCorrection(std::vector<Double_t> &val);
+  void     FourierCorrection(Float_t hrm, std::vector<Double_t> &val);
   Double_t GetCorrection(Double_t val);
   void     GetCorrection(std::vector<Double_t> &val);
 

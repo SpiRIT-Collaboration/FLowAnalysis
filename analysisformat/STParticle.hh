@@ -70,10 +70,13 @@ private:
 
   TLorentzVector fLzvec;     // LorentzVector flzvec(fRotatedP3, Etotal);
 
+  Double_t fwgt;             // Summing up weight
   TVector3 frpv;             // Individual Reaction plane vector (IRPO) for each particle
   Double_t frpphi;           // Individual Reaction plane orientaion (IRPO) for each particle
   Double_t fdeltphi;         // Azimuthal opening angle with respect to IRPO
-  Double_t fwgt;             // Summing up weight
+  TVector3 frpv2;            // Individual v2 Reaction plane vector (IRPO2) for each particle
+  Double_t frpphi2;          // Individual v2 Reaction plane orientaion (IRPO2) for each particle
+  Double_t fdeltphi2;        // Azimuthal opening angle with respect to IRPO2
 
   // --- mixed partiels
   Int_t    fmxevt  = -1;
@@ -177,6 +180,8 @@ public:
 
   void     SetIndividualRPVector(TVector3 vec)  {frpv = vec;}
   TVector3 GetIndividualRPVector()              {return frpv;}
+  void     SetIndividualRPVector2(TVector3 vec) {frpv2 = vec;}
+  TVector3 GetIndividualRPVector2()             {return frpv2;}
   void     SetRotatedMomentum(TVector3 value)   {fRotatedP3 = value; SetRotatedPt(); SetLorentzVector();}
   TVector3 GetRotatedMomentum()                 {return fRotatedP3;}
   TVector2 GetRotatedPt()                       {return fRotatedPt;}
@@ -251,11 +256,16 @@ public:
   void     SetRPWeight(Double_t value)  {fwgt = value;}
   Double_t GetRPWeight()                {return fwgt;}
 
-  void     SetAzmAngle_wrt_RP(Double_t val) {fdeltphi = val;}
-  Double_t GetAzmAngle_wrt_RP()         {return fdeltphi;}
+  void     SetAzmAngle_wrt_RP(Double_t val)  {fdeltphi = val;}
+  Double_t GetAzmAngle_wrt_RP()           {return fdeltphi;}
+  void     SetAzmAngle2_wrt_RP(Double_t val) {fdeltphi2 = val;}
+  Double_t GetAzmAngle2_wrt_RP()          {return fdeltphi2;}
 
   void     SetIndividualRPAngle(Double_t val) {frpphi = val;}
   Double_t GetIndividualRPAngle()       {return frpphi;}
+
+  void     SetIndividualRPAngle2(Double_t val) {frpphi2 = val;}
+  Double_t GetIndividualRPAngle2()       {return frpphi2;}
 
 
 
@@ -301,7 +311,7 @@ public:
   TVector3     GetPOCAVertex()                  {return rPOCAVertex;}
 
 
-  ClassDef(STParticle, 20)
+  ClassDef(STParticle, 21)
 
 };
 
