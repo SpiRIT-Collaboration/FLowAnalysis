@@ -678,6 +678,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   iyy = 0;
 
 
+  GetRPResolutionwChi(rpresall, hdphi0_180, hdphi90_180, 2.);
+
   for( UInt_t iy = 0; iy < ybin2; iy++ ) {
 
     Double_t yn    = (Double_t)hdy2[iy]->GetEntries();
@@ -687,9 +689,9 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     if( yn > 0 ) {
       auto mcos  = hdyv2[iy]->GetMean();
       auto mcose = hdyv2[iy]->GetStdDev()/sqrt(yn);
-      auto mcosee= GetError(mcos, rpresall[2], mcose, rpresall[3]);
+      auto mcosee= GetError(mcos, rpresall[0], mcose, rpresall[1]);
 
-      auto cosc = mcos/rpresall[2];
+      auto cosc = mcos/rpresall[0];
       
       gy_v2->SetPoint(iyy, ymean, cosc);
       gy_v2->SetPointError(iyy, ystdv, mcosee );
@@ -722,12 +724,12 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	  if( bccPsi )
 	    Get2PsiRPResolution(rppsires, ips);
 	  else {
-	    rppsires[1] = rpresall[2];
-	    rppsires[2] = rpresall[3];
+	    rppsires[1] = rpresall[0];
+	    rppsires[2] = rpresall[1];
 	  }
 
-	  hpsi->Fill((Double_t)ips, rppsires[4]);
-	  hpsi1->Fill(rppsires[4]);
+	  hpsi->Fill((Double_t)ips, rppsires[1]);
+	  hpsi1->Fill(rppsires[1]);
 
 	  Double_t v2u   = hdydutcos2[iy][ipt][ips]->GetMean();
 	  Double_t v2ue  = hdydutcos2[iy][ipt][ips]->GetStdDev()/sqrt( nv2u );
@@ -1046,17 +1048,18 @@ Double_t *GetPsiRPResolution(Double_t *rpcor, UInt_t ival)
 
 Double_t *Get2PsiRPResolution(Double_t *rpcor, UInt_t ival)
 {
+  //for test
   if( rpcor != NULL ) {
-    if( ival < psibin ) {
-      rpcor[0] = *(hgv_psi2->GetX() + ival );
-      rpcor[1] = *(hgv_psi2->GetY() + ival );
-      rpcor[2] = *(hgv_psi2->GetEY() + ival );
-    }
-    else {
+    // if( ival < psibin ) {
+    //   rpcor[0] = *(hgv_psi2->GetX() + ival );
+    //   rpcor[1] = *(hgv_psi2->GetY() + ival );
+    //   rpcor[2] = *(hgv_psi2->GetEY() + ival );
+    // }
+    // else {
       rpcor[0] = 0.;
       rpcor[1] = 1.;
       rpcor[2] = 0.;
-    }
+      //    }
   }
   
   return rpcor;

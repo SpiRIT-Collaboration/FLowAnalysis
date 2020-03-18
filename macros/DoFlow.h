@@ -11,7 +11,7 @@ const UInt_t nprt = 5;
 TString  iopt[]     = {"","same","same","same","same", "same", "same"};
 UInt_t   imark[]    = {20, 21, 22, 23, 25, 26, 24, 20};  
 
-UInt_t ic = -1;
+UInt_t ic = 0;
 TCanvas *cc;
 const Int_t nbinx = 30;
 UInt_t id = 0;

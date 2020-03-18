@@ -17,11 +17,11 @@ Double_t sysA[]    = {256.,    220.,      236.,   236.   ,  256.};
 //--- Data
 Bool_t bsys[]  = { 0, 0, 0, 0, 1};    //132Sn, 108Sn, 124Sn, 112Sn, 100Sn
 //-----------
-UInt_t  bver[]  = {1, 1, 1};
+UInt_t  bver[]  = {1, 1, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
   {".v50.7"    ,"cpsi_", ".m00to80",""},
-  {".v50.7"    ,"epsi_", ".m00to80",""},
+  {".v22.0"    ,"cpsi_", ".m00to80",""},
   {".v50.7"    ,"dpsi_",".m00to80",""},
   {".v50.7"    ,"ccpsi_",".m00to80",""},
   {".v41.2"    ,"bpsi_",".m00to40",""},

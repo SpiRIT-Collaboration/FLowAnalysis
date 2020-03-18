@@ -40,7 +40,7 @@ UInt_t   GetRPCorrIndex(Double_t mult);
 Double_t *GetRPResolutionwChi(Double_t *rpres, TH1D *hphi0_180, TH1D *hphi90_180, UInt_t kk);
 Double_t *GetRPResolutionwChi(Double_t *rpres, Double_t chi, Double_t chie, const UInt_t kk);
 //Double_t *GetRPResolutionMCos(Double_t *rpres, Double_t mcos, Double_t mcose, const UInt_t kk);
-Double_t GetRPResolutionMCos(Double_t mcos, Double_t mcose, UInt_t kk);
+Double_t *GetRPResolutionMCos(Double_t *rpres, Double_t mcos, Double_t mcose, UInt_t kk);
 void     GetChi2();
 
 //--
@@ -258,6 +258,8 @@ void GetChi2()
 
 void GetResolution()
 {
+  LOG(INFO) << "GetResolution ... " << FairLogger::endl;
+
   // Averaged resolution is calculated.
 
   TH1I *hmult = new TH1I("hmult",";Multiplicity",100,0,100);
@@ -274,6 +276,7 @@ void GetResolution()
   //--------------------------------------------------
   //--- Event Loop
   //--------------------------------------------------
+  //  nevt = 2000;
   for(Long64_t i = 0; i < nevt; i++){
 
     rChain->GetEntry(i);
@@ -286,7 +289,7 @@ void GetResolution()
 
     hcosd -> Fill( aflow->cosdPsi);
 
-    //    Double_t subevt_phi2 = TVector2::Phi_mpi_pi( (aflow->unitP_1fc).Phi() - (aflow->unitP_2fc).Phi() );
+    //Double_t subevt_phi2 = TVector2::Phi_mpi_pi( (aflow->unitP_1fc).Phi() - (aflow->unitP_2fc).Phi() );
     //Double_t subevt_phi2 = 2.*abs(TVector2::Phi_mpi_pi( (aflow->unit2P_1fc).Phi()/2. - (aflow->unitP_2fc).Phi()));
     Double_t subevt_phi2 = 2.*TVector2::Phi_mpi_pi( (aflow->unit2P_1fc).Phi()/2. - (aflow->unit2P_2fc).Phi()/2.);
     subevt_phi2 = TVector2::Phi_mpi_pi(subevt_phi2);
@@ -296,71 +299,77 @@ void GetResolution()
     hdphi1 -> Fill( subevt_phi );
     hdphi2 -> Fill( subevt_phi2);
 
-    hphi0_180->Fill( abs(subevt_phi2) );
-    if( abs(subevt_phi2) < TMath::Pi()/2. )
-      hphi90_180->Fill( abs(subevt_phi2) );
+    hphi0_180->Fill( abs(subevt_phi) );
+
+    if( abs(subevt_phi) > TMath::Pi()/2. )
+      hphi90_180->Fill( abs(subevt_phi) );
 
     hmult->Fill( aflow->mtrack2 );
 
   }
 
-  auto  reaolution = new Double_t[4]; 
-  GetRPResolutionwChi(reaolution, hphi0_180, hphi90_180, 2);
+  auto  rpres = new Double_t[2]; 
+  GetRPResolutionwChi(rpres, hphi0_180, hphi90_180, 1);
 
-  LOG(INFO) << " <cos (d phi) > = " << *reaolution << FairLogger::endl;
+  LOG(INFO) << " Ordinal way  <cos (d phi) > = " << *rpres << FairLogger::endl;
 
-  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
-  hmult->Draw();
+  // ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+  // hmult->Draw();
 
-  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
-  hphi0_180->Draw();
-  hphi90_180->SetLineColor(2);
-  hphi90_180->Draw("same");
+  // ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+  // hphi0_180->Draw();
+  // hphi90_180->SetLineColor(2);
+  // hphi90_180->Draw("same");
 
-  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
-  cc->Divide(1,2);
-  cc->cd(1);
-  hcosd->Draw();
-  cc->cd(2);
-  hcos2d->Draw();
+  // ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+  // cc->Divide(1,2);
+  // cc->cd(1);
+  // hcosd->Draw();
+  // cc->cd(2);
+  //  hcos2d->Draw();
 
+
+  LOG(INFO) << " New way --------- >>>  " << FairLogger::endl;
 
 
   auto mcos_sub = hcosd->GetMean();
+  mcos_sub = sqrt(mcos_sub);
   auto mcos_err = hcosd->GetStdDev()/sqrt( (Double_t)hcosd->GetEntries()-1 );
-  auto chisub   = GetRPResolutionMCos(mcos_sub, mcos_err, 1);
-  auto chifull  = sqrt(4. * chisub );
-  auto chifulle = abs(mcos_err* 1./chifull);
 
-  auto rpres = new Double_t[2];
-  GetRPResolutionwChi(rpres, chifull, chifulle, 1);
+  rpres = GetRPResolutionMCos(rpres, mcos_sub, mcos_err, 1);
+  auto chifull1  = sqrt(2) * rpres[0];
+  auto chifull1e = sqrt(2) * rpres[1];
+
+  rpres = GetRPResolutionwChi(rpres, chifull1, chifull1e, 1);
 
   LOG(INFO) << " <cosd > = " << rpres[0] << " +- " << rpres[1] 
-	    << " chi_1 = " << chifull 
+	    << " chi_1 = " << chifull1 
 	    << FairLogger::endl;
 
-  GetRPResolutionwChi(rpres, chifull, chifulle, 2);
+  rpres = GetRPResolutionwChi(rpres, chifull1, chifull1e, 2);
 
   LOG(INFO) << " <cos2d >m1 = " << rpres[0] << " +- " << rpres[1] 
-	    << " chi_1 = " << chifull 
+	    << " chi_1 = " << chifull1 
 	    << FairLogger::endl;
 
 
-  
+  LOG(INFO) << " <cos2(psi_a - psi_b)> ----> " << FairLogger::endl;  
   mcos_sub = hcos2d->GetMean();
+  mcos_sub = sqrt(mcos_sub);
   mcos_err = hcos2d->GetStdDev()/sqrt( (Double_t)hcos2d->GetEntries()-1 );
-  chisub   = GetRPResolutionMCos( mcos_sub, mcos_err, 2);
-  chifull  = sqrt(4. * chisub );
-  chifulle = abs(mcos_err* 1./chifull);
 
-  
-  GetRPResolutionwChi(rpres, chifull, chifulle, 2);
+  rpres = GetRPResolutionMCos(rpres,  mcos_sub, mcos_err, 2);
+  auto chifull2  = sqrt(2)*rpres[0];
+  auto chifull2e = sqrt(2)*rpres[1];
 
+  auto chifull  = (chifull1 + chifull2)/2.;
+  auto chifulle = sqrt(pow(chifull1e,2) + pow(chifull2e,2));
+  rpres = GetRPResolutionwChi(rpres, chifull, chifulle, 2);
+
+  LOG(INFO) << "###" << FairLogger::endl;
   LOG(INFO) << " <cos 2dsub = " << mcos_sub 
-	    << " chi_sub = " << chisub
 	    << " <cos2d >m2 = " << rpres[0] << " +- " << rpres[1] 
-	    << " chi_1 = " << chifull 
-	    << " chi_2 = " << sqrt(2. * chisub )
+	    << " chi_2 = "      << chifull << " +- " << chifulle
 	    << FairLogger::endl;
   
 }
@@ -473,14 +482,14 @@ void PsiAngleDependence()            //%% Executable :
 
       Double_t meancos_sub = hcos1_sub1ab[i]->GetMean();
       Double_t meancos_err = hcos1_sub1ab[i]->GetStdDev()/sqrt( (Double_t)(hcos1_sub1ab[i]->GetEntries()-1) );
+      meancos_sub  = sqrt( meancos_sub );
+      meancos_err  = meancos_err/sqrt( meancos_sub );
 
       LOG(INFO) << " <cos(dpsi)>[" << i << "] = " << meancos_sub << " +- " << meancos_err << FairLogger::endl;
       
-      auto chisub1 = GetRPResolutionMCos(meancos_sub, meancos_err, 1);
-
-      cout << " chisub " << chisub1 << endl;
-      Double_t chifull  = sqrt(4. * chisub1 );
-      Double_t chifulle = abs(meancos_err * 1./chifull);
+      rpres = GetRPResolutionMCos(rpres, meancos_sub, meancos_err, 1);
+      Double_t chifull  = sqrt(2) * rpres[0];
+      Double_t chifulle = sqrt(2) * rpres[1];
 
       rpres = GetRPResolutionwChi(rpres, chifull, chifulle, 1);
 
@@ -535,7 +544,7 @@ void PsiAngleDependence()            //%% Executable :
 
 void PsiAngleDependence_old()            //%% Executable :
 {
-  LOG(INFO) << " PsiAngleDependence .... " << FairLogger::endl;
+  LOG(INFO) << " PsiAngleDependence_old .... " << FairLogger::endl;
 
   gROOT->Reset();
   gROOT->cd();
@@ -1055,8 +1064,6 @@ Double_t *GetRPResolutionwChi(Double_t *rpres, TH1D *hphi0_180, TH1D *hphi90_180
     LOG(INFO) << " No entry in 0_180 " << endl;
     rpres[0] = 1.;
     rpres[1] = 0.;
-    rpres[2] = 1.;
-    rpres[3] = 0.;
     return rpres;
   }
 
@@ -1077,45 +1084,58 @@ Double_t *GetRPResolutionwChi(Double_t *rpres, TH1D *hphi0_180, TH1D *hphi90_180
     rpres[2] = par2[0]*pow(chi,2) + par2[1]*pow(chi,3) + par2[2]*pow(chi,4) + par2[3]*pow(chi,5);
   }
   else {
-    rpres[0] = sqrt(TMath::Pi())/(2.*sqrt(2))*chi*exp(-chi*chi/4.)*
-      (ROOT::Math::cyl_bessel_i(0,chi*chi/4.)+ROOT::Math::cyl_bessel_i(1,chi*chi/4.));
+    if( kk == 1 )
+      rpres[0] = sqrt(TMath::Pi())/(2.*sqrt(2))*chi*exp(-chi*chi/4.)*
+	(ROOT::Math::cyl_bessel_i(0,chi*chi/4.)+ROOT::Math::cyl_bessel_i(1,chi*chi/4.));
 
-    rpres[2] = sqrt(TMath::Pi())/(2.*sqrt(2))*chi*exp(-chi*chi/4.)*
-      (ROOT::Math::cyl_bessel_i((kk-1.)/2.,chi*chi/4.)+ROOT::Math::cyl_bessel_i((kk+1.)/2.,chi*chi/4.));
+    else if( kk == 2 )
+      rpres[0] = sqrt(TMath::Pi())/(2.*sqrt(2))*chi*exp(-chi*chi/4.)*
+	(ROOT::Math::cyl_bessel_i((kk-1.)/2.,chi*chi/4.)+ROOT::Math::cyl_bessel_i((kk+1.)/2.,chi*chi/4.));
   }
 
-  Double_t err2 = mre2*pow(par1[0] + 3.*par1[1]*pow(chi,2) + 4.*par1[2]*pow(chi,3) + 5.*par1[3]*pow(chi,4),2);
-  rpres[1] = sqrt( err2 );
-  err2     = mre2*pow( par2[0] + 2.*par2[1]*chi + 4.*par2[2]*pow(chi,3) + 5.*par2[3]*pow(chi,4),2);
-  rpres[3] = sqrt( err2 );
- 
-  LOG(INFO) << " Getting correction factor " 
-	    << " k = " << kk << " : " 
-	    << std::setw(6)  << m1 << "/" << m0 << " = " << mr << " chi = " << chi 
-	    << " <cos(dphi)> "
-   	    << std::setw(14) << rpres[0] << " +- " << std::setw(10) << rpres[1]
-	    << FairLogger::endl
+  Double_t err2 = 0;
+  if( kk == 1 ) {
+    err2 = mre2*pow(par1[0] + 3.*par1[1]*pow(chi,2) + 4.*par1[2]*pow(chi,3) + 5.*par1[3]*pow(chi,4),2);
+    rpres[1] = sqrt( err2 );
+  }
+  else if( kk == 2 ) {
+    err2     = mre2*pow( par2[0] + 2.*par2[1]*chi + 4.*par2[2]*pow(chi,3) + 5.*par2[3]*pow(chi,4),2);
+    rpres[1] = sqrt( err2 );
+  }
 
-   	    << " <cos(2dphi)> "
-   	    << std::setw(14) << rpres[2] << " +- " << std::setw(10) << rpres[3]
-   	    << FairLogger::endl;
-
+  LOG(DEBUG) << " Getting correction factor ############" ;
+  if( kk == 1 ) {
+    LOG(INFO) << " k = " << kk << " : " 
+	      << std::setw(6)  << m1 << "/" << m0 << " = " << mr << " chi = " << chi 
+	      << " <cos(dphi)> "
+	      << std::setw(14) << rpres[0] << " +- " << std::setw(10) << rpres[1]
+	      << FairLogger::endl;
+  }
+  else if( kk == 2) {
+    LOG(INFO) << " <cos(2dphi)> "
+	      << std::setw(14) << rpres[2] << " +- " << std::setw(10) << rpres[3]
+	      << FairLogger::endl; 
+  }
   if( std::isnan( rpres[0] ) || std::isnan( rpres[1] ) ) {
     rpres[0] = 1.;
     rpres[1] = 0.;
-    rpres[2] = 1.;
-    rpres[3] = 0.;
-    LOG(INFO) << rpres[0] << FairLogger::endl;
+    LOG(ERROR) << rpres[0] << FairLogger::endl;
   }
 
 
   return rpres;
 } //Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)
 
-Double_t GetRPResolutionMCos(Double_t mcos, Double_t mcose, UInt_t kk )            //%% Executable : 
+Double_t *GetRPResolutionMCos(Double_t *rpres, Double_t mcos, Double_t mcose, UInt_t kk )            //%% Executable : 
 {
-  // if( rpres == NULL ) return rpres;
-  if( kk != 1 && kk != 2 ) return 1.;
+  if( rpres == NULL )       return rpres;
+  if( kk != 1 && kk != 2)   return rpres;
+
+
+  LOG(INFO) << " GetRPReosolutionMCos()..... " << FairLogger::endl;
+
+  rpres[0] = 1.;
+  rpres[1] = 0.;
 
   Complex xx[5];
   Complex aa[6];
@@ -1125,41 +1145,53 @@ Double_t GetRPResolutionMCos(Double_t mcos, Double_t mcose, UInt_t kk )         
   for(UInt_t i = 0; i < 6; i++ )
     aa[i] = tocomplex( ppar[kk-1][5-i], 0.);
 
+  UInt_t ks = kk;
   dka(aa, xx, 5, 0.001, 100);
 
   std::vector<Double_t> xsolve;
+  std::vector<Double_t> xerr;
 
   for(UInt_t i = 0; i < 5; i++ ) {
-    if( abs(xx[i].i) < 0.01 && xx[i].r > 0 && xx[i].r < 3.)
+    if( abs(xx[i].i) < 0.01 && xx[i].r > 0 && xx[i].r < 3.) 
+      {
 	xsolve.push_back( xx[i].r );
+	
+	Double_t err = 0;
+	for(UInt_t j = 1; j < 5; j++ )
+	  err += pow(ppar[ks-1][j]*mcose,2);
+
+	xerr.push_back(sqrt(err));
+      }
   }
 
-  if( xsolve.size() == 1 )
-    return xsolve.at(0);
 
-  else   if( xsolve.size() > 1 ) 
+  if( xsolve.size() == 1 ) 
     {
-      LOG(ERROR) << " Resolution is not solved Please check it size: " << xsolve.size() << FairLogger::endl;
+      LOG(INFO) << xsolve.at(0) << " and " << xerr.at(0)  << FairLogger::endl;
 
-      for(UInt_t i = 0; i < (UInt_t)xsolve.size(); i++ ) {
-	// Double_t tt  = sqrt(2. * xsolve.at(i) );
-	// Double_t tte = abs(mcose * 1./tt);
-	
-	LOG(INFO) << " <cos(dpsi)> = " << mcos
-		  << " chi_sub = " << xsolve.at(i)
-		  << FairLogger::endl;    
-	// rpres = GetRPResolutionwChi(rpres, tt, tte, k);
-	// cout << "2 MCos  k = " << k << endl; 
-      }
+      *rpres     = xsolve.at(0);
+      *(rpres+1) = xerr.at(0);
     }
 
-  return 1.;
-  
+    else if( xsolve.size() > 1 ) 
+      {
+	LOG(ERROR) << " Resolution is not solved Please check it size: " << xsolve.size() << FairLogger::endl;
+
+	for(UInt_t i = 0; i < (UInt_t)xsolve.size(); i++ ) {
+	    LOG(INFO) << " chi_sub = " << xsolve.at(i)
+		      << FairLogger::endl;    
+	    
+	}
+      }
+  return rpres;
 }
+
 //====>>>
 Double_t *GetRPResolutionwChi(Double_t *rpres, Double_t chi, Double_t chie, const UInt_t k)            //%% Executable : 
 {
   if( rpres == NULL ) return rpres;
+
+  LOG(INFO) << " GetRPReosolutionwChi()..... " << FairLogger::endl;
 
   rpres[0] = 1.;
   rpres[1] = 0.;
@@ -1169,17 +1201,16 @@ Double_t *GetRPResolutionwChi(Double_t *rpres, Double_t chi, Double_t chie, cons
 
   cout << " wChi  k = " << k << endl; 
 
-  if( k == 1 || k == 2 ) //v1
+  if( k == 1 || k == 2 ) 
     {
       rpres[0] = sqrt(TMath::Pi())/(2.*sqrt(2))*chi*exp(-chi*chi/4.)*
 	(ROOT::Math::cyl_bessel_i((kk-1.)/2.,chi*chi/4.)+ROOT::Math::cyl_bessel_i((kk+1.)/2.,chi*chi/4.));
 
-      // Double_t rrr = 0.; 
-      // for( UInt_t i = 1; i < 6; i++ ) 
-      // 	rrr += ppar[k-1][i]*pow(chi,i);
-
-      // rpres[0] = rrr;
-
+      Double_t rrr = 0.; 
+      for( UInt_t i = 1; i < 6; i++ ) 
+       	rrr += ppar[k-1][i]*pow(chi,i);
+      
+      rpres[0] = rrr;
 
       Double_t err2 = 0.;
       for( Double_t i = 6; i > 0; i-- ) 
