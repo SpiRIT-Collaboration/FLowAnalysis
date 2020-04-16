@@ -28,7 +28,7 @@ TDatime beginTime;
 TDatime dtime;
 
 // functions
-TString  GetPsiRPFileName();
+TString  GetPsiRPFileName(UInt_t index = 0);
 Double_t GetRPBaseAngle(STFlowInfo *aflow);
 Double_t GetError(Double_t x, Double_t y, Double_t xe, Double_t ye);
 void     GetResolution();
@@ -39,9 +39,10 @@ UInt_t   Get2PsiRPIndex(Double_t aVal);
 UInt_t   GetRPCorrIndex(Double_t mult);
 Double_t *GetRPResolutionwChi(Double_t *rpres, TH1D *hphi0_180, TH1D *hphi90_180, UInt_t kk);
 Double_t *GetRPResolutionwChi(Double_t *rpres, Double_t chi, Double_t chie, const UInt_t kk);
-//Double_t *GetRPResolutionMCos(Double_t *rpres, Double_t mcos, Double_t mcose, const UInt_t kk);
+Double_t *GetRPResolutionwCount(Double_t *rpres, Double_t c0, Double_t c90, UInt_t kk);
 Double_t *GetRPResolutionMCos(Double_t *rpres, Double_t mcos, Double_t mcose, UInt_t kk);
 void     GetChi2();
+void     PsiAngleDependence_old();            //%% Executable :
 
 //--
 
@@ -51,7 +52,7 @@ void DoRPRes(Int_t isel = 0)
 {
   gROOT->Reset();
 
-  openRunAna();
+  openRunAna(1);
 
   if(rChain != NULL)     
     LOG(INFO) << " System " << isys << "  -> " << sysName << FairLogger::endl; 
@@ -97,6 +98,7 @@ void DoRPRes(Int_t isel = 0)
     PsiAngleDependence()   ;
   }
   else if( isel == 1 ) {
+    //PsiAngleDependence_old()   ;
     PsiAngleDependence()   ;
   }
 
@@ -334,7 +336,7 @@ void GetResolution()
 
   auto mcos_sub = hcosd->GetMean();
   mcos_sub = sqrt(mcos_sub);
-  auto mcos_err = hcosd->GetStdDev()/sqrt( (Double_t)hcosd->GetEntries()-1 );
+  auto mcos_err = hcosd->GetStdDev()/sqrt((Double_t)hcosd->GetEntries()-1 );
 
   rpres = GetRPResolutionMCos(rpres, mcos_sub, mcos_err, 1);
   auto chifull1  = sqrt(2) * rpres[0];
@@ -373,7 +375,8 @@ void GetResolution()
 	    << FairLogger::endl;
   
 }
-
+//--------------------------------------------------
+//@@@@@
 void PsiAngleDependence()            //%% Executable :
 {
   LOG(INFO) << " PsiAngleDependence .... " << FairLogger::endl;
@@ -382,7 +385,7 @@ void PsiAngleDependence()            //%% Executable :
   gROOT->cd();
 
 
-  TString fName = GetPsiRPFileName();
+  TString fName = GetPsiRPFileName(0);
   auto GraphSave = new TFile(fName,"recreate");
 
   TH1I *hmult  = new TH1I("hmult" ,"multiplicity",100,0,100);
@@ -394,12 +397,17 @@ void PsiAngleDependence()            //%% Executable :
   TH1D *hpsi2[npsi];
   TH1D *hcos1_sub1ab[npsi];
   TH1D *hcos2_sub2ab[npsi];
+  TH1D *hdpsi_sub1ab[npsi];
+  TH1D *hdpsi_sub2ab[npsi];
+
 
   for(UInt_t k = 0; k < npsi; k++){
     hpsi1[k]        = new TH1D(Form("hpsi1_%d",k),"",100,-3.15,3.15);
     hpsi2[k]        = new TH1D(Form("hpsi2_%d",k),"",100,-3.15,3.15);
     hcos1_sub1ab[k] = new TH1D(Form("hcos1_sub1ab_%d",k),"<cos(phi)>",100,-1.,1.);
     hcos2_sub2ab[k] = new TH1D(Form("hcos2_sub2ab_%d",k),"<cos(2phi)>",100,-1.,1.);
+    hdpsi_sub1ab[k]   = new TH1D(Form("hdpsi_sub1ab_%d",k),"#Delta #Psi",100.,-TMath::Pi(), TMath::Pi());
+    hdpsi_sub2ab[k]   = new TH1D(Form("hdpsi_sub2ab_%d",k),"#Delta #Psi",100.,-TMath::Pi(), TMath::Pi());
   }
 
   auto hiphi = new TH1I("hiphi","hiphi",15,0,15);
@@ -448,12 +456,16 @@ void PsiAngleDependence()            //%% Executable :
 
     hpsi1[iphi] ->Fill( RPangle );
 
-    Double_t subevt_phi1 = abs(TVector2::Phi_mpi_pi((aflow->unitP_1fc).Phi() - (aflow->unitP_2fc).Phi()));
+    //    Double_t subevt_phi1 = abs(TVector2::Phi_mpi_pi((aflow->unitP_1fc).Phi() - (aflow->unitP_2fc).Phi()));
+    Double_t subevt_phi1 = TVector2::Phi_mpi_pi((aflow->unitP_1fc).Phi() - (aflow->unitP_2fc).Phi());
     hcos1_sub1ab[iphi] -> Fill( cos(subevt_phi1) );
+    hdpsi_sub1ab[iphi] -> Fill( subevt_phi1 );
 
+    hpsi2[iphi] ->Fill( RPangle );
     Double_t subevt_phi2 = 2.*abs(TVector2::Phi_mpi_pi( (aflow->unit2P_1fc).Phi()/2. - (aflow->unit2P_2fc).Phi()/2.));
     hcos2_sub2ab[iphi] -> Fill(cos( subevt_phi2 ) );
-    hpsi2[iphi] ->Fill( RPangle );
+    hdpsi_sub2ab[iphi] -> Fill( TVector2::Phi_mpi_pi(2.* subevt_phi2 ) );
+
   }
 
 
@@ -461,6 +473,10 @@ void PsiAngleDependence()            //%% Executable :
   auto gv_psi1 = new TGraphErrors();
   gv_psi1->SetName("gv_psi1");
   gv_psi1->SetTitle("; #psi; <cos(#Delta #Psi)>");
+
+  auto gv_dpsi1 = new TGraphErrors();
+  gv_dpsi1->SetName("gv_dpsi1");
+  gv_dpsi1->SetTitle("; #psi; <cos(#Delta #Psi)>");
 
   auto gv_psi2 = new TGraphErrors();
   gv_psi2->SetName("gv_psi2");
@@ -477,13 +493,15 @@ void PsiAngleDependence()            //%% Executable :
   UInt_t nst[] = {6, 0};
   for(UInt_t j = 0; j < 2; j++) {
     for(UInt_t i = nst[j]; i < nst[j]+6; i++) {
-
+      
       if( hpsi1[i]->GetEntries() < 5 ) continue;
 
+      Double_t psi = hpsi1[i]->GetMean();
+
       Double_t meancos_sub = hcos1_sub1ab[i]->GetMean();
-      Double_t meancos_err = hcos1_sub1ab[i]->GetStdDev()/sqrt( (Double_t)(hcos1_sub1ab[i]->GetEntries()-1) );
+      Double_t meancos_err = hcos1_sub1ab[i]->GetStdDev()/sqrt((Double_t)(hcos1_sub1ab[i]->GetEntries()-1));
       meancos_sub  = sqrt( meancos_sub );
-      meancos_err  = meancos_err/sqrt( meancos_sub );
+      meancos_err  = 0.5 * meancos_err/meancos_sub ;
 
       LOG(INFO) << " <cos(dpsi)>[" << i << "] = " << meancos_sub << " +- " << meancos_err << FairLogger::endl;
       
@@ -493,16 +511,24 @@ void PsiAngleDependence()            //%% Executable :
 
       rpres = GetRPResolutionwChi(rpres, chifull, chifulle, 1);
 
-      Double_t psi = hpsi1[i]->GetMean();
       gv_psi1->SetPoint(ip, psi, rpres[0]);
       gv_psi1->SetPointError(ip, 0., rpres[1]);
 
+      
+      auto nc90 = hdpsi_sub1ab[i] -> Integral(0,25) + hdpsi_sub1ab[i] -> Integral(76, 100);
+      auto nc0  = hdpsi_sub1ab[i] -> GetEntries();
+      
+      rpres = GetRPResolutionwCount(rpres, nc0, nc90, 1);
+      gv_dpsi1->SetPoint(ip, psi, rpres[0]);
+      gv_dpsi1->SetPointError(ip, 0., rpres[1]);
+
       ip++;
+
       
       if( hpsi2[i]->GetEntries() > 0 ){
 	rpres = GetRPResolutionwChi(rpres, chifull, chifulle, 2);
 
-	psi = hpsi1[i]->GetMean();
+	psi = hpsi2[i]->GetMean();
 	gv_psi2->SetPoint(ip2, psi, rpres[0]);
 	gv_psi2->SetPointError(ip2, 0., rpres[1]);
 
@@ -510,10 +536,12 @@ void PsiAngleDependence()            //%% Executable :
       }
 
       cc->cd(id); id++;
-      hcos1_sub1ab[i]->Draw();
+      hdpsi_sub1ab[i]->Draw();
+
 
       cc->cd(id); id++;
       hpsi2[i]->Draw();
+
 
     }
   }
@@ -522,18 +550,20 @@ void PsiAngleDependence()            //%% Executable :
   gv_psi1->SetLineColor(2);
   gv_psi1->Draw("ALP");
 
+  gv_dpsi1->SetLineColor(4);
+  gv_dpsi1->Draw("same");
+
+
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));  
   gv_psi2->SetLineColor(2);
   gv_psi2->Draw("ALP");
 
 
-
-  hmult->Write();
-  hmult1->Write();
-  hmult2->Write();
-  hiphi->Write();
   gv_psi1->Write();
   gv_psi2->Write();
+  gv_dpsi1->Write();
+
+  GraphSave->Write();
 
   LOG(INFO) << GraphSave->GetName() << " is created. " << FairLogger::endl;
 
@@ -550,7 +580,7 @@ void PsiAngleDependence_old()            //%% Executable :
   gROOT->cd();
 
 
-  TString fName = GetPsiRPFileName();
+  TString fName = GetPsiRPFileName(1);
   auto GraphSave = new TFile(fName,"recreate");
 
   TH1I *hmult  = new TH1I("hmult" ,"multiplicity",100,0,100);
@@ -702,8 +732,8 @@ void PsiAngleDependence_old()            //%% Executable :
 
       if( hpsi2[i]->GetEntries() > 0 ){
 	psi = hpsi2[i]->GetMean();
-	gv_psi2->SetPoint(ip2, psi, rpres[2]);
-	gv_psi2->SetPointError(ip2, 0., rpres[3]);
+	gv_psi2->SetPoint(ip2, psi, rpres[0]);
+	gv_psi2->SetPointError(ip2, 0., rpres[1]);
 
 	mcos = hcos2_sub2ab[i]->GetMean();
 	scos = 1./mcos* abs( hcos2_sub2ab[i]->GetStdDev()/mcos/(Double_t)hcos2_sub2ab[i]->GetEntries() );
@@ -965,12 +995,15 @@ UInt_t GetRPCorrIndex(Double_t aVal) //???
 }
 
 //**************************************************
-TString GetPsiRPFileName()
+TString GetPsiRPFileName(UInt_t index = 0)
 {
-  //  TString fn = "data/bpsi_"+ sysName + ".v" + oVer;
-  TString fn = "data/cpsi_"+ sysName + ".v" + oVer;
-  //  TString fn = "data/dpsi_"+ sysName + ".v" + oVer;
-  //  TString fn = "data/epsi_"+ sysName + ".v" + oVer;
+  TString fn;
+  if( index == 1 )
+    fn = "data/dpsi_"+ sysName + ".v" + oVer;
+  else
+    fn = "data/cpsi_"+ sysName + ".v" + oVer;
+
+
   if( RPBase < 3 && RPBase > 0)
     fn += Form("_%d", RPBase);
 
@@ -1047,41 +1080,39 @@ Bool_t SetRPResolution()
 }
 
 //**************************************************
-Double_t *GetRPResolutionwChi(Double_t *rpres, TH1D *hphi0_180, TH1D *hphi90_180, UInt_t kk) 
+Double_t *GetRPResolutionwCount(Double_t *rpres, Double_t c0, Double_t c90, UInt_t kk) 
 {
-
-  Double_t par1[] = {0.626657, -0.09694, 0.02754, -0.002283};
-  Double_t par2[] = {0.25,  -0.011414, -0.034726, 0.006815};
 
   if( rpres == NULL ) return rpres;
 
-  hphi90_180->SetLineColor(2);
-
-  Double_t m0 = hphi0_180->GetEntries();
-  Double_t m1 = hphi90_180->GetEntries();
-
-  if( m0 == 0 ) {
-    LOG(INFO) << " No entry in 0_180 " << endl;
+  if( c0 == 0 ) {
+    LOG(INFO) << " 0 entry " << endl;
     rpres[0] = 1.;
     rpres[1] = 0.;
     return rpres;
   }
 
-  Double_t mr    = m1/m0;
-  Double_t mre2  = 1./m0;
+
+  Double_t mr   = c90/c0;
+  Double_t mre2 = 1./c0; 
 
   Double_t chi   = sqrt(abs(-4.* log(2.* mr)));
-  Double_t dchin = sqrt(-4.* log(2.*(mr-1./sqrt(m1))));
+  Double_t dchin = sqrt(-4.* log(2.*(mr - 1./sqrt(c90))));
   Double_t chie2 = pow( chi - dchin, 2 );
   Double_t chie = sqrt(chie2);
 
 
+  Double_t par1[] = {0.626657, -0.09694, 0.02754, -0.002283};
+  Double_t par2[] = {0.25,  -0.011414, -0.034726, 0.006815};
+
   //v1
   if( kFALSE ) {
     // //v1
-    rpres[0] = par1[0]*chi + par1[1]*pow(chi,3) + par1[2]*pow(chi,4) + par1[3]*pow(chi,5);  
+    if( kk == 1 )
+      rpres[0] = par1[0]*chi + par1[1]*pow(chi,3) + par1[2]*pow(chi,4) + par1[3]*pow(chi,5);  
     // //v2
-    rpres[2] = par2[0]*pow(chi,2) + par2[1]*pow(chi,3) + par2[2]*pow(chi,4) + par2[3]*pow(chi,5);
+    else if( kk == 2 )
+      rpres[0] = par2[0]*pow(chi,2) + par2[1]*pow(chi,3) + par2[2]*pow(chi,4) + par2[3]*pow(chi,5);
   }
   else {
     if( kk == 1 )
@@ -1103,10 +1134,11 @@ Double_t *GetRPResolutionwChi(Double_t *rpres, TH1D *hphi0_180, TH1D *hphi90_180
     rpres[1] = sqrt( err2 );
   }
 
-  LOG(DEBUG) << " Getting correction factor ############" ;
+  
+  LOG(INFO) << " Getting correction factor wCont ############" ;
   if( kk == 1 ) {
     LOG(INFO) << " k = " << kk << " : " 
-	      << std::setw(6)  << m1 << "/" << m0 << " = " << mr << " chi = " << chi 
+	      << std::setw(6)  << c90 << "/" << c0 << " = " << mr << " chi = " << chi 
 	      << " <cos(dphi)> "
 	      << std::setw(14) << rpres[0] << " +- " << std::setw(10) << rpres[1]
 	      << FairLogger::endl;
@@ -1122,8 +1154,21 @@ Double_t *GetRPResolutionwChi(Double_t *rpres, TH1D *hphi0_180, TH1D *hphi90_180
     LOG(ERROR) << rpres[0] << FairLogger::endl;
   }
 
-
   return rpres;
+} //Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)
+  
+
+Double_t *GetRPResolutionwChi(Double_t *rpres, TH1D *hphi0_180, TH1D *hphi90_180, UInt_t kk) 
+{
+  if( rpres == NULL ) return rpres;
+
+  hphi90_180->SetLineColor(2);
+
+  Double_t m0 = hphi0_180->GetEntries();
+  Double_t m1 = hphi90_180->GetEntries();
+
+  return GetRPResolutionwCount(rpres, m0, m1, kk);
+
 } //Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)
 
 Double_t *GetRPResolutionMCos(Double_t *rpres, Double_t mcos, Double_t mcose, UInt_t kk )            //%% Executable : 
@@ -1180,7 +1225,6 @@ Double_t *GetRPResolutionMCos(Double_t *rpres, Double_t mcos, Double_t mcose, UI
 	for(UInt_t i = 0; i < (UInt_t)xsolve.size(); i++ ) {
 	    LOG(INFO) << " chi_sub = " << xsolve.at(i)
 		      << FairLogger::endl;    
-	    
 	}
       }
   return rpres;
@@ -1191,7 +1235,7 @@ Double_t *GetRPResolutionwChi(Double_t *rpres, Double_t chi, Double_t chie, cons
 {
   if( rpres == NULL ) return rpres;
 
-  LOG(INFO) << " GetRPReosolutionwChi()..... " << FairLogger::endl;
+  LOG(INFO) << " GetRPResolutionwChi(double)..... " << FairLogger::endl;
 
   rpres[0] = 1.;
   rpres[1] = 0.;
@@ -1213,9 +1257,9 @@ Double_t *GetRPResolutionwChi(Double_t *rpres, Double_t chi, Double_t chie, cons
       rpres[0] = rrr;
 
       Double_t err2 = 0.;
-      for( Double_t i = 6; i > 0; i-- ) 
-	err2 += pow( (i-1.) * ppar[k-1][(Int_t)i] * pow(chi, i-1), 2 );
-      err2 *= pow(chie, 2);
+      for( Double_t i = 6; i > 1; i-- ) 
+	err2 += pow( (i-1.) * ppar[k-1][(Int_t)i-1] * pow(chi, i-2), 2 );
+      err2 = pow(chie,2)*err2;
 
       rpres[1] = sqrt( err2 );
     }

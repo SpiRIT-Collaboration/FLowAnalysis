@@ -5,7 +5,8 @@ STFlowTask::STFlowTask(Bool_t bfltn, Bool_t bsub, Bool_t bbst) :
   fIsSubeventAnalysis(bsub),
   fIsBootStrap(bbst),
   selReactionPlanef(1000),
-  fRPMidCut(0.)
+  fRPMidCut(0.),
+  PID_sel(0)
 {
 
   TDatime dtime;
@@ -55,6 +56,7 @@ void STFlowTask::SetFlowTask()
   ntrack[6] = 0;
 
   fflowinfo->Clear();
+  fflowinfo->SetPIDSelection(PID_sel);
 
   TIter next(tpcParticle);
 
@@ -101,6 +103,7 @@ Bool_t STFlowTask::Init(UInt_t irun, TString sver)
   }
   
   fflowinfo->SetRPMidCut(fRPMidCut);
+  //  fflowinfo->SetPIDSelection(PID_sel);
 
   return kTRUE;
 }
@@ -159,7 +162,7 @@ Bool_t STFlowTask::DoFlattening()
 
     //    auto psic = Psi_FlatteningCorrection( 2, ntrack[4], fflowinfo->unit2P);
     fflowinfo->unit2P_fc = Psi_FlatteningCorrection( 2, ntrack[4], fflowinfo->unit2P);
-    
+
     return kTRUE;
   }
  
@@ -450,17 +453,21 @@ void STFlowTask::SetupFlow(STParticle &apart)
 {
   // Setup for flow analysis
 
-  auto pid    =  apart.GetPIDLoose();
+  auto pid    =  apart.GetPIDTight();
+
+  if( PID_sel == 1 )
+    pid = apart.GetPIDNorm();
+  else if( PID_sel == 2 )
+    pid = apart.GetPIDLoose();
+
+
   if( pid == 211 )
     apart.SetReactionPlaneFlag(10);
 
   else if( iSystem == 5 || // for simulation
 	  ( pid > 2000 &&  
-	    apart.GetdEdxFlag()       &&  // dedx <= maxdEdx
-	    apart.GetMomentumFlag()   &&    // p <= maxMomentum
-	    apart.GetNDF() >= 2       &&
-	    // apart.GetNDF() >= 20       &&
-	    apart.GetVertexAtTargetFlag() && 
+	    apart.GetGoodTrackFlag() >= 1111 &&
+	    apart.GetNDF() >= 20       &&
 	    apart.GetDistanceAtVertex() <= 20 )) {
 
     apart.SetReactionPlaneFlag(1001);
@@ -547,15 +554,22 @@ void STFlowTask::SetIndividualReactionPlane( STParticle &apart )
     mExc2RP = fflowinfo->unit2P - uvec2;  // Psi_2
   }
   
-  TVector3 rcvec = fIsFlowCorrection == kTRUE ?  DoFlattening(0, mExcRP, fflowinfo->mtrack4-1 ) : mExcRP ;        
+  LOG(DEBUG) << " bef : Psi = " << mExcRP.Phi() << " " ;
+
+  TVector3 rcvec = fIsFlowCorrection == kTRUE ?  DoFlattening(0, mExcRP, fflowinfo->mtrack4 ) : mExcRP ;        
 
   apart.SetIndividualRPVector( rcvec );
   apart.SetIndividualRPAngle( rcvec.Phi() );
+  //  apart.SetIndividualRPAngle( (fflowinfo->unitP).Phi() );
   apart.SetAzmAngle_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( apart.GetRotatedMomentum().Phi() - rcvec.Phi()));
 
-  rcvec = fIsFlowCorrection == kTRUE ?  DoFlattening(2, mExc2RP, fflowinfo->mtrack4-1 ) : mExc2RP ;
+  LOG(DEBUG) << " Psi = " << rcvec.Phi() 
+	    << " relative " << (Double_t)TVector2::Phi_mpi_pi( apart.GetRotatedMomentum().Phi() - rcvec.Phi())
+	    << FairLogger::endl;
+
+  rcvec = fIsFlowCorrection == kTRUE ?  DoFlattening(2, mExc2RP, fflowinfo->mtrack4 ) : mExc2RP ;
   apart.SetIndividualRPVector2( rcvec );
-  apart.SetIndividualRPAngle2 ( rcvec.Phi()/2. );
+  apart.SetIndividualRPAngle2 ( rcvec.Phi() );
   apart.SetAzmAngle2_wrt_RP( (Double_t)TVector2::Phi_mpi_pi( apart.GetRotatedMomentum().Phi() - rcvec.Phi()/2.) );
   
 }

@@ -1,3 +1,4 @@
+#include "openRunAna.C"
 #include "DoRPAnalysis.h"
 #include  "../analysisformat/STRunToBeamA.hh"
 //----------------------------------------------------------------------
@@ -9,9 +10,13 @@
 
 //
 //----------------------------------------------------------------------
-void DoRPAnalysis(Long64_t nmax = -1)
+void DoRPAnalysis()
 {
+  openRunAna(0);
+
   SetEnvironment();
+
+  Open();
 
   // I/O
   Bool_t bCorr = kTRUE;
@@ -29,14 +34,13 @@ void DoRPAnalysis(Long64_t nmax = -1)
   }
   
 
-  Open();
-
   OutputTree();
 
-  nEntry = rChain->GetEntries();
+  Long64_t nEntry = SetBranch();
+
   for(Long64_t ievt = 0; ievt < nEntry; ievt++){
 
-    PrintProcess(ievt);
+    ShowProcess(ievt);
     rChain->GetEntry(ievt);
 
     //------ Event selection
@@ -58,33 +62,18 @@ void DoRPAnalysis(Long64_t nmax = -1)
     fflowtask->SetFlowInfo( aFlowInfo );
     fflowtask->SetRPMidRapidityCut(dMct);
 
-    fflowtask->SetParticleArray( *aParticleArray );
+    fflowtask->SetParticleArray( *aArray );
 
     if( !bRedo ) { 
 
       fflowtask->DoFlattening();
       fflowtask->DoFlatteningSub();
+      fflowtask->DoIndividualReactionPlaneAnalysis();
 
-      TIter next(aParticleArray);
-      STParticle *apart = NULL; 
-      UInt_t idx = 0;
-      while( (apart = (STParticle*)next()) ) {
-
-	//	cout << "bef  ->" << apart->GetIndividualRPVector().Phi() << endl;
-	fflowtask->SetIndividualReactionPlane( *apart );
-	TVector3 rpvec = apart->GetIndividualRPVector();
-	apart->SetAzmAngle_wrt_RP( TVector2::Phi_mpi_pi( apart->GetRotatedMomentum().Phi() - rpvec.Phi() ) );
-
-	TClonesArray &arr = *aParticleArray;
-	apart = (STParticle*)arr.At(idx);
-	
-	//	cout << "aft1 ->" << apart->GetIndividualRPVector().Phi() << endl;
-	idx++ ;
-      }
     }
-
     else {  // Redo Reaction plane calculation
 
+      fflowtask->SetPIDSelection(0);
       fflowtask->SetFlowTask();
       fflowtask->FinishEvent();
     }
@@ -96,7 +85,6 @@ void DoRPAnalysis(Long64_t nmax = -1)
 
     mflw->Fill();
 
-    if( ievt > nmax && nmax != -1 ) break;
   }
 
   
@@ -117,12 +105,6 @@ void DoRPAnalysis(Long64_t nmax = -1)
 void SetEnvironment()
 {
 
-  sRun   = gSystem -> Getenv("RUN");         // RUN number
-  sSuf   = gSystem -> Getenv("SUFX");
-  sVer   = gSystem -> Getenv("VER");         // input version
-  oVer   = gSystem -> Getenv("OVER");        // output version
-  dVer   = gSystem -> Getenv("DBVER");       // database version
-
   TString sMct   = gSystem -> Getenv("MDCUT"); // mid-rapidity cut abs(y_cm)< MDCUT
   if( sMct != "")
     dMct = atof(sMct);
@@ -137,10 +119,6 @@ void SetEnvironment()
 
   finname  = "run"+sRun+"_"+sSuf+".v"+sVer + ".root";
   foutname = "run"+sRun+"_"+sSuf+".v"+oVer + ".root"; 
-
-  // Set RUN number
-  iRun    =  atoi(sRun);
-  isys    =  STRunToBeamA::GetSystemID(iRun);
 
   // set re calculation flag
   bRedo = sRedo=="1" ? kTRUE : kFALSE;
@@ -185,77 +163,10 @@ Bool_t DefineVersion()
     if( iVer[0] >= 0 ) bfound = kTRUE;
   }
 
-  
-
   return bfound;
 }
 
 
-
-void PrintProcess(Int_t ievt)
-{
-  TDatime dtime;
-  static TDatime btime(dtime);
-
-  UInt_t eprint = nEntry/10;
-
-  if(ievt%eprint == 0) {
-    dtime.Set();
-    Int_t ptime = dtime.Get() - btime.Get();
-    std::cout << "Process " << std::setw(8) << ievt << "/"<< nEntry << " = " 
-	      << ((Double_t)(ievt)/(Double_t)nEntry)*100. << " % --->"
-	      << dtime.AsString() << " ---- "
-	      << std::setw(5) << (Int_t)ptime/60 << " [min] "
-	      << std::endl;
-  }
-}
-
-
-void Open()
-{ 
-  //  fname = Form("run"+sRun+"_"+sSuf+".v%d",iVer[0]);
-
-  TString fn = finname;
-  std::cout << fn << std::endl;
-
-  if( !gSystem->FindFile("data/", fn) ) {
-    std::cout << finname << " : Input file desn't exist. "  << std::endl;
-    exit(0);
-  }
-
-  if( finname == foutname ) {
-    std::cout << "[NOTICE] An input and an ouput files is the sane name." << std::endl;
-    
-    gSystem->Rename(fn, "data/tmp_"+finname);
-    fn = "data/tmp_"+finname;
-  }
-
-  rChain = new TChain("cbmsim");
-  rChain->Add(fn);
-
-  if(!rChain) {
-    cout << " No data was found " << fn << endl;
-    exit(0);
-  }
-  cout << "Input file is " << fn << endl;
-
-  aBDC = new TClonesArray("STBDC", 1);
-  aParticleArray = new TClonesArray("STParticle",100);
-
-  rChain->SetBranchAddress("STParticle",&aParticleArray);
-  rChain->SetBranchAddress("STFlow",    &aFlowArray);
-  
-  if( isys < 4)
-    rChain->SetBranchAddress("STBDC"     ,&aBDC);
-  else if( isys == 5 ) { 
-    rChain->SetBranchAddress("RPPsi"     ,&RPPsi);
-    auto fin = TFile::Open(fn);
-    fv1y = (TF1*)fin->Get("fv1y");
-    fv2y = (TF1*)fin->Get("fv2y");
-    fin->Close();
-  }
-
-}
 void OutputTree()
 {
   //@@@
@@ -283,15 +194,64 @@ void OutputTree()
 
   mflw = new TTree("cbmsim","Flow corrected");
 
-  anewFlow = new TClonesArray("STFlowInfo",1);
 
   //-- output                                                                                                              
   if( aBDC != NULL && beamPID != 100)  mflw->Branch("STBDC",&aBDC);
-  if( aParticleArray != NULL) mflw->Branch("STParticle",&aParticleArray);
-  if( anewFlow != NULL)       mflw->Branch("STFlow",&anewFlow);
-  if( isys  == 5 )            mflw->Branch("RPPsi" ,&RPPsi);
+  if( aArray != NULL)   mflw->Branch("STParticle",&aArray);
+  if( anewFlow != NULL) mflw->Branch("STFlow",&anewFlow);
+  if( isys  == 5 )      mflw->Branch("RPPsi" ,&RPPsi);
     
  
 }
 
+void Open()
+{ 
+  //  fname = Form("run"+sRun+"_"+sSuf+".v%d",iVer[0]);
+
+  TString fn = finname;
+  std::cout << fn << std::endl;
+
+  if( !gSystem->FindFile("data/", fn) ) {
+    std::cout << finname << " : Input file desn't exist. "  << std::endl;
+    exit(0);
+  }
+
+  if( finname == foutname ) {
+    std::cout << "[NOTICE] An input and an ouput files is the sane name." << std::endl;
+    
+    gSystem->Rename(fn, "data/tmp_"+finname);
+    fn = "data/tmp_"+finname;
+  }
+
+  rChain = new TChain("cbmsim");
+  rChain->Add(fn);
+  
+  if(!rChain) {
+    cout << " No data was found " << fn << endl;
+    exit(0);
+  }
+  cout << "Input file is " << fn << endl;
+
+  aBDC = new TClonesArray("STBDC", 1);
+  aArray = new TClonesArray("STParticle",100);
+  anewFlow = new TClonesArray("STFlowInfo",1);
+
+  
+  rChain->SetBranchAddress("STParticle",&aArray);
+  rChain->SetBranchAddress("STFlow",    &aFlowArray);
+
+  if( aArray == NULL ) 
+    LOG(ERROR) << " Particle is not active " << FairLogger::endl;
+
+  
+  if( isys < 4)
+    rChain->SetBranchAddress("STBDC"     ,&aBDC);
+  else if( isys == 5 ) { 
+    rChain->SetBranchAddress("RPPsi"     ,&RPPsi);
+    auto fin = TFile::Open(fn);
+    fv1y = (TF1*)fin->Get("fv1y");
+    fv2y = (TF1*)fin->Get("fv2y");
+    fin->Close();
+  }
+}
 

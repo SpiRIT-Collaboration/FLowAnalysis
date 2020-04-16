@@ -1,48 +1,59 @@
 #include "openRunAna.h"
 #include  "../analysisformat/STRunToBeamA.hh"
 
-void OpenChain();
+FairRootManager* fman = FairRootManager::Instance();
 
-void openRunAna()
+
+void openRunAna(Bool_t bopen=kTRUE)
 {
   gROOT->Reset();
   gStyle->SetOptStat(0);
-    
-  aRun = gSystem -> Getenv("RUN");
-  sSuf = gSystem -> Getenv("SUFX");
-  sVer = gSystem -> Getenv("VER");  
-  dVer = gSystem -> Getenv("DBVER");
-  oVer = gSystem -> Getenv("OUTVER");
 
-  if( aRun != "" || sSuf != "" || sVer != "" || dVer != ""){ 
-    std::cout << " system " << sysName
-	      << " RUN -> " << aRun 
+  FairLogger* fLogger = FairLogger::GetLogger();
+    
+  sRun   = gSystem -> Getenv("RUN");         // RUN number
+  sSuf   = gSystem -> Getenv("SUFX");
+  sVer   = gSystem -> Getenv("IVER");         // input version
+  oVer   = gSystem -> Getenv("OVER");        // output version
+  dVer   = gSystem -> Getenv("DBVER");       // database version
+
+
+  if( sRun != "" || sSuf != "" || sVer != "" || dVer != ""){ 
+    LOG(INFO) << " RUN -> " << sRun 
 	      << " : Suffix -> " << sSuf 
 	      << " : Ver --> " << sVer
 	      << " : DataBaser Version --> " << dVer
-	      << std::endl;
-    OpenChain();
+	      << FairLogger::endl;
+
+    // Set RUN number
+    iRun    =  atoi(sRun);
+    isys    =  STRunToBeamA::GetSystemID(iRun);
+
+    if( bopen )
+      OpenChain();
+
   }
+
 }
+
 
 void OpenChain()
 {
   
-  cout << "aRUN.length " << aRun.Length() << endl;
+  cout << "RUN.length " << sRun.Length() << endl;
 
-  Int_t nrun = (aRun.Length())/5;
+  Int_t nrun = (sRun.Length())/5;
 
-  printHeader = "run"+aRun(1,4) + "_" + sSuf + ".v" + sVer; 
+  printHeader = "run"+sRun(1,4) + "_" + sSuf + ".v" + sVer; 
 
-  cout << " RUN -> " << aRun 
-       << " total " << nrun 
-       << " Print Header Name " << printHeader << endl;;
+  LOG(INFO)   << " total " << nrun 
+	      << " Print Header Name " << printHeader << FairLogger::endl;;
 
 
   vector<Int_t> lrun;
   Int_t ist = 1;
-  while(ist < aRun.Length() - 4) {
-    TString prun = aRun(ist,4);
+  while(ist < sRun.Length() - 4) {
+    TString prun = sRun(ist,4);
     lrun.push_back( atoi(prun) );
     
 
@@ -50,7 +61,6 @@ void OpenChain()
   }
 
 
-  //  RunToSystemID(lrun.at(0));
   isys    =  STRunToBeamA::GetSystemID(lrun.at(0));
   sysName =  STRunToBeamA::GetSystemName(lrun.at(0)); 
   cout << " system ID >> " << isys << " systemName >> " << sysName << endl;
@@ -143,9 +153,29 @@ Long64_t SetBranch()
   TString smaxevt = gSystem -> Getenv("MXEVT");
   if( smaxevt != "" )
     maxevt = atoi(smaxevt);
-  Long64_t nevt = maxevt < totalevent ? maxevt : totalevent;
 
-  std::cout << " NOTICE !!!! Process to " << nevt << " (" << totalevent << ")" << std::endl;
+  nEntry = maxevt < totalevent ? maxevt : totalevent;
 
-  return nevt;
+  LOG(INFO) << " NOTICE !!!! Process to " << nEntry << " (" << totalevent << ")" << FairLogger::endl;
+
+  return nEntry;
+}
+
+
+void ShowProcess(Long64_t ievt)
+{
+  TDatime dtime;
+  static TDatime btime(dtime);
+
+  Long64_t eprint = nEntry/10;
+
+  if(ievt%eprint == 0) {
+    dtime.Set();
+    Int_t ptime = dtime.Get() - btime.Get();
+    std::cout << "Process " << std::setw(8) << ievt << "/"<< nEntry << " = " 
+	      << ((Double_t)(ievt)/(Double_t)nEntry)*100. << " % --->"
+	      << dtime.AsString() << " ---- "
+	      << std::setw(5) << (Int_t)ptime/60 << " [min] "
+	      << std::endl;
+  }
 }

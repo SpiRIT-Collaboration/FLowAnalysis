@@ -79,7 +79,7 @@ void DoFlow_mod(Int_t isel = 0)
 
   //==================================================
   if( isel > -1 )
-    LOG(INFO) << " Output Version v" << sVer << "." << gSystem->Getenv("OUTVER") << FairLogger::endl;
+    LOG(INFO) << " Output Version v" << sVer << "." << oVer << FairLogger::endl;
 
   if( isel > 0 ) 
     PlotPtDependence((UInt_t)isel);  
@@ -1310,7 +1310,6 @@ TString SetupOutputFile(TString fopt)
   //----- SETUP OUTPUT FILE --------------------------
   //--------------------------------------------------
   gSystem->cd("data");
-  TString oVer  = gSystem->Getenv("OUTVER");
   TString fName = fopt + oVer;
 
   if( oVer == "" ) {

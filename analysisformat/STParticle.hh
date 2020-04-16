@@ -118,8 +118,8 @@ private:
   Int_t     rClusterSize;
 
   Double_t  maxdEdx     = 2000.;  //!
-  Double_t  maxMomentum = 4700.;  //!
-  Double_t  protonMaxMomentum = 2500.;  //!
+  Double_t  maxMomentum = 4000.;  //!
+  Double_t  maxbbmass   = 10000.; //!
 
 
 private:
@@ -160,11 +160,11 @@ public:
   void     SetMass(Double_t value)       {fMass = value;}
   Double_t GetMass()                     {return fMass;}
 
-  void     SetBBMass(Double_t val)       {fBBMass   = val;}
+  void     SetBBMass(Double_t val);
   Double_t GetBBMass()                   {return fBBMass;}
 
-  void     SetBBMassHe(Double_t val)     {fBBMassHe = val;}
-
+  void     SetBBMassHe(Double_t val);
+  Double_t GetBBMassHe()                 {return fBBMassHe;}
 
   Double_t GetRapidity()                 {return fRapidity;}
 
@@ -201,8 +201,6 @@ public:
   Int_t  GetTrackID()                           {return   ftrackID;}
   void   SetTrackID(Int_t ival)                 {ftrackID = ival;}
 
-  void  SetBeamonTargetFlag(Int_t value)        {fBeamonTargetf = value;}
-  Int_t GetBeamonTargetFlag()                   {return fBeamonTargetf;}
 
   void  SetVertexBDCCorrelationFlag(Int_t value){fVBDCCorf   = value;}
   Int_t GetVertexBDCCorrelationFlag()           {return fVBDCCorf;}
@@ -217,36 +215,50 @@ public:
   Int_t GetgotoKYOTOFlag()                      {return fgotoKyotof;}
 
   // good track flag
-  void   SetGoodTrackFlag(Int_t value)          {fgoodtrackf  = value;}
-  Int_t  GetGoodTrackFlag() {
-    fgoodtrackf = 10*fdedxf*fTargetf*fmomentumf + fNDFf;
-    return fgoodtrackf;}
+private:
+  void   SetGoodTrackFlag();
 
+public:
+  Int_t  GetGoodTrackFlag()                     {return fgoodtrackf;}
+  //  void   SetGoodTrackFlag(Int_t value)          {fgoodtrackf  = fgoodtrackf != 0 ? value : 0;}
 
-  void   SetdEdxFlag(UInt_t value)              {fdedxf = value;}
-  UInt_t GetdEdxFlag()                          {return fdedxf;}
+  void  SetBeamonTargetFlag(Int_t value)        {fBeamonTargetf = value; SetGoodTrackFlag(); }
+  Int_t GetBeamonTargetFlag()                   {return fBeamonTargetf;}
 
-  void   SetVertexAtTargetFlag(Int_t value)     {fVatTargetf = value; fTargetf = fVatTargetf*fdistanceatvertexf;}
+  void   SetVertexAtTargetFlag(Int_t value)     
+  { fVatTargetf = value; 
+    fTargetf = fVatTargetf*fdistanceatvertexf;
+    SetGoodTrackFlag();
+  }  
   Int_t  GetVertexAtTargetFlag()                {return fVatTargetf;}
 
-  void   SetDistanceAtVertexFlag(UInt_t value)  {fdistanceatvertexf = value; fTargetf = fVatTargetf*fdistanceatvertexf;}
+  void   SetDistanceAtVertexFlag(UInt_t value)  
+  { fdistanceatvertexf = value; 
+    fTargetf = fVatTargetf*fdistanceatvertexf;
+    SetGoodTrackFlag();
+  }
   UInt_t GetDistanceAtVertexFlag()              {return fdistanceatvertexf;}
+  // void   SetFromTargetFlag(Int_t value)         {fTargetf  = value;}
+  // Int_t  GetFromTargetFlag()                    {return fTargetf;}
 
-  void   SetFromTargetFlag(Int_t value)         {fTargetf  = value;}
-  Int_t  GetFromTargetFlag()                    {return fTargetf;}
+  void   SetdEdxFlag(UInt_t value)              {fdedxf = value; SetGoodTrackFlag(); }
+  UInt_t GetdEdxFlag()                          {return fdedxf;}
 
-  void   SetMomentumFlag(UInt_t value)          {fmomentumf = value;}
-  UInt_t GetMomentumFlag()                      {return fmomentumf; }
+  void   SetMomentumFlag(UInt_t value)          {fmomentumf = value; SetGoodTrackFlag(); }
+  //  UInt_t GetMomentumFlag()                      {return fmomentumf; }
 
-  // --end
-
-  void   SetNDFFlag(UInt_t value)               {fNDFf = value;} 
-  UInt_t GetNDFFlag()                           {return fNDFf;}
+  void   SetNDFFlag(UInt_t value)               {fNDFf = value; SetGoodTrackFlag();} 
+  //  UInt_t GetNDFFlag()                           {return fNDFf;}
 
   void   SetClusterRatioFlag(UInt_t value)      {fclusterratiof = value;}
   UInt_t GetClusterRatioFlag()                  {return fclusterratiof;}
 
-  UInt_t GetMassFlag()                          {return fmassf;}
+  void   SetMassFlag(UInt_t value)              {fmassf = value; SetGoodTrackFlag(); }
+  //  UInt_t GetMassFlag()                          {return fmassf;}
+
+
+  // --end
+
 
   // for flow analysis
   void     SetMixedEventID(Int_t value) {fmxevt = value;}

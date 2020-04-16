@@ -10,7 +10,9 @@ STSpiRITTPCTask::STSpiRITTPCTask()
     fIsSubeventAnalysis(kTRUE),
     selReactionPlanef(100),
     fEventID(0),
-    massCal(new STMassCalculator())
+    massCal(new STMassCalculator()),
+    massCalH(new STMassCalSimpleBB("EmpiricalBB")),
+    massCalHe(new STMassCalSimpleBB("EmpiricalBB"))
 {
 
   fLogger = FairLogger::GetLogger();
@@ -42,6 +44,8 @@ STSpiRITTPCTask::~STSpiRITTPCTask()
   //--- mass fitter
   //  delete massFitter;
   delete massCal;
+  delete massCalH;
+  delete massCalHe;
 
   delete flowAnalysis; //!
   //  delete fflowinfo;    //!
@@ -113,7 +117,6 @@ Bool_t STSpiRITTPCTask::SetupParameters()
 
   //--- angle dependent mass fitter // 2019/02/19
   
-
   //--- angle dependeing mass fitter //
   //  massCal->SetParameter("db/BBFitter.root");
 
@@ -124,6 +127,23 @@ Bool_t STSpiRITTPCTask::SetupParameters()
 
   //  massCal->LoadCalibrationParameters("db/PIDCalib.root",bmA);
   massCal->LoadCalibrationParameters("db/FlattenPID.root",bmA);
+
+  auto calFile = TFile::Open(Form("db/PIDCalib_%dSn.root",bmA));
+  TH2D *h2ParamH[7], *h2ParamHe[7];
+  if( calFile  ) {
+    for(auto i: ROOT::TSeqI(7)){
+      calFile->GetObject(Form("h2InterpolateNM_%dSn_Par%d"  ,bmA,i),h2ParamH[i]);
+      calFile->GetObject(Form("h2InterpolateHeNM_%dSn_Par%d",bmA,i),h2ParamHe[i]);
+    }
+    massCalH  -> AddParameters(h2ParamH);
+    massCalHe -> AddParameters(h2ParamHe);
+  }
+  else {
+    LOG(ERROR) << " Mass calibration file " << Form("PIDCalib_%dSn.root",bmA) << " is not found." << FairLogger::endl;
+    fstatus =  kFALSE;
+  }
+
+  
 
   //------------------------------
 
@@ -237,19 +257,33 @@ Bool_t STSpiRITTPCTask::SetupInputDataFile()
 void STSpiRITTPCTask::Exec(Option_t *opt)
 {
 
-  LOG(DEBUG) << "STSpiRITTPCTask::Exec() is called " << opt << FairLogger::endl;  
+  LOG(DEBUG) << "STSpiRITTPCTask::Exec() is called " << fEventID << FairLogger::endl;  
   Clear();
+
+  auto anaRun = FairRunAna::Instance();  
     
   fChain -> GetEntry(fEventID);  
 
   ShowProcessTime();
 
+  Bool_t bfill = kFALSE;
   if(SetupEventInfo()) {
-    if(ProceedEvent()) 
-      FinishEvent();
-
     fEventID++;
+
+    if( ProceedEvent() ) {
+      bfill = kTRUE;
+      FinishEvent();
+    }
+
   }
+
+  if( bfill && BeamPID != 0) 
+    bfill = kTRUE;
+  else
+    bfill = kFALSE;
+
+  anaRun->MarkFill(bfill);
+
 
   if( fEventID >= prcEntry )  {
       LOG(INFO) << "STSpiRITTPC:: Finishing analysis. " << FairLogger::endl;
@@ -278,13 +312,8 @@ void STSpiRITTPCTask::ShowProcessTime()
 
 void STSpiRITTPCTask::FinishEvent()
 {
-  LOG(DEBUG) << "STSpiRITTPCTask::FinishEvent is called. " << FairLogger::endl;
+  LOG(DEBUG) << "STSpiRITTPCTask::FinishEvent is called. " << BeamPID << FairLogger::endl;
 
-  auto anaRun = FairRunAna::Instance();  
-  // if( ntrack[2] == 0 || BeamPID == 0) {
-  //   anaRun->MarkFill(kFALSE);
-  //   return;
-  // }
 
   if( fIsFlowAnalysis ) {
 
@@ -296,7 +325,6 @@ void STSpiRITTPCTask::FinishEvent()
     new( aflow[0] ) STFlowInfo( *fflowinfo );
   }
 
-  anaRun->MarkFill(kTRUE);
 
 }
 
@@ -322,6 +350,7 @@ Bool_t STSpiRITTPCTask::SetupEventInfo()
   BeamPID = fBDC->GetBeamPID();
 
   return kTRUE;
+
 }
 
 
@@ -340,17 +369,17 @@ Bool_t STSpiRITTPCTask::GetVertexQuality(TVector3 vert)
   if( abs( vert.Z() - VtxMean[BeamIndex].Z() ) > 2.*VtxSigm[BeamIndex] ||
       abs( vert.X() - VtxMean[BeamIndex].X() ) > 15. ||
       abs( vert.Y() - VtxMean[BeamIndex].Y() ) > 20. )
-    return kFALSE;;
+   return kFALSE;;
 
   return kTRUE;
 }
 
 void STSpiRITTPCTask::SetupTrackQualityFlag(STParticle *apart) 
 {
-  if( apart->GetDistanceAtVertex() > 10 )
+  if( apart->GetDistanceAtVertex() > 25 )
     apart->SetDistanceAtVertexFlag(0);
 
-  if( apart->GetNDF() < 15) 
+  if( apart->GetNDF() < 10) 
     apart->SetNDFFlag(0);
 }
 
@@ -388,6 +417,7 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
   else
     return kFALSE;
 
+  if( !vflag ) return kFALSE;
 
   TIter next(trackArray);
   STRecoTrack *trackFromArray = NULL;
@@ -411,29 +441,38 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
     else
       aParticle->SetBeamonTargetFlag(0);
 
-
     Int_t    Charge   = aParticle->GetCharge();
     TVector3 VMom     = aParticle->GetRotatedMomentum();
+    Double_t fMom     = VMom.Mag();
     Double_t dEdx     = aParticle->GetdEdx();
-
 
     //--- Set MassFitter      
     Double_t mass[2] = {0.,0.};
-    if( dEdx > -1 ){
-      mass[0]  = massCal->CalcMass(0, 1., VMom, dEdx);  // proton fitted
+
+    /* 20190804 
+    mass[0]  = massCal->CalcMass(0, 1., VMom, dEdx);  // proton fitted
       
-      if( mass[0] > 1500. )  // deuteron fitted
-	mass[0]  = massCal->CalcMass(1, 1., VMom, dEdx);  
-      
-      mass[1]  = massCal->CalcMass(1, 2., VMom, dEdx);
-    }
+    if( mass[0] > 1500. )  // deuteron fitted
+      mass[0]  = massCal->CalcMass(1, 1., VMom, dEdx);  
+    mass[1]  = massCal->CalcMass(1, 2., VMom, dEdx);
+    */
+
+    // updated for 20191213
+    mass[0] = massCalH -> CalcMass(1., VMom, dEdx);
+    mass[1] = massCalHe-> CalcMass(2., VMom, dEdx);
+
+    LOG(DEBUG) << " mass H " << mass[0] 
+	       << " mass He " << mass[1]
+	       << " p = " << VMom.Mag()
+	       << " dEdx = " << dEdx
+	       << FairLogger::endl;
 
     aParticle->SetBBMass(mass[0]);      
     aParticle->SetBBMassHe(mass[1]);
       
-    Int_t    pid_tight  = GetPIDTight(mass, dEdx);
-    Int_t    pid_normal = GetPIDNorm(mass, dEdx);
-    Int_t    pid_loose  = GetPIDLoose(mass, dEdx);
+    Int_t    pid_tight  = GetPIDTight(mass, fMom, dEdx);
+    Int_t    pid_normal = GetPIDNorm (mass, fMom, dEdx);
+    Int_t    pid_loose  = GetPIDLoose(mass, fMom, dEdx);
     
     //      massFitter->GetBBMass(VMom, dEdx, Charge, massH, massHe, pid_tight, pid_loose); 
     aParticle->SetPID(pid_tight);
@@ -454,7 +493,7 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
       aParticle->SetExpectedClusterNumber(clustNum);
     }
       
-    if( aParticle->GetGoodTrackFlag() >= 1 )
+    if( aParticle->GetGoodTrackFlag() >= 1111 )
       ntrack[3]++;
     
     aParticle->SetTrackID(ntrack[2]);
@@ -473,7 +512,7 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
   return kTRUE;
 }
 
-Int_t STSpiRITTPCTask::GetPID(Double_t mass[2], Double_t dedx)
+Int_t STSpiRITTPCTask::GetPID(Double_t mass[2], Double_t fMom,  Double_t dedx)
 {
   // p, d, t                                                                                                                               
   if( mass[0] == 0 )
@@ -486,7 +525,11 @@ Int_t STSpiRITTPCTask::GetPID(Double_t mass[2], Double_t dedx)
       Double_t mass_up  = MassRegion[i][0]+MassRegion[i][1]*MassRegion[i][3] ;
 
       if( mass[0] >= mass_low && mass[0] <= mass_up ) {
+
+	if( i == 1 && fMom > protonMaxMomentum ) continue;
+ 
 	STPID::PID pid = static_cast<STPID::PID>(i);
+
         return STPID::GetPDG(pid);
       }
     }
@@ -507,7 +550,7 @@ Int_t STSpiRITTPCTask::GetPID(Double_t mass[2], Double_t dedx)
   return 0;
 }
 
-Int_t STSpiRITTPCTask::GetPIDLoose(Double_t mass[2], Double_t dedx)
+Int_t STSpiRITTPCTask::GetPIDLoose(Double_t mass[2], Double_t fMom, Double_t dedx)
 {
   if( mass[0] == 0 )
     return 0;
@@ -516,6 +559,9 @@ Int_t STSpiRITTPCTask::GetPIDLoose(Double_t mass[2], Double_t dedx)
   else if( mass[1] < MassRegionLU_L[4][0] ) {
     for(UInt_t i = 0; i < 4; i++) {
       if( mass[0] >= MassRegionLU_L[i][0] && mass[0] < MassRegionLU_L[i][1] ) {
+
+	if( i == 1 && fMom > protonMaxMomentum ) continue;
+
 	STPID::PID pid = static_cast<STPID::PID>(i);
         return STPID::GetPDG(pid);
       }
@@ -532,32 +578,40 @@ Int_t STSpiRITTPCTask::GetPIDLoose(Double_t mass[2], Double_t dedx)
   }
   return 0;
 }
-Int_t STSpiRITTPCTask::GetPIDTight(Double_t mass[2], Double_t dedx)
+Int_t STSpiRITTPCTask::GetPIDTight(Double_t mass[2], Double_t fMom, Double_t dedx)
 {
   if( mass[0] == 0 )
     return 0;
 
   // p, d, t   
   else if( mass[1] < MassRegionLU_T[4][0]  ) {
-    for(UInt_t i = 0; i < 4; i++) {
+    for(Int_t i = 3; i >=0; i--) {
+    //    for(UInt_t i = 0; i < 4; i++) {
       if( mass[0] >= MassRegionLU_T[i][0] && mass[0] < MassRegionLU_T[i][1] ) {
+
+	if( i == 1 && fMom > protonMaxMomentum ) continue; 
+
 	STPID::PID pid = static_cast<STPID::PID>(i);
-        return STPID::GetPDG(pid);
+	return STPID::GetPDG(pid);
       }
     }
   }
+
   // He3, He4, He6
   else if( mass[0] >= 3100 && dedx <= 700) {
-    for( UInt_t i = 4; i < 7; i++ ){
+    //    for( UInt_t i = 4; i < 7; i++ ){
+    for( Int_t i = 6; i >= 4; i-- ){
       if( mass[1] >= MassRegionLU_T[i][0] && mass[1] < MassRegionLU_T[i][1] ) {
 	STPID::PID pid = static_cast<STPID::PID>(i);
         return STPID::GetPDG(pid);
       }
     }
   }
+
   return 0;
 }
-Int_t STSpiRITTPCTask::GetPIDNorm(Double_t mass[2], Double_t dedx)
+
+Int_t STSpiRITTPCTask::GetPIDNorm(Double_t mass[2], Double_t fMom, Double_t dedx)
 {
   if( mass[0] == 0 )
     return 0;
@@ -566,6 +620,8 @@ Int_t STSpiRITTPCTask::GetPIDNorm(Double_t mass[2], Double_t dedx)
   else if( mass[1] < MassRegionLU_N[4][0] ) {
     for(UInt_t i = 0; i < 4; i++) {
       if( mass[0] >= MassRegionLU_N[i][0] && mass[0] < MassRegionLU_N[i][1] ) {
+
+	if( i == 1 && fMom > protonMaxMomentum ) continue;
 	STPID::PID pid = static_cast<STPID::PID>(i);
         return STPID::GetPDG(pid);
       }

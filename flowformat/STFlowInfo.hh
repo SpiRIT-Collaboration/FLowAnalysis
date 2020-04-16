@@ -64,6 +64,7 @@ public:
   UInt_t   goodEventf;
   
   Float_t  fRPMidCut;
+  UInt_t   fpidsel;    // PID selection: 0: tight, 1: normal, 2:losse
 
 public:
 
@@ -89,10 +90,16 @@ public:
   void      SetRPSigma(Double_t val) {rpSigma = val;}
   Double_t  GetRPSigma() {return rpSigma;}
   void      SetRPChi(Double_t val, UInt_t n){n < 1 ? rpChi[n] = val : rpChi[0] = val;}
+
   void      SetRPMidCut(Double_t val) {fRPMidCut = val;}
   Double_t  GetRPMidCut()             {return fRPMidCut;}
 
-  ClassDef(STFlowInfo,7);
+  void   SetPIDSelection(UInt_t ival) {fpidsel = ival;}
+  UInt_t GetPIDSelection()            {return fpidsel;}
+
+
+
+  ClassDef(STFlowInfo,8);
 };
 
 #endif

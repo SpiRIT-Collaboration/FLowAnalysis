@@ -24,6 +24,8 @@
 #include "TObject.h"
 #include "FairLink.h"
 #include "STRunToBeamA.hh"
+#include "STMassCalSimpleBB.hh"
+
 
 class STSpiRITTPCTask : public FairTask
 {
@@ -60,7 +62,6 @@ private:
   FairLogger      *fLogger;       //!
   FairRootManager *fRootManager;  //!
   
-
   ST_ClusterNum_DB* db;    //!
   
   UInt_t  iRun;
@@ -80,6 +81,8 @@ private:
 
   //--- mass fitter
   STMassCalculator* massCal;    //!
+  STMassCalSimpleBB* massCalH;  //!
+  STMassCalSimpleBB* massCalHe; //!
 
   TClonesArray *flowAnalysis; //!
   STFlowInfo   *fflowinfo;    //!
@@ -116,12 +119,15 @@ private:
 			  1.38199,  //124Sn (temp)
 			  1.38199}; //112Sn (temp)
 
+  Double_t  protonMaxMomentum = 2500.;  //!  
+
+
   Double_t MassRegion[7][4] ={{ 127.2,   21.3,      4.,  4.},            //pi  
 			      { 911.044, 68.4656,   2.,  2.},            //p  685.3 to 1,165.9
 			      { 1874.76, 129.962,   1.5, 1.5},           //d  1,552.3 to 
 			      { 2870.62, 212.896,   1.,  1.},            //t 2463
 			      { 2760.47, 196.659,   1.,  1.},            //He3 
-			      { 3720.77, 255.71,    1.,  1.},            //He4 
+			      { 3531.15, 278.23,    1.,  1.},            //He4 
 			      { 5751.97, 673.339,   0.5, 0.5}};      //! //He6  // read from fitted function
  
   Double_t MassRegionLU_L[7][2] = { {   0.0,  400.0},     // pi
@@ -146,7 +152,7 @@ private:
 				    {1600.0, 2100.0},     // d
 				    {2550.0, 3100.0},     // t
 				    {2400.0, 2850.0},     // fBBMassHe  3He
-				    {3300.0, 4000.0},     // fBBMassHe  4He
+				    {3200.0, 4000.0},     // fBBMassHe  4He
 				    {4000.0, 7000.0}};    //!           6He
 
   void   Clear();
@@ -157,10 +163,10 @@ private:
   Bool_t ProceedEvent();
   Bool_t SetupEventInfo();
   void   SetupTrackQualityFlag(STParticle *apart);
-  Int_t  GetPID(Double_t mass[2], Double_t dedx);
-  Int_t  GetPIDTight(Double_t mass[2], Double_t dedx);
-  Int_t  GetPIDNorm (Double_t mass[2], Double_t dedx);
-  Int_t  GetPIDLoose(Double_t mass[2], Double_t dedx);
+  Int_t  GetPID(Double_t mass[2], Double_t fMom,  Double_t dedx);
+  Int_t  GetPIDTight(Double_t mass[2], Double_t fMom, Double_t dedx);
+  Int_t  GetPIDNorm (Double_t mass[2], Double_t fMom, Double_t dedx);
+  Int_t  GetPIDLoose(Double_t mass[2], Double_t fMom, Double_t dedx);
   void   ShowProcessTime();
   Bool_t GetVertexQuality(TVector3 vert);
 

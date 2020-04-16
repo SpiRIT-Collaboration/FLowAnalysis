@@ -61,6 +61,7 @@ STFlowInfo::STFlowInfo(const STFlowInfo &cp)
 
   goodEventf = cp.goodEventf;
   fRPMidCut  = cp.fRPMidCut;
+  fpidsel    = cp.fpidsel;
 }
 
 STFlowInfo &STFlowInfo::operator=(const STFlowInfo &cp)

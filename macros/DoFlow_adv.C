@@ -65,17 +65,17 @@ void DoFlow_adv(Int_t isel = 0)
       Lcent = 0;
   }
 
-  LOG(INFO) << " Multiplicity :: " << Lcent << " to " << Ucent << FairLogger::endl;
+  LOG(INFO) << "Multiplicity :: " << Lcent << " to " << Ucent << FairLogger::endl;
 
   //--------------------------------------------------
   TString rpBase = gSystem -> Getenv("RPBS");
   RPBase = rpBase != "" ? atoi(rpBase): 0;
 
-  LOG(INFO) << " Reaction plane base is " << RPBase << FairLogger::endl;
+  LOG(INFO) << "Reaction plane base is " << RPBase << FairLogger::endl;
 
   TString ccPsi = gSystem -> Getenv("CCPSI");
   bccPsi = ccPsi == "" ? kTRUE: kFALSE;
-  LOG(INFO) << " Angle dependent correction is ";
+  LOG(INFO) << "Angle dependent correction is ";
   if( bccPsi )
     LOG(INFO) << " !!! ON !!!"  << FairLogger::endl;
   else
@@ -83,9 +83,6 @@ void DoFlow_adv(Int_t isel = 0)
 
 
   //==================================================
-  if( isel > -1 )
-    LOG(INFO) << " Output Version v" << sVer << "." << gSystem->Getenv("OUTVER") << FairLogger::endl;
-
   if( isel > 0 ) 
     PlotPtDependence((UInt_t)isel);  
   else if( isel == -1 )
@@ -93,7 +90,8 @@ void DoFlow_adv(Int_t isel = 0)
 }
 
 
-//pdt
+//@@/--- pdt ------------------------------------------------------- 
+//******************** Main ****************************************
 void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 {
 
@@ -102,11 +100,13 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
   gStyle->SetOptStat(0);
 
+  //-- Load multiplicity dependent RP resolution
   if(!LoadMultRPResolution()) {
     LOG(INFO) << " RP resolution is not found " << FairLogger::endl;
     //    return;
   }
 
+  //-- Load phi angle dependent RP resolution
   if(!LoadPsiRPResolution(1)) {
     LOG(INFO) << " RP resolution is not found " << FairLogger::endl;
     exit(0);
@@ -118,6 +118,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   dpt1 = pt_max/(Double_t)ptbin1;
   dpt2 = pt_max/(Double_t)ptbin2;
 
+  //-- Define Output file name 
   TString fHeader = "advYPt_"+ sysName + "_" + partname[selid]+".v"+sVer+".";
   auto fName = SetupOutputFile( fHeader );
   
@@ -136,11 +137,12 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   LOG(INFO) << " v1 BIN y " << ybin1 << " pt " << ptbin1 << " mult " << mbin << FairLogger::endl;
   LOG(INFO) << " v2 BIN y " << ybin2 << " pt " << ptbin2 << " mult " << mbin << FairLogger::endl;
 
-  auto hpid       = new TH2D("hpid",   "; P/Z[MeV/c]; dEdx[ADC/mm]",400,-800.,3000.,300,0.,1500);
-  auto hpidsel    = new TH2D("hpidsel","; P/Z[MeV/c]; dEdx[ADC/mm]",400,-800.,3000.,300,0.,1500);
+  auto hpid       = new TH2D("hpid",   "All particles    ; P/Z[MeV/c]; dEdx[ADC/mm]",400,-800.,3000.,300,0.,1500);
+  auto hpidsel    = new TH2D("hpidsel","selected particle; P/Z[MeV/c]; dEdx[ADC/mm]",400,-800.,3000.,300,0.,1500);
   auto hyawpitch  = new TH2D("hyawpitch","; Yaw angle; Pitch angle",200,-1.5,1.5,200,-1.5,1.5);
   auto hmass      = new TH2D("hmass",   ";P/Q; Mass [MeV/c^2]"     ,200,  0.,2500., 200, 0.,7000);
   TString hlabel  = (TString)Form("mtrack1 %2d to %2d ; Y_{cm}; Pt [MeV/c]",Lcent,Ucent);
+
   auto hyptacp    = new TH2D("hyptacp", hlabel ,200, -1., 1.4, 200, 0., 1100);
   auto huy        = new TH2D("huy","; y_{cm}/y_{beam}; u_{t0} ", 200,-1., 1.8, 200,0.,1.8);
   auto hpsi       = new TH2D("hpsi",";#Psi;",15, 0., 15., 200,0.,1.);
@@ -151,8 +153,12 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   auto hRPPsi     = new TH1D("hRPPsi",";Indiv. #Psi"  ,100,-TMath::Pi(),TMath::Pi());
   auto hRPPsipsi  = new TH2D("hRPPsipsi",";RP #Psi; Indiv #Psi"  ,100,-TMath::Pi(),TMath::Pi(),100,-TMath::Pi(),TMath::Pi());
   auto hphi       = new TH1D("hphi",     ";#phi"  ,100,-TMath::Pi(),TMath::Pi());
+  auto hv1yphi    = new TH2D("hv1yphi",";Rapidity; iphi", ybin1,0.,ybin1, 13,0., 13.);
+  auto hv2yphi    = new TH2D("hv2yphi",";Rapidity; iphi", ybin2,0.,ybin2, 13,0., 13.);
+
 
   TH1I *hmult = new TH1I("hmult",";Multiplicity",100,0,100);
+
   TH1F *hdypsicos1[ybin1][psibin][mbin];
   TH1F *hdypsicos2[ybin1][psibin][mbin];
   TH1D *hdy1[ybin1];
@@ -253,25 +259,14 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   //--------------------------------------------------
   for(Long64_t i = 0; i < nEntry; i++){
 
+    ShowProcess(i);
+
     rChain->GetEntry(i);
     STFlowInfo *aflow = (STFlowInfo*)aFlowArray->At(0);
 
     /// for reaction plane resolution
     Bool_t bFill = kFALSE;
     Bool_t bRes  = kFALSE;
-
-    beginTime.Copy(dtime);
-    if(i%(UInt_t)(nEntry/50) == 0) {
-      dtime.Set();
-      Int_t ptime = dtime.Get() - beginTime.Get();
-
-      LOG(INFO) << "Processing .... " 
-		<< setw(4) << Int_t(((Double_t)i/(Double_t)nEntry)*100.) << " % = "
-		<< setw(8) << i << "/"<< nEntry
-		<< "--->"
-		<< dtime.AsString() << " ---- "
-		<< FairLogger::endl;
-    }
 
     /// centrality selection
     if(aflow->mtrack2 > Ucent || aflow->mtrack2 <= Lcent || aflow->mtrack4 < 6) continue;
@@ -282,9 +277,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
     Double_t subevt_phi = abs(TVector2::Phi_mpi_pi((aflow->unitP_1fc).Phi()-
 						   (aflow->unitP_2fc).Phi()));
-      
-    ///    auto RPangle = GetRPBaseAngle(aflow);
 
+    ///    auto RPangle = GetRPBaseAngle(aflow);
     auto RPangle = aflow->unitP_fc.Phi();
 
     UInt_t ipsi  = GetPsiRPIndex(  RPangle );
@@ -305,7 +299,12 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       if( isys == 4 && mtk > (UInt_t)aflow->mtrack4*0.6 ) break; 
 
       // ---- track quality selection ---
-      if( isys != 5 && aPart->GetGoodTrackFlag() != 11 ) continue;
+      // if( isys != 5 && 
+      // 	  ( ( sVer != "44.0" && aPart->GetGoodTrackFlag() != 1111)  ||
+      // 	    ( sVer == "44.0" && aPart->GetGoodTrackFlag() != 11 ) )
+      // 	  ) continue;
+
+      if( isys != 5 && aPart->GetReactionPlaneFlag()%2 != 1 ) continue;
       //------------------------------
 
       auto yaw   = aPart->GetYawAngle();
@@ -317,9 +316,10 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       auto theta = aPart->GetRotatedMomentum().Theta();
       auto charge= aPart->GetCharge();
 
-      auto pid   = aPart->GetPID();
-      // auto pid   = aPart->GetPIDLoose();  
-      //auto pid   = aPart->GetPIDNorm();  
+      //auto pid   = aPart->GetPIDTight();
+      auto pid   = aPart->GetPIDLoose();  
+      //      auto pid   = aPart->GetPIDNorm();  
+
 
       //----- Particle Selection -----
       Bool_t bpart = kFALSE;
@@ -356,7 +356,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	bpart = kTRUE;
       }
 
-   
 
       //@@****************************************
       // if( abs( phi ) > 30.*TMath::DegToRad() ) continue;
@@ -435,15 +434,13 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
       hdypsicos1[irapid1][ipt1][im]->Fill( cos(dphi) );
       hdypsicos2[irapid2][ipt2][im]->Fill( cos(2.*dphi) );
-      //      hdypsicos2[irapid2][ipt2][im]->Fill( cos(dphi2) );
+      //hdypsicos2[irapid2][ipt2][im]->Fill( cos(dphi2) );
 
       hdydutcos1[irapid1][ipt1][ipsi]->Fill( cos(dphi) );
       hdydutcos2[irapid2][ipt2][ipsi2]->Fill( cos(2.*dphi) );
       //hdydutcos2[irapid2][ipt2][ipsi2]->Fill( cos(dphi2) );
       hdydutdphi1[irapid1][ipt1][ipsi]->Fill( dphi );
 
-
-      
 
       if( abs(phi) <= 30.*TMath::DegToRad() )
 	hut[irapid1][0] -> Fill( u_t0 );
@@ -452,12 +449,16 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
       //      if( u_t0 > 0. ) {
       //      if( u_t0 > 0.4 && u_t0 < 1.5) {
-      if( u_t0 > 0.4 ) {
-	hdyucos1[irapid1][ipsi]->Fill( cos(dphi) );
-	//hdyucos2[irapid2][ipsi2]->Fill( cos(dphi2) );
-	hdyucos2[irapid2][ipsi2]->Fill( cos(2.*dphi) );
 
+
+      if( u_t0 > 0. ) {
+	hdyucos1[irapid1][ipsi]->Fill( cos(dphi) );
 	hdyv1[irapid1]->Fill( cos(dphi) );
+      }
+
+      if( u_t0 > 0.4 ) {
+	hdyucos2[irapid2][ipsi2]->Fill( cos(2.*dphi) );
+	//hdyucos2[irapid2][ipsi2]->Fill( cos(dphi2) );
 	hdyv2[irapid2]->Fill( cos(2.*dphi) );
       }
     }
@@ -537,7 +538,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       auto mcosee= GetError(mcos, rpresall[0], mcose, rpresall[1]);
       
       auto cosc = mcos/rpresall[0];
-      
       gy_v1->SetPoint(iyy, ymean, cosc);
       gy_v1->SetPointError(iyy, ystdv, mcosee );
       iyy++;
@@ -575,8 +575,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	    rppsires[2] = rpresall[1];
 	  }
 
-
-
 	  Double_t v1u   = hdydutcos1[iy][ipt][ips]->GetMean();
 	  Double_t v1ue  = hdydutcos1[iy][ipt][ips]->GetStdDev()/sqrt(nv1u);
 	  Double_t v1uee = GetError(v1u, rppsires[1], v1ue, rppsires[2]);
@@ -587,7 +585,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
 	}
       }
-
 
 
       Double_t v1u_ave = v1u_sum / v1u_n;
@@ -602,7 +599,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       
     } ///// endof Pt bin
     
-
     Double_t v1u_sum = 0.;
     Double_t v1u_n   = 0.;
     Double_t v1u_ste = 0.;
@@ -626,6 +622,9 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	v1u_sum += v1u / rppsires[1] * nv1u;
 	v1u_n   += nv1u;
 	v1u_ste += pow(v1uee*nv1u,2);
+
+	hv1yphi -> Fill( (Double_t)iy, (Double_t)ips, v1u); 
+
       }
 
     }
@@ -692,7 +691,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       auto mcosee= GetError(mcos, rpresall[0], mcose, rpresall[1]);
 
       auto cosc = mcos/rpresall[0];
-      
+
       gy_v2->SetPoint(iyy, ymean, cosc);
       gy_v2->SetPointError(iyy, ystdv, mcosee );
       iyy++;
@@ -728,13 +727,12 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	    rppsires[2] = rpresall[1];
 	  }
 
-	  hpsi->Fill((Double_t)ips, rppsires[1]);
+	  hpsi ->Fill((Double_t)ips, rppsires[1]);
 	  hpsi1->Fill(rppsires[1]);
 
 	  Double_t v2u   = hdydutcos2[iy][ipt][ips]->GetMean();
 	  Double_t v2ue  = hdydutcos2[iy][ipt][ips]->GetStdDev()/sqrt( nv2u );
 	  Double_t v2uee = GetError(v2u, rppsires[1], v2ue, rppsires[2]);
-
 
 	  v2u_sum += v2u / rppsires[1] * nv2u;
 	  v2u_n   += nv2u;
@@ -777,6 +775,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	Double_t v2ue  = hdyucos2[iy][ips]->GetStdDev()/sqrt( nv2u );
 	Double_t v2uee = GetError(v2u, rppsires[1], v2ue, rppsires[2]);
 
+	hv2yphi -> Fill( (Double_t)iy, (Double_t)ips, v2u); 
 	  
 	v2u_sum += v2u / rppsires[1] * nv2u;
 	v2u_n   += nv2u;
@@ -835,6 +834,9 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   hphi      ->Write();
   hpid      ->Write();
   hpidsel   ->Write();
+  hv1yphi   ->Write();  
+  hv2yphi   ->Write();  
+  //  hdyucos2 ->Write();
   //--------------------------------------------------
   //--- Plotting
   //--------------------------------------------------
@@ -925,13 +927,14 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   hRPPsipsi->Draw("colz");
   cc->cd(4);
   hphi->Draw();
+
+
   
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
-  hpid->Draw("colz");
+  hv2yphi->Draw("colz");
 
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
-  //  hpidsel->Draw("colz");
-  hpsindx->Draw();
+  hv1yphi->Draw("colz");
 
   gSystem->cd("..");
 }
@@ -1050,18 +1053,19 @@ Double_t *Get2PsiRPResolution(Double_t *rpcor, UInt_t ival)
 {
   //for test
   if( rpcor != NULL ) {
-    // if( ival < psibin ) {
-    //   rpcor[0] = *(hgv_psi2->GetX() + ival );
-    //   rpcor[1] = *(hgv_psi2->GetY() + ival );
-    //   rpcor[2] = *(hgv_psi2->GetEY() + ival );
-    // }
-    // else {
+     if( ival < psibin ) {
+       rpcor[0] = *(hgv_psi2->GetX() + ival );
+       rpcor[1] = *(hgv_psi2->GetY() + ival );
+       rpcor[2] = *(hgv_psi2->GetEY() + ival );
+     }
+  }    
+  else {
       rpcor[0] = 0.;
       rpcor[1] = 1.;
       rpcor[2] = 0.;
       //    }
   }
-  
+
   return rpcor;
 }
 //**************************************************
@@ -1269,15 +1273,15 @@ TString SetupOutputFile(TString fopt)
   //----- SETUP OUTPUT FILE --------------------------
   //--------------------------------------------------
   gSystem->cd("data");
-  TString oVer  = gSystem->Getenv("OUTVER");
-  TString fName = fopt + oVer;
+  TString oVerSub= gSystem -> Getenv("OSUBV");
+  TString fName = fopt + oVerSub;
 
-  if( oVer == "" ) {
+  if( oVerSub == "" ) {
     UInt_t kVer = 0; 
     TString checkName;
 
     while( kTRUE ) {
-      checkName = Form(fName + "%04d.root", kVer);
+      checkName = Form(fName + "%d.root", kVer);
       if( !gSystem->FindFile(".",checkName) ) {
 	break;
       }
@@ -1311,7 +1315,8 @@ Bool_t SetupEffCorrection()
 {
   fefffile = TFile::Open("correctedPt.phi60.nomultcut.root");
 
-  if( fefffile != NULL ) return kTRUE;
+  if( fefffile != NULL ) 
+    return kTRUE;
   else
     return kFALSE;
 }
@@ -1422,7 +1427,7 @@ void PlotSubEvent(Double_t ml=30, Double_t mu=80)
   hroty->Draw("same");
 }
 
-
+///--------------------------------------------------
 ///######################################################################
 
 

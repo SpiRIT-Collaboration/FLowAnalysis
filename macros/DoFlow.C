@@ -1234,7 +1234,6 @@ TString SetupOutputFile(TString fopt)
   //----- SETUP OUTPUT FILE --------------------------
   //--------------------------------------------------
   gSystem->cd("data");
-  TString oVer = gSystem->Getenv("OUTVER");
   TString fName = fopt + oVer;
 
   if( oVer == "" ) {

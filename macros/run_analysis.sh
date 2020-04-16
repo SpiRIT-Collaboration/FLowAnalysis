@@ -22,17 +22,12 @@ source ../build/config.sh
 #export RCVER=HEAD.1853.e498ace
 #export SUFX=BTt
 
-VERSION=44
-export TPCDIR=/data/spdaq01/recoData/20190822/data/
-export RCVER=HEAD.1858.1824743
+VERSION=47
+#export TPCDIR=/data/spdaq01/recoData/20190822/data/
+export TPCDIR=/data/spdaq01/recoData/20191214/data
+export RCVER=develop.1964.781a3cf
 export SUFX=BTt
 
-export ST132DIR=${STTPCDIR}
-export ST108DIR=${STTPCDIR}
-export ST124DIR=${STTPCDIR}
-export ST112DIR=${STTPCDIR}
-export STCkT100=${STTPCDIR}
-export STCkT300=${STTPCDIR}
 
 ##export STBBFITTER=db/BBFitter.root
 export STBBFITTER=db/FlattenPID.root # Kaneko-kun's PID calibration files done with 20190804/data.corr_ExBl112/ 
@@ -69,23 +64,28 @@ source runList.sh
 # Set RUNNUMBER1 
 DBVERSION=0
 
-#RUNNUMBER1=(${RNF132})
-RUNNUMBER1=(${RNF108})
+export TPCDIR=$TPCDIR/Sn132
+
+RUNNUMBER1=(${RNF132})
+#RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RNFTEMP})
 #RUNNUMBER1=(${RNF132r})
-#RUNNUMBER1=(${RNF132s})
+#RUNNUMBER1=(${RNF132t})
 
-function execa() { ## Job for the 2841 with maximum event number =MEVT
-    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MEVT DBVER=$DBVERSION root run_analysis.C 
+
+
+
+function execa() { ## Job for the 2841 with maximum event number = MXEVT
+    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR DBVER=$DBVERSION MXEVT=$1 root run_analysis.C 
 }
 
-MEVT=
-function execb() {  ## batch job for the first run with maxium event number = MEVT
-    echo $MEVT
+
+function execb() {  ## batch job for the first run with maxium event number = MXEVT
+    echo $MXEVT
     LOG=log/p1_${RUN}_v${VERSION}.log
-    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR MXEVT=$MEVT DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
+    RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR  DBVER=$DBVERSION MXEVT=$1 root -b -q run_analysis.C >& $LOG &
 }
 
 function execc(){   ## batch job from the second to the end.
@@ -93,33 +93,33 @@ function execc(){   ## batch job from the second to the end.
     while(( $I < ${#RUNNUMBER1[@]} ))
     do
 
-#	RUN=${RUNNUMBER1[I]} 
-#	LOG=log/p1_${RUN}_v${VERSION}.log
-#	echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
-#	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
-#	let I++
-#	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
-#            break;
-#        fi
-#
-#	RUN=${RUNNUMBER1[I]} 
-#	LOG=log/p1_${RUN}_v${VERSION}.log
-#        echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
-#	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
-#	let I++
-#	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
-#            break;
-#        fi
-#
-#	RUN=${RUNNUMBER1[I]} 
-#	LOG=log/p1_${RUN}_v${VERSION}.log
-#        echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
-#	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
-#	let I++
-#	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
-#            break;
-#        fi
-#
+	RUN=${RUNNUMBER1[I]} 
+	LOG=log/p1_${RUN}_v${VERSION}.log
+	echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
+	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
+	let I++
+	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
+            break;
+        fi
+
+	RUN=${RUNNUMBER1[I]} 
+	LOG=log/p1_${RUN}_v${VERSION}.log
+        echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
+	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
+	let I++
+	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
+            break;
+        fi
+
+	RUN=${RUNNUMBER1[I]} 
+	LOG=log/p1_${RUN}_v${VERSION}.log
+        echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
+	RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C >& $LOG &
+	let I++
+	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
+            break;
+        fi
+
 	RUN=${RUNNUMBER1[I]} 
 	LOG=log/p1_${RUN}_v${VERSION}.log
         echo RUN=${RUN} VER=$VERSION DBVER=$DBVERSION root -b -q run_analysis.C '>&' $LOG
@@ -128,14 +128,21 @@ function execc(){   ## batch job from the second to the end.
     done
 }
 
+function execd() { ## Job for the 2841 with maximum event number = MXEVT
+    RUN=2843 VER=$VERSION TPCDIR=$TPCDIR DBVER=$DBVERSION MXEVT=$1 root run_analysis.C 
+    RUN=2898 VER=$VERSION TPCDIR=$TPCDIR DBVER=$DBVERSION MXEVT=$1 root run_analysis.C 
+}
+
 #RUN=${RUNNUMBER1[0]}
 #RUN=${RUN} VER=$VERSION root -b -q run_analysis.C\(1000\)
 
 grep function run_analysis.sh
 
-#execb
-#execc
 
+###--- show envirounment
+echo run$RUNNUMBER1 with ${#RUNNUMBER1[@]} runs 
+echo v$VERSION
+##----
 
 
 

@@ -30,7 +30,8 @@ private:
   UInt_t selReactionPlanef;      //! track quality for reaction plane 
   UInt_t iSystem;                //!  system ID {"(132Sn + 124Sn)", "(108Sn + 112Sn)", "(124Sn + 112Sn)", "(112Sn + 124Sn)", "(p + p)"}
   Float_t fRPMidCut;             //!  exclude mid-rapidity reation from the RP calculation abs(y_cm)<fRPMidCut
-  
+
+  UInt_t PID_sel;                //!
 
   TString sVer; //!
 
@@ -106,6 +107,10 @@ public:
   UInt_t  GetGoodEventFlag(){return fflowinfo->GetGoodEventFlag();}
 
   void    SetRPMidRapidityCut(Float_t val) {fRPMidCut = val; fflowinfo->fRPMidCut = fRPMidCut;}
+
+  void   SetPIDSelection(UInt_t ival) {PID_sel = ival;}
+  UInt_t GetPIDSelection()            {return PID_sel;}
+
 };
 
 #endif

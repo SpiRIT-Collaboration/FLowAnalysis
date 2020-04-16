@@ -52,7 +52,13 @@ void DoFlattening(UInt_t isel = 10)
 
   UInt_t ichain = 0;
 
-  openRunAna();
+  openRunAna(1);
+
+  if( sRun == "" || sSuf == "" || sVer == "" || dVer == "") {
+    LOG(ERROR) << " Environment is not set properly. " << FairLogger::endl;
+    exit(0);
+  }
+
 
   rChain = (TChain*)gROOT->FindObject("rChain");
   if(rChain == NULL) {    
@@ -157,14 +163,8 @@ void Flatten_Psi_ntrack(UInt_t isel)
   //--- retrivewed data
   Double_t bsPhi_1[3];
   Double_t bsPhi_2[3];
-  
-  TClonesArray *aFlowArray = NULL;
-  TClonesArray *aBDCArray  = NULL;
 
-  if( isel >= 10) {
-    rChain->SetBranchAddress("STFlow"  ,&aFlowArray);
-  }
-
+  Long64_t nevt = SetBranch();
 
   // Flattening with a shifting method
   STFlowCorrection *flowcorr[ntrknbin+1];
@@ -200,13 +200,12 @@ void Flatten_Psi_ntrack(UInt_t isel)
 
   // process
     
-  Int_t nevt = rChain->GetEntries();
+  //  Int_t nevt = rChain->GetEntries();
   cout << " Number of events " << nevt << endl;
 
   Int_t icout = 0;
   std::vector<Double_t> ophi;
 
-  nevt=100000;
   for(UInt_t i = 0; i < nevt; i++){
     rChain->GetEntry(i);
 
@@ -271,6 +270,7 @@ void Flatten_Psi_ntrack(UInt_t isel)
     vector<Double_t> rcphi = flowcorr[j]->GetReCeneringPhi();
     
     cout << "after " << mtk.size()  << endl;
+
     if(mtk.size() > 0){
       for(UInt_t k = 0; k < (UInt_t)mtk.size(); k++){	  
 	hbiphi     ->Fill(rcphi.at(k));
@@ -279,7 +279,7 @@ void Flatten_Psi_ntrack(UInt_t isel)
 	hantrkiphi ->Fill(mtk.at(k)   , aphi.at(k));
 	haiphi     ->Fill(aphi.at(k));	  
 
-	hbaiphi->Fill(abs(bphi.at(k)), abs(rcphi.at(k)));
+	hbaiphi->Fill((bphi.at(k)), (rcphi.at(k)));
 	  
 	if(j == 1)
 	  habiphi  ->Fill(ophi.at(k), aphi.at(k));

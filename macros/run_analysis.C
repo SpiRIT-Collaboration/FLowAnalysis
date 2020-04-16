@@ -61,7 +61,7 @@ void run_analysis(Int_t nevt = -1)
   TString sMAX = gSystem->Getenv("MXEVT");
   if( sMAX != "" ) 
     maxevt = (Long64_t)atoi(sMAX);
-  cout << " max event number " << maxevt << std::endl;
+  LOG(INFO) << " >>> Event number >>>  " << maxevt << FairLogger::endl;
     
   TPCTask->SetProcessingNumberOfEvent(maxevt);
 

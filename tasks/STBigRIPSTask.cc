@@ -244,8 +244,8 @@ Int_t STBigRIPSTask::GetBeamPID()
 
 void STBigRIPSTask::Exec(Option_t *opt)
 {
-  LOG(DEBUG) << "STBigRIPSTask::Exec is called " << FairLogger::endl;
   fEventID++;
+  LOG(DEBUG) << "STBigRIPSTask::Exec is called " << fEventID << FairLogger::endl;
 
   ProceedEvent();
 

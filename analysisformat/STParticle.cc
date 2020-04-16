@@ -178,9 +178,20 @@ void STParticle::Clear(Option_t *option)
 
 }
 
+void STParticle::SetGoodTrackFlag()
+{
+  fgoodtrackf = fgoodtrackf != 0 ?  
+    1000*( fBeamonTargetf * fVatTargetf )  + 
+    100 *( fmassf * fmomentumf * fdedxf) +
+    10*fdistanceatvertexf + 
+    fNDFf : 0;
+}
+
 
 void STParticle::SetRecoTrack(STRecoTrack *atrack)
 {
+  Clear();
+
   fRTrack = atrack;
 
   forigP3 = fRTrack->GetMomentumTargetPlane(); //v35
@@ -207,8 +218,9 @@ void STParticle::SetRecoTrack(STRecoTrack *atrack)
   rClusterSize   = (fRTrack -> GetClusterIDArray()) -> size();
 
   // quality flag
-  if( fP > maxMomentum ) fmomentumf = 0;
-  if( fdEdx > maxdEdx  ) fdedxf     = 0;
+  if( fP > maxMomentum || fP == 0 )    SetMomentumFlag(0);
+  if( fdEdx > maxdEdx  || fdEdx <= 0 ) SetdEdxFlag(0);
+  if( fGFChar != fChar )               SetMassFlag(0);
 
 }
 
@@ -251,10 +263,26 @@ void STParticle::SetVertex(TVector3 value)
 
 void STParticle::SetPIDLoose(Int_t value)
 {
-  fPID_loose = value;
-  SetMass(value);
+  if( fmassf ) 
+    {
+      fPID_loose = value;
+      SetMass(value);
+    }
 }
 
+void STParticle::SetBBMass(Double_t val)       
+{
+  if( val < maxbbmass && val > 0 ) 
+      fBBMass   = val;
+  else
+      SetMassFlag(0);
+}
+
+void STParticle::SetBBMassHe(Double_t val)       
+{
+  if( val < maxbbmass && val > 0) 
+      fBBMassHe   = val;
+}
 
 
 void STParticle::SetMass(Int_t val)

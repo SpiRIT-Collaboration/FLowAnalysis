@@ -121,9 +121,9 @@ void DoTrackQuatlity()
 
       //*********************************************
       // ---- track quality selection ---
-      if( aPart->GetGoodTrackFlag() != 11 ) continue;
+      if( aPart->GetGoodTrackFlag() != 1111 ) continue;
       //------------------------------
-      if( (pitch/yaw) > 1. || yaw < 0 ) continue;
+      //      if( (pitch/yaw) > 1. || yaw < 0 ) continue;
       //if( (pitch/yaw) > 1. || yaw > 0 ) continue;
 
       //if ( abs( pitch / yaw ) > 1. ) continue;

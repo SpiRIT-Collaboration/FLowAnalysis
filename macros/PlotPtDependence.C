@@ -8,6 +8,7 @@ struct gplot{
   TString comment;
 };
 
+
 TString  bName[]   = {"132Sn_","108Sn_","124Sn_","112Sn_","100Sn_"};
 Double_t sysdlt[]  = {0.22,    0.09,      0.15,   0.15   , 0.22};
 Double_t sysA[]    = {256.,    220.,      236.,   236.   ,  256.};
@@ -20,7 +21,7 @@ Bool_t bplot[] =
   { 0, // 0 data   It should be set to 1 in the code.
     0, // 1 model  It should be set to 1 in the code.
     1, // 2 v1 and v2 rapidity 
-    0, // 3 v1 and v2 on pt in one window
+    1, // 3 v1 and v2 on pt in one window
     0, // 4 v1 and v2 in individual windows
     0, // 5 Acceptance ypt
     0, // 6 <px>/A
@@ -39,67 +40,48 @@ Bool_t bstyle[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 0, 0, 0, 0, 1};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
+Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
 Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {1, 1, 0, 0}; //{1, 1, 1, 1, 1, 0, 0, 0, 0};
+UInt_t  bver[]  = {1, 1, 1, 1}; //{1, 1, 1, 1, 1, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v50.7.1"   ,"advYPt_","(TPC)v50.7.1"},
-  {".v22.0.8"   ,"advYPt_","(Full)22.0.8"},
-  {".v50.0"   ,"advYPt_","(TPC)v50.0"},
-  {".v50.0"     ,"advYPt_","(A)TPC"},
-  {".v43.0.9"   ,"advYPt_","v9"}, //"p/y<=1"},
-  {".v43.0.7"   ,"advYPt_","v7"}, //"p/y<=1"},
-  {".v43.0.8"   ,"advYPt_","v8"}, //"p/y<=1"},
-  {".v43.0.6"   ,"advYPt_","v6"}, //"p/y<=1"},
-  {".v43.0.4"   ,"advYPt_","ut<1.5"}, //"p/y<=1"},
-  {".v43.0.1"   ,"advYPt_","loose"}, //"p/y<=1"},
-  {".v41.2.21"   ,"advYPt_","All"},
-  {".v41.2.23"   ,"advYPt_","p/y<=1&&y>0"},
-  {".v41.2.24"   ,"advYPt_","p/y<=1&&y<0"},
-  {".v3.0"   ,"advYPt_","all"},
-  {".v43.0"   ,"advYPt_","|y_cm|>0.005"},
-  {".v42.0"   ,"advYPt_","|y_cm|>0.01"},
-  {".v41.0"   ,"advYPt_","|y_cm|>0.05"},
-  {".v13.0"   ,"advYPt_","all"},
-  {".v13.4"   ,"advYPt_","all"},
-  {".v41.2.10" ,"advYPt_","All Phi"},//m2_0to50&&|#phi|>30&150"},
-  {".v7.4"    ,"advYPt_","fc-All"},
-  {".v7.2"    ,"advYPt_","fc-#phi<45"},
-  {".v7.3"    ,"advYPt_","fc-#fc>45"},
-  {".v8.0"    ,"advYPt_","org-All"},
-  {".v8.1"    ,"advYPt_","org-#phi<45"},
-  {".v8.2"    ,"advYPt_","org-#fc>45"},
-  {".v5.5"    ,"advYPt_","{phi}<30or150"},
-  {".v5.12"   ,"advYPt_",""},
-  {".v5.4"    ,"advYPt_","allphi"},
-  {".v5.10"   ,"advYPt_","|pitch/yaw|<1"},
-  {".v3.1"    ,"advYPt_","1.6e+6"},
-  {".v3.2"    ,"advYPt_","1e+6"},
-  {".v3.3"    ,"advYPt_","1e+6"},
-  {".v41.2.4"  ,"advYPt_","|#phi|>30&150"},
-  {".v41.2.5"  ,"advYPt_",""},//m2_0to50&&|#phi|>30&150"},
-  {".v41.2.6"  ,"advYPt_",""},//m2_0to50&&|#phi|>30&150"},
-  {".v41.2.7"  ,"advYPt_",""},//m2_0to50&&|#phi|>30&150"},
-  {".v41.2.8"  ,"advYPt_",""},//m2_0to50&&|#phi|>30&150"},
-  {".v41.2.3"  ,"advYPt_","|#phi|>30&150"},
-  {".v41.2.2"  ,"advYPt_","|#phi|>30&150"},
-  {".v41.2.3"  ,"advYPt_","|#phi|<30"},
-  {".v41.2.0"  ,"advYPt_","|#phi|<150"},
-  {".v5.6"    ,"advYPt_","yaw>0"},
-  {".v5.7"    ,"advYPt_","yaw<0"},
-  {".v5.8"    ,"advYPt_","pitch>0"},
-  {".v5.9"    ,"advYPt_","pitch<0"},
+  {".v47.0.6","advYPt_","v47.0.Loose&fRP"},
+  {".v47.0.3","advYPt_","v47.0.Loose"},
+  {".v44.0.0","advYPt_","v44.0.Loose"},
+  {".v44.0.3","advYPt_","v44.0.Loose&fRP"},
+  {".v47.0.4","advYPt_","v47.0.Norm"},
+  {".v44.0.2","advYPt_","v44.0.Norm"},
+  {".v47.0.2","advYPt_","v47.0.Tight"},
+  {".v44.0.1","advYPt_","v44.0.Tight"},
+  {".v44.0.1","advYPt_","v44.0.Tight"},
+  {".v47.0.2","advYPt_","v47.0.Tight"},
+  {".v46.0.1","advYPt_","v46.0.1"},
+  {".v46.0.0","advYPt_","v46.0.0"},
+  {".v46.0.2","advYPt_","v46.0.2"},
+  {".v45.2.2","advYPt_","v45.2.2"},
+  {".v43.1.0","advYPt_","v43.1.0"},
+  {".v45.0.1","advYPt_",""},
+  {".v50.7.1","advYPt_","(TPC)v50.7.1"},
+  {".v22.0.8","advYPt_","(Full)22.0.8"},
+  {".v50.0"  ,"advYPt_","(TPC)v50.0"},
+  {".v50.0"  ,"advYPt_","(A)TPC"},
+  {".v5.8"   ,"advYPt_","pitch>0"},
+  {".v5.9"   ,"advYPt_","pitch<0"},
 };
 
-TString sVer[nmax];
-TString sName[nmax];
-TString cmnt[nmax];
+TString *sVer  = new TString[nmax];
+TString *sName = new TString[nmax];
+TString *cmnt  = new TString[nmax];
+
+//-- TuQMD
+Bool_t btQMDConfig[] = {0};
+//-----------
+gplot tQMDConfig[] = {".v0","tuqmd_",""};
 
 //-- pBUU
 Bool_t  bpBUUConfig[]  = {0, 0, 0, 0};
@@ -131,7 +113,6 @@ Bool_t  amdEOS[]= {0, 0};
 //-----------
 TString amdName[] = {"SLy4",
 		     "SLy4-L108"};
-
 TString amdHeader[] = {"amd_132Sn124Sn270AMeV_cluster_",
 		       "amd_108Sn112Sn270AMeV_cluster_"};
 
@@ -177,8 +158,10 @@ void PlotPtDependence()
   gStyle->SetOptStat(0);
   SetStyle();
 
+  UInt_t ndata = 0;
   for(UInt_t i = 0; i < nmax; i++){
     if( bver[i] ) {
+      ndata++;
       sVer[i]  = gnames[i].Version;
       sName[i] = gnames[i].fileHeader;
       cmnt[i]  = gnames[i].comment;
@@ -264,8 +247,8 @@ void PlotPtDependence()
   auto mmpx  = new TMultiGraph("mmpx","; y/y_{cm} ; <px>/A");
   //  mv1slp->GetXaxis()->SetAlphanumeric(kTRUE);
 
-  auto lgr1 = new TLegend(0.60, 0.20, 0.85, 0.40, ""); 
-  auto lgr2 = new TLegend(0.46, 0.65, 0.65, 0.9, "");
+  auto lgr1 = new TLegend(0.54, 0.20, 0.80, 0.40, ""); 
+  auto lgr2 = new TLegend(0.53, 0.20, 0.70, 0.45, "");
   auto lgr3 = new TLegend(0.35, 0.13, 0.7, 0.33, "");
   auto lgr4 = new TLegend(0.15, 0.63, 0.5, 0.85, "");
   auto lgr5 = new TLegend(0.15, 0.63, 0.5, 0.85, "");
@@ -310,6 +293,7 @@ void PlotPtDependence()
 	  index[2].push_back(it); // centrality
 	  index[3].push_back(it+cntw);
 	  index[4].push_back(iz); // version
+
 	  if( is == 4 ) {
 	    index[5].push_back(4);
 	    SimFunction();
@@ -358,6 +342,8 @@ void PlotPtDependence()
     }
   }
   
+
+
   //---- pBUU
   UInt_t pgr = 0;
   for(UInt_t ms = 0; ms < 4; ms++ ){
@@ -385,6 +371,43 @@ void PlotPtDependence()
 	pgr++;
 
 	bplot[1] = 1;
+      }
+    }
+  }
+
+
+  //---- TuQMD
+  UInt_t tgr = 0;
+  for(UInt_t i = 0; i < nmax; i++) {
+    if( btQMDConfig[i] ) {
+      *(sVer + ndata + i -1) = tQMDConfig[i].Version;
+      *(sName+ ndata + i -1) = tQMDConfig[i].fileHeader;
+      *(cmnt + ndata + i -1) = tQMDConfig[i].comment;
+    }
+  }
+
+
+  for(UInt_t ls = 0; ls < 4; ls++ ){
+    if( !bsys[ls] ) continue;
+
+    for(UInt_t lp = 0; lp < (UInt_t)sizeof(bpid)/sizeof(Bool_t); lp++){
+      if( !bpid[lp] ) continue;
+
+      for(UInt_t lo = 0; lo < (UInt_t)sizeof(btQMDConfig)/sizeof(Bool_t); lo++) {
+	if( !btQMDConfig[lo] ) continue;
+
+	TString ffin = "data/"+ sName[ndata+lo-1] + bName[ls] + fpid[lp] + sVer[ndata+lo-1] + ".root";
+	std::cout << ffin << std::endl;
+
+	fname.push_back(ffin);
+
+	index[0].push_back(ls);
+	index[1].push_back(lp);
+	index[2].push_back(lo);
+	index[3].push_back(3);
+	index[4].push_back(1);
+	index[5].push_back(5); //TuQMD
+	tgr++;
       }
     }
   }
@@ -437,7 +460,7 @@ void PlotPtDependence()
   UInt_t isp1[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
   UInt_t isp2[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
-  for(UInt_t igr = 0; igr < ngr+kgr+pgr; igr++ ) {
+  for(UInt_t igr = 0; igr < (UInt_t)fname.size(); igr++ ) {
 
     fOpen = TFile::Open(fname.at(igr)); 
 
@@ -466,11 +489,14 @@ void PlotPtDependence()
     TString otitle  = ohtitle;
 
     if( ia == 1 ) { //data
-      //otitle += cmnt[iz];
-      //otitle += sVer[iz]+";"+cmnt[iz];
+      std::cout << "mnt " << cmnt[iz] << " " << iz << endl;
+
+      otitle += cmnt[iz];
+      //      otitle += sVer[iz]+";"+cmnt[iz];
       //otitle += "DATA"+sVer[iz]+";"+cmnt[iz];
       //otitle += "data";
-      otitle += "("+ lpid[ip]+")"+cmnt[iz];
+      //      otitle += "("+ lpid[ip]+")"+cmnt[iz];
+      //      otitle += "("+ lpid[ip]+")"+sVer[iz];
       //     otitle = fpid[ip] ;
     }
     else if( ia == 2 ) //amd
@@ -484,8 +510,9 @@ void PlotPtDependence()
       otitle = cmnt[iz];
       bstyle[2] = kTRUE;
     }
+    else if( ia == 5 ) // TuQMD
+      otitle += "("+ lpid[ip]+") TuQMD";
 
-    //otitle  = ohtitle;
 
     //acceptance
     if( bplot[0] && bplot[5] ) {
@@ -606,9 +633,12 @@ void PlotPtDependence()
       if( yv2 != NULL ) {
 	for( Int_t iip = (Int_t)yv2->GetN()-1; iip >= 0; iip-- ){
 	  Double_t xpnt, ypnt;
-	  yv2->GetPoint(iip, xpnt, ypnt);
+	  //	  yv2->GetPoint(iip, xpnt, ypnt);
 	  //	  if( (xpnt > 1 || xpnt < -0.8) && is != 5 )
 	  //	    yv2->RemovePoint(iip);
+	  ypnt = yv2->GetErrorY(iip);
+	  if( ypnt > 0.02 )
+	    yv2->RemovePoint(iip);
 	}
 
 	
