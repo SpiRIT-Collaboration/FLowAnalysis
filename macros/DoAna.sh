@@ -38,14 +38,14 @@ function data47.0()    ##CONFIG
     commonsetup
 }
 ##<----
-function data46()    ##CONFIG
+function data49()    ##CONFIG
 {
     export MNSFX=BTt
     export MDCUT= #0.0               ##   <------@@ mid-rapidity cut
 ##--
     export MNRNF=$RNF132
-    export MNINVERSION=46            ##   <------@@ input
-    export MNOUTVERSION=46.0         ##   <------@@ output 
+    export MNINVERSION=49            ##   <------@@ input
+    export MNOUTVERSION=49.0         ##   <------@@ output 
     export MNOSUBV=
     export MNUC=40
 
@@ -306,7 +306,6 @@ function doflowbatch()
 
 function doflow() 
 {
-    SetStep3
     if [ -n "$2" ]; then
 	export OSUBV=$2
     fi

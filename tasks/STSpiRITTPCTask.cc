@@ -12,7 +12,8 @@ STSpiRITTPCTask::STSpiRITTPCTask()
     fEventID(0),
     massCal(new STMassCalculator()),
     massCalH(new STMassCalSimpleBB("EmpiricalBB")),
-    massCalHe(new STMassCalSimpleBB("EmpiricalBB"))
+    massCalHe(new STMassCalSimpleBB("EmpiricalBB")),
+    massGateFile(NULL)
 {
 
   fLogger = FairLogger::GetLogger();
@@ -25,6 +26,7 @@ STSpiRITTPCTask::STSpiRITTPCTask()
   //------------------------//
   // initial setup
   fChain = nullptr;
+
 }
 
 STSpiRITTPCTask::~STSpiRITTPCTask()
@@ -120,7 +122,7 @@ Bool_t STSpiRITTPCTask::SetupParameters()
   //--- angle dependeing mass fitter //
   //  massCal->SetParameter("db/BBFitter.root");
 
-  UInt_t bmA = STRunToBeamA::GetBeamA(iRun);
+  bmA = STRunToBeamA::GetBeamA(iRun);
 
   if( bmA == 124 )
     bmA = 132;  
@@ -142,10 +144,11 @@ Bool_t STSpiRITTPCTask::SetupParameters()
     LOG(ERROR) << " Mass calibration file " << Form("PIDCalib_%dSn.root",bmA) << " is not found." << FairLogger::endl;
     fstatus =  kFALSE;
   }
-
   
+  fstatus *= SetupPIDFit();
 
-  //------------------------------
+
+  // no longer used. ------------------------------
 
   if( kFALSE ) {
     //--- Single mass fitter
@@ -405,7 +408,8 @@ void STSpiRITTPCTask::Clear()
 Bool_t STSpiRITTPCTask::ProceedEvent()
 {
 
-  ntrack[0] = trackArray -> GetEntries();
+  //  ntrack[0] = trackArray -> GetEntries();  
+  ntrack[0] = trackVAArray -> GetEntries(); // after 20191214
 
   LOG(DEBUG) << "nttack[0] -------------------- > " << ntrack[0] << FairLogger::endl;
                  
@@ -419,7 +423,8 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
 
   if( !vflag ) return kFALSE;
 
-  TIter next(trackArray);
+  //  TIter next(trackArray);
+  TIter next(trackVAArray);
   STRecoTrack *trackFromArray = NULL;
   TClonesArray &ptpcParticle = *tpcParticle;
 
@@ -442,7 +447,8 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
       aParticle->SetBeamonTargetFlag(0);
 
     Int_t    Charge   = aParticle->GetCharge();
-    TVector3 VMom     = aParticle->GetRotatedMomentum();
+    //    TVector3 VMom     = aParticle->GetRotatedMomentum();
+    TVector3 VMom     = aParticle->GetMomentumAtTarget();
     Double_t fMom     = VMom.Mag();
     Double_t dEdx     = aParticle->GetdEdx();
 
@@ -469,13 +475,14 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
 
     aParticle->SetBBMass(mass[0]);      
     aParticle->SetBBMassHe(mass[1]);
-      
+
+    Int_t    pid_kaneko = GetPIDFit  (mass, fMom, 3);
     Int_t    pid_tight  = GetPIDTight(mass, fMom, dEdx);
     Int_t    pid_normal = GetPIDNorm (mass, fMom, dEdx);
     Int_t    pid_loose  = GetPIDLoose(mass, fMom, dEdx);
     
     //      massFitter->GetBBMass(VMom, dEdx, Charge, massH, massHe, pid_tight, pid_loose); 
-    aParticle->SetPID(pid_tight);
+    aParticle->SetPID(pid_kaneko);
     aParticle->SetPIDTight(pid_tight);
     aParticle->SetPIDNorm(pid_normal);
     aParticle->SetPIDLoose(pid_loose);
@@ -578,6 +585,75 @@ Int_t STSpiRITTPCTask::GetPIDLoose(Double_t mass[2], Double_t fMom, Double_t ded
   }
   return 0;
 }
+
+
+Bool_t STSpiRITTPCTask::SetupPIDFit()
+{
+
+  TString massFitName = Form("data/MassFit_%dSn.left.root",bmA);
+  massGateFile = TFile::Open(massFitName);
+  if( massGateFile == NULL ) {
+    LOG(ERROR) << massFitName << " is not found. " << FairLogger::endl;
+    return kFALSE;
+  }    
+
+  LOG(INFO) << massFitName << " is loaded. " << FairLogger::endl;
+
+  TString pidName[]={"Proton","Deuteron","Triton","Helium3","Alpha"}; 
+  for(auto pid: ROOT::MakeSeq(5)) 
+    for(auto mbin: ROOT::MakeSeq(4)) 
+      for(auto i: ROOT::TSeqI(2)) 
+	for(auto j: ROOT::TSeqI(4)) { 
+	  TString f1name = Form("f1MassGate_%dSn_"+pidName[pid]+"_mbin%d_%d_%d",bmA,mbin,i,j);
+	  massGateFile->GetObject(f1name,  f1MassGate[pid][mbin][i][j]);
+
+	  if( f1MassGate[pid][mbin][i][j] == NULL ) {
+	    LOG(ERROR) << f1name << " is not found. " << FairLogger::endl;
+	    return kFALSE;
+	  }
+	}
+  return kTRUE;
+}
+
+Int_t STSpiRITTPCTask::GetPIDFit(Double_t mass[2], Double_t fMom, Int_t mbin)
+{
+  // coded by Kaneko 20200418
+  // pid: p=0, d=1, t=2, 3he=3, 4he=4. 
+  // mass[0]: calibrated mass of track-> p,d,t: mass[1]:helium mass
+  // fMom: rigidity magnitude of track
+  // mbin: centrality bin, mbin=0: M>=56, mbin=1: 50<=M<56, mbin=2: 40<=M<50, mbin=3: no selection
+
+  TString pidName[]={"Proton","Deuteron","Triton","Helium3","Alpha"}; 
+
+  Int_t fpid = 0;
+  
+  for(Int_t i = 0; i < 5; i++ ) {
+
+    Double_t m = i < 3 ? mass[0] : mass[1];
+
+    Bool_t roughCut =  m >= MassRange_Fit[i][0] && m <= MassRange_Fit[i][1]; 
+
+    if( i == 2 )
+      roughCut = roughCut * mass[0] <= 0.6* fMom+2650.;
+
+    STPID::PID pid = static_cast<STPID::PID>(i+1);
+      
+    if( roughCut ) {
+    
+      Int_t fitSigmaID = i <= 2 ? 3 - i : 2;
+      
+      Bool_t fitCut =  m >= f1MassGate[i][mbin][0][fitSigmaID]->Eval(fMom) && m <= f1MassGate[i][mbin][1][fitSigmaID]->Eval(fMom);
+    
+      fpid = STPID::GetPDG(pid) * fitCut;
+
+      if( fitCut )
+	break;
+    }
+  }
+    
+  return fpid;
+}
+
 Int_t STSpiRITTPCTask::GetPIDTight(Double_t mass[2], Double_t fMom, Double_t dedx)
 {
   if( mass[0] == 0 )

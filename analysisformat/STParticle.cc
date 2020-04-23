@@ -189,7 +189,7 @@ void STParticle::SetGoodTrackFlag()
 
 
 void STParticle::SetRecoTrack(STRecoTrack *atrack)
-{
+{    
   Clear();
 
   fRTrack = atrack;
@@ -353,9 +353,15 @@ void  STParticle::SetLorentzVector()
 
 void  STParticle::RotateAlongBeamDirection(Double_t valuex, Double_t valuey)
 {
- 
-  fRotatedP3.RotateY(-valuex);
-  fRotatedP3.RotateX(-valuey);
+  TVector3 beamDirection(TMath::Tan(valuex), TMath::Tan(valuey), 1.);
+  beamDirection = beamDirection.Unit();
+  auto rotationAxis  = beamDirection.Cross(TVector3(0,0,1));
+  auto rotationAngle = beamDirection.Angle(TVector3(0,0,1));
+
+  fRotatedP3.Rotate(rotationAngle, rotationAxis);
+
+  //  fRotatedP3.RotateY(-valuex);
+  //  fRotatedP3.RotateX(-valuey);
 
   SetRotatedPt();
 

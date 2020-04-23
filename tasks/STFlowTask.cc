@@ -453,7 +453,7 @@ void STFlowTask::SetupFlow(STParticle &apart)
 {
   // Setup for flow analysis
 
-  auto pid    =  apart.GetPIDTight();
+  auto pid    =  apart.GetPID();
 
   if( PID_sel == 1 )
     pid = apart.GetPIDNorm();

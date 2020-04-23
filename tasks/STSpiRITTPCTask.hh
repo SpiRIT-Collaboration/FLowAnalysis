@@ -67,6 +67,7 @@ private:
   UInt_t  iRun;
   TString tVer;  //!
   TString sVer;  //!
+  UInt_t  bmA;   //!
 
   TString rootDir; //!       
   TChain *fChain;  //!
@@ -155,6 +156,17 @@ private:
 				    {3200.0, 4000.0},     // fBBMassHe  4He
 				    {4000.0, 7000.0}};    //!           6He
 
+  Double_t MassRange_Fit[6][2] = { {700.,1200},      // Kanekokun's pid range
+				   {1500.,2300.},
+				   {2400.,3400.},
+				   {2400.,3200.},
+				   {3250.,4200.},
+				   {5200.,6000.} };   //!
+
+  TF1 *f1MassGate[5][4][2][4];//!
+  TFile *massGateFile; //!
+
+
   void   Clear();
   Bool_t SetupParameters();
   Bool_t SetupInputDataFile();
@@ -167,6 +179,8 @@ private:
   Int_t  GetPIDTight(Double_t mass[2], Double_t fMom, Double_t dedx);
   Int_t  GetPIDNorm (Double_t mass[2], Double_t fMom, Double_t dedx);
   Int_t  GetPIDLoose(Double_t mass[2], Double_t fMom, Double_t dedx);
+  Int_t  GetPIDFit  (Double_t mass[2], Double_t fMom, Int_t    mbin);
+  Bool_t SetupPIDFit();
   void   ShowProcessTime();
   Bool_t GetVertexQuality(TVector3 vert);
 
