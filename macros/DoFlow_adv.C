@@ -316,8 +316,9 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       auto theta = aPart->GetRotatedMomentum().Theta();
       auto charge= aPart->GetCharge();
 
+      auto pid   = aPart->GetPID();  
       //auto pid   = aPart->GetPIDTight();
-      auto pid   = aPart->GetPIDLoose();  
+      //      auto pid   = aPart->GetPIDLoose();  
       //      auto pid   = aPart->GetPIDNorm();  
 
 

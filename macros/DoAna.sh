@@ -9,36 +9,29 @@ source setup.sh
 source runList.sh
 export MNMACRO=DoFlow_adv.C          ##<--- Flow analysis MACRO name
 
+unset IVER
+unset OVER
+unset SUFX
+unset DBVER
+unset OSUBV
+unset MXEVT
+unset REDO
+unset MNMXEVT
+unset MNREDO
+unset UC
+unset RPBS
+unset RUNNUMBER1
+unset MNRNF
+unset MNINVERSION
+unset MNOUTVERSION
 
 ##------>>> EDIT HERE 
+export MNUC=100
+export MNLC=55
 
 ##-- DATA
-function data47()    ##CONFIG
-{
-    export MNSFX=BTt
-    export MDCUT= #0.0               ##   <------@@ mid-rapidity cut
-##--
-    export MNRNF=$RNF132
-    export MNINVERSION=47            ##   <------@@ input
-    export MNOUTVERSION=47.1         ##   <------@@ output 
-    export MNOSUBV=
-    export MNUC=40
-
-    if [ -n "$1" ]; then
-	SetStep3
-    fi
-
-    commonsetup
-}
 ##<----
-function data47.0()    ##CONFIG
-{
-    data47
-    export MNOUTVERSION=47.0         ##   <------@@ output 
-    commonsetup
-}
-##<----
-function data49()    ##CONFIG
+function data49a()    ##CONFIG
 {
     export MNSFX=BTt
     export MDCUT= #0.0               ##   <------@@ mid-rapidity cut
@@ -47,7 +40,23 @@ function data49()    ##CONFIG
     export MNINVERSION=49            ##   <------@@ input
     export MNOUTVERSION=49.0         ##   <------@@ output 
     export MNOSUBV=
-    export MNUC=40
+
+    if [ -n "$1" ]; then
+	SetStep3
+    fi
+
+    commonsetup
+##<----
+} 
+function data49b()    ##CONFIG
+{
+    export MNSFX=BTt
+    export MDCUT= #0.0               ##   <------@@ mid-rapidity cut
+##--
+    export MNRNF=$RNF108
+    export MNINVERSION=49            ##   <------@@ input
+    export MNOUTVERSION=49.0         ##   <------@@ output 
+    export MNOSUBV=
 
     if [ -n "$1" ]; then
 	SetStep3
@@ -65,7 +74,6 @@ function data45()    ##CONFIG
     export MNINVERSION=45            ##   <------@@ input
     export MNOUTVERSION=45.2         ##   <------@@ output 
     export MNOSUBV=
-    export MNUC=40
 
     if [ -n "$1" ]; then
 	SetStep3
@@ -83,7 +91,6 @@ function data44()    ##CONFIG
     export MNINVERSION=44            ##   <------@@ input
     export MNOUTVERSION=44.0         ##   <------@@ output 
     export MNOSUBV=
-    export MNUC=40
 
     if [ -n "$1" ]; then
 	SetStep3
@@ -101,7 +108,6 @@ function datapre()    ##CONFIG
     export MNINVERSION=43            ##   <------@@ input
     export MNOUTVERSION=43.1         ##   <------@@ output 
     export MNOSUBV=
-    export MNUC=40
 
     if [ -n "$1" ]; then
 	SetStep3
@@ -117,7 +123,6 @@ function datapre()    ##CONFIG
 function simtpc()   ##CONFIG
 {
     export MNSFX=rpsim
-    export MNUC=
     export MNRNF=0400 
     export MNINVERSION=50.7          ##   <------@@ input
     export MNOUTVERSION=50.8         ##   <------@@ output 
@@ -154,9 +159,10 @@ function commonsetup()
     export MNMXEVT=
     export MNREDO=
     export UC=$MNUC
+    export LC=$MNLC
     export RPBS=0
 
-    RUNNUMBER1=(${MNRNF})
+#    RUNNUMBER1=(${MNRNF})
     anahelp
 }
 ##<<< ---
@@ -280,11 +286,9 @@ function doflowmulti()
     if [ -n "$1" ]; then
 	export MNOVER=$1
 	echo "output version -> "  $MNOVER
-    elif [ -n "$2" ]; then
-	export MNDBVERSION=$2
     fi
 
-    PARTICLES=("2" "3" "4" "5" "6" "8")
+    PARTICLES=("3" "4" "5" "6")
     ##PARTICLES=("3")
     typeset -i I=0;
     while(( $I < ${#PARTICLES[@]} ))
@@ -301,7 +305,7 @@ function doflowmulti()
 
 function doflowbatch() 
 {
-   RPBS=0 RUN={$MNRNF} DBVER=$MNOUTVERSION root -b -q $MNMACRO\($1\)
+   RPBS=0 RUN={$MNRNF} DBVER=$MNOVER root -b -q $MNMACRO\($1\)
 }
 
 function doflow() 

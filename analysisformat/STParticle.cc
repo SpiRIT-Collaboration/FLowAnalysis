@@ -1,4 +1,4 @@
-/** 111
+/**
  * STParticle Class
  *
  * @author Mizuki
@@ -130,6 +130,8 @@ void STParticle::Clear(Option_t *option)
 
   fP            = -9999.;
   fdEdx         = -9999.;
+  fMass        - 0.;
+
 
   fpipid       = 0;
   fPID         = 0;
@@ -259,15 +261,6 @@ void STParticle::SetVertex(TVector3 value)
 {
   fvertex = value;
   rDist = (rPOCAVertex - fvertex).Mag();
-}
-
-void STParticle::SetPIDLoose(Int_t value)
-{
-  if( fmassf ) 
-    {
-      fPID_loose = value;
-      SetMass(value);
-    }
 }
 
 void STParticle::SetBBMass(Double_t val)       

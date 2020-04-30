@@ -40,18 +40,19 @@ Bool_t bstyle[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
-Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bsys[]  = { 1, 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
+Bool_t bpid[]  = { 0, 0, 0, 0, 1, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {1, 1, 1, 1}; //{1, 1, 1, 1, 1, 0, 0, 0, 0};
+UInt_t  bver[]  = {1, 0}; //{1, 1, 1, 1, 1, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
+  {".v49.0.1","advYPt_","_Kaneko"},
+  {".v49.0.0","advYPt_","_Loose"},
   {".v47.0.6","advYPt_","v47.0.Loose&fRP"},
-  {".v47.0.3","advYPt_","v47.0.Loose"},
   {".v44.0.0","advYPt_","v44.0.Loose"},
   {".v44.0.3","advYPt_","v44.0.Loose&fRP"},
   {".v47.0.4","advYPt_","v47.0.Norm"},
@@ -491,13 +492,14 @@ void PlotPtDependence()
     if( ia == 1 ) { //data
       std::cout << "mnt " << cmnt[iz] << " " << iz << endl;
 
-      otitle += cmnt[iz];
+      //otitle += cmnt[iz];
       //      otitle += sVer[iz]+";"+cmnt[iz];
       //otitle += "DATA"+sVer[iz]+";"+cmnt[iz];
       //otitle += "data";
       //      otitle += "("+ lpid[ip]+")"+cmnt[iz];
       //      otitle += "("+ lpid[ip]+")"+sVer[iz];
-      //     otitle = fpid[ip] ;
+      otitle += "("+ lpid[ip]+")";
+      //      otitle = fpid[ip] ;
     }
     else if( ia == 2 ) //amd
       //      otitle += amdHeader[is](4,5) + amdName[it];

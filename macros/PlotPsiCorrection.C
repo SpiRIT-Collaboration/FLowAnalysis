@@ -17,10 +17,11 @@ Double_t sysA[]    = {256.,    220.,      236.,   236.   ,  256.};
 //--- Data
 Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, 100Sn
 //-----------
-UInt_t  bver[]  = {1, 1, 1,1};
+UInt_t  bver[]  = {1, 1};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v47.0"    ,"cpsi_", ".m00to40","v47_Loose"},
+  {".v47.0"    ,"cpsi_", ".m00to40","v47.0"},
+  {".v49.0"    ,"cpsi_", ".m00to40","v49"},
   {".v44.0"    ,"cpsi_", ".m00to40","v44.0"},
   {".v46.0"    ,"cpsi_", ".m00to40","v46.0"},
   {".v43.1"    ,"cpsi_", ".m00to40","v43.1"},
@@ -147,6 +148,7 @@ void PlotPsiCorrection(UInt_t bmp = 0) // 0: phi, 1:mlt
   if( bmp < 2) {
     mrpsi1->SetTitle( gv_psi1[0]->GetTitle() );
     mrpsi2->SetTitle( gv_psi2[0]->GetTitle() );
+
     if( bmp == 0 )
       mrpsi2->SetTitle("; #Psi;<cos(2#Delta #Psi)>");
   

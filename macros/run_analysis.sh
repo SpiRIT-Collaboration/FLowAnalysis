@@ -22,7 +22,7 @@ source ../build/config.sh
 #export RCVER=HEAD.1853.e498ace
 #export SUFX=BTt
 
-VERSION=49
+VERSION=50
 #export TPCDIR=/data/spdaq01/recoData/20190822/data/
 export TPCDIR=/data/spdaq01/recoData/20191214/data
 export RCVER=develop.1964.781a3cf

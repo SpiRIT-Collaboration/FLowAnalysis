@@ -34,7 +34,6 @@ TVector3 STLorentzBoostVector::GetBoostVector(UInt_t sysid = 4)
   auto totalVec = bmVec + tgVec;
 
   return totalVec.BoostVector();
-
 }
 
 #endif

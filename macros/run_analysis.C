@@ -5,7 +5,6 @@
 //----------------------------------------
 // Assemble TPC reconstructed data, Kyoto,  Katana, BigRIPS, and NeuLAND
 //----------------------------------------------------------------------
-//#include "FairRootManager.h"
 
 void run_analysis(Int_t nevt = -1)
 {

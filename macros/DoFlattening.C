@@ -197,7 +197,6 @@ void Flatten_Psi_ntrack(UInt_t isel)
     flowcorr[j]->SetReCenteringParameter("Y",rcY);        
   }   
 
-
   // process
     
   //  Int_t nevt = rChain->GetEntries();

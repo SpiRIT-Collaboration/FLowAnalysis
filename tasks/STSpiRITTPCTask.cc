@@ -482,11 +482,14 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
     Int_t    pid_loose  = GetPIDLoose(mass, fMom, dEdx);
     
     //      massFitter->GetBBMass(VMom, dEdx, Charge, massH, massHe, pid_tight, pid_loose); 
-    aParticle->SetPID(pid_kaneko);
     aParticle->SetPIDTight(pid_tight);
     aParticle->SetPIDNorm(pid_normal);
     aParticle->SetPIDLoose(pid_loose);
-    
+    aParticle->SetMass(pid_loose);
+
+    aParticle->SetPID(pid_kaneko);
+    if( pid_kaneko != 0 )
+      aParticle->SetMass(pid_kaneko);
 
     LOG(DEBUG) << " mass H "  << mass[0]  << " & pid " << pid_loose << " : " << pid_tight << ": " << dEdx << FairLogger::endl;
     LOG(DEBUG) << " mass He"  << mass[1] << " & pid " << pid_loose << " : " << pid_tight  << ": " << dEdx << FairLogger::endl;

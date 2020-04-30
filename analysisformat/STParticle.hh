@@ -151,7 +151,7 @@ public:
   Int_t    GetPIDTight()                 {return fPID_tight;}           
   void     SetPIDNorm(Int_t value)       {fPID_norm = value;}           
   Int_t    GetPIDNorm()                  {return fPID_norm;}           
-  void     SetPIDLoose(Int_t value);           
+  void     SetPIDLoose(Int_t value)      {fPID_loose = value;}
   Int_t    GetPIDLoose()                 {return fPID_loose;}           
 
   Double_t GetPIDProbability()           {return fPIDProbability;}
