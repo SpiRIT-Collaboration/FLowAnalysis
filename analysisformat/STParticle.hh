@@ -119,8 +119,8 @@ private:
 
   Double_t  maxdEdx     = 2000.;  //!
   Double_t  maxMomentum = 4000.;  //!
-  Double_t  maxbbmass   = 10000.; //!
-
+  Double_t  minMomentum = 20.;    //!
+  Double_t  maxbbmass   = 20000.; //!
 
 private:
   virtual void Clear(Option_t *option = "");
@@ -256,9 +256,7 @@ public:
   void   SetMassFlag(UInt_t value)              {fmassf = value; SetGoodTrackFlag(); }
   //  UInt_t GetMassFlag()                          {return fmassf;}
 
-
   // --end
-
 
   // for flow analysis
   void     SetMixedEventID(Int_t value) {fmxevt = value;}

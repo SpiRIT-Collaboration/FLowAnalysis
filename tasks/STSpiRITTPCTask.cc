@@ -455,15 +455,7 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
     //--- Set MassFitter      
     Double_t mass[2] = {0.,0.};
 
-    /* 20190804 
-    mass[0]  = massCal->CalcMass(0, 1., VMom, dEdx);  // proton fitted
-      
-    if( mass[0] > 1500. )  // deuteron fitted
-      mass[0]  = massCal->CalcMass(1, 1., VMom, dEdx);  
-    mass[1]  = massCal->CalcMass(1, 2., VMom, dEdx);
-    */
-
-    // updated for 20191213
+    // updated for 20191214
     mass[0] = massCalH -> CalcMass(1., VMom, dEdx);
     mass[1] = massCalHe-> CalcMass(2., VMom, dEdx);
 
@@ -490,9 +482,14 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
     aParticle->SetPID(pid_kaneko);
     if( pid_kaneko != 0 )
       aParticle->SetMass(pid_kaneko);
+    else if( pid_kaneko == 0 && pid_loose == 211 ) {
+      aParticle->SetPID(pid_loose);
+      aParticle->SetMass(pid_loose);
+    }
+
 
     LOG(DEBUG) << " mass H "  << mass[0]  << " & pid " << pid_loose << " : " << pid_tight << ": " << dEdx << FairLogger::endl;
-    LOG(DEBUG) << " mass He"  << mass[1] << " & pid " << pid_loose << " : " << pid_tight  << ": " << dEdx << FairLogger::endl;
+    LOG(DEBUG) << " mass He"  << mass[1]  << " & pid " << pid_loose << " : " << pid_tight << ": " << dEdx << FairLogger::endl;
 
     //--- number cluster ratio
     if( kFALSE ) {
@@ -629,6 +626,8 @@ Int_t STSpiRITTPCTask::GetPIDFit(Double_t mass[2], Double_t fMom, Int_t mbin)
   TString pidName[]={"Proton","Deuteron","Triton","Helium3","Alpha"}; 
 
   Int_t fpid = 0;
+  if( mass[0] <= 0 && mass[1] <= 0 ) return 0;
+
   
   for(Int_t i = 0; i < 5; i++ ) {
 

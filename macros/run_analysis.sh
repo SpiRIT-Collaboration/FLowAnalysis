@@ -22,10 +22,15 @@ source ../build/config.sh
 #export RCVER=HEAD.1853.e498ace
 #export SUFX=BTt
 
-VERSION=50
+#VERSION=50
 #export TPCDIR=/data/spdaq01/recoData/20190822/data/
-export TPCDIR=/data/spdaq01/recoData/20191214/data
-export RCVER=develop.1964.781a3cf
+#export TPCDIR=/data/spdaq01/recoData/20191214/data
+#export RCVER=develop.1964.781a3cf
+#export SUFX=BTt
+
+VERSION=51
+export TPCDIR=/data/spdaq02/recoData/20200529/data
+export RCVER=develop.1988.bf2b00e
 export SUFX=BTt
 
 
@@ -64,12 +69,12 @@ source runList.sh
 # Set RUNNUMBER1 
 DBVERSION=0
 
-export TPCDIR=$TPCDIR/Sn132
+export TPCDIR=$TPCDIR/Sn112
 
-RUNNUMBER1=(${RNF132})
+#RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
 #RUNNUMBER1=(${RNF124})
-#RUNNUMBER1=(${RNF112})
+RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RNFTEMP})
 #RUNNUMBER1=(${RNF132r})
 #RUNNUMBER1=(${RNF132t})

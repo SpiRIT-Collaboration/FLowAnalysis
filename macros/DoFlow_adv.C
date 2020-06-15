@@ -194,8 +194,10 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   TString rangeLabel1[ybin1];
   TString rangeLabel2[ybin2];
 
+  // replace y_cm -> y_bm
+
   for( UInt_t iy = 0; iy < ybin1; iy++ ) {
-    rangeLabel1[iy] = Form("%5.2f <= y < %5.2f"      ,yrange1[iy]/y_cm[isys],yrange1[iy+1]/y_cm[isys]);
+    rangeLabel1[iy] = Form("%5.2f <= y < %5.2f"      ,yrange1[iy]/y_bm[isys],yrange1[iy+1]/y_bm[isys]);
     hdy1[iy]      = new TH1D(Form("hdy1_y%d",iy)     ,rangeLabel1[iy]+";Rapidity", 500,-2.5,2.5);
     hdympt1[iy]   = new TH1D(Form("hdympt1%d",iy)    ,rangeLabel1[iy]+";Rapidity; <Pt>/A", 500,-1000.,1000.);
     hutphi10[iy]  = new TH1D(Form("hutphi10_%d",iy)  ,rangeLabel1[iy]+";#Delta #Psi",100,0.,3.2);
@@ -222,7 +224,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   }
 
   for( UInt_t iy = 0; iy < ybin2; iy++ ) {
-    rangeLabel2[iy] = Form("%5.2f <= y < %5.2f",yrange2[iy]/y_cm[isys],yrange2[iy+1]/y_cm[isys]);
+    rangeLabel2[iy] = Form("%5.2f <= y < %5.2f",yrange2[iy]/y_bm[isys],yrange2[iy+1]/y_bm[isys]);
     hdy2[iy]      = new TH1D(Form("hdy2_y%d",iy),rangeLabel2[iy]+";Rapidity", 500,-2.5,2.5);
     hutphi20[iy]  = new TH1D(Form("hutphi20_%d",iy),rangeLabel2[iy]+";#Delta #Psi",100,0.,3.2);
     hutphi290[iy] = new TH1D(Form("hutphi290_%d",iy),rangeLabel2[iy]+";#Delta #Psi",100,0.,3.2);
@@ -304,7 +306,10 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       // 	    ( sVer == "44.0" && aPart->GetGoodTrackFlag() != 11 ) )
       // 	  ) continue;
 
-      if( isys != 5 && aPart->GetReactionPlaneFlag()%2 != 1 ) continue;
+      if( isys != 5 && 
+	  ((selid >= 2 && aPart->GetReactionPlaneFlag()%2 != 1) ||
+	   (selid <= 1 && aPart->GetGoodTrackFlag() != 1111)) )
+	continue;
       //------------------------------
 
       auto yaw   = aPart->GetYawAngle();
@@ -346,11 +351,13 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	  bpart = kTRUE;
 	}
       }
-      else if( selid == 0 && charge == 1 && pid == partid[0] ) //pi+
-	bpart = kFALSE;
+      else if( selid == 1 && charge == 1 && aPart->GetPIDTight() == partid[0] &&
+	       aPart->GetBBMass() >= 100 && aPart->GetBBMass() <= 160.  ) //pi+
+	bpart = kTRUE;
 
-      else if( selid == 1 && charge == -1 && pid == partid[0] ) //pi-
-	bpart = kFALSE;
+      else if( selid == 0 && charge == -1 && aPart->GetPIDTight() == partid[0] &&
+	       aPart->GetBBMass() >= 100 && aPart->GetBBMass() <= 160. ) //pi-
+	bpart = kTRUE;
 
       else if( selid < 8  && pid == partid[selid] && charge == 1 ){ //p,d,t,3He,4He
 	MassNumber = partA[selid];
@@ -359,9 +366,18 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
 
       //@@****************************************
-      // if( abs( phi ) > 30.*TMath::DegToRad() ) continue;
-      //if( abs( phi ) < 150.*TMath::DegToRad() ) continue;
-      //      if( abs( phi ) > 30.*TMath::DegToRad() && abs( phi ) < 150.*TMath::DegToRad() ) continue;
+      if( theta > 45.*TMath::DegToRad() ) continue;
+
+      //if( abs( phi ) >  30.*TMath::DegToRad() ) continue;
+      //      if( abs( phi ) < 150.*TMath::DegToRad() ) continue;
+      //      if( abs( phi ) < 0.9 ) continue;
+
+      if( abs( phi ) < 135.*TMath::DegToRad() ) continue;
+      //if( abs( phi ) > 45.*TMath::DegToRad() ) continue;
+
+      //      if( theta  > 0.5 ) continue;
+      //      if( phi < 0 || abs(phi) < 30.*TMath::DegToRad() || abs(phi) > 150.*TMath::DegToRad() ) continue;
+      //      if( phi > 0 || abs(phi) < 30.*TMath::DegToRad() || abs(phi) > 150.*TMath::DegToRad() ) continue;
 
       //@@      if ( abs( pitch / yaw ) > 1. ) continue;
 
@@ -376,18 +392,19 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       //-----------------
       hpidsel->Fill(aPart->GetRotatedMomentum().Mag()*aPart->GetCharge(), aPart->GetdEdx());
 
-
-
       bFill = kTRUE;
 
+      y_norm = y_cm[isys];
+      //      y_norm = y_cm[4];
+
       auto rapid  = aPart->GetRapiditycm();;	
-      auto rapidn = rapid / y_cm[isys];
+      auto rapidn = rapid / y_norm;
       auto rpphi  = aPart->GetIndividualRPAngle();
       auto dphi   = aPart->GetAzmAngle_wrt_RP();
       auto dphi2  = aPart->GetAzmAngle2_wrt_RP();
 
       //      if( isys == 5 ) 
-	//	dphi = TVector2::Phi_mpi_pi(aPart->GetRotatedMomentum().Phi() - RPPsi);
+      //	dphi = TVector2::Phi_mpi_pi(aPart->GetRotatedMomentum().Phi() - RPPsi);
 
       hPsi->Fill(RPPsi);
       hRPPsi->Fill(rpphi);
@@ -398,11 +415,11 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       Double_t u_t0  = aPart->GetRotatedMomentum().Pt()/aPart->GetMass()/u_p;
       Double_t ou_t0 = aPart->GetMomentumAtTarget().Pt()/aPart->GetMass()/u_p;
       
-      huy->Fill( rapid / y_cm[isys], u_t0 );
+      huy->Fill( rapid / y_norm, u_t0 );
 
       hyawpitch->Fill(yaw,   pitch);
       hmass    ->Fill(aPart->GetRotatedMomentum().Mag(), bmass);
-      hyptacp  ->Fill(rapid/y_cm[isys], pt);
+      hyptacp  ->Fill(rapid/y_norm, pt);
 
       UInt_t irapid1 = GetV1cmRapidityIndex(rapidn);
       UInt_t ipt1    = GetV1PtIndex(pt);
@@ -411,11 +428,11 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       UInt_t ipt2    = GetV2PtIndex(pt);
       UInt_t im      = GetRPCorrIndex((Double_t)aflow->mtrack4);
 
-      hdy1[irapid1]->Fill( rapid/y_cm[isys] );
-      hdy2[irapid2]->Fill( rapid/y_cm[isys] );
+      hdy1[irapid1]->Fill( rapid/y_norm );
+      hdy2[irapid2]->Fill( rapid/y_norm );
 
-      hirap1 -> Fill( rapid/y_cm[isys] , (Double_t)irapid1 );
-      hirap2 -> Fill( rapid/y_cm[isys] , (Double_t)irapid2 );
+      hirap1 -> Fill( rapid/y_norm , (Double_t)irapid1 );
+      hirap2 -> Fill( rapid/y_norm , (Double_t)irapid2 );
 
       hutphi10[irapid1] -> Fill( subevt_phi );
       hutphi20[irapid2] -> Fill( subevt_phi );
@@ -451,13 +468,13 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       //      if( u_t0 > 0. ) {
       //      if( u_t0 > 0.4 && u_t0 < 1.5) {
 
-
-      if( u_t0 > 0. ) {
+      //      if( u_t0 > 0. ) {
+      if( (selid >= 2 && u_t0 > 0.4) || selid < 2 ) {
 	hdyucos1[irapid1][ipsi]->Fill( cos(dphi) );
 	hdyv1[irapid1]->Fill( cos(dphi) );
       }
 
-      if( u_t0 > 0.4 ) {
+      if( (selid >= 2 && u_t0 > 0.4) || selid < 2 ) {
 	hdyucos2[irapid2][ipsi2]->Fill( cos(2.*dphi) );
 	//hdyucos2[irapid2][ipsi2]->Fill( cos(dphi2) );
 	hdyv2[irapid2]->Fill( cos(2.*dphi) );
@@ -625,9 +642,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	v1u_ste += pow(v1uee*nv1u,2);
 
 	hv1yphi -> Fill( (Double_t)iy, (Double_t)ips, v1u); 
-
       }
-
     }
 
     if( yn > 0 && v1u_n > 0) {
@@ -1210,7 +1225,7 @@ UInt_t GetV1cmRapidityIndex(Double_t y)
 {
   UInt_t irapid1 = ybin1-1;
   for( UInt_t i = 1; i < ybin1; i++){
-    if( y < yrange1[i]/y_cm[isys] ){
+    if( y < yrange1[i]/y_norm ){
       irapid1 = i-1;
       break;
     }
@@ -1233,7 +1248,7 @@ UInt_t GetV2cmRapidityIndex(Double_t y)
 {
   UInt_t irapid2 = ybin2-1;
   for( UInt_t i = 1; i < ybin2; i++){
-    if( y < yrange2[i]/y_cm[isys]){
+    if( y < yrange2[i]/y_norm){
       irapid2 = i-1;
       break;
     }

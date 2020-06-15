@@ -1,4 +1,4 @@
-#include "DoFlow.h"
+ #include "DoFlow.h"
 #include "SetStyle.C"
 #include "SimFunction.C"
 
@@ -12,7 +12,6 @@ struct gplot{
 TString  bName[]   = {"132Sn_","108Sn_","124Sn_","112Sn_","100Sn_"};
 Double_t sysdlt[]  = {0.22,    0.09,      0.15,   0.15   , 0.22};
 Double_t sysA[]    = {256.,    220.,      236.,   236.   ,  256.};
-
 
 //==================================================
 //-- plot configuration
@@ -41,39 +40,61 @@ Bool_t bstyle[] =
 // --> Plotting selection
 //--- Data
 Bool_t bsys[]  = { 1, 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
-Bool_t bpid[]  = { 0, 0, 0, 0, 1, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {1, 0}; //{1, 1, 1, 1, 1, 0, 0, 0, 0};
+//UInt_t  bver[]  = {1};
+//UInt_t  bver[]  = {1, 0, 0, 0};
+UInt_t  bver[]  = {1, 1, 0};
+//UInt_t  bver[]  = {1, 1, 1, 1, 1}; //{1, 1, 1, 1, 1, 0, 0, 0, 0};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v49.0.1","advYPt_","_Kaneko"},
-  {".v49.0.0","advYPt_","_Loose"},
+  {".v51.0.3","advYPt_","Theta<=45 phi<45"},
+  {".v51.0.4","advYPt_","Theta<=45 phi>135"},
+  {".v50.2.28","advYPt_","Y_{cmN}/y_{cmA} phi>135"},
+  {".v50.2.27","advYPt_","Y_{cmN}/y_{cmA} phi<45"},
+  {".v50.2.4","advYPt_","Y_{cmN}/y_{cmA} Ut>0.4"},
+  {".v50.4.3","advYPt_","Y_{cmA}/y_{cmA} ut>0.4"},
+  {".v50.2.26","advYPt_","|phi|<0.78 y_{cmnn}"},
+  {".v50.4.4" ,"advYPt_","|phi|<0.78 y_{cmAA}"},
+  {".v50.2.5","advYPt_","Y_{cmN}/y_{cmA} phi<30"},
+  {".v50.2.6","advYPt_","Y_{cmN}/y_{cmA} phi>150"},
+  {".v50.2.25","advYPt_","|phi|<0.9 ybin"},
+  {".v50.2.24","advYPt_","|phi|<0.9"},
+  {".v50.2.13","advYPt_","M40-50"},
+  {".v50.2.21","advYPt_","M40-50 |phi|<30"},
+  {".v50.2.17","advYPt_","M40-50 |phi|>150"},
+  {".v50.2.15","advYPt_","M0-30"},
+  {".v50.2.12","advYPt_","M30-40"},
+  {".v50.2.13","advYPt_","M40-50"},
+  {".v50.2.14","advYPt_","M50-80"},
+  {".v50.2.21","advYPt_","M40-50 |phi|>150"},
+  {".v50.2.22","advYPt_","M50-80 |phi|>150"},
+  {".v50.2.10","advYPt_","Y_{cmN}/y_{cmA} 30<phi<150"},
+  {".v50.2.9","advYPt_","Y_{cmN}/y_{cmA} -150<phi<-30"},
+  {".v49.0.0","advYPt_","PIDLoose"},
+  {".v49.0.1","advYPt_","PID"},
+  {".v50.4.0","advYPt_","Y_{cmA}/y_{bm}"},
+  {".v50.4.2","advYPt_","Y_{cmA}/y_{cmN}"},
+  {".v50.4.1","advYPt_","Y_{cmA}/y_{cmA}"},
+  {".v50.2.3","advYPt_","Y_{cmN}/y_{cmN}"},
+  {".v50.2.1","advYPt_","Y_{cmN}/Y_{bm}"},
+  {".v50.2.2","advYPt_","Y_{cmN}/y_{cmA}"},
   {".v47.0.6","advYPt_","v47.0.Loose&fRP"},
-  {".v44.0.0","advYPt_","v44.0.Loose"},
-  {".v44.0.3","advYPt_","v44.0.Loose&fRP"},
-  {".v47.0.4","advYPt_","v47.0.Norm"},
-  {".v44.0.2","advYPt_","v44.0.Norm"},
-  {".v47.0.2","advYPt_","v47.0.Tight"},
-  {".v44.0.1","advYPt_","v44.0.Tight"},
-  {".v44.0.1","advYPt_","v44.0.Tight"},
-  {".v47.0.2","advYPt_","v47.0.Tight"},
-  {".v46.0.1","advYPt_","v46.0.1"},
-  {".v46.0.0","advYPt_","v46.0.0"},
-  {".v46.0.2","advYPt_","v46.0.2"},
-  {".v45.2.2","advYPt_","v45.2.2"},
-  {".v43.1.0","advYPt_","v43.1.0"},
-  {".v45.0.1","advYPt_",""},
   {".v50.7.1","advYPt_","(TPC)v50.7.1"},
-  {".v22.0.8","advYPt_","(Full)22.0.8"},
   {".v50.0"  ,"advYPt_","(TPC)v50.0"},
-  {".v50.0"  ,"advYPt_","(A)TPC"},
   {".v5.8"   ,"advYPt_","pitch>0"},
   {".v5.9"   ,"advYPt_","pitch<0"},
 };
+
+//APR2019
+//  {".v50.7.1","advYPt_","(A)TPC"}, //APR2019
+//  {".v22.0.7","advYPt_","(B)Full"},//APR2019
+//  {".v50.0"  ,"advYPt_","(A)TPC"},
+//  {".v22.0.8","advYPt_","(B)Full"},
 
 TString *sVer  = new TString[nmax];
 TString *sName = new TString[nmax];
@@ -135,6 +156,8 @@ TMultiGraph  *mv1[ybin1];
 TMultiGraph  *mv2[ybin2];
 TLegend      *lg1[ybin1];
 TLegend      *lg2[ybin2];
+
+
 
 void RapidityShift(TGraphErrors *gv);
 void ShiftX(TGraphErrors *gv, Double_t off);
@@ -242,14 +265,15 @@ void PlotPtDependence()
   TH2D *hyptacp[10];
 
   auto mrv1  = new TMultiGraph("mrv1"  ,";y_{cm}/y_{beam}; v1");
-  auto mrv2  = new TMultiGraph("mrv2"  ,";y_{cm}/y_{beam}; v2");
+  auto mrv2  = new TMultiGraph("mrv2"  ,";y_{nrm};v2");//";y_{cm}/y_{beam}; v2");
   auto mv1sl = new TMultiGraph("mv1sl" ,";Centrality; v1 slope");
   auto mv1slp= new TMultiGraph("mv1slp","; Particle ; v1 slope");
   auto mmpx  = new TMultiGraph("mmpx","; y/y_{cm} ; <px>/A");
   //  mv1slp->GetXaxis()->SetAlphanumeric(kTRUE);
 
-  auto lgr1 = new TLegend(0.54, 0.20, 0.80, 0.40, ""); 
-  auto lgr2 = new TLegend(0.53, 0.20, 0.70, 0.45, "");
+  auto lgr1 = new TLegend(0.4 , 0.20, 0.70, 0.40, ""); 
+  auto lgr2 = new TLegend(0.5 , 0.60, 0.70, 0.9, "");
+  //  auto lgr2 = new TLegend(0.5 , 0.20, 0.70, 0.45, "");
   auto lgr3 = new TLegend(0.35, 0.13, 0.7, 0.33, "");
   auto lgr4 = new TLegend(0.15, 0.63, 0.5, 0.85, "");
   auto lgr5 = new TLegend(0.15, 0.63, 0.5, 0.85, "");
@@ -496,9 +520,9 @@ void PlotPtDependence()
       //      otitle += sVer[iz]+";"+cmnt[iz];
       //otitle += "DATA"+sVer[iz]+";"+cmnt[iz];
       //otitle += "data";
-      //      otitle += "("+ lpid[ip]+")"+cmnt[iz];
+      otitle += "("+ lpid[ip]+")"+cmnt[iz];
       //      otitle += "("+ lpid[ip]+")"+sVer[iz];
-      otitle += "("+ lpid[ip]+")";
+      //otitle += "("+ lpid[ip]+")";
       //      otitle = fpid[ip] ;
     }
     else if( ia == 2 ) //amd
@@ -563,6 +587,7 @@ void PlotPtDependence()
       TH1I *hmult  = (TH1I*)fOpen->Get("hmult");
 
       TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gu_v1");
+      //TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gy_v1");
       if( yv1 == NULL || bpBUUConfig[0] || bpBUUConfig[1]) 
 	yv1 = (TGraphErrors*)fOpen->Get("gv_v1");
 
@@ -629,6 +654,7 @@ void PlotPtDependence()
 
       //--- y vs v2 ---
       TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gu_v2");
+      //@@@      TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gy_v2");
       if( yv2 == NULL || bpBUUConfig[0] || bpBUUConfig[1]) 
 	yv2 = (TGraphErrors*)fOpen->Get("gv_v2");
 

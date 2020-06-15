@@ -17,7 +17,6 @@ unset OSUBV
 unset MXEVT
 unset REDO
 unset MNMXEVT
-unset MNREDO
 unset UC
 unset RPBS
 unset RUNNUMBER1
@@ -26,98 +25,54 @@ unset MNINVERSION
 unset MNOUTVERSION
 
 ##------>>> EDIT HERE 
-export MNUC=100
-export MNLC=55
+export MNUC=40
+export MNLC=0
 
 ##-- DATA
-##<----
-function data49a()    ##CONFIG
+function data132()    ##CONFIG
 {
     export MNSFX=BTt
     export MDCUT= #0.0               ##   <------@@ mid-rapidity cut
-##--
+##-- 
+    export MNSN=132
     export MNRNF=$RNF132
-    export MNINVERSION=49            ##   <------@@ input
-    export MNOUTVERSION=49.0         ##   <------@@ output 
+    export MNINVERSION=$1            ##   <------@@ input
+    export MNOUTVERSION=$2           ##   <------@@ output 
     export MNOSUBV=
-
-    if [ -n "$1" ]; then
-	SetStep3
-    fi
-
-    commonsetup
-##<----
-} 
-function data49b()    ##CONFIG
-{
-    export MNSFX=BTt
-    export MDCUT= #0.0               ##   <------@@ mid-rapidity cut
-##--
-    export MNRNF=$RNF108
-    export MNINVERSION=49            ##   <------@@ input
-    export MNOUTVERSION=49.0         ##   <------@@ output 
-    export MNOSUBV=
-
-    if [ -n "$1" ]; then
-	SetStep3
-    fi
-
-    commonsetup
-##<----
-} 
-function data45()    ##CONFIG
-{
-    export MNSFX=BTt
-    export MDCUT= #0.0               ##   <------@@ mid-rapidity cut
-##--
-    export MNRNF=$RNF132
-    export MNINVERSION=45            ##   <------@@ input
-    export MNOUTVERSION=45.2         ##   <------@@ output 
-    export MNOSUBV=
-
-    if [ -n "$1" ]; then
-	SetStep3
-    fi
-
-    commonsetup
-##<----
-} 
-function data44()    ##CONFIG
-{
-    export MNSFX=BTt
-    export MDCUT= #0.0               ##   <------@@ mid-rapidity cut
-##--
-    export MNRNF=$RNF132
-    export MNINVERSION=44            ##   <------@@ input
-    export MNOUTVERSION=44.0         ##   <------@@ output 
-    export MNOSUBV=
-
-    if [ -n "$1" ]; then
-	SetStep3
-    fi
 
     commonsetup
 ##<----
 }
-function datapre()    ##CONFIG
+
+function data108()    ##CONFIG
 {
     export MNSFX=BTt
     export MDCUT= #0.0               ##   <------@@ mid-rapidity cut
 ##--
-    export MNRNF=$RNF132
-    export MNINVERSION=43            ##   <------@@ input
-    export MNOUTVERSION=43.1         ##   <------@@ output 
+    export MNSN=108
+    export MNRNF=$RNF108
+    export MNINVERSION=$1            ##   <------@@ input
+    export MNOUTVERSION=$2           ##   <------@@ output 
     export MNOSUBV=
-
-    if [ -n "$1" ]; then
-	SetStep3
-    fi
 
     commonsetup
 ##<----
-} ##----end DATA
+}
 
+function data112()    ##CONFIG
+{
+    export MNSFX=BTt
+    export MDCUT= #0.0               ##   <------@@ mid-rapidity cut
+##--
+    export MNSN=112
+    export MNRNF=$RNF112
+    export MNINVERSION=$1            ##   <------@@ input
+    export MNOUTVERSION=$2           ##   <------@@ output 
+    export MNOSUBV=
 
+    commonsetup
+##<----
+}
 
 ##-- for simulation
 function simtpc()   ##CONFIG
@@ -155,14 +110,13 @@ function commonsetup()
     export DBVER=$MNINVERSION
     export OSUBV=$MNOSUBV
     export MXEVT=$MNMXEVT
-    export REDO=$MNREDO
     export MNMXEVT=
-    export MNREDO=
     export UC=$MNUC
     export LC=$MNLC
     export RPBS=0
 
-#    RUNNUMBER1=(${MNRNF})
+    RUNNUMBER1=(${MNRNF})
+    showenv
     anahelp
 }
 ##<<< ---
@@ -179,18 +133,18 @@ function flattening() {
 
 ##>>>>>> Step 2 >
 function corr(){    ## The first run only; flatteing correction on interactive mode
-    if [ $1 -eq 1 ]; then
+    if [ -n "$1" ]; then
 	export REDO=1
 	echo " Re-calculating Reaction plane #### "
     fi	
-
+   
     RUN=${RUNNUMBER1[0]}  root DoRPAnalysis.C
 
     export REDO=
 }
 
 function corrb(){   ## The First run only; flattening correction on batch mode
-    if [ $1 -eq 1 ]; then
+    if [ -n "$1" ]; then
 	export REDO=1
 	echo " Re-calculating Reaction plane #### "
     fi	
@@ -202,7 +156,7 @@ function corrb(){   ## The First run only; flattening correction on batch mode
 
 
 function allcorr(){ ## Go through from the second to the last
-    if [ $1 -eq 1 ]; then
+    if [ -n "$1" ]; then
 	export REDO=1
 	echo " Re-calculating Reaction plane #### "
     fi	
@@ -263,33 +217,30 @@ function SetStep3()
 
 function dorpres()
 {
-    SetStep3
     RUN={$MNRNF} root DoRPRes.C\($1\)
 }
 
 function doflowmdependence() 
 {
-    
-    LC=0  UC=30  root -b -q $MNMACRO\(-4\)  
-    LC=30 UC=40  root -b -q $MNMACRO\(-4\)
-    LC=40 UC=50  root -b -q $MNMACRO\(-4\)
-    LC=50 UC=80  root -b -q $MNMACRO\(-4\)
+#    LC=0   UC=30   RUN={$MNRNF} root -b -q DoRPRes.C\(0\)
+#    LC=30  UC=40   RUN={$MNRNF} root -b -q DoRPRes.C\(0\)
+#    LC=40  UC=50   RUN={$MNRNF} root -b -q DoRPRes.C\(0\)
+#    LC=50  UC=80   RUN={$MNRNF} root -b -q DoRPRes.C\(0\)
 
-    LC=0  UC=30  OUTVER=5 root -b -q $MNMACRO\(8\)   
-    LC=30 UC=40  OUTVER=6 root -b -q $MNMACRO\(8\) 
-    LC=40 UC=50  OUTVER=7 root -b -q $MNMACRO\(8\) 
-    LC=50 UC=80  OUTVER=8 root -b -q $MNMACRO\(8\) 
+    LC=0  UC=30 OSUBV=15 doflowbatch $1
+    LC=30 UC=40 OSUBV=16 doflowbatch $1
+    LC=40 UC=50 OSUBV=17 doflowbatch $1
+    LC=50 UC=80 OSUBV=18 doflowbatch $1
 }
 
 function doflowmulti()
 {
     if [ -n "$1" ]; then
-	export MNOVER=$1
+	export OSUBV=$1
 	echo "output version -> "  $MNOVER
     fi
 
     PARTICLES=("3" "4" "5" "6")
-    ##PARTICLES=("3")
     typeset -i I=0;
     while(( $I < ${#PARTICLES[@]} ))
     do
@@ -305,7 +256,7 @@ function doflowmulti()
 
 function doflowbatch() 
 {
-   RPBS=0 RUN={$MNRNF} DBVER=$MNOVER root -b -q $MNMACRO\($1\)
+   RPBS=0 RUN={$MNRNF} root -b -q $MNMACRO\($1\)
 }
 
 function doflow() 
@@ -327,16 +278,13 @@ function doopen()
 
 function anahelp()
 {
-    echo "++++++++++++++++++++++++++++++++++++++++"
-    echo "**** Environment *********************** "
-    echo "++++++++++++++++++++++++++++++++++++++++"
-    env | grep MN
-    showenv
+    echo "----------------------------------------"
     echo "RUN --------------> " ${RUNNUMBER1[0]}
     echo "Max event number --> \$MXEVT " $MXEVT
     echo "++++++++++++++++++++++++++++++++++++++++"
     echo "type anahelp()"
     echo "++++++++++++++++++++++++++++++++++++++++"
+    echo " Setup >> data132/data108  ##.#(INverseion) ##.#(OutVersion)"
     echo " Step 0 > corr 1 OR correction 1 :: Re-caluculate reaction plane "
     echo " Step 1 > flattening OR flattenandcorrection "
     echo " Step 2 > corr(the first run) OR allcorr(excpt the first run) OR  correction(full)"
@@ -352,7 +300,12 @@ function anahelp()
 
 function showenv()
 {
+    echo "++++++++++++++++++++++++++++++++++++++++"
+    echo "**** Environment *********************** "
+    echo "++++++++++++++++++++++++++++++++++++++++"
+    env | grep MN
     echo "----------------------------------------"
+    echo BEAM          :: $MNSN
     echo run number    :: $MNRNF
     echo Sufix         :: $SUFX
     echo Input         :: $IVER

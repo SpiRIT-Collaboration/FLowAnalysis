@@ -176,6 +176,7 @@ void STParticle::Clear(Option_t *option)
 
   rChi2   = 0.;
   fBBMass = 0.;
+  fBBMassHe = 0.;
   rClusterSize = 0;
 
 }
@@ -220,9 +221,9 @@ void STParticle::SetRecoTrack(STRecoTrack *atrack)
   rClusterSize   = (fRTrack -> GetClusterIDArray()) -> size();
 
   // quality flag
-  if( fP > maxMomentum || fP == 0 )    SetMomentumFlag(0);
+  if( fP > maxMomentum || fP <= minMomentum )   SetMomentumFlag(0);
   if( fdEdx > maxdEdx  || fdEdx <= 0 ) SetdEdxFlag(0);
-  if( fGFChar != fChar )               SetMassFlag(0);
+  //  if( fGFChar != fChar )               SetMassFlag(0);
 
 }
 
@@ -265,16 +266,18 @@ void STParticle::SetVertex(TVector3 value)
 
 void STParticle::SetBBMass(Double_t val)       
 {
-  if( val < maxbbmass && val > 0 ) 
-      fBBMass   = val;
+  if( val > 0 ) 
+    fBBMass   = val;
   else
-      SetMassFlag(0);
+    SetMassFlag(0);
 }
 
 void STParticle::SetBBMassHe(Double_t val)       
 {
-  if( val < maxbbmass && val > 0) 
-      fBBMassHe   = val;
+  if( val > 0) {
+    fBBMassHe   = val;
+    fmassf = 1;
+  }
 }
 
 

@@ -479,23 +479,24 @@ void STFlowTask::SetupFlow(STParticle &apart)
 
 
   // Pt weight
-  TLorentzVector lrnzVec =  apart.GetLorentzVector();
-  TVector3 boostVec = STLorentzBoostVector::GetBoostVector(iSystem); 
-  lrnzVec.Boost(-boostVec);
+  if( apart.GetPID()!=0 || apart.GetPIDLoose() !=0 ) {
+    TLorentzVector lrnzVec =  apart.GetLorentzVector();
+    //@@@@
+    //TVector3 boostVec = STLorentzBoostVector::GetBoostVector(iSystem); 
+    TVector3 boostVec = STLorentzBoostVector::GetBoostVector(4); 
+    lrnzVec.Boost(-boostVec);
 
-  auto rapiditycm = lrnzVec.Rapidity();
+    auto rapiditycm = lrnzVec.Rapidity();
+    apart.SetRapiditycm(rapiditycm);
+    
+    if( rapiditycm  <  0 )
+      apart.SetRPWeight(-1);
+    else
+      apart.SetRPWeight(1);
 
-  apart.SetRapiditycm(rapiditycm);
-
-  if( rapiditycm  <  0 )
-    apart.SetRPWeight(-1);
-  else
-    apart.SetRPWeight(1);
-
-
-  if( abs( apart.GetRapiditycm() ) < fRPMidCut ) 
-    apart.AddReactionPlaneFlag(3);
-
+    if( abs( apart.GetRapiditycm() ) < fRPMidCut ) 
+      apart.AddReactionPlaneFlag(3);
+  }
 }
 
 void STFlowTask::DoFlowAnalysis(STParticle &apart)

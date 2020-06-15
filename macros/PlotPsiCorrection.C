@@ -15,13 +15,13 @@ Double_t sysA[]    = {256.,    220.,      236.,   236.   ,  256.};
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, 100Sn
+Bool_t bsys[]  = { 0, 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, 100Sn
 //-----------
 UInt_t  bver[]  = {1, 1};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = { 
-  {".v47.0"    ,"cpsi_", ".m00to40","v47.0"},
-  {".v49.0"    ,"cpsi_", ".m00to40","v49"},
+  {".v50.2"    ,"cpsi_", ".m00to40","v50.2 Ycm(nn)"},
+  {".v50.4"    ,"cpsi_", ".m00to40","v50.4 Ycm(AA)"},
   {".v44.0"    ,"cpsi_", ".m00to40","v44.0"},
   {".v46.0"    ,"cpsi_", ".m00to40","v46.0"},
   {".v43.1"    ,"cpsi_", ".m00to40","v43.1"},

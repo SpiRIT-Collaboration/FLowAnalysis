@@ -176,7 +176,7 @@ void OutputTree()
   TString fo = foutname;
 
   if( !gROOT->IsBatch() && gSystem->FindFile("data/",fo) ) {
-    std::cout << fo << " is existing. Do you recreate? (y/n)" << std::endl;
+    std::cout << fo << " is existing. Do you like to overwrite? (y/n)" << std::endl;
     TString sAns;
     std::cin >> sAns;
     if(sAns == "y" || sAns == "Y")
@@ -189,6 +189,7 @@ void OutputTree()
   else {
     std::cout << "Output file is " << foutname << endl;
     foutname = "data/" + foutname;
+    
     fout  = new TFile(foutname,"recreate");
   }
 
@@ -232,8 +233,8 @@ void Open()
   }
   cout << "Input file is " << fn << endl;
 
-  aBDC = new TClonesArray("STBDC", 1);
-  aArray = new TClonesArray("STParticle",100);
+  aBDC     = new TClonesArray("STBDC", 1);
+  aArray   = new TClonesArray("STParticle",100);
   anewFlow = new TClonesArray("STFlowInfo",1);
 
   

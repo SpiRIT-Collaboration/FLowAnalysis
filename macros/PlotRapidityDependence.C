@@ -29,22 +29,6 @@ Double_t ycmoff[nprt][nsys] = {{0.,0.,0.,0}, {0.,0.,0.,0},{0.,0.,0.,0},
 
 
 
-void Save(TString fopt = "", Int_t isel=-1)
-{
-  TString printHeader = "dNdy";
-  
-  if(isel > -1)
-    gROOT->GetListOfCanvases()->At(isel)->SaveAs(printHeader+fopt+Form("_%d",isel)+".png");
-
-  else {
-    Int_t iCanvas = gROOT->GetListOfCanvases()->GetEntries();  
-    for(Int_t i = 0; i < iCanvas; i++)
-      gROOT->GetListOfCanvases()->At(i)->SaveAs(printHeader+fopt+Form("_%d",i)+".png");
-  }
-}
-
-
-
 void PlotRapidityDependence()
 {
   // --> Plotting selection                                                                                                                           

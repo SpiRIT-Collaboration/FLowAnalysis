@@ -115,7 +115,6 @@ void mc2()
 
   TTree *cbmsim = (TTree*)file0->Get("cbmsim");
 
-
   TH2D *hacp = new TH2D("hacp",";y_{cm}; Pt[MeV/c]",200,-0.42,0.42, 200,0.,800);
   cbmsim->Project("hacp","fRotatedP3.Pt():fRapiditycm");
 
