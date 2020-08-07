@@ -1,6 +1,10 @@
- #include "DoFlow.h"
+#include "DoFlow.h"
 #include "SetStyle.C"
-#include "SimFunction.C"
+#include "FlowFunction.C"
+#include "SetColor.C"
+#include "calculateImpactParameter.C"
+
+FairLogger *logger = FairLogger::GetLogger();
 
 struct gplot{
   TString Version;
@@ -26,7 +30,9 @@ Bool_t bplot[] =
     0, // 6 <px>/A
     0, // 7 v1 vs part system dependence
     0, // 8 v2_min system dependence 
-    0  // 9 v1 slope and v2 max dependence on m
+    0, // 9 v1 slope and v2 max dependence on m
+    0, //10 v1 slope and v2 max dependence on impact parameter
+    0  //11 v1 slop and v2 max systematic error check
   };
 
 Bool_t bstyle[] =
@@ -39,55 +45,52 @@ Bool_t bstyle[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
+Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
 Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-//UInt_t  bver[]  = {1};
-//UInt_t  bver[]  = {1, 0, 0, 0};
-UInt_t  bver[]  = {1, 1, 0};
-//UInt_t  bver[]  = {1, 1, 1, 1, 1}; //{1, 1, 1, 1, 1, 0, 0, 0, 0};
+UInt_t  bver[]  = {1, 1};
+//UInt_t  bver[]  = {1, 1, 1};
+//UInt_t  bver[]  = {0, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+//UInt_t  bver[]  = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
-gplot gnames[] = { 
-  {".v51.0.3","advYPt_","Theta<=45 phi<45"},
-  {".v51.0.4","advYPt_","Theta<=45 phi>135"},
-  {".v50.2.28","advYPt_","Y_{cmN}/y_{cmA} phi>135"},
-  {".v50.2.27","advYPt_","Y_{cmN}/y_{cmA} phi<45"},
-  {".v50.2.4","advYPt_","Y_{cmN}/y_{cmA} Ut>0.4"},
-  {".v50.4.3","advYPt_","Y_{cmA}/y_{cmA} ut>0.4"},
-  {".v50.2.26","advYPt_","|phi|<0.78 y_{cmnn}"},
-  {".v50.4.4" ,"advYPt_","|phi|<0.78 y_{cmAA}"},
-  {".v50.2.5","advYPt_","Y_{cmN}/y_{cmA} phi<30"},
-  {".v50.2.6","advYPt_","Y_{cmN}/y_{cmA} phi>150"},
-  {".v50.2.25","advYPt_","|phi|<0.9 ybin"},
-  {".v50.2.24","advYPt_","|phi|<0.9"},
-  {".v50.2.13","advYPt_","M40-50"},
-  {".v50.2.21","advYPt_","M40-50 |phi|<30"},
-  {".v50.2.17","advYPt_","M40-50 |phi|>150"},
-  {".v50.2.15","advYPt_","M0-30"},
-  {".v50.2.12","advYPt_","M30-40"},
-  {".v50.2.13","advYPt_","M40-50"},
-  {".v50.2.14","advYPt_","M50-80"},
-  {".v50.2.21","advYPt_","M40-50 |phi|>150"},
-  {".v50.2.22","advYPt_","M50-80 |phi|>150"},
-  {".v50.2.10","advYPt_","Y_{cmN}/y_{cmA} 30<phi<150"},
-  {".v50.2.9","advYPt_","Y_{cmN}/y_{cmA} -150<phi<-30"},
-  {".v49.0.0","advYPt_","PIDLoose"},
-  {".v49.0.1","advYPt_","PID"},
-  {".v50.4.0","advYPt_","Y_{cmA}/y_{bm}"},
-  {".v50.4.2","advYPt_","Y_{cmA}/y_{cmN}"},
-  {".v50.4.1","advYPt_","Y_{cmA}/y_{cmA}"},
-  {".v50.2.3","advYPt_","Y_{cmN}/y_{cmN}"},
-  {".v50.2.1","advYPt_","Y_{cmN}/Y_{bm}"},
-  {".v50.2.2","advYPt_","Y_{cmN}/y_{cmA}"},
-  {".v47.0.6","advYPt_","v47.0.Loose&fRP"},
-  {".v50.7.1","advYPt_","(TPC)v50.7.1"},
-  {".v50.0"  ,"advYPt_","(TPC)v50.0"},
-  {".v5.8"   ,"advYPt_","pitch>0"},
-  {".v5.9"   ,"advYPt_","pitch<0"},
+gplot gnames[] = {  
+  {".v52.10.16" ,"finYPt_","corr M<50"},
+  {".v52.10.18" ,"finYPt_","corr M<50"},
+  {".v52.10.0" ,"advYPt_","M<50"},
+  {".v52.10.1" ,"finYPt_","fin M55-80"},
+  {".v52.10.5" ,"advYPt_","M50-80"},
+  {".v52.10.3" ,"advYPt_","M0-80&Acc"},
+  {".v52.10.0" ,"advYPt_","M0-50"},
+  {".v52.9.14" ,"advYPt_","M0-50"},
+  {".v52.9.5" ,"advYPt_","M15-20"},
+  {".v52.9.6" ,"advYPt_","M20-40"},
+  {".v52.9.7" ,"advYPt_","M20-40"},
+  {".v52.9.8" ,"advYPt_","M30-50"},
+  {".v52.9.9" ,"advYPt_","M40-50"},
+  {".v52.9.10","advYPt_","M60-64"},
+  {".v52.9.11","advYPt_","M60-80"},
+  {".v52.9.12","advYPt_","M65-50"},
+  {".v52.9.13","advYPt_","M50-55"},
+  {".v52.9.1" ,"advYPt_","M40-50"},
+  {".v52.9.2" ,"advYPt_","M50-80"},
+  {".v52.9.4" ,"advYPt_","M0-20"},
+  {".v52.7.1" ,"advYPt_","y_nn/y_nn"},
+  {".v52.1.0" ,"advYPt_","y_AA"},
+  {".v52.3.0" ,"advYPt_","y_AA/y_AA"},
+  {".v52.3.1" ,"advYPt_","8.0:phi<30"},
+  {".v52.3.2" ,"advYPt_","8.0:phi>150"},
+  {".v52.8.1" ,"advYPt_","8.0:y<0"},
+  {".v52.8.0" ,"advYPt_","8.0:y>0"},
+  {".v52.7.0" ,"advYPt_","y_nn/y_nn"},
+  {".v52.4.0" ,"advYPt_","y_AA/y_nn"},
+  {".v52.6.0" ,"advYPt_","y_AA/y_sys"},
+  {".v52.5.0" ,"advYPt_","y_AA/y_bm"},
+  {".v52.2.1" ,"advYPt_","y_sys"},
+  {".v52.0.13" ,"advYPt_","y_nn"},
 };
 
 //APR2019
@@ -143,13 +146,11 @@ TString amdHeader[] = {"amd_132Sn124Sn270AMeV_cluster_",
 //==================================================
 UInt_t   ccvid = 0;
 auto lslope = new TF1("lslope","[0]+[1]*x",-1., 1.);
-auto fv1fit = new TF1("fv1fit","[0]+[1]*x+[2]*x^3",-0.5,1.3);
 auto fv2fit = new TF1("fv2fit","[0]+[1]*x^2+[2]*x^4",0.,1.1);
 
 // --> configuration
 Size_t  imsz[] = {1, 1, 1.3, 1.3, 1.3, 1.3, 1.3};
-Color_t icol[] = {  kRed, kBlue, kSpring, kMagenta, kOrange, kViolet};
-Color_t icolnn[]={ kPink, kBlue+1, kGreen+2, kViolet-1};
+//Color_t icolnn[]={ kPink, kBlue+1, kDeepSea+2, kViolet-1};
 
 
 TMultiGraph  *mv1[ybin1];
@@ -157,12 +158,13 @@ TMultiGraph  *mv2[ybin2];
 TLegend      *lg1[ybin1];
 TLegend      *lg2[ybin2];
 
-
+TString  hmultX;
 
 void RapidityShift(TGraphErrors *gv);
 void ShiftX(TGraphErrors *gv, Double_t off);
 void GetMinimumv2(TGraphErrors *gr, Double_t &min, Double_t &mer);
 void GetAveragev2(TGraphErrors *gr);
+void FindFirstBin( TH1I *h, Int_t &min, Int_t &max );
 
 Double_t FittingAndIntegral(TGraphErrors *gr)
 {
@@ -175,12 +177,16 @@ Double_t FittingAndIntegral(TGraphErrors *gr)
 
 
 
-
 void PlotPtDependence()
 {
   
   gStyle->SetOptStat(0);
   SetStyle();
+  SetColor();
+
+  if( bplot[10] )
+    calculateImpactParameter();
+
 
   UInt_t ndata = 0;
   for(UInt_t i = 0; i < nmax; i++){
@@ -264,14 +270,14 @@ void PlotPtDependence()
   // Rapidity dependence 
   TH2D *hyptacp[10];
 
-  auto mrv1  = new TMultiGraph("mrv1"  ,";y_{cm}/y_{beam}; v1");
+  auto mrv1  = new TMultiGraph("mrv1"  ,";y_{nrm}; v1");
   auto mrv2  = new TMultiGraph("mrv2"  ,";y_{nrm};v2");//";y_{cm}/y_{beam}; v2");
   auto mv1sl = new TMultiGraph("mv1sl" ,";Centrality; v1 slope");
   auto mv1slp= new TMultiGraph("mv1slp","; Particle ; v1 slope");
   auto mmpx  = new TMultiGraph("mmpx","; y/y_{cm} ; <px>/A");
   //  mv1slp->GetXaxis()->SetAlphanumeric(kTRUE);
 
-  auto lgr1 = new TLegend(0.4 , 0.20, 0.70, 0.40, ""); 
+  auto lgr1 = new TLegend(0.5 , 0.15, 0.70, 0.40, sVer[0]); 
   auto lgr2 = new TLegend(0.5 , 0.60, 0.70, 0.9, "");
   //  auto lgr2 = new TLegend(0.5 , 0.20, 0.70, 0.45, "");
   auto lgr3 = new TLegend(0.35, 0.13, 0.7, 0.33, "");
@@ -321,7 +327,7 @@ void PlotPtDependence()
 
 	  if( is == 4 ) {
 	    index[5].push_back(4);
-	    SimFunction();
+	    FlowFunction();
 	  }
 	  else
 	    index[5].push_back(1);
@@ -480,7 +486,7 @@ void PlotPtDependence()
   UInt_t ipp = 0;
   UInt_t ips1[4] = {0,0,0,0};
   UInt_t ips2[4] = {0,0,0,0};
-  Color_t icolor = 100; 
+  Color_t icolor = 2; 
   UInt_t iv1f = 0;
   UInt_t isp1[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
   UInt_t isp2[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -505,10 +511,6 @@ void PlotPtDependence()
       iss = is;
     }
 
-    if( igr < 7)
-      icolor = icol[igr];
-    else
-      icolor -= 2;
 
     TString ohtitle = lsys[is];//+" "+lpid[ip]+" ";
     TString otitle  = ohtitle;
@@ -580,23 +582,61 @@ void PlotPtDependence()
     fOpen->cd();
 
     //------------------------------    
+
+    TH1I *hmult  = (TH1I*)fOpen->Get("hmult");
+    if( hmult == NULL ) 
+      continue;
+
+    hmultX = "Multiplicity";
+    Double_t mmean = hmult->GetMean();
+    //Double_t mstd  = hmult->GetMeanError();
+    Double_t mstd  = hmult->GetStdDev()/sqrt(hmult->GetEntries());
+    cout << "get mean " << mmean << " +- " << mstd<< endl;
+
+    if( bplot[10] ) {
+      hmultX = " Impact Parameter [fm] ";
+      Int_t mmin = hmult->GetXaxis()->GetXmin();;
+      Int_t mmax = hmult->GetXaxis()->GetXmax();
+      FindFirstBin(hmult, mmin, mmax);
+	  
+      mstd  = GetMinB( Asys[is], mmean-mstd, mmean+mstd );
+      mmean = GetMinB( Asys[is], mmin, mmax);
+      cout << "getminB  mean " << mmean << " +-" << mstd << endl;
+
+    }
+
+
     // rapidity dependence
     //--- v1 vs rapidity ---
     if( ( bplot[0] || bplot[1]) && bplot[2] ) {
 
-      TH1I *hmult  = (TH1I*)fOpen->Get("hmult");
 
       TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gu_v1");
-      //TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gy_v1");
+      //      TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gy_v1");
+
       if( yv1 == NULL || bpBUUConfig[0] || bpBUUConfig[1]) 
 	yv1 = (TGraphErrors*)fOpen->Get("gv_v1");
+
+      LOG(INFO) << " yv1 : " << yv1->GetName() << FairLogger::endl;
+      yv1->Print();
+
+
+      auto yv1_rev = new TGraphErrors();
+      for( UInt_t i = 0; i < yv1->GetN(); i++ ) {
+	Double_t x = 0, y = 0;
+	yv1->GetPoint( yv1->GetN()-1-i, x, y );
+	yv1_rev->SetPoint( i, -x, -y );
+      }
+
 
       if( yv1 != NULL ) {
 	yv1->SetMarkerColor(icolor);
 	yv1->SetMarkerStyle(imark[is]);
-	
+	yv1_rev->SetMarkerColor(icolor);
+	yv1_rev->SetMarkerStyle(imark[is]);
+
 	// --- check it
-	if( is != 5 ) {
+	if( kFALSE ) { //|| is != 5 ) {
 	  yv1->RemovePoint(10);
 	  yv1->RemovePoint(9);
 	  yv1->RemovePoint(8);
@@ -609,12 +649,24 @@ void PlotPtDependence()
 	  yv1->SetMarkerStyle(imark[is]+4);
 	yv1->SetMarkerSize(imsz[is]);
 	yv1->SetLineColor(icolor);
-	
-	mrv1->Add(yv1,"p");
-	lgr1->AddEntry(yv1,  otitle ,"lp");
+	yv1_rev->SetMarkerStyle(imark[is]+4);
+	yv1_rev->SetMarkerSize(imsz[is]);
+	yv1_rev->SetLineColor(icolor);
 
 	fv1fit->SetLineColor(icolor);
-	yv1->Fit("fv1fit","","",-0.5,1.1);//"Q0","");
+	fv1fit->SetParameter(1,0.2);
+
+	if( kFALSE ) {//is == 2 ) {
+	  mrv1->Add(yv1_rev,"p");
+	  lgr1->AddEntry(yv1_rev,  otitle+"_rev" ,"lp");
+	  yv1_rev->Fit("fv1fit","","",-1.1,1.1); //"Q0","");
+	}
+	else {
+	  mrv1->Add(yv1,"p");
+	  lgr1->AddEntry(yv1,  otitle ,"lp");
+	  yv1->Fit("fv1fit","","",-0.6, 1.); //"Q0","");
+	}
+
 	Double_t constlslope = fv1fit->GetParameter(0);
 	Double_t slope = fv1fit->GetParameter(1);
 	Double_t slopee= fv1fit->GetParError(1);
@@ -624,9 +676,7 @@ void PlotPtDependence()
       
 	if( hmult != NULL ) {
 
-	  Double_t mmean = hmult->GetMean();
-	  Double_t mstd  = hmult->GetStdDev();
-	  
+
 	  g_v1slp -> SetPoint(iv1f, mmean, slope);
 	  g_v1slp -> SetPointError(iv1f, mstd, slopee);	
 	  iv1f++;
@@ -654,9 +704,10 @@ void PlotPtDependence()
 
       //--- y vs v2 ---
       TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gu_v2");
-      //@@@      TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gy_v2");
+      //       TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gy_v2");
       if( yv2 == NULL || bpBUUConfig[0] || bpBUUConfig[1]) 
 	yv2 = (TGraphErrors*)fOpen->Get("gv_v2");
+
 
       if( yv2 != NULL ) {
 	for( Int_t iip = (Int_t)yv2->GetN()-1; iip >= 0; iip-- ){
@@ -665,7 +716,7 @@ void PlotPtDependence()
 	  //	  if( (xpnt > 1 || xpnt < -0.8) && is != 5 )
 	  //	    yv2->RemovePoint(iip);
 	  ypnt = yv2->GetErrorY(iip);
-	  if( ypnt > 0.02 )
+	  if( ypnt > 0.05 )
 	    yv2->RemovePoint(iip);
 	}
 
@@ -691,8 +742,6 @@ void PlotPtDependence()
 
 	if( hmult != NULL ){
 
-	  Double_t mmean = hmult->GetMean();
-	  Double_t mstd  = hmult->GetStdDev() ;
 	  g_v2max->SetPoint(isp , mmean, -v2y);
 	  g_v2max->SetPointError(isp, mstd, v2ye);
 	  isp++;
@@ -856,6 +905,11 @@ void PlotPtDependence()
 	//      mv2[k]->GetYaxis()->SetRangeUser(v2mn, v2mx);
       }
     }	
+
+    icolor++;
+    if( icolor == 10 )
+      icolor++;
+
     fOpen->Close();
   }
 
@@ -929,7 +983,7 @@ void PlotPtDependence()
 
     if( bstyle[2] ) {
       ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
-      fv2y->SetTitle(";y_{cm}/y_{beam}; v2");
+      fv2y->SetTitle(";y_{nrm}; v2");
       fv2y->SetLineColor(3);
       fv2y->Draw("");
       mrv2->Draw("");
@@ -955,8 +1009,8 @@ void PlotPtDependence()
   }
 
   if( (bplot[0] || bplot[1]) && bplot[3] ) { // gethered plots
-    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),2000,500);
-    cc->Divide(ybin1-1,1);
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1500,1200);//2000,500);
+    cc->Divide((ybin1-1)/3,3);
     for(UInt_t k = 0; k < ybin1-1; k++){
       cc->cd(k+1);
       mv1[k]->Draw("ALP");
@@ -966,8 +1020,8 @@ void PlotPtDependence()
       mv1[k]->Write();
     }
 
-    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1400,500);
-    cc->Divide(ybin2-1,1);
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1500,1200);//1400,500);
+    cc->Divide((ybin2-1)/3,3);
     for(UInt_t k = 0; k < ybin2-1; k++){
       cc->cd(k+1);
       mv2[k]->Draw("ALP");
@@ -1062,7 +1116,8 @@ void PlotPtDependence()
     auto m_v1m = new TMultiGraph();
     auto lgv1slpm =  new TLegend(0.2,0.2,0.5,0.4,"");
 
-    m_v1m->SetTitle(";multiplicity; v1 slope");
+
+    m_v1m->SetTitle(";"+ hmultX +"; v1 slope");
 
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     for(UInt_t jj = 0; jj < 20; jj++){
@@ -1116,7 +1171,7 @@ void PlotPtDependence()
 
     auto m_v2m  = new TMultiGraph();
     auto lgv2m  =  new TLegend(0.5,0.7,0.8,0.9,"");
-    m_v2m->SetTitle(";Multiplicity; -v2 max");
+    m_v2m->SetTitle(";"+hmultX+"; -v2 max");
 
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
 
@@ -1257,22 +1312,25 @@ void integ()
 
 void GetMinimumv2(TGraphErrors *gr, Double_t &min, Double_t &mer)
 {
+  std::cout << "GetMinimum v2 " << gr->GetN() << std::endl;
   gr->Print();
 
   Double_t x, y;
-  min = 999.;
+  min = 9.;
   UInt_t mid = 0;
   for(UInt_t i = 0; i < gr->GetN(); i++) {
     gr->GetPoint(i, x, y);
     if( abs(y) > 0.2 ) {
-      gr->RemovePoint(i);
-      i = 0;
+      //      gr->RemovePoint(i);
+      //      i = 0;
       continue;
     }
 
-    if( y < min ) {
+    if( y < min && y < 0) {
       min = y;
       mid = i;
+
+      std::cout << " min v2 = " << min << " at " << mid << std::endl;
     }
   }
 
@@ -1308,4 +1366,22 @@ void GetAveragev2(TGraphErrors *gr)
   //  fv2y->SetParameter(2,  0.);
 
 
+}
+
+void FindFirstBin( TH1I *h, Int_t &min, Int_t &max )
+{
+  for( UInt_t i = 0; i < h->GetXaxis()->GetNbins(); i++ ) {
+    if( h->GetBinContent(i) > 0 ){
+      min = i;
+      cout << "min " << min << endl;
+      break;
+    }
+  }
+  for( UInt_t i = h->GetXaxis()->GetNbins(); i > 0;  i-- ) {
+    if( h->GetBinContent(i) > 0 ) {
+      max = i;
+      cout << "max " << max << endl;
+      break;
+    }
+  }
 }

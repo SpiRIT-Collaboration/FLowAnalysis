@@ -1,15 +1,8 @@
-#include "DoRPRes.C" //#include "openRunAna.C" #include "DoFlow.h" #include "SimFunction.C"
+#include "DoFlow_adv.C" //#include "openRunAna.C" #include "DoFlow.h" #include "SimFunction.C"
 
 //drawing
 
-UInt_t selReactionPlanef = 10000;
-
-TFile* fefffile;
-
-Bool_t bccPsi;
-
 // functions
-TString SetupOutputFile(TString fopt);
 void PlotPt(UInt_t selid = 2);
  
 //-------------------//
@@ -71,49 +64,6 @@ void DoFlow_mod(Int_t isel = 2)
     PlotPt(0);  
 }
 
-TString SetupOutputFile(TString fopt)
-{
-  //--------------------------------------------------
-  //----- SETUP OUTPUT FILE --------------------------
-  //--------------------------------------------------
-
-  gSystem->cd("data");
-  TString oVerSub= gSystem -> Getenv("OSUBV");
-  TString fName = fopt + oVerSub;
-
-  if( oVerSub == "" ) {
-    UInt_t kVer = 0;
-    TString checkName;
-
-    while( kTRUE ) {
-      checkName = Form(fName + "%d.root", kVer);
-      if( !gSystem->FindFile(".",checkName) ) {
-        break;
-      }
-      else
-        kVer++;
-    }
-    fName = Form(fName + "%d.root", kVer);
-  }
-  else {
-    TString checkName = fName + ".root";;
-    if( !gROOT->IsBatch() && gSystem->FindFile(".",checkName) ) {
-      LOG(INFO) << checkName << " is existing. Do you recreate? (y/n)" << FairLogger::endl;
-      TString sAns;
-      std::cin >> sAns;
-      if(sAns == "N" || sAns == "n") {
-	LOG(INFO) << " Retry" << FairLogger::endl;
-	exit(0);
-      }
-    }
-    fName += ".root";
-  }
-
-  LOG(INFO) << "File " << fName << " will be created. " << FairLogger::endl;
-
-  return fName;
-}
-//--------------------------------------------------       
 
 //pdt
 void PlotPt(UInt_t selid = 2)       //%% Executable :
@@ -131,6 +81,10 @@ void PlotPt(UInt_t selid = 2)       //%% Executable :
   TH1D* hpt[4];
   TH2D* hypt[4];
   TH2D* hthetapt[4];
+  TH1D* hptphiybin[ybin2][4];
+  TH1D* hptybin[ybin2];
+  TH1D* hdphiphiybin[ybin2][4];
+  TH1D* hdphiybin[ybin2];
 
   Float_t phirange[] = { TMath::Pi()*7/4, TMath::Pi()/4, TMath::Pi()*3/4, TMath::Pi()*5/4, TMath::Pi()*7/4 };  
 
@@ -141,6 +95,22 @@ void PlotPt(UInt_t selid = 2)       //%% Executable :
     hpt[i]  = new TH1D(Form("hpt_%d",i) ,label_low + label_up + "; Pt",100,0.,1500.);
     hypt[i] = new TH2D(Form("hypt_%d",i),label_low + label_up + "; Rapidity; Pt", 100,0.,1.2,100.,0.,800);
     hthetapt[i] = new TH2D(Form("hthetapt_%d",i),label_low + label_up + ";#Theta; Pt",100,0.,1.4,100,0.,800.);
+
+  }
+
+
+
+  for( UInt_t k = 0; k < ybin2; k++) {
+    TString label = Form("%5.2f < y < %5.2f",yrange2[k],yrange2[k+1]);
+    hptybin[k] = new TH1D(Form("hptybin_y%d",k), label, 100,0.,800);
+    hdphiybin[k] = new TH1D(Form("hdphiybin_y%d",k), label, 100,-1., 1.);
+  
+    for( UInt_t i = 0; i < 4; i++ ) {
+      TString label_low = Form("Phi:%4.0f",phirange[i]*TMath::RadToDeg());
+      TString label_up  = Form(" to %4.0f",phirange[i+1]*TMath::RadToDeg());
+      hptphiybin[k][i] = new TH1D( Form("hptphiybin_phi%dy%d",i,k), label_low + label_up +" with " + label + ";Pt",100,0.,800);
+      hdphiphiybin[k][i] = new TH1D( Form("hdphiphiybin_phi%dy%d",i,k),label_low + label_up +" with " + label + ";#Phi",100, -1., 1.);
+    }
   }
 
   //------------------------------
@@ -150,7 +120,7 @@ void PlotPt(UInt_t selid = 2)       //%% Executable :
   //--- Event Loop
   //--------------------------------------------------
   Long64_t nEntry = SetBranch();
-  
+
   for(Int_t i = 0; i < nEntry; i++){
 
     rChain->GetEntry(i);
@@ -198,6 +168,8 @@ void PlotPt(UInt_t selid = 2)       //%% Executable :
       auto theta = aPart->GetRotatedMomentum().Theta();
       auto charge= aPart->GetCharge();
       auto rapid = aPart->GetRapidity();
+      auto yindex = GetV2RapidityIndex( aPart->GetRapiditycm() );
+      auto deltphi= cos( 2.*aPart->GetAzmAngle_wrt_RP() );
 
       auto pid   = aPart->GetPID();
       // auto pid   = aPart->GetPIDLoose();  
@@ -239,33 +211,45 @@ void PlotPt(UInt_t selid = 2)       //%% Executable :
       }
    
       //@@****************************************
-      if( !bpart ) continue;
+      if( isys != 5 && !bpart ) continue;
 
-      if( theta > 45.*TMath::DegToRad() ) continue;
+      //      if( theta > 40.*TMath::DegToRad() && theta < 50.*TMath::DegToRad()) continue;
 
       // if( abs( phi ) > 30.*TMath::DegToRad() ) continue;
       //if( abs( phi ) < 150.*TMath::DegToRad() ) continue;
       //*********************************************
 
+
+      hptybin[yindex]  ->Fill( pt );
+      hdphiybin[yindex]->Fill( deltphi );
+      
       if( abs(phi) < phirange[1] ) {
 	hpt[0]  -> Fill(pt);
 	hypt[0] -> Fill(rapid, pt);
 	hthetapt[0] -> Fill(theta, pt);
+	hptphiybin[yindex][0] -> Fill( pt );
+	hdphiphiybin[yindex][0]-> Fill( deltphi );
       }
       else if( phi >= phirange[1] && phi < phirange[2] ) {
 	hpt[1] -> Fill(pt);
       	hypt[1] -> Fill(rapid, pt);
 	hthetapt[1] -> Fill(theta, pt);
+	hptphiybin[yindex][1] -> Fill( pt );
+	hdphiphiybin[yindex][1]-> Fill( deltphi );
       }
       else if( abs(phi) > phirange[2] ) {
 	hpt[2] -> Fill(pt);
 	hypt[2] -> Fill(rapid, pt);
 	hthetapt[2] -> Fill(theta, pt);
+	hptphiybin[yindex][2] -> Fill( pt );
+	hdphiphiybin[yindex][2]-> Fill( deltphi );
       }
       else if( TVector2::Phi_0_2pi(phi) < phirange[4] && TVector2::Phi_0_2pi(phi) >= phirange[3] ) {
 	hpt[3] -> Fill(pt);
 	hypt[3] -> Fill(rapid, pt);
 	hthetapt[3] -> Fill(theta, pt);
+	hptphiybin[yindex][3] -> Fill( pt );
+	hdphiphiybin[yindex][3]-> Fill( deltphi );
       }
     }
   }
@@ -321,6 +305,47 @@ void PlotPt(UInt_t selid = 2)       //%% Executable :
     hypt[i] -> Draw("colz");
   }
 
+
+  cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1500,1200); ic++;
+  cc->Divide((ybin2 - 1)/4, 4);
+
+
+  for( UInt_t k = 0; k < ybin2-1; k++ ){
+    cc->cd(k+1);
+
+    hptybin[k]->SetLineColor(1);
+    hptybin[k]->SetNormFactor(100);
+    hptybin[k]->Draw();
+    for( UInt_t i = 0; i < 4; i=i+2 ) {
+      hptphiybin[k][i]->SetLineColor(icol[i]);
+      hptphiybin[k][i]->SetNormFactor(100);
+      hptphiybin[k][i]->Draw("same");
+    }
+  }
+
+
+  cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1500,1200); ic++;
+  cc->Divide((ybin2 - 1)/4, 5);
+
+
+  for( UInt_t k = 0; k < ybin2-1; k++ ){
+    cc->cd(k+1);
+
+    hdphiybin[k]->SetLineColor(1);
+    hdphiybin[k]->SetNormFactor(100);
+    hdphiybin[k]->Draw();
+
+    std::cout << hdphiybin[k]->GetTitle()  << " cos(dphi) " << hdphiybin[k]->GetMean() << std::endl;
+ 
+    for( UInt_t i = 0; i < 4; i++ ) {
+      hdphiphiybin[k][i]->SetLineColor(icol[i]);
+      hdphiphiybin[k][i]->SetNormFactor(100);
+      hdphiphiybin[k][i]->Draw("same");
+
+
+      std::cout << " phi " << i << " cos(dphi) " << hdphiphiybin[k][i]->GetMean() << std::endl;
+    }
+  }
 }
     
 

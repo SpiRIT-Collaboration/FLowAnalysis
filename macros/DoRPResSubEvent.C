@@ -1,6 +1,6 @@
 #include "openRunAna.C"
 #include "DoFlow.h"
-#include "SimFunction.C"
+#include "FlowFunction.C"
 
 
 auto *fcos1 = new TF1("fcos1","[0]+2.*[1]*cos(x)"   ,-1.*TMath::Pi(),TMath::Pi());

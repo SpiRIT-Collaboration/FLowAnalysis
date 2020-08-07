@@ -7,7 +7,7 @@
 
 source setup.sh
 source runList.sh
-export MNMACRO=DoFlow_adv.C          ##<--- Flow analysis MACRO name
+export MNMACRO=DoFlow_fin.C          ##<--- Flow analysis MACRO name
 
 unset IVER
 unset OVER
@@ -23,10 +23,16 @@ unset RUNNUMBER1
 unset MNRNF
 unset MNINVERSION
 unset MNOUTVERSION
+unset CCPSI
 
 ##------>>> EDIT HERE 
-export MNUC=40
 export MNLC=0
+export MNUC=50
+#export MNLC=55
+#export MNUC=80
+
+
+
 
 ##-- DATA
 function data132()    ##CONFIG
@@ -38,6 +44,7 @@ function data132()    ##CONFIG
     export MNRNF=$RNF132
     export MNINVERSION=$1            ##   <------@@ input
     export MNOUTVERSION=$2           ##   <------@@ output 
+    export MNMXEVT=$3
     export MNOSUBV=
 
     commonsetup
@@ -51,6 +58,21 @@ function data108()    ##CONFIG
 ##--
     export MNSN=108
     export MNRNF=$RNF108
+    export MNINVERSION=$1            ##   <------@@ input
+    export MNOUTVERSION=$2           ##   <------@@ output 
+    export MNOSUBV=
+
+    commonsetup
+##<----
+}
+
+function data124()    ##CONFIG
+{
+    export MNSFX=BTt
+    export MDCUT= #0.0               ##   <------@@ mid-rapidity cut
+##--
+    export MNSN=124
+    export MNRNF=$RNF124
     export MNINVERSION=$1            ##   <------@@ input
     export MNOUTVERSION=$2           ##   <------@@ output 
     export MNOSUBV=
@@ -79,11 +101,9 @@ function simtpc()   ##CONFIG
 {
     export MNSFX=rpsim
     export MNRNF=0400 
-    export MNINVERSION=50.7          ##   <------@@ input
+    export MNINVERSION=50.8          ##   <------@@ input
     export MNOUTVERSION=50.8         ##   <------@@ output 
-    if [ -n "$1" ]; then
-	SetStep3
-    fi
+
     commonsetup
 }
 function simfull()  ##CONFIG
@@ -114,6 +134,7 @@ function commonsetup()
     export UC=$MNUC
     export LC=$MNLC
     export RPBS=0
+    export CCPSI=1 #phi dependent correction
 
     RUNNUMBER1=(${MNRNF})
     showenv
@@ -132,6 +153,11 @@ function flattening() {
 }
 
 ##>>>>>> Step 2 >
+function allcorr() {
+    corrb $1
+    restcorr $1
+}
+
 function corr(){    ## The first run only; flatteing correction on interactive mode
     if [ -n "$1" ]; then
 	export REDO=1
@@ -154,8 +180,7 @@ function corrb(){   ## The First run only; flattening correction on batch mode
     export REDO=
 }
 
-
-function allcorr(){ ## Go through from the second to the last
+function restcorr(){ ## Go through from the second to the last
     if [ -n "$1" ]; then
 	export REDO=1
 	echo " Re-calculating Reaction plane #### "
@@ -200,11 +225,6 @@ function flattenandcorrection() {
     allcorr
 }
 
-function correction() {
-    corrb
-    allcorr
-}
-
 
 ##>>>>>> Step 3 >
 function SetStep3()
@@ -217,7 +237,8 @@ function SetStep3()
 
 function dorpres()
 {
-    RUN={$MNRNF} root DoRPRes.C\($1\)
+    RUN={$MNRNF} root -q DoRPRes.C\($1\)
+
 }
 
 function doflowmdependence() 
@@ -237,10 +258,11 @@ function doflowmulti()
 {
     if [ -n "$1" ]; then
 	export OSUBV=$1
-	echo "output version -> "  $MNOVER
+	echo "output version -> "  $OSUBV
     fi
 
-    PARTICLES=("3" "4" "5" "6")
+
+    PARTICLES=("2" "3" "4" "5" "6")
     typeset -i I=0;
     while(( $I < ${#PARTICLES[@]} ))
     do
@@ -256,6 +278,9 @@ function doflowmulti()
 
 function doflowbatch() 
 {
+    if [ -n "$2" ]; then
+	export OSUBV=$2
+    fi
    RPBS=0 RUN={$MNRNF} root -b -q $MNMACRO\($1\)
 }
 
@@ -285,17 +310,19 @@ function anahelp()
     echo "type anahelp()"
     echo "++++++++++++++++++++++++++++++++++++++++"
     echo " Setup >> data132/data108  ##.#(INverseion) ##.#(OutVersion)"
-    echo " Step 0 > corr 1 OR correction 1 :: Re-caluculate reaction plane "
+    echo " Step 0 > corr 1 OR allcorr 1 :: Re-caluculate reaction plane "
     echo " Step 1 > flattening OR flattenandcorrection "
-    echo " Step 2 > corr(the first run) OR allcorr(excpt the first run) OR  correction(full)"
+    echo " Step 2 > corr(the first run) OR restcorr(excpt the first run) OR  allcorr(full)"
     echo " Step 3 > dorpres 0 "
     echo "          dorpres 0   :: Get centrality and Psi dependent correction"
     echo "          dorpres 1   :: Get Psi dependent correction parameter"
     echo "          dorpres 2   :: Get overall correction factor"
     echo " Step 4 > doflow       :: open files "
-    echo "          doflow 2  0(output version#) 1(Corretion versoin):: DoFlow_adv.C"
+    echo "          doflow 2  0(output version#) 1(Corretion versoin)::" $MNMACRO
     echo "                  -1:pi- 1:pi+, 2:p, 3:d, 4:t, 5:3He, 6: 4He, 7:n, 8:H" 
     echo "                  run #(partid) #(Output version)"
+    echo "++++++++++++++++++++++++++++++++++++++++"
+    echo "Change runnumber : export MNRNF=\$RNF132s then commonsetup"
 }
 
 function showenv()
@@ -314,8 +341,19 @@ function showenv()
     echo Output subVer :: $RPBS
     echo Max maltiplicity :: $UC
     echo Min multiplicity :: $LC
+    echo Number of event :: $MXEVT
     echo "++++++++++++++++++++++++++++++++++++++++"
 }
+
+function showdata()
+{
+    typeset -i I=0
+    while(( $I < ${#RUNNUMBER1[@]} ))
+    do    
+	ls -l data/run${RUNNUMBER1[$I]}_$MNSFX.v$MNINVERSION.root
+    done
+}
+
 
 grep "CONFIG"  DoAna.sh 
 anahelp

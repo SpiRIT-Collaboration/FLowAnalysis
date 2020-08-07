@@ -59,14 +59,35 @@ void RapidityShift()
 void Kinema(UInt_t isel = 0)
 {
   
-
+  TGraph *grph = new TGraph();
   //  RapidityShift();
+  TVector3 vec;
 
-  GetLorentzBoost(0);
-  GetLorentzBoost(1);
-  GetLorentzBoost(2);
-  GetLorentzBoost(3);
-  GetLorentzBoost(4);
+  vec = GetLorentzBoost(4);
+  TLine *ln = new TLine(100., vec.Z(), 135., vec.Z());
+
+  vec = GetLorentzBoost(1);
+  grph->SetPoint(0, 108., vec.Z() );
+
+  vec = GetLorentzBoost(3);
+  grph->SetPoint(1, 112., vec.Z() );
+
+  vec = GetLorentzBoost(2);
+  grph->SetPoint(2, 124., vec.Z() );
+
+
+  vec = GetLorentzBoost(0);
+  grph->SetPoint(3, 132., vec.Z() );
+
+
+  TCanvas *cc;
+  grph->SetMarkerStyle(20);
+  grph->SetMarkerSize(0.4);
+  grph->Draw("AP");
+  ln->Draw();
+
+
+
 
   return;
 }
@@ -75,16 +96,16 @@ void Kinema(UInt_t isel = 0)
 
 TVector3 GetLorentzBoost(UInt_t isel = 4)
 {
-  if( isel > 4 ) exit(0);
+  if( isel >= 6 ) exit(0);
 
   Double_t amu  = 931.4940954; //MeV/c2  
   Double_t c    = 299792458.; //m/s                                                                 
 
-  TString system[5];
-  Double_t AB[5];
-  Double_t mB[5];
-  Double_t eB_lb[5];
-  Double_t mT[5];     
+  TString system[6];
+  Double_t AB[6];
+  Double_t mB[6];
+  Double_t eB_lb[6];
+  Double_t mT[6];     
 
   system[0] =  "(132Sn + 124Sn)";
   AB[0]     =  132.;
@@ -122,16 +143,23 @@ TVector3 GetLorentzBoost(UInt_t isel = 4)
   eB_lb[4]  = 268.9;
   mT[4]     = 1.00727646688;
 
+  TVector3 nnBoost(0.,0., 0.355151);
+
+  system[5] = "(112Sn + XSn)";
+  AB[5]     = 112.;
+  mB[5]     = 111.8773895;
+  eB_lb[5]  = 270.2;
+  mT[5]     = 123.8773895 * 112./124.;;
+
   //Sn-108    107.911892833   +- 0.000005900    0+                        10.30M 8 
   //Sn-112    111.904821807   +- 0.000001813    0+               0.97     stable  
   //Sn-124    123.905273581   +- 0.000001492    0+               5.79     stable 
   //Sn-132    131.917821719   +- 0.000006866    0+                        39.7S 8    
 
-  mB[0]     = 131.917821719;
-  mB[1]     = 107.911892833;
-  mB[2]     = 123.905273581;
-  mB[3]     = 111.904821807;
-  
+  // mB[0]     = 131.917821719;
+  // mB[1]     = 107.911892833;
+  // mB[2]     = 123.905273581;
+  // mB[3]     = 111.904821807;
 
   UInt_t isys = isel;
 
@@ -214,44 +242,18 @@ TVector3 GetLorentzBoost(UInt_t isel = 4)
   cout << " boostVec Z "     << boostVec.Z(); 
   cout << endl;
 
-  // cout << " ---> before " << endl;
-  // cout << " beam g : " << bmVec->Gamma()
-  //      << "      Y : " << bmVec->Y()
-  //      << "      Z : " << bmVec->Z()
-  //      << "      E : " << bmVec->E()
-  //      << endl;
-
-  // cout << " Targ g : " << tgVec->Gamma()
-  //      << "      Y : " << tgVec->Y()
-  //      << "      Z : " << tgVec->Z()
-  //      << "      E : " << tgVec->E()
-  //      << endl;
+  cout << " Beam   Boost " << bmVec->BoostVector().Z() << endl;
 
   bmVec->Boost(-boostVec);
   tgVec->Boost(-boostVec);
 
-  // cout << " ---> after " << endl;
-  // cout << " beam g : " << bmVec->Gamma()
-  //      << "      Y : " << bmVec->Y()
-  //      << "      Z : " << bmVec->Z()
-  //      << "      E : " << bmVec->E()
-  //      << endl;
-
-  // cout << " Targ g : " << tgVec->Gamma()
-  //      << "      Y : " << tgVec->Y()
-  //      << "      Z : " << tgVec->Z()
-  //      << "      E : " << tgVec->E()
-  //      << endl;
-
-  //  cout << " Ecm " << (*bmVec + *tgVec).E() << endl;
-
-  // cout << " Beam   Rapidity " << 0.5 * log( ( bmVec->E() + bmVec->Z())/(bmVec->E() - bmVec->Z()) ) ;
-  // cout << " Target Rapidity " << 0.5 * log( ( tgVec->E() + tgVec->Z())/(tgVec->E() - tgVec->Z()) );
 
   cout << " y_beam   = " << bmVec->Rapidity()<< endl;
   cout << " y_target = " << tgVec->Rapidity()<<endl;
 
 
+  bmVec->Boost(boostVec-nnBoost);
+  cout << " y_bam - y_nn = " << bmVec->Rapidity()<<endl;
 
 
   cout << " =====-------=====---------- " << endl;

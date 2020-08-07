@@ -8,6 +8,7 @@ TFile* fefffile;
 
 Bool_t bccPsi;
 
+
 // functions
 void     PlotPtDependence(UInt_t selid);
 TString  SetupOutputFile(TString fopt);
@@ -15,6 +16,7 @@ Bool_t   SetupEffCorrection();
 
 Bool_t   LoadPsiRPResolution(Bool_t bbcorr);
 Bool_t   LoadMultRPResolution();
+Bool_t   LoadAcceptanceCorrection(UInt_t ipid);
 Double_t *GetPsiRPResolution (Double_t *rpcor, UInt_t ival);
 Double_t *Get2PsiRPResolution(Double_t *rpcor, UInt_t ival);
 Double_t *GetMultRPResolution(Double_t *rpcor, UInt_t vn, UInt_t mult);
@@ -26,11 +28,18 @@ UInt_t   GetV2cmRapidityIndex(Double_t y);
 UInt_t   GetV1PtIndex(Double_t val);
 UInt_t   GetV2PtIndex(Double_t val);
 
-TString   GetPsiRPLoadFileName();
+void     DrawAcceptanceCorrection();
+TString  GetPsiRPLoadFileName();
 
+
+TFile*        GraphSave;
 TGraphErrors* hgv_psi1;
 TGraphErrors* hgv_psi2;
+TH2D*         hAcpCorr;
+TH1D*         hAcpyv1[ybin1];
+TH1D*         hAcpyv2[ybin2];
 
+Double_t      fmass;
 
 //-------------------//
 void DoFlow_adv(Int_t isel = 0) 
@@ -114,12 +123,23 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   
   LOG(INFO) << " RP resolution is ready " << FairLogger::endl;
 
+  if(!LoadAcceptanceCorrection(selid) ){
+    LOG(INFO) << " Acceptance correction is not found. " << FairLogger::endl;
+  }
+  else 
+    LOG(INFO) << " Acceptance correction is found. " << FairLogger::endl;
+
+
   LOG(INFO) << "PlotPtDependence(" << selid << ")" << FairLogger::endl;
   dpt1 = pt_max/(Double_t)ptbin1;
   dpt2 = pt_max/(Double_t)ptbin2;
 
+
   //-- Define Output file name 
   TString fHeader = "advYPt_"+ sysName + "_" + partname[selid]+".v"+sVer+".";
+  if( oVer != "" )
+    fHeader = "advYPt_"+ sysName + "_" + partname[selid]+".v"+oVer+".";
+
   auto fName = SetupOutputFile( fHeader );
   
   Bool_t bEffCorr = kFALSE;
@@ -129,7 +149,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   if( bEffCorr )
     LOG(INFO) << "correctedPt.phi60.nomultcut.root is opened." << FairLogger::endl;
 
-  auto GraphSave  = new TFile(fName,"recreate");
+  GraphSave  = new TFile(fName,"recreate");
+
 
   LOG(INFO) << " Rapidity binning " << ybin1 << FairLogger::endl;
 
@@ -197,7 +218,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   // replace y_cm -> y_bm
 
   for( UInt_t iy = 0; iy < ybin1; iy++ ) {
-    rangeLabel1[iy] = Form("%5.2f <= y < %5.2f"      ,yrange1[iy]/y_bm[isys],yrange1[iy+1]/y_bm[isys]);
+    rangeLabel1[iy] = Form("%5.2f <= y < %5.2f"      ,yrange1[iy]/y_cm[isys+4],yrange1[iy+1]/y_cm[isys+4]);
     hdy1[iy]      = new TH1D(Form("hdy1_y%d",iy)     ,rangeLabel1[iy]+";Rapidity", 500,-2.5,2.5);
     hdympt1[iy]   = new TH1D(Form("hdympt1%d",iy)    ,rangeLabel1[iy]+";Rapidity; <Pt>/A", 500,-1000.,1000.);
     hutphi10[iy]  = new TH1D(Form("hutphi10_%d",iy)  ,rangeLabel1[iy]+";#Delta #Psi",100,0.,3.2);
@@ -205,6 +226,10 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     hut[iy][0]    = new TH1D(Form("hut0_%d",iy)      ,rangeLabel1[iy]+"_yaw>0;U_{t};",100,0., 2.5);
     hut[iy][1]    = new TH1D(Form("hut1_%d",iy)      ,rangeLabel1[iy]+"_yaw<0;U_{t};",100,0., 2.5);
     hdyv1[iy]     = new TH1D(Form("hdyv1_%d",iy)     ,rangeLabel1[iy]+"<cos#phi>;",100,-1.,1.);
+
+    hAcpyv1[iy]   = new TH1D();
+    hAcpyv1[iy] -> SetTitle(rangeLabel1[iy]);
+
 
     for( UInt_t ips = 0; ips < psibin; ips++) {
       hdyucos1[iy][ips]  = new TH1D(Form("hdyucos1%dp%d",iy,ips)   ,rangeLabel1[iy]+"; cos(#phi - #Psi)"  , 100, -1., 1.);
@@ -222,6 +247,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       }
     }
   }
+  
+  DrawAcceptanceCorrection();
 
   for( UInt_t iy = 0; iy < ybin2; iy++ ) {
     rangeLabel2[iy] = Form("%5.2f <= y < %5.2f",yrange2[iy]/y_bm[isys],yrange2[iy+1]/y_bm[isys]);
@@ -259,6 +286,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   //--------------------------------------------------
   //--- Event Loop
   //--------------------------------------------------
+
   for(Long64_t i = 0; i < nEntry; i++){
 
     ShowProcess(i);
@@ -298,7 +326,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     while( (aPart = (STParticle*)next()) ) {
 
       mtk++;
-      if( isys == 4 && mtk > (UInt_t)aflow->mtrack4*0.6 ) break; 
+      //      if( isys == 4 && mtk > (UInt_t)aflow->mtrack4*0.6 ) break; 
 
       // ---- track quality selection ---
       // if( isys != 5 && 
@@ -366,16 +394,20 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
 
       //@@****************************************
-      if( theta > 45.*TMath::DegToRad() ) continue;
+      //if( theta > 45.*TMath::DegToRad() ) continue;
+
+      //if( theta > 40.*TMath::DegToRad() && theta < 50.*TMath::DegToRad()) continue;
+      
+      //if( phi < 0 ) continue;
+      //      if( phi > 0 ) continue;
 
       //if( abs( phi ) >  30.*TMath::DegToRad() ) continue;
-      //      if( abs( phi ) < 150.*TMath::DegToRad() ) continue;
-      //      if( abs( phi ) < 0.9 ) continue;
 
-      if( abs( phi ) < 135.*TMath::DegToRad() ) continue;
-      //if( abs( phi ) > 45.*TMath::DegToRad() ) continue;
+      //if( abs( phi ) < 150.*TMath::DegToRad() ) continue;
 
-      //      if( theta  > 0.5 ) continue;
+      //      if( abs( phi ) < 135.*TMath::DegToRad() ) continue;
+      //      if( abs( phi ) > 45.*TMath::DegToRad() ) continue;
+
       //      if( phi < 0 || abs(phi) < 30.*TMath::DegToRad() || abs(phi) > 150.*TMath::DegToRad() ) continue;
       //      if( phi > 0 || abs(phi) < 30.*TMath::DegToRad() || abs(phi) > 150.*TMath::DegToRad() ) continue;
 
@@ -394,14 +426,28 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
       bFill = kTRUE;
 
-      y_norm = y_cm[isys];
+      //v52.2 v52.6
+      // if( isys == 0 || isys == 2 )
+      //  	y_norm = y_cm[4];
+      // else if( isys == 1 || isys == 3 )
+      //  	y_norm = y_cm[isys];
+
+      //v52.3
+      //y_norm = y_cm[isys];
+
+      //v52.4
       //      y_norm = y_cm[4];
 
+      //v52.10
+      y_norm = y_cm[isys+4];
+
+      auto rapidl = aPart->GetRapidity();
       auto rapid  = aPart->GetRapiditycm();;	
       auto rapidn = rapid / y_norm;
       auto rpphi  = aPart->GetIndividualRPAngle();
       auto dphi   = aPart->GetAzmAngle_wrt_RP();
       auto dphi2  = aPart->GetAzmAngle2_wrt_RP();
+      fmass  = aPart->GetMass();
 
       //      if( isys == 5 ) 
       //	dphi = TVector2::Phi_mpi_pi(aPart->GetRotatedMomentum().Phi() - RPPsi);
@@ -412,8 +458,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       hRPPsipsi->Fill(RPPsi, rpphi);
       hpsindx->Fill(aflow->unit2P_fc.Phi()/2., (Double_t)ipsi2);
 
-      Double_t u_t0  = aPart->GetRotatedMomentum().Pt()/aPart->GetMass()/u_p;
-      Double_t ou_t0 = aPart->GetMomentumAtTarget().Pt()/aPart->GetMass()/u_p;
+      Double_t u_t0  = aPart->GetRotatedMomentum().Pt()/fmass/u_p;
+      Double_t ou_t0 = aPart->GetMomentumAtTarget().Pt()/fmass/u_p;
       
       huy->Fill( rapid / y_norm, u_t0 );
 
@@ -428,6 +474,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       UInt_t ipt2    = GetV2PtIndex(pt);
       UInt_t im      = GetRPCorrIndex((Double_t)aflow->mtrack4);
 
+      //@@@@@
       hdy1[irapid1]->Fill( rapid/y_norm );
       hdy2[irapid2]->Fill( rapid/y_norm );
 
@@ -535,6 +582,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   gmpx->SetTitle("; Rapidity/y_{cm}; <px>");
 
   //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++@@
+  // This function returen resolution from subevent correlation with overall events.
   Double_t *rpresall = new Double_t[4];
   GetRPResolutionwChi(rpresall, hdphi0_180, hdphi90_180, 1.);
   //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -574,6 +622,11 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       Double_t utn    = (Double_t)hdydut1[iy][ipt]->GetEntries();
       Double_t utmean = hdydut1[iy][ipt]->GetMean();
       Double_t ute    = hdydut1[iy][ipt]->GetStdDev()/sqrt(utn);
+      
+      if( utn == 0 ) continue;
+      Double_t ptmean = utmean * fmass * u_p /1000.;
+      Int_t ibin = hAcpyv1[iy] -> GetXaxis() -> FindBin(ptmean) ;
+      Double_t npt    = hAcpyv1[iy] -> GetBinContent(ibin);
 
       //  phi dependent correction  ->
       Double_t v1u_sum = 0.;
@@ -581,26 +634,25 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       Double_t v1u_ste = 0.;
 
       for( UInt_t ips = 0; ips < psibin; ips++ ){  
-	Double_t nv1u  = (Double_t)hdydutcos1[iy][ipt][ips]->GetEntries();
-
-
-	if( nv1u > 0 ) {
+      	Double_t nv1u  = (Double_t)hdydutcos1[iy][ipt][ips]->GetEntries();
+      
+	if( npt > 0 ) {
 	  
-	  if( bccPsi )
-	    GetPsiRPResolution(rppsires, ips);
-	  else {
-	    rppsires[1] = rpresall[0];
-	    rppsires[2] = rpresall[1];
-	  }
+	if( bccPsi )
+	  GetPsiRPResolution(rppsires, ips);
+	else {
+	  rppsires[1] = rpresall[0];
+	  rppsires[2] = rpresall[1];
+	}
 
-	  Double_t v1u   = hdydutcos1[iy][ipt][ips]->GetMean();
-	  Double_t v1ue  = hdydutcos1[iy][ipt][ips]->GetStdDev()/sqrt(nv1u);
-	  Double_t v1uee = GetError(v1u, rppsires[1], v1ue, rppsires[2]);
-
-	  v1u_sum += v1u / rppsires[1] * nv1u;
-	  v1u_n   += nv1u;
-	  v1u_ste += pow(v1uee*nv1u,2);
-
+	Double_t v1u   = hdydutcos1[iy][ipt][ips]->GetMean();
+	Double_t v1ue  = hdydutcos1[iy][ipt][ips]->GetStdDev()/sqrt(utn);
+	Double_t v1uee = GetError(v1u, rppsires[1], v1ue, rppsires[2]);
+	
+	v1u_sum += v1u / rppsires[1] * utn;
+	v1u_n   += utn;
+	v1u_ste += pow(v1uee*utn,2);
+	
 	}
       }
 
@@ -612,8 +664,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	gUt_v1[iy]->SetPoint(iptv, utmean, v1u_ave );
 	gUt_v1[iy]->SetPointError(iptv, ute, v1u_err);
 	iptv++;
-      }
-      //<- phi dependent correction 
+      }  //<- phi dependent correction 
+
       
     } ///// endof Pt bin
     
@@ -622,9 +674,9 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     Double_t v1u_ste = 0.;
     
     for( UInt_t ips = 0; ips < psibin; ips++ ){
-      Double_t nv1u  = (Double_t)hdyucos1[iy][ips]->GetEntries();
+      Double_t npt  = (Double_t)hdyucos1[iy][ips]->GetEntries();
       
-      if( nv1u > 0 ) {
+      if( npt > 0 ) {
 
 	if( bccPsi )
 	  GetPsiRPResolution(rppsires, ips);
@@ -634,12 +686,12 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	}
 	
 	Double_t v1u   = hdyucos1[iy][ips]->GetMean();
-	Double_t v1ue  = hdyucos1[iy][ips]->GetStdDev()/sqrt( nv1u );
+	Double_t v1ue  = hdyucos1[iy][ips]->GetStdDev()/sqrt( npt );
 	Double_t v1uee = GetError(v1u, rppsires[1], v1ue, rppsires[2]);
 	
-	v1u_sum += v1u / rppsires[1] * nv1u;
-	v1u_n   += nv1u;
-	v1u_ste += pow(v1uee*nv1u,2);
+	v1u_sum += v1u / rppsires[1] * npt;
+	v1u_n   += npt;
+	v1u_ste += pow(v1uee*npt,2);
 
 	hv1yphi -> Fill( (Double_t)iy, (Double_t)ips, v1u); 
       }
@@ -783,8 +835,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	if( bccPsi )
 	  Get2PsiRPResolution(rppsires, ips);
 	else {
-	  rppsires[1] = rpresall[2];
-	  rppsires[2] = rpresall[3];
+	  rppsires[1] = rpresall[0];
+	  rppsires[2] = rpresall[1];
 	}
 
 	Double_t v2u   = hdyucos2[iy][ips]->GetMean();
@@ -904,7 +956,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
   gu_v1->Draw("ALP");
   if( isys == 5 ) {
-    SimFunction();
+    FlowFunction();
     fv1y->Draw("same");
   }
   gy_v1->SetLineColor(2);
@@ -1142,6 +1194,52 @@ Bool_t LoadPsiRPResolution(Bool_t bbcorr)
 
   return kTRUE;
 }
+//**************************************************
+Bool_t LoadAcceptanceCorrection(UInt_t selid)
+{
+  TString fname = "LCPSpectra_b0.15.root";
+
+  if( !gSystem->FindFile("data",fname) ){
+    LOG(ERROR) << fname << " is not found " << FairLogger::endl; 
+    return kFALSE;
+  }
+
+  TFile *fopen = TFile::Open(fname);
+  
+  TString hname = "h2PtY_"+ sysName + "_" +Partname[selid];
+  hAcpCorr = (TH2D*)fopen->Get(hname);
+  hAcpCorr -> SetDirectory( 0 );
+
+  if( !hAcpCorr ) {
+    LOG(ERROR) << hname << " is not found. " << FairLogger::endl;
+
+    return kFALSE;
+  }
+
+  fopen->Close();
+  return kTRUE;
+}
+void DrawAcceptanceCorrection()
+{
+
+  for( UInt_t i = 0; i < ybin1; i++ ) {
+    auto firstbin = hAcpCorr->GetXaxis()->FindBin(yrange1[i]/y_cm[isys+4]);
+    auto lastbin  = hAcpCorr->GetXaxis()->FindBin(yrange1[i+1]/y_cm[isys+4]);
+    hAcpyv1[i] = (TH1D*) hAcpCorr->ProjectionY(Form("hAcpyv1_%d",i), firstbin, lastbin);
+  }
+
+  id = 1;
+  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,600);
+  cc->Divide(4, ybin1/4);
+
+  for( UInt_t i = 0; i < ybin1; i++ ) {
+    cc->cd(i+1);
+    hAcpyv1[i]->Draw();
+  }
+
+  
+}
+
 //**************************************************
 Bool_t LoadMultRPResolution()
 {

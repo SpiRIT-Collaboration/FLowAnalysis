@@ -1,6 +1,6 @@
 #include "openRunAna.C"
 #include "DoFlow.h"
-#include "SimFunction.C"
+#include "FlowFunction.C"
 #include "sslib.h"
 #include "Complex.C"
 #include "poly.C"
@@ -37,6 +37,7 @@ void     PsiAngleDependence();
 UInt_t   GetPsiRPIndex(Double_t aVal);
 UInt_t   Get2PsiRPIndex(Double_t aVal);
 UInt_t   GetRPCorrIndex(Double_t mult);
+Double_t *GetRPResolutionwChi(Double_t *rpres, TH1D *hphi0_180, UInt_t kk);
 Double_t *GetRPResolutionwChi(Double_t *rpres, TH1D *hphi0_180, TH1D *hphi90_180, UInt_t kk);
 Double_t *GetRPResolutionwChi(Double_t *rpres, Double_t chi, Double_t chie, const UInt_t kk);
 Double_t *GetRPResolutionwCount(Double_t *rpres, Double_t c0, Double_t c90, UInt_t kk);
@@ -1144,8 +1145,10 @@ Double_t *GetRPResolutionwCount(Double_t *rpres, Double_t c0, Double_t c90, UInt
 	      << FairLogger::endl;
   }
   else if( kk == 2) {
-    LOG(INFO) << " <cos(2dphi)> "
-	      << std::setw(14) << rpres[2] << " +- " << std::setw(10) << rpres[3]
+    LOG(INFO) << " k = " << kk << " : " 
+	      << std::setw(6)  << c90 << "/" << c0 << " = " << mr << " chi = " << chi 
+	      << " <cos(2dphi)> "
+	      << std::setw(14) << rpres[0] << " +- " << std::setw(10) << rpres[1]
 	      << FairLogger::endl; 
   }
   if( std::isnan( rpres[0] ) || std::isnan( rpres[1] ) ) {
@@ -1157,6 +1160,19 @@ Double_t *GetRPResolutionwCount(Double_t *rpres, Double_t c0, Double_t c90, UInt
   return rpres;
 } //Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)
   
+
+Double_t *GetRPResolutionwChi(Double_t *rpres, TH1D *hphi0_180, UInt_t kk) 
+{
+  if( rpres == NULL ) return rpres;
+  
+  auto nbin = hphi0_180->GetNbinsX();
+
+  Double_t m0 = hphi0_180->GetEntries();
+  Double_t m1 = hphi0_180->Integral(nbin/2+1, nbin);
+
+  return GetRPResolutionwCount(rpres, m0, m1, kk);
+
+} //Double_t *GetRPResolutionwChi(TH1D *hphi0_180, TH1D *hphi90_180)
 
 Double_t *GetRPResolutionwChi(Double_t *rpres, TH1D *hphi0_180, TH1D *hphi90_180, UInt_t kk) 
 {

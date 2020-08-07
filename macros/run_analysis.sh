@@ -28,7 +28,7 @@ source ../build/config.sh
 #export RCVER=develop.1964.781a3cf
 #export SUFX=BTt
 
-VERSION=51
+VERSION=52
 export TPCDIR=/data/spdaq02/recoData/20200529/data
 export RCVER=develop.1988.bf2b00e
 export SUFX=BTt
@@ -44,6 +44,9 @@ export STBEAM124=/cache/scr/spirit/DataAskedByMizuki/beam.Sn124/
 export STBEAM112=/cache/scr/spirit/DataAskedByMizuki/beam.Sn112/
 
 #KATANA data
+
+
+
 export STKATANADIR=/xrootd/spdaq02/katana/root/katana/
 
 #Kyoto data
@@ -69,12 +72,12 @@ source runList.sh
 # Set RUNNUMBER1 
 DBVERSION=0
 
-export TPCDIR=$TPCDIR/Sn112
+export TPCDIR=$TPCDIR/Sn124
 
 #RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
-#RUNNUMBER1=(${RNF124})
-RUNNUMBER1=(${RNF112})
+RUNNUMBER1=(${RNF124})
+#RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RNFTEMP})
 #RUNNUMBER1=(${RNF132r})
 #RUNNUMBER1=(${RNF132t})
