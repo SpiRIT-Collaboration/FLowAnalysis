@@ -10,7 +10,7 @@ UInt_t  Asys[] = { 132,   108,  124, 112};
 const UInt_t nsys = 4;
 const UInt_t nprt = 5;
 TString  iopt[]     = {"","same","same","same","same", "same", "same"};
-UInt_t   imark[]    = {20, 21, 22, 23, 25, 26, 24, 20};  
+UInt_t   imark[]    = {24, 25, 26, 32, 20, 21, 22, 23};  
 Color_t  icol[] = {  kRed, kBlue, kGreen+2, kMagenta, kOrange, kViolet};
 
 UInt_t ic = 0;
@@ -34,9 +34,8 @@ const UInt_t ybin2 = sizeof(yrange2)/sizeof(Double_t);
 
 //Double_t y_cm[]  = { 0.382453, 0.364873, 0.390302, 0.354066, 0.371326, 0.382453}; //by v52.9
 Double_t y_bm[]  = { 0.360199, 0.377779, 0.354065, 0.390301, 0.371326, 0.360199};
-
-Double_t y_cm[] =  { 0.382006, 0.36444, 0.389983, 0.353648, 0.37093, 0.37093, 0.37192, 0.371788};
-
+Double_t y_cm[] =  { 0.382006, 0.36444, 0.389983, 0.353648, 0.371326, 0.382006,   0.37093, 0.37093, 0.37192, 0.371788, 0.371326, 0.37093};
+//                    132AA    108AA    124AA     112AA     pp         100(sim)    132nn    108nn    124nn    112nn    pp         100nn
 // pt bin
 const UInt_t   ptbin1  = 8; //16
 const UInt_t   ptbin2  = 5; //10

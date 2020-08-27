@@ -22,11 +22,29 @@ UInt_t  sysID = 0;
 TString partName = "proton";
 UInt_t  ip = 2;
 gplot gnames[] = {
+  {".v52.10.7" ,"finYPt_","No corr","gy_v1"},
+  {".v52.10.7" ,"finYPt_","PID_Kaneko","gu_v1"},
+  {".v52.10.8" ,"finYPt_","PID_Tight","gu_v1"},
+  {".v52.10.9" ,"finYPt_","PID_Norm","gu_v1"},
+  //  {".v52.10.14" ,"finYPt_","yaw < 0","gu_v1"},
+  // {".v52.10.15" ,"finYPt_","yaw > 0","gu_v1"},
+  // {".v52.10.10" ,"finYPt_","|#Phi| < 0","gu_v1"},
+  // {".v52.10.11" ,"finYPt_","|#Phi| > 0","gu_v1"},
+  {".v52.11.0"  ,"finYPt_","|y|>0.1","gu_v1"},
+  {".v52.11.1"  ,"finYPt_","|y|>0.1&g1","gu_v1"},
+  {".v52.11.2"  ,"finYPt_","|y|>0.1&g1&PID_T","gu_v1"},
+  // {".v52.11.3"  ,"finYPt_","|y|>0.1&|#phi|>0","gu_v1"},
+  // {".v52.11.4"  ,"finYPt_","|y|>0.1&|#phi|<0","gu_v1"},
+  {".v52.12.0"  ,"finYPt_","|y|>0.15&flwf1","gu_v1"},
+  {".v52.12.1"  ,"finYPt_","|y|>0.15&g1","gu_v1"},
+  // {".v52.10.16" ,"finYPt_","aft PID_kaneko","gu_v1"},
+  // {".v52.10.17" ,"finYPt_","aft yaw > 0","gu_v1"},
   // {".v52.10.19" ,"finYPt_","M55to80 no corr","gy_v1"},
   // {".v52.10.19" ,"finYPt_","w/o corr","gu_v1"},
-  {".v52.10.21" ,"finYPt_","corr","gu_v1"},
-  {".v52.10.20" ,"finYPt_","corr yaw<0","gu_v1"},
-  {".v52.10.22" ,"finYPt_","corr yaw>0","gu_v1"},
+  // {".v52.10.21" ,"finYPt_","corr","gu_v1"},
+  // {".v52.10.20" ,"finYPt_","corr yaw<0","gu_v1"},
+  // {".v52.10.22" ,"finYPt_","corr yaw>0","gu_v1"},
+  //--
   // {".v52.10.8" ,"finYPt_","PID_Tight","gu_v1"},
   // {".v52.10.9" ,"finYPt_","PID_Norm","gu_v1"},
   // {".v52.10.14" ,"finYPt_","yaw < 0","gu_v1"},
@@ -87,6 +105,7 @@ void PlotSystematicError()
   SetStyle();
   SetColor();
 
+
   Color_t fcolor = 2;
 
   TString gtitle = bName[sysID]+partName;
@@ -98,6 +117,7 @@ void PlotSystematicError()
   std::vector<Double_t> v1_slpe;
   std::vector<Double_t> v2_max ;
   std::vector<Double_t> v2_maxe;
+  Double_t v1_sigm = 0.;
 
   mrv1 = new TMultiGraph("mrv1"  ,gtitle+";y_{nrm}; v1");
   mrv2 = new TMultiGraph("mrv2"  ,gtitle+";y_{nrm}; v2");
@@ -140,14 +160,15 @@ void PlotSystematicError()
 
     if( yv1 ) {
 
-      //mid-central M<50
-      fv1fit->SetParameter(1,0.3);
-      fv1fit->SetParameter(2,-8.4e-09);
-      fv1fit->SetParameter(3,-6.5e-05);
       //central M>55
       fv1fit->SetParameter(1,0.2);
       fv1fit->SetParameter(2,-2.4e-02);
       fv1fit->SetParameter(3,-5.8e-02);
+      //mid-central M<50
+      fv1fit->SetParameter(1,0.3);
+      fv1fit->SetParameter(2,-8.4e-09);
+      fv1fit->SetParameter(3,-6.5e-05);
+
       fv1fit->SetLineColor(fcolor);
       yv1->Fit("fv1fit","","",-0.5,0.6); //"Q0","");    
       cout << " fcolor " << fcolor << endl; 
@@ -171,6 +192,7 @@ void PlotSystematicError()
       else {
 	v1_slp.push_back ( fv1fit->GetParameter(1) / pow( fv1fit->GetParError(1), 2) );
 	v1_slpe.push_back( 1./ pow( fv1fit->GetParError(1), 2 ) ); 
+	v1_sigm += 1./ pow( fv1fit->GetParError(1), 2 );
       }
 
       gev1 -> SetPoint(iv1, iv1, fv1fit->GetParameter(1) );
@@ -247,14 +269,14 @@ void PlotSystematicError()
   //------
   ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv)); iccv++;
 
-  for( UInt_t i = 0; i < ncp; i++ ){
-    auto fbin = gev1 -> GetXaxis() -> FindBin( i*2 );
-    if( fbin != 101 ) 
-      gev1 -> GetXaxis() -> SetBinLabel( fbin, gev1Label.at(i*2) );
 
-    fbin = gev1 -> GetXaxis() -> FindBin( i*2+1 );
+  cout << "gev1lable.size " << gev1Label.size() << endl;
+  
+
+  for( UInt_t i = 0; i < ncp; i++ ){
+    auto fbin = gev1 -> GetXaxis() -> FindBin( i );
     if( fbin != 101 ) 
-      gev1 -> GetXaxis() -> SetBinLabel( fbin, gev1Label.at(i*2+1));
+      gev1 -> GetXaxis() -> SetBinLabel( fbin, gev1Label.at(i) );
     
   }
   // set style
@@ -265,7 +287,6 @@ void PlotSystematicError()
   gev1 -> SetMarkerColor(2);
   gev1 -> SetMarkerSize(1.5);
   gev1 -> SetMarkerStyle(21);
-  gev1 -> Draw("ACFP");
 
   Double_t m_v1slp = TMath::Mean( v1_slp.begin(),  v1_slp.end() );
   Double_t s_v1slp = TMath::Mean( v1_slpe.begin(), v1_slpe.end());
@@ -274,24 +295,22 @@ void PlotSystematicError()
   s_v1slp = sqrt(1./s_v1slp * v1_slpe.size());
   
 
-
+  v1_sigm = 1./sqrt(v1_sigm);
   auto aLineV1  = new TLine( gev1->GetXaxis()->GetXmin(), m_v1slp,
 			     gev1->GetXaxis()->GetXmax(), m_v1slp);
-  auto aBoxV1   = new TBox(  gev1->GetXaxis()->GetXmin(), m_v1slp+s_v1slp,
-			     gev1->GetXaxis()->GetXmax(), m_v1slp-s_v1slp );
+  auto aBoxV1   = new TBox(  gev1->GetXaxis()->GetXmin(), m_v1slp+v1_sigm,
+			     gev1->GetXaxis()->GetXmax(), m_v1slp-v1_sigm );
   aBoxV1->SetFillStyle(3008);
   aBoxV1->SetFillColor(4);
 
 
-  LOG(INFO) << "v1 slope = " << m_v1slp << " +- " << s_v1slp << FairLogger::endl;
+  LOG(INFO) << "v1 slope = " << m_v1slp << " +- " << v1_sigm << FairLogger::endl;
 
   // auto aLineY1 = new TLine( 0., mrv1->GetYaxis()->GetXmin(), 
   // 			    0., mrv1->GetYaxis()->GetXmax());
 
   aLineV1->SetLineColor(1);
   aLineV1->SetLineStyle(3);
-  aLineV1->Draw();
-  aBoxV1 ->Draw();
 
 
   meanV1 -> SetX1( gev1->GetXaxis()->GetXmin() );
@@ -301,9 +320,15 @@ void PlotSystematicError()
   meanV1 -> SetLineColor(kGreen);
   stdV1  -> SetFillStyle(4061);
   stdV1  -> SetFillColor( kGreen -6 );
-  meanV1 -> Draw();
-  stdV1  -> Draw();
 
+  Double_t ymax =  m_v1slp+v1_sigm > gev1->GetYaxis()->GetXmax() ?  m_v1slp+v1_sigm*1.2  : gev1->GetYaxis()->GetXmax();
+  Double_t ymin =  m_v1slp-v1_sigm < gev1->GetYaxis()->GetXmin() ?  m_v1slp-v1_sigm*0.97 : gev1->GetYaxis()->GetXmin();
+  gev1->GetYaxis()->SetRangeUser(ymin, ymax);
+  gev1 -> Draw("ACFP");
+  aLineV1->Draw();
+  aBoxV1 ->Draw();
+  meanV1 -> Draw();
+  //stdV1  -> Draw();
 
   //  Plot_v2();
   //  Plot_v1offset();

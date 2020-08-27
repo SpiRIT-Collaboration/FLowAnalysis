@@ -96,7 +96,7 @@ void DoRPRes(Int_t isel = 0)
 
   if( isel == 0 ) {
     CentralityDependence() ;
-    PsiAngleDependence()   ;
+    //    PsiAngleDependence()   ;
   }
   else if( isel == 1 ) {
     //PsiAngleDependence_old()   ;
@@ -790,7 +790,7 @@ void PsiAngleDependence_old()            //%% Executable :
 
 void CentralityDependence()            //%% Executable :
 {
-  LOG(INFO) << " CentralityDependence .... " << FairLogger::endl;
+  LOG(INFO) << " CentralityDependence .... " << mbin << FairLogger::endl;
 
   gROOT->Reset();
   gROOT->cd();
@@ -830,7 +830,7 @@ void CentralityDependence()            //%% Executable :
 
   Long64_t nEntry = SetBranch();
 
-  nEntry=10;
+  //  nEntry=10;
   for(Long64_t i = 0; i < nEntry; i++) {
 
     rChain->GetEntry(i);
@@ -894,30 +894,32 @@ void CentralityDependence()            //%% Executable :
     cc80->cd(id); id++;
     hmultbin4[i]->Draw();
     
-    Double_t *rpres = new Double_t[4];
+    Double_t *rpres = new Double_t[2];
 
     GetRPResolutionwChi(rpres, hphi0_180[i], hphi90_180[i], 1);
     LOG(INFO) << " Multiplicity " << hmultbin4[i]->GetMean() << " > " << mrange[i]
 	      << " k=1  <cos(Phi)> = " << rpres[0] << " +- " << rpres[1] 
 	      << " <cos(2Phi)> = "<< rpres[2] << " +- " << rpres[3] 
 	      << FairLogger::endl;
+    if( hphi90_180[i]->GetEntries() > 15 && !std::isnan(rpres[0]) && rpres[1] < 0.1) {
+      gv_mcos1->SetPoint(ip, hmultbin4[i]->GetMean(), rpres[0]);
+      gv_mcos1->SetPointError(ip, hmultbin4[i]->GetStdDev()/sqrt((Double_t)hmultbin4[i]->GetEntries()), rpres[1]);
+      gv_mcos1m1->SetPoint(ip, hmultbin1[i]->GetMean(), rpres[0]);
+      gv_mcos1m1->SetPointError(ip, hmultbin1[i]->GetStdDev()/sqrt((Double_t)hmultbin1[i]->GetEntries()), rpres[1]);
+    }
 
-    GetRPResolutionwChi(rpres, h2phi0_180[i], h2phi90_180[i], 2);
+    //    GetRPResolutionwChi(rpres, h2phi0_180[i], h2phi90_180[i], 2);
+    GetRPResolutionwChi(rpres, hphi0_180[i], hphi90_180[i], 2);
     LOG(INFO) << " Multiplicity " << hmultbin4[i]->GetMean() << " > " << mrange[i]
 	      << " k=2 <cos(2Phi)> = "<< rpres[2] << " +- " << rpres[3] 
 	      << FairLogger::endl;
      
     if( hphi90_180[i]->GetEntries() > 15 && !std::isnan(rpres[0]) && rpres[1] < 0.1) {
-      gv_mcos1->SetPoint(ip, hmultbin4[i]->GetMean(), rpres[0]);
-      gv_mcos1->SetPointError(ip, hmultbin4[i]->GetStdDev()/sqrt((Double_t)hmultbin4[i]->GetEntries()), rpres[1]);
+      gv_mcos2->SetPoint(ip, hmultbin4[i]->GetMean(), rpres[0]);
+      gv_mcos2->SetPointError(ip, hmultbin4[i]->GetStdDev()/sqrt((Double_t)hmultbin4[i]->GetEntries()), rpres[1]);
 
-      gv_mcos2->SetPoint(ip, hmultbin4[i]->GetMean(), rpres[2]);
-      gv_mcos2->SetPointError(ip, hmultbin4[i]->GetStdDev()/sqrt((Double_t)hmultbin4[i]->GetEntries()), rpres[3]);
-
-      gv_mcos1m1->SetPoint(ip, hmultbin1[i]->GetMean(), rpres[0]);
-      gv_mcos1m1->SetPointError(ip, hmultbin1[i]->GetStdDev()/sqrt((Double_t)hmultbin1[i]->GetEntries()), rpres[1]);
-      gv_mcos2m1->SetPoint(ip, hmultbin1[i]->GetMean(), rpres[2]);
-      gv_mcos2m1->SetPointError(ip, hmultbin1[i]->GetStdDev()/sqrt((Double_t)hmultbin1[i]->GetEntries()), rpres[3]);
+      gv_mcos2m1->SetPoint(ip, hmultbin1[i]->GetMean(), rpres[0]);
+      gv_mcos2m1->SetPointError(ip, hmultbin1[i]->GetStdDev()/sqrt((Double_t)hmultbin1[i]->GetEntries()), rpres[1]);
       ip++;
     }
   }

@@ -29,23 +29,28 @@ unset CCPSI
 export MNLC=0
 export MNUC=50
 #export MNLC=55
-#export MNUC=80
+export MNUC=80
 
 
+export MNSFX=BTt
+export MDCUT=0.15 #0.0               ##   <------@@ mid-rapidity cut
+export MNINVERSION=52.9             ##   <------@@ input
+export MNOUTVERSION=52.12           ##   <------@@ output 
 
 
 ##-- DATA
 function data132()    ##CONFIG
 {
-    export MNSFX=BTt
-    export MDCUT= #0.0               ##   <------@@ mid-rapidity cut
 ##-- 
     export MNSN=132
     export MNRNF=$RNF132
-    export MNINVERSION=$1            ##   <------@@ input
-    export MNOUTVERSION=$2           ##   <------@@ output 
-    export MNMXEVT=$3
+    export MNMXEVT=
     export MNOSUBV=
+
+    if [ -n "$1" ]; then
+	export MNINVERSION=$1            ##   <------@@ input
+	export MNOUTVERSION=$2           ##   <------@@ output 
+    fi
 
     commonsetup
 ##<----
@@ -53,14 +58,15 @@ function data132()    ##CONFIG
 
 function data108()    ##CONFIG
 {
-    export MNSFX=BTt
-    export MDCUT= #0.0               ##   <------@@ mid-rapidity cut
 ##--
     export MNSN=108
     export MNRNF=$RNF108
-    export MNINVERSION=$1            ##   <------@@ input
-    export MNOUTVERSION=$2           ##   <------@@ output 
     export MNOSUBV=
+
+    if [ -n "$1" ]; then
+	export MNINVERSION=$1            ##   <------@@ input
+	export MNOUTVERSION=$2           ##   <------@@ output 
+    fi
 
     commonsetup
 ##<----
@@ -68,14 +74,15 @@ function data108()    ##CONFIG
 
 function data124()    ##CONFIG
 {
-    export MNSFX=BTt
-    export MDCUT= #0.0               ##   <------@@ mid-rapidity cut
 ##--
     export MNSN=124
     export MNRNF=$RNF124
-    export MNINVERSION=$1            ##   <------@@ input
-    export MNOUTVERSION=$2           ##   <------@@ output 
     export MNOSUBV=
+
+    if [ -n "$1" ]; then
+	export MNINVERSION=$1            ##   <------@@ input
+	export MNOUTVERSION=$2           ##   <------@@ output 
+    fi
 
     commonsetup
 ##<----
@@ -83,14 +90,15 @@ function data124()    ##CONFIG
 
 function data112()    ##CONFIG
 {
-    export MNSFX=BTt
-    export MDCUT= #0.0               ##   <------@@ mid-rapidity cut
 ##--
     export MNSN=112
     export MNRNF=$RNF112
-    export MNINVERSION=$1            ##   <------@@ input
-    export MNOUTVERSION=$2           ##   <------@@ output 
     export MNOSUBV=
+
+    if [ -n "$1" ]; then
+	export MNINVERSION=$1            ##   <------@@ input
+	export MNOUTVERSION=$2           ##   <------@@ output 
+    fi
 
     commonsetup
 ##<----
@@ -99,15 +107,17 @@ function data112()    ##CONFIG
 ##-- for simulation
 function simtpc()   ##CONFIG
 {
+    export MNSN=100
     export MNSFX=rpsim
-    export MNRNF=0400 
-    export MNINVERSION=50.8          ##   <------@@ input
-    export MNOUTVERSION=50.8         ##   <------@@ output 
+    export MNRNF=0022 
+    export MNINVERSION=22.0          ##   <------@@ input
+    export MNOUTVERSION=22.0         ##   <------@@ output 
 
     commonsetup
 }
 function simfull()  ##CONFIG
 {
+    export MNSN=100
     export MNSFX=rpsim
     export UC=
     export MNRNF=0022
@@ -243,15 +253,22 @@ function dorpres()
 
 function doflowmdependence() 
 {
-#    LC=0   UC=30   RUN={$MNRNF} root -b -q DoRPRes.C\(0\)
-#    LC=30  UC=40   RUN={$MNRNF} root -b -q DoRPRes.C\(0\)
-#    LC=40  UC=50   RUN={$MNRNF} root -b -q DoRPRes.C\(0\)
-#    LC=50  UC=80   RUN={$MNRNF} root -b -q DoRPRes.C\(0\)
-
     LC=0  UC=30 OSUBV=15 doflowbatch $1
     LC=30 UC=40 OSUBV=16 doflowbatch $1
     LC=40 UC=50 OSUBV=17 doflowbatch $1
     LC=50 UC=80 OSUBV=18 doflowbatch $1
+}
+
+function doflowmultiHeavy()
+{
+    PARTICLES=("3" "4" "5" "6")
+    doflowmulti $1
+}
+
+function doflowmultiall()
+{
+    PARTICLES=("2" "3" "4" "5" "6")
+    doflowmulti $1
 }
 
 function doflowmulti()
@@ -262,7 +279,7 @@ function doflowmulti()
     fi
 
 
-    PARTICLES=("2" "3" "4" "5" "6")
+#    PARTICLES=("2" "3" "4" "5" "6")
     typeset -i I=0;
     while(( $I < ${#PARTICLES[@]} ))
     do
@@ -282,6 +299,7 @@ function doflowbatch()
 	export OSUBV=$2
     fi
    RPBS=0 RUN={$MNRNF} root -b -q $MNMACRO\($1\)
+   unset OSUBV
 }
 
 function doflow() 
@@ -291,6 +309,7 @@ function doflow()
     fi
     
     RPBS=0 RUN={$MNRNF} root $MNMACRO\($1\)
+    unset OSUBV
 }
 
 function doopen()
@@ -313,11 +332,11 @@ function anahelp()
     echo " Step 0 > corr 1 OR allcorr 1 :: Re-caluculate reaction plane "
     echo " Step 1 > flattening OR flattenandcorrection "
     echo " Step 2 > corr(the first run) OR restcorr(excpt the first run) OR  allcorr(full)"
-    echo " Step 3 > dorpres 0 "
-    echo "          dorpres 0   :: Get centrality and Psi dependent correction"
-    echo "          dorpres 1   :: Get Psi dependent correction parameter"
-    echo "          dorpres 2   :: Get overall correction factor"
-    echo " Step 4 > doflow       :: open files "
+#    echo " Step 3 > dorpres 0 "
+#    echo "          dorpres 0   :: Get centrality and Psi dependent correction"
+#    echo "          dorpres 1   :: Get Psi dependent correction parameter"
+#    echo "          dorpres 2   :: Get overall correction factor"
+    echo " Step 3 > doflow       :: open files "
     echo "          doflow 2  0(output version#) 1(Corretion versoin)::" $MNMACRO
     echo "                  -1:pi- 1:pi+, 2:p, 3:d, 4:t, 5:3He, 6: 4He, 7:n, 8:H" 
     echo "                  run #(partid) #(Output version)"
@@ -332,16 +351,17 @@ function showenv()
     echo "++++++++++++++++++++++++++++++++++++++++"
     env | grep MN
     echo "----------------------------------------"
-    echo BEAM          :: $MNSN
-    echo run number    :: $MNRNF
-    echo Sufix         :: $SUFX
-    echo Input         :: $IVER
-    echo Output        :: $OVER
-    echo DataBase      :: $DBVER
-    echo Output subVer :: $RPBS
-    echo Max maltiplicity :: $UC
-    echo Min multiplicity :: $LC
-    echo Number of event :: $MXEVT
+    echo "BEAM             ::"  $MNSN
+    echo "run number       ::"  $MNRNF
+    echo "Sufix            ::"  $SUFX
+    echo "Input            ::"  $IVER
+    echo "Output           ::"  $OVER
+    echo "DataBase         ::"  $DBVER
+    echo "Output subVer    ::"  $RPBS
+    echo "Max maltiplicity ::"  $UC
+    echo "Min multiplicity ::"  $LC
+    echo "Number of event  ::"  $MXEVT
+    echo "Mid-Y cut        ::"  $MDCUT
     echo "++++++++++++++++++++++++++++++++++++++++"
 }
 

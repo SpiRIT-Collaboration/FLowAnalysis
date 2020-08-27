@@ -21,17 +21,17 @@ Double_t sysA[]    = {256.,    220.,      236.,   236.   ,  256.};
 //-- plot configuration
 //--------------------------------------------------
 Bool_t bplot[] = 
-  { 0, // 0 data   It should be set to 1 in the code.
+  { 1, // 0 data   It should be set to 1 in the code.
     0, // 1 model  It should be set to 1 in the code.
-    1, // 2 v1 and v2 rapidity 
-    1, // 3 v1 and v2 on pt in one window
+    0, // 2 v1 and v2 rapidity 
+    0, // 3 v1 and v2 on pt in one window
     0, // 4 v1 and v2 in individual windows
-    0, // 5 Acceptance ypt
+    0, // 5 Acceptance ypt => never be plotted 
     0, // 6 <px>/A
     0, // 7 v1 vs part system dependence
     0, // 8 v2_min system dependence 
-    0, // 9 v1 slope and v2 max dependence on m
-    0, //10 v1 slope and v2 max dependence on impact parameter
+    0, // 9 v1 slope(V11) and v2 max dependence on m
+    0, //10 v1 slope(v11) and v2 max dependence on impact parameter
     0  //11 v1 slop and v2 max systematic error check
   };
 
@@ -46,52 +46,28 @@ Bool_t bstyle[] =
 // --> Plotting selection
 //--- Data
 Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
-Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bpid[]  = { 0, 0, 0, 1, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
-UInt_t  bver[]  = {1, 1};
-//UInt_t  bver[]  = {1, 1, 1};
-//UInt_t  bver[]  = {0, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-//UInt_t  bver[]  = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 gplot gnames[] = {  
-  {".v52.10.16" ,"finYPt_","corr M<50"},
-  {".v52.10.18" ,"finYPt_","corr M<50"},
-  {".v52.10.0" ,"advYPt_","M<50"},
-  {".v52.10.1" ,"finYPt_","fin M55-80"},
-  {".v52.10.5" ,"advYPt_","M50-80"},
-  {".v52.10.3" ,"advYPt_","M0-80&Acc"},
-  {".v52.10.0" ,"advYPt_","M0-50"},
-  {".v52.9.14" ,"advYPt_","M0-50"},
-  {".v52.9.5" ,"advYPt_","M15-20"},
-  {".v52.9.6" ,"advYPt_","M20-40"},
-  {".v52.9.7" ,"advYPt_","M20-40"},
-  {".v52.9.8" ,"advYPt_","M30-50"},
-  {".v52.9.9" ,"advYPt_","M40-50"},
-  {".v52.9.10","advYPt_","M60-64"},
-  {".v52.9.11","advYPt_","M60-80"},
-  {".v52.9.12","advYPt_","M65-50"},
-  {".v52.9.13","advYPt_","M50-55"},
-  {".v52.9.1" ,"advYPt_","M40-50"},
-  {".v52.9.2" ,"advYPt_","M50-80"},
-  {".v52.9.4" ,"advYPt_","M0-20"},
-  {".v52.7.1" ,"advYPt_","y_nn/y_nn"},
-  {".v52.1.0" ,"advYPt_","y_AA"},
-  {".v52.3.0" ,"advYPt_","y_AA/y_AA"},
-  {".v52.3.1" ,"advYPt_","8.0:phi<30"},
-  {".v52.3.2" ,"advYPt_","8.0:phi>150"},
-  {".v52.8.1" ,"advYPt_","8.0:y<0"},
-  {".v52.8.0" ,"advYPt_","8.0:y>0"},
-  {".v52.7.0" ,"advYPt_","y_nn/y_nn"},
-  {".v52.4.0" ,"advYPt_","y_AA/y_nn"},
-  {".v52.6.0" ,"advYPt_","y_AA/y_sys"},
-  {".v52.5.0" ,"advYPt_","y_AA/y_bm"},
-  {".v52.2.1" ,"advYPt_","y_sys"},
-  {".v52.0.13" ,"advYPt_","y_nn"},
+  {".v52.10.16" ,"finYPt_",""},
+  //  {".v22.0.0" ,"finYPt_","SIM full"},
+  //  {".v50.8.0" ,"finYPt_","SIM TPC"},
+  //  {".v52.10.30" ,"finYPt_","M65-80"},
+  // {".v52.10.31" ,"finYPt_","M60-65"},
+  // {".v52.10.32" ,"finYPt_","M55-60"},
+  // {".v52.10.33" ,"finYPt_","M50-55"},
+  // {".v52.10.34" ,"finYPt_","M45-50"},
+  // {".v52.10.35" ,"finYPt_","M40-45"},
+  // {".v52.10.36" ,"finYPt_","M30-40"},
+  // {".v52.10.37" ,"finYPt_","M0-30"},
+  // {".v52.0.13" ,"advYPt_","y_nn"},
 };
+//const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
+const UInt_t nmax = (UInt_t)sizeof(gnames)/sizeof(gplot);
 
 //APR2019
 //  {".v50.7.1","advYPt_","(A)TPC"}, //APR2019
@@ -146,7 +122,7 @@ TString amdHeader[] = {"amd_132Sn124Sn270AMeV_cluster_",
 //==================================================
 UInt_t   ccvid = 0;
 auto lslope = new TF1("lslope","[0]+[1]*x",-1., 1.);
-auto fv2fit = new TF1("fv2fit","[0]+[1]*x^2+[2]*x^4",0.,1.1);
+//auto fv2fit = new TF1("fv2fit","[0]+[1]*x^2+[2]*x^4",0.,1.1);
 
 // --> configuration
 Size_t  imsz[] = {1, 1, 1.3, 1.3, 1.3, 1.3, 1.3};
@@ -190,18 +166,16 @@ void PlotPtDependence()
 
   UInt_t ndata = 0;
   for(UInt_t i = 0; i < nmax; i++){
-    if( bver[i] ) {
-      ndata++;
-      sVer[i]  = gnames[i].Version;
-      sName[i] = gnames[i].fileHeader;
-      cmnt[i]  = gnames[i].comment;
+    ndata++;
+    sVer[i]  = gnames[i].Version;
+    sName[i] = gnames[i].fileHeader;
+    cmnt[i]  = gnames[i].comment;
 
-      if( gnames[i].Version == "" ) {
-	std::cout << " Version? v##.# ";
-	TString svv; 
-	std::cin  >> svv;
-	sVer[i] = ".v" + svv;
-      }
+    if( gnames[i].Version == "" ) {
+      std::cout << " Version? v##.# ";
+      TString svv; 
+      std::cin  >> svv;
+      sVer[i] = ".v" + svv;
     }
   }
 
@@ -236,7 +210,7 @@ void PlotPtDependence()
 
   TGraphErrors *g_v1slp = new TGraphErrors();
   g_v1slp->SetName("g_v1slp");
-  g_v1slp->SetTitle("; multiplicity; v1 slope");
+  g_v1slp->SetTitle("; multiplicity; v_{11}");
 
 
   TGraphErrors *g_v2max = new TGraphErrors();
@@ -262,19 +236,19 @@ void PlotPtDependence()
     g_v1slpm[jj]   = new TGraphErrors();
     g_v2maxm[jj]   = new TGraphErrors();
     g_v1slpm[jj] -> SetName(Form("g_v1slpm%d",jj));
-    g_v1slpm[jj] -> SetTitle("; multiplicity; v1 slope");
+    g_v1slpm[jj] -> SetTitle("; multiplicity; v_{11}");
     g_v2maxm[jj] -> SetName(Form("g_v2maxm%d",jj));
     g_v2maxm[jj] -> SetTitle("; multiplicity; -v2 max");
   }
 
   // Rapidity dependence 
-  TH2D *hyptacp[10];
+  TH2D *hyptacp[20];
 
-  auto mrv1  = new TMultiGraph("mrv1"  ,";y_{nrm}; v1");
-  auto mrv2  = new TMultiGraph("mrv2"  ,";y_{nrm};v2");//";y_{cm}/y_{beam}; v2");
+  auto mrv1  = new TMultiGraph("mrv1"  ,";y/y_{nn}-1; v1");
+  auto mrv2  = new TMultiGraph("mrv2"  ,";y/y__{nn}-1;v2");//";y_{cm}/y_{beam}; v2");
   auto mv1sl = new TMultiGraph("mv1sl" ,";Centrality; v1 slope");
   auto mv1slp= new TMultiGraph("mv1slp","; Particle ; v1 slope");
-  auto mmpx  = new TMultiGraph("mmpx","; y/y_{cm} ; <px>/A");
+  auto mmpx  = new TMultiGraph("mmpx","; y/y_{nn}-1 ; <px>/A");
   //  mv1slp->GetXaxis()->SetAlphanumeric(kTRUE);
 
   auto lgr1 = new TLegend(0.5 , 0.15, 0.70, 0.40, sVer[0]); 
@@ -305,10 +279,8 @@ void PlotPtDependence()
 	
 	if( !bcnt[it] ) continue;
 
-	for(UInt_t iz = 0; iz < (UInt_t)sizeof(bver)/sizeof(UInt_t); iz++){
+	for(UInt_t iz = 0; iz < nmax; iz++){
 	  
-	  if( bver[iz] == 0 ) continue;
-
 	  fname.push_back( "data/"+ sName[iz] + bName[is] + fpid[ip] + sVer[iz] + ".root" );
 
 	  if( fOutName == "" )
@@ -365,7 +337,7 @@ void PlotPtDependence()
 	index[1].push_back(lp);
 	index[2].push_back(lo);
 	index[3].push_back(3);
-	index[4].push_back((UInt_t)sizeof(bver)/sizeof(UInt_t)+1);
+	index[4].push_back(nmax+1);
 	index[5].push_back(2);
 	kgr++;
 
@@ -543,13 +515,18 @@ void PlotPtDependence()
 
 
     //acceptance
-    if( bplot[0] && bplot[5] ) {
+    if( bplot[0] && bplot[5] && kFALSE ) {
       hyptacp[igr] = (TH2D*)fOpen->Get("hyptacp");
       if( hyptacp[igr] == NULL) {
 	cout <<" NULL 222" << endl;
       } 
-      else
-	hyptacp[igr]->SetTitle(Form("hyptacp_%d",igr));
+      else {
+	hyptacp[igr]->Print();
+	hyptacp[igr]->SetName(Form("hyptacp_%d",igr));
+	cout << " igr " << igr << " " <<hyptacp[igr]->GetName() << endl;
+	cout << hyptacp[igr] << endl;
+	hyptacp[igr]->Draw("colz");
+      }
     }
 
     if( igr < ngr ) {
@@ -995,6 +972,7 @@ void PlotPtDependence()
 
   if( bplot[0] && bplot[5] ) {
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),500,700);
+    cout << "ngr " << ngr << endl;
     cc->Divide(1,ngr);
     for(UInt_t i = 0; i < ngr; i++){
       if( hyptacp[i] == NULL) {
@@ -1003,7 +981,8 @@ void PlotPtDependence()
       }
       else {
        	cc->cd(i+1);
-	//       	hyptacp[i]->Draw("colz");
+	cout << hyptacp[i] << endl;
+	hyptacp[i]->Draw("colz");
       }
     }
   }
@@ -1093,7 +1072,7 @@ void PlotPtDependence()
   if( bplot[0] && bplot[7]) {
     auto m_v1sys = new TMultiGraph();
     auto lgv1sys = new TLegend(0.2,0.7,0.5,0.9,"");
-    m_v1sys->SetTitle(";(n-p)/A; v1 slope");
+    m_v1sys->SetTitle(";(n-p)/A; v_{11}");
 
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     for(UInt_t jj = 0; jj < 6; jj++){
@@ -1117,13 +1096,13 @@ void PlotPtDependence()
     auto lgv1slpm =  new TLegend(0.2,0.2,0.5,0.4,"");
 
 
-    m_v1m->SetTitle(";"+ hmultX +"; v1 slope");
+    m_v1m->SetTitle(";"+ hmultX +"; v_{11}");
 
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     for(UInt_t jj = 0; jj < 20; jj++){
       if(g_v1slpm[jj]->GetN() > 0) {
 	g_v1slpm[jj]->SetMarkerStyle(20);
-	g_v1slpm[jj]->SetMarkerSize(1.5);
+	g_v1slpm[jj]->SetMarkerSize(0.9);
 	g_v1slpm[jj]->SetMarkerColor(icol[jj]);
 	g_v1slpm[jj]->SetLineColor(icol[jj]);
 	
@@ -1154,7 +1133,7 @@ void PlotPtDependence()
     for(UInt_t jj = 0; jj < 6; jj++){
       if(g_v2maxsys[jj]->GetN() > 0) {
 	g_v2maxsys[jj]->SetMarkerStyle(20);
-	g_v2maxsys[jj]->SetMarkerSize(1.5);
+	g_v2maxsys[jj]->SetMarkerSize(0.6);
 	g_v2maxsys[jj]->SetMarkerColor(icol[jj]);
 	g_v2maxsys[jj]->SetLineColor(icol[jj]);
 
@@ -1179,8 +1158,8 @@ void PlotPtDependence()
       if(g_v2maxm[jj]->GetN() > 0) {
 	cout << "m_v2m " << jj << " " << icol[jj] << endl;
     
-	if( jj == 0 )
-	  g_v2maxm[jj]->SetMarkerSize(1.5);
+	//	if( jj == 0 )
+	g_v2maxm[jj]->SetMarkerSize(0.9);
 	g_v2maxm[jj]->SetMarkerStyle(20);
 	g_v2maxm[jj]->SetMarkerColor(icol[jj]);
 	g_v2maxm[jj]->SetLineColor(icol[jj]);
