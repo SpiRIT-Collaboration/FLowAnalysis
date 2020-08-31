@@ -33,9 +33,9 @@ export MNUC=80
 
 
 export MNSFX=BTt
-export MDCUT=0.15 #0.0               ##   <------@@ mid-rapidity cut
+export MDCUT=0. #0.0               ##   <------@@ mid-rapidity cut
 export MNINVERSION=52.9             ##   <------@@ input
-export MNOUTVERSION=52.12           ##   <------@@ output 
+export MNOUTVERSION=52.13           ##   <------@@ output 
 
 
 ##-- DATA
@@ -137,7 +137,8 @@ function commonsetup()
     export IVER=$MNINVERSION
     export OVER=$MNOUTVERSION
     export SUFX=$MNSFX
-    export DBVER=$MNINVERSION
+#    export DBVER=$MNINVERSION
+    export DBVER=$MNOUTVERSION
     export OSUBV=$MNOSUBV
     export MXEVT=$MNMXEVT
     export MNMXEVT=

@@ -468,6 +468,16 @@ UInt_t STFlowCorrection::SaveCorrectionFactor(TString comm1, TString comm2)
   fout.open(fname,std::fstream::out);
   fout << charm << std::endl;
 
+  //  LOG(INFO) << " nphi " << bphi.size << FairLogger::endl();
+
+  // if( bphi.size() == 0 ) {
+  //   fout.close();
+  //   LOG(INFO) << fname << " is created with no contents. "<< FairLogger::endl;
+
+  //   gSystem->cd("..");
+  //   return 2;
+  // }
+
   fout << "comment : " << comm1 << std::endl;
 
   if( comm2 != "")

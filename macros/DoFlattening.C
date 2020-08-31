@@ -247,7 +247,7 @@ void Flatten_Psi_ntrack(UInt_t isel)
     
     hniphi->Fill(vec.Phi());
 
-   if(intrk==1)
+    if(intrk==1)
       ophi.push_back(vec.Phi());
     
     if(intrk <= ntrknbin )   
@@ -259,17 +259,17 @@ void Flatten_Psi_ntrack(UInt_t isel)
   //----------  get corrrection parameters
   for(UInt_t j = 0; j < ntrknbin+1; j++){   
 
-    //    if(flowcorr[j]->GetNPhi() == 0 ) continue;
+
     UInt_t nphi = flowcorr[j]->ReCenteringFourierCorrection();
     std::cout << " At " << ntrkbin[j]  << " nphi " << nphi <<  std::endl;
-      
+    
     vector<Int_t>    mtk   = flowcorr[j]->GetMTrack();
     vector<Double_t> aphi  = flowcorr[j]->GetCorrectedPhi();
     vector<Double_t> bphi  = flowcorr[j]->GetOriginalPhi();
     vector<Double_t> rcphi = flowcorr[j]->GetReCeneringPhi();
     
     cout << "after " << mtk.size()  << endl;
-
+      
     if(mtk.size() > 0){
       for(UInt_t k = 0; k < (UInt_t)mtk.size(); k++){	  
 	hbiphi     ->Fill(rcphi.at(k));
@@ -282,16 +282,17 @@ void Flatten_Psi_ntrack(UInt_t isel)
 	  
 	if(j == 1)
 	  habiphi  ->Fill(ophi.at(k), aphi.at(k));
-
+	
       }
     }
-      
+
     TString comm1 = sysName + ".v" + dVer + "." + flabel;
     comm1 += Form(".m%d:flatten_Psi_ntrk; ntrack>= %f && ntrack< %f ",
 		  j,ntrkbin[j],ntrkbin[j+1]);
  
     TString comm2 = unitpX + " && " + unitpY;
     cout << "saving in ...  " << comm1 << endl;
+
     flowcorr[j]-> SaveCorrectionFactor(comm1, comm2);    
   }
 

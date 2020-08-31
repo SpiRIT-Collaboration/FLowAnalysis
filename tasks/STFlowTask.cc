@@ -157,11 +157,13 @@ Bool_t STFlowTask::DoFlattening()
 {
   if( aflowcorrArray[0] != NULL ) {
  
-    fflowinfo->unitP_fc = Psi_FlatteningCorrection( 0, ntrack[4], fflowinfo->unitP);
-    fflowinfo->unitP_rc = Psi_ReCenteringCorrection(0, ntrack[4], fflowinfo->unitP);
+    fflowinfo->unitP_fc = Psi_FlatteningCorrection( 0, ntrack[2], fflowinfo->unitP);
+    fflowinfo->unitP_rc = Psi_ReCenteringCorrection(0, ntrack[2], fflowinfo->unitP);
+    //    fflowinfo->unitP_fc = Psi_FlatteningCorrection( 0, ntrack[4], fflowinfo->unitP);
+    //    fflowinfo->unitP_rc = Psi_ReCenteringCorrection(0, ntrack[4], fflowinfo->unitP);
 
     //    auto psic = Psi_FlatteningCorrection( 2, ntrack[4], fflowinfo->unit2P);
-    fflowinfo->unit2P_fc = Psi_FlatteningCorrection( 2, ntrack[4], fflowinfo->unit2P);
+    fflowinfo->unit2P_fc = Psi_FlatteningCorrection( 2, ntrack[2], fflowinfo->unit2P);
 
     return kTRUE;
   }
@@ -176,8 +178,10 @@ Bool_t STFlowTask::DoFlatteningSub()
   if( aflowcorrArray[1] != NULL ) {
 
     // original
-    fflowinfo->unitP_1fc = Psi_FlatteningCorrection( 1, fflowinfo->mtrack_1, fflowinfo->unitP_1);
-    fflowinfo->unitP_2fc = Psi_FlatteningCorrection( 1, fflowinfo->mtrack_2, fflowinfo->unitP_2);
+    // fflowinfo->unitP_1fc = Psi_FlatteningCorrection( 1, fflowinfo->mtrack_1, fflowinfo->unitP_1);
+    // fflowinfo->unitP_2fc = Psi_FlatteningCorrection( 1, fflowinfo->mtrack_2, fflowinfo->unitP_2);
+    fflowinfo->unitP_1fc = Psi_FlatteningCorrection( 1, ntrack[2]/2, fflowinfo->unitP_1);
+    fflowinfo->unitP_2fc = Psi_FlatteningCorrection( 1, ntrack[2]/2, fflowinfo->unitP_2);
 
     fflowinfo->cosdPsi  = cos(fflowinfo->unitP_1fc.Phi() - fflowinfo->unitP_2fc.Phi());
 
