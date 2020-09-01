@@ -91,7 +91,8 @@ void PlotFigure()
   Double_t v20e[4][4];
   Double_t v21[4][4];
   Double_t v21e[4][4];
-
+  Double_t v2n[4][4];
+  Double_t v2ne[4][4];
 
   mrv1 = new TMultiGraph("mrv1"  ,";(y-y_{cm}(nn))/y_{cm}(nn); v1");
   mrv2 = new TMultiGraph("mrv2"  ,";(y-y_{cm}(nn))/y_{cm}(nn);; v2");
@@ -143,7 +144,6 @@ void PlotFigure()
       yv1->Fit("fv1fit","","",-0.6,1.2); //"Q0","");    
       fv1fit->SetLineColor(icol[is]+ip);
       v1_slp [is][ip]   = fv1fit->GetParameter(1);
-      //      v1_slpe[is][ip]   = fv1fit->GetParameter(1)*0.01;
       v1_slpe[is][ip]   = fv1fit->GetParError(1);
 
       if( ip != 3 ) {
@@ -165,13 +165,17 @@ void PlotFigure()
 	Double_t v2x, v2y, v2ye;
         GetMinimumv2(yv2, v2_max[is][ip], v2_maxe[is][ip]);	
 
-	yv2->Fit("fv2fit","","",-0.6,0.6);
+	yv2->Fit("fv2fit","","",-0.5,0.5);
+	yv2->SetLineColor(icol[is]+ip);
 	
 	v20[is][ip]  = fv2fit->GetParameter(0);
 	v20e[is][ip] = fv2fit->GetParError(0);
 
 	v21[is][ip]  = fv2fit->GetParameter(1);
 	v21e[is][ip] = fv2fit->GetParError(1);
+	
+	v2n[is][ip]  = abs(v21[is][ip]) + abs(v20[is][ip]);
+	v2ne[is][ip] = 0.; sqrt( pow(v21[is][ip],2) + pow(v20[is][ip],2) );
 
       }
       
@@ -216,10 +220,14 @@ void PlotFigure()
 		  << FairLogger::endl;
 
 	g_v1slp[ip] -> SetPoint     ( iss,  *(syslabel+is), v1_slp[is][ip] ); 
-	g_v1slp[ip] -> SetPointError( iss, 0, v1_slpe[is][ip] );
+	g_v1slp[ip] -> SetPointError( iss, 0,   v1_slpe[is][ip] );
 
 	g_v2max[ip] -> SetPoint     ( iss,  *(syslabel+is), -v2_max[is][ip] ); 
 	g_v2max[ip] -> SetPointError( iss,  0., v2_maxe[is][ip] ); 
+
+	g_v2n[ip]   -> SetPoint     ( iss,  *(syslabel+is), v2n[is][ip] );
+	g_v2n[ip]   -> SetPointError( iss,  0., v2ne[is][ip] );
+	
 
 	if( ip > 0 ) {
 	  auto ratio = v1_slp[is][ip]/v1_slp[is][0];
@@ -241,6 +249,11 @@ void PlotFigure()
     g_v2max[ip]->SetMarkerSize(1.5);
     g_v2max[ip]->SetMarkerColor(icol[ip]);
     g_v2max[ip]->SetLineColor(icol[ip]);
+
+    g_v2n[ip]->SetMarkerStyle(20);
+    g_v2n[ip]->SetMarkerSize(1.5);
+    g_v2n[ip]->SetMarkerColor(icol[ip]);
+    g_v2n[ip]->SetLineColor(icol[ip]);
 
     
     g_v1sysD -> Add( g_v1slp[ip], "p" );
@@ -273,11 +286,11 @@ void PlotFigure()
 
   //  Draw_v1v2SystemD();
 
-  Draw_Indiv_v1SystemD_Three(); 
+  //  Draw_Indiv_v1SystemD_Three(); 
   // Draw_Indiv_v1SystemD();
   // Draw_Indiv_v2SystemD();
 
-  //  Draw_v2SystemD();
+  Draw_v2SystemD();
   //Draw_v1Ratio();
 
 
@@ -313,8 +326,79 @@ void GetMinimumv2(TGraphErrors *gr, Double_t &min, Double_t &mer)
 void Draw_v2SystemD()
 {
   ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 500, 800); iccv++;
-  
-  
+
+  Double_t BYs = 0.1;            // Bottom Y space
+  Double_t BYm = 0.1;            // Bottom Y mergin
+  Double_t TYm = 0.01;            // Top Y mergin
+
+  Double_t Ny  = 4;               // Number of pads along Y  
+  Double_t H   = (1.0 - (TYm+BYm+BYs))/Ny; // pad height
+  cout << " H= " << H << endl;
+
+  Double_t Yl = BYs;  Double_t Yu = Yl + H;
+  cout << " low " << Yl << " up " << Yu << endl;
+  TPad *p1 = new TPad("p1", "p1", 0., Yl, 1.,  Yu, 0, 0, 0);
+  p1->SetTopMargin(0);
+  p1->SetBottomMargin(BYm);
+  p1->Draw();
+
+
+  Yl = Yu;  Yu = Yl + H;
+  cout << " low " << Yl << " up " << Yu << endl;
+  TPad *p2 = new TPad("p2", "p2", 0., Yl, 1., Yu, 0, 0, 0);
+  p2->SetTopMargin(0);
+  p2->SetBottomMargin(0);
+  p2->Draw();
+
+  Yl = Yu;  Yu = Yl + H;
+  cout << " low " << Yl << " up " << Yu << endl;
+  TPad *p3 = new TPad("p3", "p3", 0., Yl, 1., Yu, 0, 0, 0);  
+  p3->SetTopMargin(0);
+  p3->SetBottomMargin(0);
+  p3->Draw();
+
+  Yl = Yu;  Yu = Yl +  H;
+  cout << " low " << Yl << " up " << Yu << endl;
+  TPad *p4 = new TPad("p4", "p4", 0., Yl, 1., Yu, 0, 0, 0);  
+  p4->SetTopMargin(TYm);
+  p4->SetBottomMargin(0);
+  p4->Draw();
+
+
+  //  gStyle->SetLabelSize(0.08);
+  g_v2n[0]->SetTitle(";"+xlabel+";"); 
+  g_v2n[3]->SetTitle(";; v_{11} ");
+
+  p1->cd(); 
+  g_v2n[0] -> GetYaxis() -> SetLabelOffset(0.01);
+  g_v2n[0] -> GetYaxis() -> SetLabelSize(0.08);
+  g_v2n[0] -> GetXaxis() -> SetLabelSize(0.1);
+  g_v2n[0] -> GetXaxis() -> SetTitleOffset(1.);
+  g_v2n[0] -> GetXaxis() -> SetTitleSize(1);
+  //  g_v2n[0] -> GetXaxis() -> SetTitleOffSet(0.5);
+  g_v2n[0] -> Draw("AP");  
+  plabel.DrawLatexNDC(0.2, 0.9, fpid[0]);
+
+
+  p2->cd();
+  g_v2n[1] -> GetYaxis() -> SetLabelOffset(0.01);
+  g_v2n[1] -> GetYaxis() -> SetLabelSize(0.1);
+  g_v2n[1] -> Draw("AP");  
+  plabel.DrawLatexNDC(0.2,0.9,fpid[1]);
+
+  p3->cd(); 
+  g_v2n[2] -> GetYaxis() -> SetLabelOffset(0.01);
+  g_v2n[2] -> GetYaxis() -> SetLabelSize(0.1);
+  g_v2n[2] -> Draw("AP");  
+  plabel.DrawLatexNDC(0.2,0.9,fpid[2]);
+
+  p4->cd(); 
+  g_v2n[3] -> GetYaxis() -> SetTitleOffset(1.);
+  g_v2n[3] -> GetYaxis() -> SetTitleSize(0.1);
+  g_v2n[3] -> GetYaxis() -> SetLabelOffset(0.01);
+  g_v2n[3] -> GetYaxis() -> SetLabelSize(0.1);
+  g_v2n[3] -> Draw("AP");  
+  plabel.DrawLatexNDC(0.2,0.9,fpid[3]);
 
 }
 

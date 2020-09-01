@@ -23,7 +23,7 @@ Double_t sysA[]    = {256.,    220.,      236.,   236.   ,  256.};
 Bool_t bplot[] = 
   { 1, // 0 data   It should be set to 1 in the code.
     0, // 1 model  It should be set to 1 in the code.
-    0, // 2 v1 and v2 rapidity 
+    1, // 2 v1 and v2 rapidity 
     0, // 3 v1 and v2 on pt in one window
     0, // 4 v1 and v2 in individual windows
     0, // 5 Acceptance ypt => never be plotted 
@@ -46,7 +46,7 @@ Bool_t bstyle[] =
 // --> Plotting selection
 //--- Data
 Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
-Bool_t bpid[]  = { 0, 0, 0, 1, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bpid[]  = { 1, 1, 1, 1, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
@@ -708,6 +708,11 @@ void PlotPtDependence()
 
 	mrv2->Add(yv2,"lp");
 	lgr2->AddEntry(yv2,  otitle ,"lp");
+
+	// fv2fit->SetParameter(0,-0.05);
+	// fv2fit->SetParameter(1, 0.01);
+	// fv2fit->SetParameter(2,0.);
+	yv2->Fit("fv2fit","","",-0.5,0.5);
 	// --end of rapidity dependence
 	
 	Double_t v2x, v2y, v2ye;
@@ -1052,7 +1057,7 @@ void PlotPtDependence()
       mv2[i]->GetYaxis()->SetTitleOffset(2.5);
 
       //      mv2[i]->GetXaxis()->SetRangeUser(0.,1.5);
-      mv2[i]->Fit("fv2fit","","",0.,1.1);
+      //      mv2[i]->Fit("fv2fit","","",0.,1.1);
       mv2[i]->Draw("ALP");
       lg2[i]->Draw();
 
