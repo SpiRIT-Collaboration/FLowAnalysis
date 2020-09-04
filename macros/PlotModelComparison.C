@@ -33,7 +33,7 @@ Bool_t bplot[] =
     0, // 9 v1 slope(V11) and v2 max dependence on m
     0, //10 v1 slope(v11) and v2 max dependence on impact parameter
     0, //11 v1 slop and v2 max systematic error check
-    0, //12 v11 and v20 plot
+    0, //12 v11 and v22 comparison with models 
   };
 
 Bool_t bstyle[] =
@@ -46,7 +46,7 @@ Bool_t bstyle[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 0, 0, 0, 1, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
+Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
 Bool_t bpid[]  = { 1, 1, 1, 1, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
@@ -56,32 +56,52 @@ UInt_t iv2at = 4;
 gplot gnames[] = {  
   {".v52.10.28" ,"finYPt_","b3fm"},
   //  {".v52.10.26" ,"finYPt_",""},
-
-  //  {".v52.10.27" ,"finYPt_",""},
-  //  {".v22.0.0" ,"finYPt_","SIM full"},
-  //  {".v50.8.0" ,"finYPt_","SIM TPC"},
-  //  {".v52.10.30" ,"finYPt_","M65-80"},
-  // {".v52.10.31" ,"finYPt_","M60-65"},
-  // {".v52.10.32" ,"finYPt_","M55-60"},
-  // {".v52.10.33" ,"finYPt_","M50-55"},
-  // {".v52.10.34" ,"finYPt_","M45-50"},
-  // {".v52.10.35" ,"finYPt_","M40-45"},
-  // {".v52.10.36" ,"finYPt_","M30-40"},
-  // {".v52.10.37" ,"finYPt_","M0-30"},
-  // {".v52.0.13" ,"advYPt_","y_nn"},
 };
-//const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
-const UInt_t nmax = (UInt_t)sizeof(gnames)/sizeof(gplot);
 
-//APR2019
-//  {".v50.7.1","advYPt_","(A)TPC"}, //APR2019
-//  {".v22.0.7","advYPt_","(B)Full"},//APR2019
-//  {".v50.0"  ,"advYPt_","(A)TPC"},
-//  {".v22.0.8","advYPt_","(B)Full"},
+const UInt_t nmax = (UInt_t)sizeof(gnames)/sizeof(gplot);
 
 TString *sVer  = new TString[nmax];
 TString *sName = new TString[nmax];
 TString *cmnt  = new TString[nmax];
+
+//-- TuQMD
+Bool_t btQMDConfig[] = {1};
+//-----------
+gplot tQMDConfig[] = {".v0","tuqmd_",""};
+
+//-- pBUU
+Bool_t  bpBUUConfig[]  = {0, 0, 1, 1};
+//-----------
+gplot pBUUConfig[] = {
+  {"_energy270_gamma0.50_b5_withCluster.","pBUU2","pBUU b5g0.5"},
+  {"_energy270_gamma1.75_b5_withCluster.","pBUU2","pBUU b5g1.75"},
+  {".b2.g05"   ,"pBUU_"  ,"pBUU b2g0.5"},
+  {".b2.g175"  ,"pBUU_"  ,"pBUU b2g1.75"},
+  {".b4.g05"   ,"pBUU_"  ,"pBUU b4g0.5"},
+  {".b4.g175"  ,"pBUU_"  ,"pBUU b4g1.75"}
+};
+Double_t pBUU_F[4][4] = { //F b2 g0.5, b2 g1.75, b4 g0.5, b4 g1.75
+  { 92.1902, 93.199, 120.6029, 120.467},   // 132
+  { 88.2085, 87.8252,113.6998, 113.6738},  // 108
+  { 88.2085, 87.8252,113.6998, 113.6738},  // 108 (124)
+  { 88.2085, 87.8252,113.6998, 113.6738}   // 108 (112)
+};
+
+Double_t pBUU_v2[4][4] = { //v2 b2 g0.5, b2 g1.75, b4 g0.5, b4 g1.75
+  { -0.0071928, -0.0058827, -0.0372598, -0.0338454}, //132
+  { -0.0066653, -0.0059764, -0.0372598, -0.0343415}, //108
+  { -0.0066653, -0.0059764, -0.0372598, -0.0343415}, //(124)
+  { -0.0066653, -0.0059764, -0.0372598, -0.0343415}  //(112)
+};
+
+//-- AMD
+Bool_t  amdEOS[]= {0, 0};
+//-----------
+TString amdName[] = {"SLy4",
+		     "SLy4-L108"};
+TString amdHeader[] = {"amd_132Sn124Sn270AMeV_cluster_",
+		       "amd_108Sn112Sn270AMeV_cluster_"};
+
 
 
 //==================================================
@@ -131,7 +151,7 @@ Double_t FittingAndIntegral(TGraphErrors *gr)
 
 
 
-void PlotPtDependence()
+void PlotModelComparison()
 {
   
   gStyle->SetOptStat(0);
@@ -303,8 +323,122 @@ void PlotPtDependence()
 
   cout << " Number of data files --> " << fname.size() << endl;
 
+  //---- amd
+  UInt_t kgr = 0;
+  for(UInt_t ls = 0; ls < 2; ls++){
+    if( !bsys[ls] ) continue;
+
+    for(UInt_t lp = 0; lp < (UInt_t)sizeof(bpid)/sizeof(Bool_t); lp++){
+      if( !bpid[lp] ) continue;
+
+      for(UInt_t lo = 0; lo < (UInt_t)sizeof(amdEOS)/sizeof(Bool_t); lo++) { 
+	if( !amdEOS[lo] ) continue;
+
+	fname.push_back( "data/"+ amdHeader[ls]+amdName[lo]+"_"+amdpartname[lp]+"_cm.root" );
+	std::cout << fname.at(ngr+kgr) << std::endl;
+
+	index[0].push_back(ls);
+	index[1].push_back(lp);
+	index[2].push_back(lo);
+	index[3].push_back(3);
+	index[4].push_back(nmax+1);
+	index[5].push_back(2);
+	kgr++;
+
+      }
+    }
+  }
+  
+
+
+  //---- pBUU
+  UInt_t pgr = 0;
+  for(UInt_t ms = 0; ms < 4; ms++ ){
+    if( !bsys[ms] ) continue;
+    
+    for(UInt_t ip = 0; ip < (UInt_t)sizeof(bpid)/sizeof(Bool_t); ip++){
+
+      if( !bpid[ip] ) continue;
+      //      if( (!bpid[ip] && ip < 5) || (!bpid[6] && ip == 6)  ) continue;
+
+      for(UInt_t mt = 0; mt < (UInt_t)sizeof(bpBUUConfig)/sizeof(Bool_t); mt++) {
+	if( !bpBUUConfig[mt] ) continue;
+	
+	//@@@
+	fname.push_back("../../pBUU/data/"+pBUUConfig[mt].fileHeader+"sn" + rsys[ms] + "_sn" 
+			+ tsys[ms] + pBUUConfig[mt].Version + fpid[ip] + ".root");
+	
+	std::cout << fname.at(ngr+kgr+pgr) << std::endl;
+	index[0].push_back(ms);
+	index[1].push_back(ip);
+	index[2].push_back(0);
+	index[3].push_back(mt);
+	index[4].push_back(1);
+	index[5].push_back(3);  // pBUU
+	pgr++;
+
+	bplot[1] = 1;
+      }
+    }
+  }
+
+
+  //---- TuQMD
+  UInt_t tgr = 0;
+  for(UInt_t i = 0; i < nmax; i++) {
+    if( btQMDConfig[i] ) {
+      *(sVer + ndata + i -1) = tQMDConfig[i].Version;
+      *(sName+ ndata + i -1) = tQMDConfig[i].fileHeader;
+      *(cmnt + ndata + i -1) = tQMDConfig[i].comment;
+    }
+  }
+
+
+  for(UInt_t ls = 0; ls < 4; ls++ ){
+    if( !bsys[ls] ) continue;
+
+    for(UInt_t lp = 0; lp < (UInt_t)sizeof(bpid)/sizeof(Bool_t); lp++){
+      if( !bpid[lp] ) continue;
+
+      for(UInt_t lo = 0; lo < (UInt_t)sizeof(btQMDConfig)/sizeof(Bool_t); lo++) {
+	if( !btQMDConfig[lo] ) continue;
+
+	TString ffin = "data/"+ sName[ndata+lo-1] + bName[ls] + fpid[lp] + sVer[ndata+lo-1] + ".root";
+	std::cout << ffin << std::endl;
+
+	fname.push_back(ffin);
+
+	index[0].push_back(ls);
+	index[1].push_back(lp);
+	index[2].push_back(lo);
+	index[3].push_back(3);
+	index[4].push_back(1);
+	index[5].push_back(5); //TuQMD
+	tgr++;
+      }
+    }
+  }
+
+  //---------------------------------------------------
+
+  // pBUU by Genie
+  if( bplot[1] ) {
+    g_pBUUFg5->SetPoint(0, sysdlt[0], pBUU_F[0][2]);
+    g_pBUUFg5->SetPoint(1, sysdlt[1], pBUU_F[1][2]);
+    
+    g_pBUUFg17->SetPoint(0, sysdlt[0], pBUU_F[0][3]);
+    g_pBUUFg17->SetPoint(1, sysdlt[1], pBUU_F[1][3]);
+
+    g_pBUUv2g5->SetPoint(0, sysdlt[0], pBUU_v2[0][2]);
+    g_pBUUv2g5->SetPoint(1, sysdlt[1], pBUU_v2[1][2]);
+    
+    g_pBUUv2g17->SetPoint(0, sysdlt[0], pBUU_v2[0][3]);
+    g_pBUUv2g17->SetPoint(1, sysdlt[1], pBUU_v2[1][3]);
+  }  
+
 
   TFile *fOutput = new TFile(fOutName,"recreate");
+
   TFile *fOpen;
 
 
@@ -359,10 +493,29 @@ void PlotPtDependence()
 
     // ia: -------------
     // 1 : data
+    // 2 : AMD
+    // 3 : pBUU
+    // 4 : simulation
+    // 5 : TuQMD
     //-------------------
     if( ia == 1 ) { //data
       std::cout << "mnt " << cmnt[iz] << " " << iz << endl;
       otitle += "("+ lpid[ip]+")"+cmnt[iz];
+    }
+    else if( ia == 2 ) //amd
+      otitle += "AMD " + amdName[it];
+
+    else if( ia == 3 ) {// pBUU
+      otitle += pBUUConfig[ik].comment; 
+      bstyle[1] = kTRUE;
+    }
+    else if( ia == 4 ) {// simulation
+      otitle = cmnt[iz];
+      bstyle[2] = kTRUE;
+    }
+    else if( ia == 5 ) {// TuQMD
+      otitle += "("+ lpid[ip]+") TuQMD";
+      bstyle[1] = kTRUE;
     }
 
     //acceptance
@@ -416,8 +569,8 @@ void PlotPtDependence()
     //--- v1 vs rapidity ---
     if( ( bplot[0] || bplot[1]) && bplot[2] ) {
 
-      //TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gu_v1");
-      TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gy_v1");
+      TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gu_v1");
+      //      TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gy_v1");
 
       gROOT->ls();
 
@@ -458,7 +611,7 @@ void PlotPtDependence()
 	  yv1->RemovePoint(0);
 	}
 
-	if( ip == 5 )
+	if( ip == 5 || ia != 1)
 	  yv1->SetMarkerStyle(imark[is]+4);
 
 	yv1->SetMarkerSize(imsz[is]);
@@ -481,9 +634,10 @@ void PlotPtDependence()
 	  yv1->Fit("fv1fit","","",-0.6, 1.); //"Q0","");
 	}
 
-
-	d_v11.push_back(fv1fit->GetParameter(1));
-	d_v11e.push_back(fv1fit->GetParError(1));
+	if( ia == 1 ){
+	  d_v11.push_back(fv1fit->GetParameter(1));
+	  d_v11e.push_back(fv1fit->GetParError(1));
+	}
 
 	g_v11->SetPoint((UInt_t)lx_v11.size(), (UInt_t)lx_v11.size()+0.5, fv1fit->GetParameter(1) );
 	g_v11->SetPointError((UInt_t)lx_v11.size(),                 0., fv1fit->GetParError(1) );
@@ -494,6 +648,13 @@ void PlotPtDependence()
       TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gu_v2");
       //       TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gy_v2");
 
+      if( yv2 == NULL && ia == 3 ) 
+	yv2 = (TGraphErrors*)fOpen->Get("gv_v2");
+
+      if( yv2 != NULL && ia == 5 )
+	DividebyTwo(yv2);
+
+      
       
       if( yv2 != NULL ) {
 	for( Int_t iip = (Int_t)yv2->GetN()-1; iip >= 0; iip-- ){
@@ -521,17 +682,19 @@ void PlotPtDependence()
 	else
 	  yv2->Fit("fv2fit","","",-0.5,0.5);
 
-
-	d_v20.push_back(fv2fit->GetParameter(0));
-	d_v20e.push_back(fv2fit->GetParError(0));
-	
+	if( ia == 1 ){
+	  d_v20.push_back(fv2fit->GetParameter(0));
+	  d_v20e.push_back(fv2fit->GetParError(0));
+	}
 	g_v20->SetPoint((UInt_t)lx_v20.size(), (UInt_t)lx_v20.size()+0.5, fv2fit->GetParameter(0) );
 	g_v20->SetPointError((UInt_t)lx_v20.size(),                   0., fv2fit->GetParError(0) );
 	lx_v20.push_back(otitle);
 
 	mrv2->Add(yv2,"p");
 	lgr2->AddEntry(yv2,  otitle ,"lp");
-	
+		
+	// if( ia == 4 )
+	//   GetAveragev2(yv2);
       }
 
 
@@ -660,7 +823,7 @@ void PlotPtDependence()
       for(UInt_t k = 0; k < ybin1; k++){
 
 	TGraphErrors *gr_v1 = (TGraphErrors*)fOpen->Get((TString)Form("gUt_v1%d",k));
-	if( gr_v1 == NULL )
+	if( gr_v1 == NULL || bpBUUConfig[0] || bpBUUConfig[1])
 	  gr_v1 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v1%d",k));
 	
 	if( gr_v1 == NULL ) continue;
@@ -708,7 +871,7 @@ void PlotPtDependence()
 	
 	TGraphErrors *gr_v2 = (TGraphErrors*)fOpen->Get((TString)Form("gUt_v2%d",k));
 	
-	if( gr_v2 == NULL )
+	if( gr_v2 == NULL || bpBUUConfig[0] || bpBUUConfig[1])
 	  gr_v2 = (TGraphErrors*)fOpen->Get((TString)Form("gPt_v2%d",k));
 	
 	if( gr_v2 == NULL ) continue;
@@ -769,13 +932,21 @@ void PlotPtDependence()
   if( ( bplot[0] || bplot[1]) && bplot[2] ) {
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
 
-    mrv1->GetXaxis()->SetRangeUser(-1.2,1.2);
     if( bstyle[0] ) {
       mrv1->GetXaxis()->SetRangeUser(-0.65,1.2);
       mrv1->GetYaxis()->SetRangeUser(-0.4, 0.6);
     }
+    else if( bstyle[1] ) {
+      mrv1->GetXaxis()->SetRangeUser(-1.2,1.2);
+      //      mrv1->GetYaxis()->SetRangeUser(-0.4, 0.4);
+    }
 
     mrv1->Draw("ALP");
+    if( bstyle[2] ) {
+      fv1y->SetLineColor(3);
+      fv1y->Draw("same");
+      lgr1->AddEntry("fv1y","initial","lp");
+    }
     lgr1->Draw();
 
     auto Ymin = mrv1->GetYaxis()->GetXmin();
@@ -797,10 +968,11 @@ void PlotPtDependence()
     //--- v2 vs rapidity ---
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
 
-    mrv2->GetXaxis()->SetRangeUser(-1.2,1.2);
-
     if( bstyle[0] )
       mrv2->GetXaxis()->SetRangeUser(-0.55,1.2);
+    else if( bstyle[1] ) {
+      mrv2->GetXaxis()->SetRangeUser(-1.2,1.2);
+    }
     
     mrv2->Draw("ALP");
     lgr2->Draw();

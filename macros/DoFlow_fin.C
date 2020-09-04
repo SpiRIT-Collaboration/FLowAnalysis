@@ -387,19 +387,18 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       //	dphi = TVector2::Phi_mpi_pi(aPart->GetRotatedMomentum().Phi() - RPPsi);
 
 
-      hPsi->Fill(RPangle);
-      hRPPsi->Fill(rpphi);
-      hphi->Fill(phi);
+      hPsi     ->Fill(RPangle);
+      hRPPsi   ->Fill(rpphi);
+      hphi     ->Fill(phi);
       hRPPsipsi->Fill(RPPsi, rpphi);
+      hyptacp  ->Fill(rapid/y_norm, pt);
 
       Double_t u_t0  = aPart->GetRotatedMomentum().Pt()/fmass/u_p;
       Double_t ou_t0 = aPart->GetMomentumAtTarget().Pt()/fmass/u_p;
       
-      huy->Fill( rapid / y_norm, u_t0 );
-
       hyawpitch->Fill(yaw,   pitch);
       hmass    ->Fill(aPart->GetRotatedMomentum().Mag(), bmass);
-      hyptacp  ->Fill(rapid/y_norm, pt);
+
 
 
       UInt_t irapid1 = GetV1cmRapidityIndex(rapidn);
@@ -423,12 +422,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       hdydutcos1[irapid1][ipt1] -> Fill( cos(dphi) );
 
       //      if( (selid >= 2 && u_t0 > 0) || selid < 2 ) {
-      if( (selid >= 2 && u_t0 > 0.4) || selid < 2 ) {
-	hdyv1[irapid1]               ->Fill( cos(dphi) );
-
-	hdydut1cut[irapid1][ipt1]    -> Fill( u_t0 );
-	hdydutcos1cut[irapid1][ipt1] -> Fill( cos(dphi) );
-      }
 
       //v2 ------------
       hutphi20[irapid2] -> Fill( subevt_phi );
@@ -441,10 +434,17 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
       //if( (selid >= 2 && u_t0 > 0.) || selid < 2 ) {
       if( (selid >= 2 && u_t0 > 0.4) || selid < 2 ) {
-       	hdyv2[irapid2]                ->Fill( cos(2.*dphi) );
+	huy->Fill( rapid / y_norm, u_t0 );
 
+
+	hdyv1[irapid1]               -> Fill( cos(dphi) );
+	hdydut1cut[irapid1][ipt1]    -> Fill( u_t0 );
+	hdydutcos1cut[irapid1][ipt1] -> Fill( cos(dphi) );
+
+       	hdyv2[irapid2]               -> Fill( cos(2.*dphi) );
 	hdydut2cut[irapid2][ipt2]    -> Fill( u_t0 );
 	hdydutcos2cut[irapid2][ipt2] -> Fill( cos(2.*dphi) );
+	
       }
     }
     

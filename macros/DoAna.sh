@@ -29,13 +29,15 @@ unset CCPSI
 export MNLC=0
 export MNUC=50
 #export MNLC=55
-export MNUC=80
+#export MNUC=80
+export MNLC=47
+export MNUC=52
 
 
 export MNSFX=BTt
 export MDCUT=0. #0.0               ##   <------@@ mid-rapidity cut
 export MNINVERSION=52.9             ##   <------@@ input
-export MNOUTVERSION=52.13           ##   <------@@ output 
+export MNOUTVERSION=52.10           ##   <------@@ output 
 
 
 ##-- DATA
@@ -137,8 +139,8 @@ function commonsetup()
     export IVER=$MNINVERSION
     export OVER=$MNOUTVERSION
     export SUFX=$MNSFX
-#    export DBVER=$MNINVERSION
-    export DBVER=$MNOUTVERSION
+    export DBVER=$MNINVERSION
+#    export DBVER=$MNOUTVERSION
     export OSUBV=$MNOSUBV
     export MXEVT=$MNMXEVT
     export MNMXEVT=
@@ -285,7 +287,7 @@ function doflowmulti()
     while(( $I < ${#PARTICLES[@]} ))
     do
 	echo $I 
-	doflowbatch ${PARTICLES[I]}  
+	doflowbatch ${PARTICLES[I]} $1 
 	let I++;
 	if [ $I -ge ${#PARTICLES[@]} ]; then
 	    break;
