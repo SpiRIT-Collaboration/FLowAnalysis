@@ -46,7 +46,7 @@ Bool_t bstyle[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 0, 0, 0, 1, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
+Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
 Bool_t bpid[]  = { 1, 1, 1, 1, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
