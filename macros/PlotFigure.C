@@ -27,6 +27,16 @@ gplot gnames[] = {
   //  {".v52.8.4" ,"advYPt_","y_sys/y_sys"},
 };
 
+Double_t FOPI_AuAu_v10[2][]={
+  {1.0, 0.384},  //p
+  {2.0, 0.641},  //d
+  {3.0, 0.800}}; //A=3
+Double_t FOPI_AuAu_v20[2][]={
+  {1.0, -0.048},
+  {2.0, -0.105},
+  {3.0, -0.170}};
+
+
 TCanvas *ccv; UInt_t iccv = 0;
 TString xlabel;
 TLatex  plabel;
