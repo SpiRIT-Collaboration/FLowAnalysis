@@ -59,8 +59,8 @@ private:
   Double_t fP;               // Momentum/Q [MeV/c]
   Double_t fdEdx;            // dEdx
   Double_t fNDF;             // STVertex::GetNDF()
-  Double_t fclustex;            // expected cluster number
-  Double_t fclusterratio;      // rClusterSize/fclustex
+  Double_t fclustex;         // expected cluster number
+  Double_t fclusterratio;    // rClusterSize/fclustex
 
   // for flow analysis 
   TVector3 fRotatedP3;       // Momentum vector rotated with respect to the beam angle.

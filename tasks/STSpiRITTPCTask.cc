@@ -21,13 +21,18 @@ STSpiRITTPCTask::STSpiRITTPCTask()
 
   fRunAna = FairRunAna::Instance();
   iRun  = fRunAna->getRunId();
-
+  bmA   = STRunToBeamA::GetBeamA(iRun);
+  if( bmA == 100 )
+    BeamPID = 100;
 
   //------------------------//
   // initial setup
   fChain = nullptr;
 
+  vertexVAArray = new TClonesArray("STVertex",1);
+  vertexArray   = new TClonesArray("STVertex",1);
 }
+
 
 STSpiRITTPCTask::~STSpiRITTPCTask()
 {
@@ -82,7 +87,7 @@ InitStatus STSpiRITTPCTask::Init()
   auto fBDCArray = (TClonesArray *)fRootManager->GetObject("STBDC");
   if( fBDCArray == nullptr ) {
     LOG(ERROR) << "Register STBDC in advance! " << FairLogger::endl;
-    return kERROR;
+    //    return kERROR;
   }
   else
     LOG(INFO) << "STBDC is found. " << FairLogger::endl;
@@ -122,29 +127,31 @@ Bool_t STSpiRITTPCTask::SetupParameters()
   //--- angle dependeing mass fitter //
   //  massCal->SetParameter("db/BBFitter.root");
 
-  bmA = STRunToBeamA::GetBeamA(iRun);
 
   if( bmA == 124 )
     bmA = 132;  
 
-  //  massCal->LoadCalibrationParameters("db/PIDCalib.root",bmA);
-  massCal->LoadCalibrationParameters("db/FlattenPID.root",bmA);
+  if( bmA != 100 ) {
+    massCal->LoadCalibrationParameters("db/PIDCalib.root",bmA);
+    massCal->LoadCalibrationParameters("db/FlattenPID.root",bmA);
+    
 
-  auto calFile = TFile::Open(Form("db/PIDCalib_%dSn.root",bmA));
-  TH2D *h2ParamH[7], *h2ParamHe[7];
-  if( calFile  ) {
-    for(auto i: ROOT::TSeqI(7)){
-      calFile->GetObject(Form("h2InterpolateNM_%dSn_Par%d"  ,bmA,i),h2ParamH[i]);
-      calFile->GetObject(Form("h2InterpolateHeNM_%dSn_Par%d",bmA,i),h2ParamHe[i]);
+    auto calFile = TFile::Open(Form("db/PIDCalib_%dSn.root",bmA));
+    TH2D *h2ParamH[7], *h2ParamHe[7];
+    if( calFile  ) {
+      for(auto i: ROOT::TSeqI(7)){
+	calFile->GetObject(Form("h2InterpolateNM_%dSn_Par%d"  ,bmA,i),h2ParamH[i]);
+	calFile->GetObject(Form("h2InterpolateHeNM_%dSn_Par%d",bmA,i),h2ParamHe[i]);
+      }
+      massCalH  -> AddParameters(h2ParamH);
+      massCalHe -> AddParameters(h2ParamHe);
     }
-    massCalH  -> AddParameters(h2ParamH);
-    massCalHe -> AddParameters(h2ParamHe);
-  }
-  else {
-    LOG(ERROR) << " Mass calibration file " << Form("PIDCalib_%dSn.root",bmA) << " is not found." << FairLogger::endl;
-    fstatus =  kFALSE;
-  }
-  
+    else {
+      LOG(ERROR) << " Mass calibration file " << Form("PIDCalib_%dSn.root",bmA) << " is not found." << FairLogger::endl;
+      fstatus =  kFALSE;
+    }
+  }  
+
   fstatus *= SetupPIDFit();
 
 
@@ -213,13 +220,22 @@ Bool_t STSpiRITTPCTask::SetupInputDataFile()
   UInt_t i = 0;
   while(kTRUE){
 
+
     TString recoFile = Form("run%04d_s%02d.reco."+tVer+".root",iRun,i);
+    if( bmA == 100 )
+      recoFile = Form("mizuki_%06d_s%02d.reco.v1.04.root",iRun,i);
+
+    LOG(INFO) << i << " recoFile " << recoFile << FairLogger::endl;
+
 
     if(gSystem->FindFile(rootDir,recoFile)) 
       fChain -> Add(recoFile);
 
     else if(i < 10) {
       recoFile = Form("run%04d_s%d.reco."+tVer+".root",iRun,i);
+      if( bmA == 100 )
+	recoFile = Form("mizuki_%06d_s%d.reco.v1.04.root",iRun,i);
+
       if(gSystem->FindFile(rootDir,recoFile)) 
 	fChain -> Add(recoFile);
       else
@@ -229,7 +245,6 @@ Bool_t STSpiRITTPCTask::SetupInputDataFile()
     else 
       break;
     
-    LOG(INFO) << i << " recoFile " << recoFile << FairLogger::endl;
     i++;
 
   }
@@ -247,9 +262,16 @@ Bool_t STSpiRITTPCTask::SetupInputDataFile()
   fChain -> SetBranchAddress("STEventHeader", &eventHeader);
   fChain -> SetBranchAddress("STRecoTrack",   &trackArray);
   fChain -> SetBranchAddress("VATracks",      &trackVAArray);
-  fChain -> SetBranchAddress("STVertex"   ,   &vertexArray);
+
   fChain -> SetBranchAddress("VAVertex"   ,   &vertexVAArray);
   fChain -> SetBranchAddress("BDCVertex"  ,   &vertexBDCArray);
+
+  if( bmA == 100 ) {
+    fChain -> SetBranchAddress("STVertex_1" ,   &vertexArray);
+    fChain -> SetBranchAddress("STRecoTrack",   &trackVAArray);
+  }
+  else
+    fChain -> SetBranchAddress("STVertex"   ,   &vertexArray);
 
   //  fChain->Print();
 
@@ -273,6 +295,7 @@ void STSpiRITTPCTask::Exec(Option_t *opt)
   if(SetupEventInfo()) {
     fEventID++;
 
+
     if( ProceedEvent() ) {
       bfill = kTRUE;
       FinishEvent();
@@ -284,6 +307,10 @@ void STSpiRITTPCTask::Exec(Option_t *opt)
     bfill = kTRUE;
   else
     bfill = kFALSE;
+
+  if( bmA == 100 )
+    bfill = kTRUE;
+
 
   anaRun->MarkFill(bfill);
 
@@ -319,10 +346,13 @@ void STSpiRITTPCTask::FinishEvent()
 
 
   if( fIsFlowAnalysis ) {
+    LOG(INFO) << "beam " << BeamPID << " event " << rEventID << FairLogger::endl;
 
     fflowtask->SetupEventInfo(rEventID, BeamPID);
     fflowtask->FinishEvent();
-    fflowinfo = fflowtask->GetFlowInfo();
+
+    if( bmA != 100 )
+      fflowinfo = fflowtask->GetFlowInfo();
     
     TClonesArray &aflow = *flowAnalysis;
     new( aflow[0] ) STFlowInfo( *fflowinfo );
@@ -334,6 +364,13 @@ void STSpiRITTPCTask::FinishEvent()
 
 Bool_t STSpiRITTPCTask::SetupEventInfo()
 {
+  if( bmA == 100 ) {
+    BeamPID = 100;
+
+    LOG(DEBUG) << "STSpiRITTPCTask::SetupEventInfo() " << FairLogger::endl;
+    return kTRUE;
+  }
+
   rEventID = eventHeader -> GetEventID() - 1;
   
   auto fBDCArray = (TClonesArray *)fRootManager->GetObject("STBDC");
@@ -360,11 +397,14 @@ Bool_t STSpiRITTPCTask::SetupEventInfo()
 
 Bool_t STSpiRITTPCTask::GetVertexQuality(TVector3 vert) 
 {
+  if( bmA == 100 ) return kTRUE; 
+
   if( ProjA < -99 || ProjA > 100) return kFALSE;
-
+  
   if( ProjB < -99 ) return kFALSE;
-
+  
   if( abs(ProjX) > 20 || abs(ProjY) > 20 ) return kFALSE;
+
 
   auto BeamIndex = STRunToBeamA::GetSystemID(iRun);
   if(BeamIndex >= 4) return kFALSE;
@@ -379,11 +419,18 @@ Bool_t STSpiRITTPCTask::GetVertexQuality(TVector3 vert)
 
 void STSpiRITTPCTask::SetupTrackQualityFlag(STParticle *apart) 
 {
+  if( bmA == 100 ) {
+    cout << " vDistance " << apart->GetDistanceAtVertex() << " NDF " << apart->GetNDF() << endl;
+    return ;
+  }
+
   if( apart->GetDistanceAtVertex() > 25 )
     apart->SetDistanceAtVertexFlag(0);
 
   if( apart->GetNDF() < 10) 
     apart->SetNDFFlag(0);
+
+
 }
 
 void STSpiRITTPCTask::Clear()
@@ -408,10 +455,7 @@ void STSpiRITTPCTask::Clear()
 Bool_t STSpiRITTPCTask::ProceedEvent()
 {
 
-  //  ntrack[0] = trackArray -> GetEntries();  
   ntrack[0] = trackVAArray -> GetEntries(); // after 20191214
-
-  LOG(DEBUG) << "nttack[0] -------------------- > " << ntrack[0] << FairLogger::endl;
                  
   auto vertex = (STVertex *) vertexArray -> At(0);
 
@@ -432,8 +476,12 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
 
     ntrack[1]++;
 
+    cout << " ntrack[1] " << ntrack[1] << endl;
+
     STParticle *aParticle = new STParticle();
     aParticle->SetRecoTrack(trackFromArray);
+
+    cout << " ndf --> " << aParticle->GetNDFvertex() << endl;
 
     //--- Set event and track quality ---;  
     aParticle->SetVertex(vertex);
@@ -589,6 +637,7 @@ Int_t STSpiRITTPCTask::GetPIDLoose(Double_t mass[2], Double_t fMom, Double_t ded
 
 Bool_t STSpiRITTPCTask::SetupPIDFit()
 {
+  if( bmA == 100 ) return kTRUE;
 
   TString massFitName = Form("data/MassFit_%dSn.left.root",bmA);
   massGateFile = TFile::Open(massFitName);

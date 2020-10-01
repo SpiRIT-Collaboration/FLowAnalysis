@@ -47,14 +47,17 @@ Bool_t bstyle[] =
 // --> Plotting selection
 //--- Data
 Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
-Bool_t bpid[]  = { 1, 1, 1, 1, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
 gplot gnames[] = {  
-  {".v52.10.28" ,"finYPt_","b3fm"},
+  {".v52.11.2" ,"finYPt_","ut>0.crr.b3fm"},
+  {".v52.11.1" ,"finYPt_","crr.b3fm"},
+  {".v52.11.0" ,"finYPt_","w/ocorr.b3fm"},
+  //  {".v52.10.28" ,"finYPt_","b3fm"},
   //  {".v52.10.26" ,"finYPt_",""},
 
   //  {".v52.10.27" ,"finYPt_",""},
@@ -242,11 +245,11 @@ void PlotPtDependence()
   auto lgr0 = new TLegend(0.16, 0.70, 0.46, 0.85,"");
   auto lgr10= new TLegend(0.16, 0.70, 0.46, 0.85,"");
 
-  g_v11 = new TGraphErrors("g_v11");
+  g_v11 = new TGraphErrors();
   g_v11 -> SetTitle("v_{11}");
-  g_v20 = new TGraphErrors("g_v20");
+  g_v20 = new TGraphErrors();
   g_v20 -> SetTitle("v_{20}");
-  g_v2n = new TGraphErrors("g_v2n");
+  g_v2n = new TGraphErrors();
   g_v2n -> SetTitle("v_{2n}");
 
   
@@ -416,8 +419,8 @@ void PlotPtDependence()
     //--- v1 vs rapidity ---
     if( ( bplot[0] || bplot[1]) && bplot[2] ) {
 
-      //TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gu_v1");
-      TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gy_v1");
+      TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gu_v1");
+      //      TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gy_v1");
 
       gROOT->ls();
 
@@ -468,26 +471,27 @@ void PlotPtDependence()
 	yv1_rev->SetLineColor(icolor);
 
 	fv1fit->SetLineColor(icolor);
-	fv1fit->SetParameter(1,0.2);
+	//	fv1fit->SetParameter(1,0.7);
 	  
 	if( kFALSE ) {//is == 2 ) {
 	  mrv1->Add(yv1_rev,"p");
 	  lgr1->AddEntry(yv1_rev,  otitle+"_rev" ,"lp");
-	  yv1_rev->Fit("fv1fit","","",-1.1,1.1); //"Q0","");
+	  yv1_rev->Fit("fv1fit","Q0","",-1.1,1.1); //"Q0","");
 	}
 	else {
 	  mrv1->Add(yv1,"p");
 	  lgr1->AddEntry(yv1,  otitle ,"lp");
-	  yv1->Fit("fv1fit","","",-0.6, 1.); //"Q0","");
+	  yv1->Fit("fv1fit","Q0","",-0.6, 0.8); //"Q0","");
 	}
 
-
-	d_v11.push_back(fv1fit->GetParameter(1));
-	d_v11e.push_back(fv1fit->GetParError(1));
-
-	g_v11->SetPoint((UInt_t)lx_v11.size(), (UInt_t)lx_v11.size()+0.5, fv1fit->GetParameter(1) );
-	g_v11->SetPointError((UInt_t)lx_v11.size(),                 0., fv1fit->GetParError(1) );
-	lx_v11.push_back(otitle);
+	if( bplot[12] ) {
+	  d_v11.push_back(fv1fit->GetParameter(1));
+	  d_v11e.push_back(fv1fit->GetParError(1));
+	  
+	  g_v11->SetPoint((UInt_t)lx_v11.size(), (UInt_t)lx_v11.size()+0.5, fv1fit->GetParameter(1) );
+	  g_v11->SetPointError((UInt_t)lx_v11.size(),                 0., fv1fit->GetParError(1) );
+	  lx_v11.push_back(otitle);
+	}
       }
 
       //--- y vs v2 ---
@@ -801,6 +805,8 @@ void PlotPtDependence()
 
     if( bstyle[0] )
       mrv2->GetXaxis()->SetRangeUser(-0.55,1.2);
+
+
     
     mrv2->Draw("ALP");
     lgr2->Draw();

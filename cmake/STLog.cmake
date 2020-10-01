@@ -1,4 +1,4 @@
-set(STPATH /cache/scr/spirit/mizuki/SpiRITAnalysis)
+set(STPATH /home/mizuki/SpiRITAnalysis)
 
 set(CREATE_GIT_LOG on)
 

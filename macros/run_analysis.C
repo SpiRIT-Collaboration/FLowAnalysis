@@ -30,7 +30,6 @@ void run_analysis(Int_t nevt = -1)
   }
 
 
-
   FairRunAna* anaRun = new FairRunAna();
   anaRun->SetRunId(atoi(sRun));
 
@@ -42,6 +41,8 @@ void run_analysis(Int_t nevt = -1)
   FairLogger *logger = FairLogger::GetLogger();
   logger ->SetLogToScreen(true);
 
+  cout << sRun << endl;
+
   auto BDCTask     = new STBigRIPSTask();  // This should be called earlier than TPC
   anaRun->AddTask(BDCTask);
 
@@ -49,9 +50,7 @@ void run_analysis(Int_t nevt = -1)
   anaRun->AddTask(TPCTask);
 
   TPCTask->SetRunInfo(tDir, tVer, dVer);
-  TPCTask->SetFlowAnalysis(kTRUE);  // Flow analysis is activated.
-
-  //  TChain* tpcChain = TPCTask->GetChain();
+  TPCTask->SetFlowAnalysis(kFALSE);  // Flow analysis is activated.
 
   anaRun->Init();
   

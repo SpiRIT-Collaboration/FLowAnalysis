@@ -29,7 +29,7 @@ UInt_t   GetV2PtIndex(Double_t val);
 void     DrawAcceptanceCorrection();
 TString  GetPsiRPLoadFileName();
 void     GetdNdydPt(Double_t ycm, Double_t pt);
-
+void     GetdNdydUt( Double_t ycm, Double_t ut, Double_t ycme, Double_t ute);
 
 TFile*        GraphSave;
 TH2D*         hAcpCorr;
@@ -108,11 +108,14 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
   gStyle->SetOptStat(0);
 
+
+  ///------>>>> Acceptance Correction Option: --------
   Bool_t bAcc_corr = kFALSE;
   //  Bool_t bAcc_corr = kTRUE;
+
   if( bAcc_corr && LoadAcceptanceCorrection(selid) ) {
     LOG(INFO) << " Acceptance correction is found. " << FairLogger::endl;
-    DrawAcceptanceCorrection();
+    // DrawAcceptanceCorrection();
   }
   else {
     LOG(INFO) << " Acceptance correction is OFF." << FairLogger::endl;
@@ -137,7 +140,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     auto bEffCorr = SetupEffCorrection();
 
   if( bEffCorr )
-    LOG(INFO) << "correctedPt.phi60.nomultcut.root is opened." << FairLogger::endl;
+    LOG(INFO) << fefffile->GetName() << FairLogger::endl;
 
   GraphSave  = new TFile(fName,"recreate");
 
@@ -153,6 +156,10 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   auto hyawpitch  = new TH2D("hyawpitch","; Yaw angle; Pitch angle",200,-1.5,1.5,200,-1.5,1.5);
   auto hmass      = new TH2D("hmass",   ";P/Q; Mass [MeV/c^2]"     ,200,  0.,2500., 200, 0.,7000);
   TString hlabel  = (TString)Form("mtrack1 %2d to %2d ; Y_{cm}; Pt [MeV/c]",Lcent,Ucent);
+
+  auto hypteff    = new TH2D("hypteff", hlabel , 40, -2., 2., 50, 0., 2.);
+  auto hyuteff    = new TH2D("hyuteff", hlabel , 40, -2., 2., 50, 0., 2.);
+  auto hdndydut   = new TH2D("hdndydut",";y;ut",40, -2., 2., 50, 0., 2.);
 
   auto hyptacp    = new TH2D("hyptacp", hlabel ,200, -1., 1.4, 200, 0., 1100);
   auto huy        = new TH2D("huy","; y_{cm}/y_{beam}; u_{t0} ", 200,-1., 1.8, 200,0.,1.8);
@@ -200,7 +207,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
   // booking for v1
   for( UInt_t iy = 0; iy < ybin1; iy++ ) {
-    rangeLabel1[iy] = Form("%5.2f <= y < %5.2f"      ,yrange1[iy]/y_cm[isys+6],yrange1[iy+1]/y_cm[isys+6]);
+    rangeLabel1[iy] = Form("%5.2f <= y < %5.2f"      ,yrange1nrm[iy]/y_cm[isys+6],yrange1nrm[iy+1]/y_cm[isys+6]);
     hutphi10[iy]  = new TH1D(Form("hutphi10+%d",iy)  ,rangeLabel1[iy]+";sub#Delta #Psi",100, -TMath::Pi(), TMath::Pi());
 
     hdy1[iy]      = new TH1D(Form("hdy1_y%d",iy)     ,rangeLabel1[iy]+";Rapidity", 500,-2.5,2.5);
@@ -219,7 +226,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   
 
   for( UInt_t iy = 0; iy < ybin2; iy++ ) {
-    rangeLabel2[iy] = Form("%5.2f <= y < %5.2f",yrange2[iy]/y_cm[isys+6],yrange2[iy+1]/y_cm[isys+6]);
+    rangeLabel2[iy] = Form("%5.2f <= y < %5.2f",yrange2nrm[iy]/y_cm[isys+6],yrange2nrm[iy+1]/y_cm[isys+6]);
     hutphi20[iy]    = new TH1D(Form("hutphi20+%d",iy)  ,rangeLabel1[iy]+";sub#Delta #Psi",100, -TMath::Pi(), TMath::Pi());
     hdy2[iy]        = new TH1D(Form("hdy2_y%d",iy),rangeLabel2[iy]+";Rapidity", 500,-2.5,2.5);
     hdyv2[iy]       = new TH1D(Form("hdyv2_y%d",iy),rangeLabel2[iy]+"ut>0.4;<cos#phi>;Rapidity", 500,-2.5,2.5);
@@ -382,19 +389,19 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       auto dphi   = aPart->GetAzmAngle_wrt_RP();
       auto dphi2  = aPart->GetAzmAngle2_wrt_RP();
       fmass  = aPart->GetMass();
+      Double_t u_t0  = aPart->GetRotatedMomentum().Pt()/fmass/u_p;
+      Double_t ou_t0 = aPart->GetMomentumAtTarget().Pt()/fmass/u_p;
 
       //      if( isys == 5 ) 
       //	dphi = TVector2::Phi_mpi_pi(aPart->GetRotatedMomentum().Phi() - RPPsi);
-
 
       hPsi     ->Fill(RPangle);
       hRPPsi   ->Fill(rpphi);
       hphi     ->Fill(phi);
       hRPPsipsi->Fill(RPPsi, rpphi);
       hyptacp  ->Fill(rapid/y_norm, pt);
-
-      Double_t u_t0  = aPart->GetRotatedMomentum().Pt()/fmass/u_p;
-      Double_t ou_t0 = aPart->GetMomentumAtTarget().Pt()/fmass/u_p;
+      hypteff  ->Fill(rapid/y_norm, pt/1000.);
+      hyuteff  ->Fill(rapid/y_norm, u_t0);
       
       hyawpitch->Fill(yaw,   pitch);
       hmass    ->Fill(aPart->GetRotatedMomentum().Mag(), bmass);
@@ -427,13 +434,13 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       hutphi20[irapid2] -> Fill( subevt_phi );
 
       hdy2[irapid2]     -> Fill( rapid/y_norm );
-      hdycos2[irapid2]  -> Fill( cos(dphi) );
+      hdycos2[irapid2]  -> Fill( cos(2.*dphi) );
 
       hdydut2[irapid2][ipt2] -> Fill( u_t0 );
       hdydutcos2[irapid2][ipt2] -> Fill( cos(2.*dphi) );
 
-      //if( (selid >= 2 && u_t0 > 0.) || selid < 2 ) {
-      if( (selid >= 2 && u_t0 > 0.4) || selid < 2 ) {
+      if( (selid >= 2 && u_t0 > 0.) || selid < 2 ) {
+      //      if( (selid >= 2 && u_t0 > 0.4) || selid < 2 ) {
 	huy->Fill( rapid / y_norm, u_t0 );
 
 
@@ -561,9 +568,17 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	  Double_t ptmean = utmean * fmass * u_p /1000.;
 
 	  if( !hAcpCorr -> IsZombie() ) { 
-	    GetdNdydPt(ymean, ptmean);
+	    //	    GetdNdydPt(ymean, ptmean);
+	    GetdNdydUt(ymean, utmean,  ystdv, ute);
 	    npt    = acpcorr[0];
 	    npte   = acpcorr[1];
+
+	    cout << " npt " << npt 
+		 << " +-  " << npte
+		 << endl;
+
+	    hdndydut->Fill(ymean, utmean, npt);
+
 	  }
 	}
 	//---------------------
@@ -587,6 +602,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       Double_t v1u_ave = v1u_sum / v1u_n;
       //      Double_t v1u_err = 1./sqrt(v1u_ste);
       Double_t v1u_err = 1./sqrt(v1u_n);
+
+      cout << " v1u_ave " << v1u_ave << endl;
       
       gu_v1->SetPoint( iyv, ymean, v1u_ave);
       gu_v1->SetPointError( iyv, ystdv, v1u_err);
@@ -664,7 +681,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	  Double_t ptmean = utmean * fmass * u_p /1000.;
 
 	  if( !hAcpCorr -> IsZombie() ) {
-	    GetdNdydPt(ymean, ptmean);
+	    //	    GetdNdydPt(ymean, ptmean);
+	    GetdNdydUt(ymean, utmean,  ystdv, ute);
 	    npt    = acpcorr[0];
 	    npte   = acpcorr[1];
 	  }
@@ -715,6 +733,9 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   hyawpitch->Write();
   hmass    ->Write();
   hyptacp  ->Write();
+  hypteff  ->Write();
+  hyuteff  ->Write();
+  hdndydut ->Write();
   hirap1   ->Write();
   hirap2   ->Write();
   huy      ->Write();
@@ -775,8 +796,13 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   LineH->Draw();
 
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
+  cc->Divide(2,2);
+  cc->cd(1);
   huy->Draw("colz");
-
+  cc->cd(2);
+  hdndydut->Draw("colz");
+  cc->cd(3);
+  hAcpCorr->Draw("colz");
   
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
   cc->Divide(2,2);
@@ -816,7 +842,7 @@ void PtDistribution(UInt_t selid)
   Double_t u_p = 0.355151 * 1.06974; //p+p(268.9MeV/u)
   
   for( UInt_t iy = 0; iy < ybin1; iy++ ) {
-    rangeLabel1[iy] = Form("%5.2f <= y < %5.2f"      ,yrange1[iy],yrange1[iy+1]);
+    rangeLabel1[iy] = Form("%5.2f <= y < %5.2f"      ,yrange1nrm[iy],yrange1nrm[iy+1]);
     hut[iy][0]    = new TH1D(Form("hut0_%d",iy)      ,rangeLabel1[iy]+"_yaw>0;U_{t};",100,0., 2.5);
     hut[iy][1]    = new TH1D(Form("hut1_%d",iy)      ,rangeLabel1[iy]+"_yaw<0;U_{t};",100,0., 2.5);
   }
@@ -878,7 +904,8 @@ void PtDistribution(UInt_t selid)
 //**************************************************
 Bool_t LoadAcceptanceCorrection(UInt_t selid)
 {
-  TString fname = "LCPSpectra_b0.15.root";
+  //  TString fname = "LCPSpectra_b0.15.root";
+  TString fname = "UnfoldedLCPSpectra.slim.root";
 
   if( !gSystem->FindFile("data",fname) ){
     LOG(ERROR) << fname << " is not found " << FairLogger::endl; 
@@ -887,7 +914,8 @@ Bool_t LoadAcceptanceCorrection(UInt_t selid)
 
   TFile *fopen = TFile::Open(fname);
   
-  TString hname = "h2PtY_"+ sysName + "_" +Partname[selid];
+  //  TString hname = "h2PtY_"+ sysName + "_" +Partname[selid];
+  TString hname = "h2UtYCorr_108Sn_" +Partname[selid]+"_mbin0_iter1";
   hAcpCorr = (TH2D*)fopen->Get(hname);
   
   if( !hAcpCorr ) {
@@ -895,16 +923,21 @@ Bool_t LoadAcceptanceCorrection(UInt_t selid)
     return kFALSE;
   }
 
+
   hAcpCorr -> SetDirectory( 0 );
+
 
   fopen->Close();
   return kTRUE;
 }
 void DrawAcceptanceCorrection()
 {
-  Double_t *yrange = &yrange2[0];
-  UInt_t ybin = ybin2;
+  ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+  hAcpCorr->Draw("colz");
 
+
+  Double_t *yrange = &yrange2nrm[0];
+  UInt_t ybin = ybin2;
   TH1D *hacp;
   id = 1;
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,600);
@@ -932,12 +965,40 @@ void GetdNdydPt( Double_t ycm, Double_t pt)
   acpcorr[1] = hAcpCorr->GetBinError(ybin, xbin);  
 }
 
+void GetdNdydUt( Double_t ycm, Double_t ut, Double_t ycme, Double_t ute)
+{
+  auto ybin     = hAcpCorr->GetXaxis()->FindBin(ycm);
+  auto ybin_low = hAcpCorr->GetXaxis()->FindBin(ycm-ycme);
+  auto ybin_hig = hAcpCorr->GetXaxis()->FindBin(ycm+ycme);
+
+  auto xbin     = hAcpCorr->GetYaxis()->FindBin(ut);
+  auto xbin_low = hAcpCorr->GetYaxis()->FindBin(ut-ute);
+  auto xbin_hig = hAcpCorr->GetYaxis()->FindBin(ut+ute);
+
+  Double_t content = 0.;
+  Double_t error = 0.;
+  for( Int_t iy = ybin_low; iy <= ybin_hig; iy++ ) {
+    for( Int_t ix = xbin_low; ix <= xbin_hig; ix++ ) {
+      auto num = hAcpCorr->GetBinContent(iy, ix);
+      content += num;
+      error   += 1./num;
+
+      cout << " y = " << iy << " x= " << ix <<  " " << hAcpCorr->GetBinContent(iy, ix) 
+	   << " +- " << hAcpCorr->GetBinError(iy, ix) << " : " << sqrt(error)
+	   << endl;
+    }
+  }
+
+  acpcorr[0] = content;
+  acpcorr[1] = sqrt(error);
+}
+
 
 UInt_t GetV1RapidityIndex(Double_t y)
 {
   UInt_t irapid1 = ybin1-1;
   for( UInt_t i = 1; i < ybin1; i++){
-    if( y < yrange1[i]){
+    if( y < yrange1nrm[i]){
       irapid1 = i-1;
       break;
     }
@@ -960,7 +1021,7 @@ UInt_t GetV2RapidityIndex(Double_t y)
 {
   UInt_t irapid2 = ybin2-1;
   for( UInt_t i = 1; i < ybin2; i++){
-    if( y < yrange2[i]){
+    if( y < yrange2nrm[i]){
       irapid2 = i-1;
       break;
     }
@@ -1052,7 +1113,7 @@ TString SetupOutputFile(TString fopt)
 
 Bool_t SetupEffCorrection()
 {
-  fefffile = TFile::Open("correctedPt.phi60.nomultcut.root");
+  fefffile = TFile::Open("UnfoldedLCPSpectra.slim.root");
 
   if( fefffile != NULL ) 
     return kTRUE;

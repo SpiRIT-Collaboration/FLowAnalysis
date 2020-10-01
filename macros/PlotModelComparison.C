@@ -33,7 +33,7 @@ Bool_t bplot[] =
     0, // 9 v1 slope(V11) and v2 max dependence on m
     0, //10 v1 slope(v11) and v2 max dependence on impact parameter
     0, //11 v1 slop and v2 max systematic error check
-    0, //12 v11 and v22 comparison with models 
+    1, //12 v11 and v22 comparison with models 
   };
 
 Bool_t bstyle[] =
@@ -47,7 +47,7 @@ Bool_t bstyle[] =
 // --> Plotting selection
 //--- Data
 Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
-Bool_t bpid[]  = { 1, 1, 1, 1, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
@@ -75,10 +75,8 @@ Bool_t  bpBUUConfig[]  = {0, 0, 1, 1};
 gplot pBUUConfig[] = {
   {"_energy270_gamma0.50_b5_withCluster.","pBUU2","pBUU b5g0.5"},
   {"_energy270_gamma1.75_b5_withCluster.","pBUU2","pBUU b5g1.75"},
-  {".b2.g05"   ,"pBUU_"  ,"pBUU b2g0.5"},
-  {".b2.g175"  ,"pBUU_"  ,"pBUU b2g1.75"},
-  {".b4.g05"   ,"pBUU_"  ,"pBUU b4g0.5"},
-  {".b4.g175"  ,"pBUU_"  ,"pBUU b4g1.75"}
+  {"_energy270_gamma0.50_b5_withCluster.","","wClust b5g0.5"},
+  {"_energy270_gamma1.75_b5_withCluster.","","wClust b5g1.75"},
 };
 Double_t pBUU_F[4][4] = { //F b2 g0.5, b2 g1.75, b4 g0.5, b4 g1.75
   { 92.1902, 93.199, 120.6029, 120.467},   // 132
@@ -262,11 +260,11 @@ void PlotModelComparison()
   auto lgr0 = new TLegend(0.16, 0.70, 0.46, 0.85,"");
   auto lgr10= new TLegend(0.16, 0.70, 0.46, 0.85,"");
 
-  g_v11 = new TGraphErrors("g_v11");
+  g_v11 = new TGraphErrors();
   g_v11 -> SetTitle("v_{11}");
-  g_v20 = new TGraphErrors("g_v20");
+  g_v20 = new TGraphErrors();
   g_v20 -> SetTitle("v_{20}");
-  g_v2n = new TGraphErrors("g_v2n");
+  g_v2n = new TGraphErrors();
   g_v2n -> SetTitle("v_{2n}");
 
   
@@ -365,7 +363,7 @@ void PlotModelComparison()
 	if( !bpBUUConfig[mt] ) continue;
 	
 	//@@@
-	fname.push_back("../../pBUU/data/"+pBUUConfig[mt].fileHeader+"sn" + rsys[ms] + "_sn" 
+	fname.push_back("ModelData/pBUU/"+pBUUConfig[mt].fileHeader+"sn" + rsys[ms] + "_sn" 
 			+ tsys[ms] + pBUUConfig[mt].Version + fpid[ip] + ".root");
 	
 	std::cout << fname.at(ngr+kgr+pgr) << std::endl;
@@ -403,7 +401,7 @@ void PlotModelComparison()
       for(UInt_t lo = 0; lo < (UInt_t)sizeof(btQMDConfig)/sizeof(Bool_t); lo++) {
 	if( !btQMDConfig[lo] ) continue;
 
-	TString ffin = "data/"+ sName[ndata+lo-1] + bName[ls] + fpid[lp] + sVer[ndata+lo-1] + ".root";
+	TString ffin = "ModelData/TuQMD/"+ sName[ndata+lo-1] + bName[ls] + fpid[lp] + sVer[ndata+lo-1] + ".root";
 	std::cout << ffin << std::endl;
 
 	fname.push_back(ffin);

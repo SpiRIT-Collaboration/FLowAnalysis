@@ -1,3 +1,4 @@
+#include "../tasks/STLorentzBoostVector.hh"
 TVector3 GetLorentzBoost(UInt_t isel);
 
 void RapidityShift()
@@ -56,7 +57,7 @@ void RapidityShift()
   
 }
 
-void Kinema(UInt_t isel = 0)
+void Kinema_org(UInt_t isel = 0)
 {
   
   TGraph *grph = new TGraph();
@@ -293,3 +294,21 @@ TVector3 GetLorentzBoost(UInt_t isel = 4)
 
 }
 
+
+
+void Kinema(UInt_t isel = 0)
+{
+
+  auto vboost0 = STLorentzBoostVector::GetBoostVector(0);
+  auto vboost1 = STLorentzBoostVector::GetBoostVector(1);
+  auto vboost2 = STLorentzBoostVector::GetBoostVector(2);
+  auto vboost3 = STLorentzBoostVector::GetBoostVector(3);
+  auto vboost4 = STLorentzBoostVector::GetBoostVector(4);
+  auto vboost5 = STLorentzBoostVector::GetBoostVector(5);
+  auto vboost6 = STLorentzBoostVector::GetBoostVector(6);
+  auto vboost7 = STLorentzBoostVector::GetBoostVector(7);
+
+  
+
+
+}

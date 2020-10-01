@@ -9,43 +9,25 @@ source ../build/config.sh
 
 # TPC data
 #
-#VERSION=37
-#export TPCDIR=/data/spdaq01/recoData/20190206/data/
-#export RCVER=HEAD.1780.1e193e6
-
-#VERSION=38
-#export TPCDIR=/data/spdaq01/recoData/20190804/data/
-#export RCVER=HEAD.1853.e498ace
-
-#VERSION=39
-#export TPCDIR=/data/spdaq01/recoData/20190804/data.corr_ExBl112/
-#export RCVER=HEAD.1853.e498ace
-#export SUFX=BTt
-
-#VERSION=50
-#export TPCDIR=/data/spdaq01/recoData/20190822/data/
-#export TPCDIR=/data/spdaq01/recoData/20191214/data
-#export RCVER=develop.1964.781a3cf
-#export SUFX=BTt
-
 VERSION=52
-export TPCDIR=/data/spdaq02/recoData/20200529/data
+export TPCDIR=/home/recoData/20200529/data
 export RCVER=develop.1988.bf2b00e
 export SUFX=BTt
 
+##g4 data
+export TPCDIR=/home/isobe/20200909MizukiGeant4/recoData.20200910/
+#mizuki_000003_s0.reco.v1.04.root
 
 ##export STBBFITTER=db/BBFitter.root
 export STBBFITTER=db/FlattenPID.root # Kaneko-kun's PID calibration files done with 20190804/data.corr_ExBl112/ 
 
 #BigRIPS data
-export STBEAM132=/cache/scr/spirit/DataAskedByMizuki/beam.Sn132_all/
-export STBEAM108=/cache/scr/spirit/DataAskedByMizuki/beam.Sn108/
-export STBEAM124=/cache/scr/spirit/DataAskedByMizuki/beam.Sn124/
-export STBEAM112=/cache/scr/spirit/DataAskedByMizuki/beam.Sn112/
+export STBEAM132=/home/spana01/DataAskedByMizuki/beam.Sn132_all/
+export STBEAM108=/home/spana01/DataAskedByMizuki/beam.Sn108/
+export STBEAM124=/home/spana01/DataAskedByMizuki/beam.Sn124/
+export STBEAM112=/home/spana01/DataAskedByMizuki/beam.Sn112/
 
 #KATANA data
-
-
 
 export STKATANADIR=/xrootd/spdaq02/katana/root/katana/
 
@@ -58,10 +40,10 @@ export STNLDIR=/cache/scr/spirit/NeuLand/neuland_4sep2018
 
 #Anlaysis Flag
 export STPC=1;
-export BIGRIPS=1;
+export BIGRIPS=0;
 export KYOTOARRY=0;
-export KATANA=1;
-export NEULAND=1;
+export KATANA=0;
+export NEULAND=0;
 
 #--------------
 
@@ -72,17 +54,16 @@ source runList.sh
 # Set RUNNUMBER1 
 DBVERSION=0
 
-export TPCDIR=$TPCDIR/Sn124
+#export TPCDIR=$TPCDIR/Sn132
 
 #RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
-RUNNUMBER1=(${RNF124})
+#RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RNFTEMP})
 #RUNNUMBER1=(${RNF132r})
 #RUNNUMBER1=(${RNF132t})
-
-
+RUNNUMBER1=(${RNFG4})
 
 
 function execa() { ## Job for the 2841 with maximum event number = MXEVT

@@ -2,6 +2,7 @@
 #define STLORENTZBOOSTVECTOR_HH
 #include <TVector3.h>
 
+
 namespace STLorentzBoostVector
 {
   const Double_t amu  = 931.4940954; //MeV/c2
@@ -17,6 +18,7 @@ namespace STLorentzBoostVector
     
 
   inline TVector3 GetBoostVector(UInt_t sysid);
+  inline void     Print(UInt_t isys, TLorentzVector bvec, TLorentzVector tvec);
 };
 
 TVector3 STLorentzBoostVector::GetBoostVector(UInt_t sysid = 4)
@@ -37,9 +39,30 @@ TVector3 STLorentzBoostVector::GetBoostVector(UInt_t sysid = 4)
   TLorentzVector tgVec = TLorentzVector( TVector3(0., 0., 0.), targetMass );
   auto totalVec = bmVec + tgVec;
 
-
+  //  Print(sysid, bmVec, tgVec);
 
   return totalVec.BoostVector();
 }
+
+void STLorentzBoostVector::Print(UInt_t isys, TLorentzVector bvec, TLorentzVector tvec)
+{
+  auto  totalVec = bvec + tvec;
+
+  std::cout << " ----- SYSTEM ----- " << system[isys] << std::endl;
+
+  Double_t y_beam = bvec.Rapidity();
+  std::cout << " LorentzBoost BEAM   " << bvec.Rapidity() ;
+  bvec.Boost(-totalVec.BoostVector());
+  std::cout << " -------- Boost  " << bvec.Rapidity()   << std::endl;
+
+  std::cout << " LorentzBoost TARGET " << tvec.Rapidity();
+  tvec.Boost(-totalVec.BoostVector());
+  std::cout << " -------- Boost  " << tvec.Rapidity()    << std::endl;
+  
+  std::cout << " y_cm " << totalVec.Rapidity() << endl;
+
+
+}
+
 
 #endif
