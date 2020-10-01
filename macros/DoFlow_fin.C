@@ -802,7 +802,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   cc->cd(2);
   hdndydut->Draw("colz");
   cc->cd(3);
-  hAcpCorr->Draw("colz");
+  if( !hAcpCorr -> IsZombie() )
+    hAcpCorr->Draw("colz");
   
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
   cc->Divide(2,2);
