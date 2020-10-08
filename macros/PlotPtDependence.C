@@ -46,7 +46,7 @@ Bool_t bstyle[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
+Bool_t bsys[]  = { 0, 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
 Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
@@ -54,9 +54,12 @@ UInt_t iv2at = 4;
 //-----------
 
 gplot gnames[] = {  
-  {".v52.11.2" ,"finYPt_","ut>0.crr.b3fm"},
-  {".v52.11.1" ,"finYPt_","crr.b3fm"},
-  {".v52.11.0" ,"finYPt_","w/ocorr.b3fm"},
+  {".v52.11.0" ,"finYPt_","ut>0.4 crr.b3fm"},
+  {".v52.11.7" ,"finYPt_","ut>0.crr.b3fm"},
+  //  {".v52.11.9" ,"finYPt_","w/ocorr.b3fm"},
+  // {".v52.11.3" ,"finYPt_","ut>0.w/ocrr.b3fm"},
+  // {".v52.11.2" ,"finYPt_","ut>0.crr.b3fm"},
+  // {".v52.11.1" ,"finYPt_","crr.b3fm"},
   //  {".v52.10.28" ,"finYPt_","b3fm"},
   //  {".v52.10.26" ,"finYPt_",""},
 
