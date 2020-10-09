@@ -24,7 +24,7 @@ Bool_t bplot[] =
   { 1, // 0 data   It should be set to 1 in the code.
     0, // 1 model  It should be set to 1 in the code.
     1, // 2 v1 and v2 rapidity 
-    0, // 3 v1 and v2 on pt in one window
+    1, // 3 v1 and v2 on pt in one window
     0, // 4 v1 and v2 in individual windows
     0, // 5 Acceptance ypt => never be plotted 
     0, // 6 <px>/A
@@ -55,7 +55,7 @@ UInt_t iv2at = 4;
 
 gplot gnames[] = {  
   {".v52.11.0" ,"finYPt_","ut>0.4 crr.b3fm"},
-  {".v52.11.7" ,"finYPt_","ut>0.crr.b3fm"},
+  {".v52.11.9" ,"finYPt_","ut>0.crr.b3fm"},
   //  {".v52.11.9" ,"finYPt_","w/ocorr.b3fm"},
   // {".v52.11.3" ,"finYPt_","ut>0.w/ocrr.b3fm"},
   // {".v52.11.2" ,"finYPt_","ut>0.crr.b3fm"},

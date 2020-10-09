@@ -30,6 +30,7 @@ void     DrawUt(TH2D *h2, UInt_t sel, TString opt="");
 TString  GetPsiRPLoadFileName();
 void     GetdNdydPt(Double_t ycm, Double_t pt);
 void     GetdNdydUt( Double_t ycm, Double_t ut, TH2D* h2c);
+void     GetdNdydUt( Int_t ih, Int_t iy, Int_t ipt, TH2D *h2c);
 void     GetYUtCorrection(TH2D &h2, TH2D &h2c);
 
 TFile*        GraphSave;
@@ -92,6 +93,9 @@ void DoFlow_fin(Int_t isel = 0)
   acpcorr[0] = 1.;
   acpcorr[1] = 0.;
 
+  dpt1 = ut_max[isel-2]/(Double_t)ptbin1;
+  dpt2 = ut_max[isel-2]/(Double_t)ptbin2;
+
 
   if( isel > 0 ) 
     PlotPtDependence((UInt_t)isel);  
@@ -126,9 +130,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
 
   LOG(INFO) << "PlotPtDependence(" << selid << ")" << FairLogger::endl;
-  dpt1 = pt_max/(Double_t)ptbin1;
-  dpt2 = pt_max/(Double_t)ptbin2;
-
 
   //-- Define Output file name 
   TString fHeader = "finYPt_"+ sysName + "_" + partname[selid]+".v"+sVer+".";
@@ -415,11 +416,12 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
 
       UInt_t irapid1 = GetV1cmRapidityIndex(rapidn);
-      UInt_t ipt1    = GetV1PtIndex(pt);
-      
+      UInt_t ipt1    = GetV1PtIndex(u_t0);
+
+
       UInt_t irapid2 = GetV2cmRapidityIndex(rapidn);
-      UInt_t ipt2    = GetV2PtIndex(pt);
-      
+      UInt_t ipt2    = GetV2PtIndex(u_t0);
+
       hirap1 -> Fill( rapid/y_norm , (Double_t)irapid1 );
       hirap2 -> Fill( rapid/y_norm , (Double_t)irapid2 );
 
@@ -588,12 +590,14 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
 	  if( !hyutacpcrr -> IsZombie() ) { 
 	    //	    GetdNdydPt(ymean, ptmean);
-	    GetdNdydUt(ymean, utmean,  huy);
+	    //	    GetdNdydUt(ymean, utmean,  huy);
 	    //	    GetdNdydUt(ymean, utmean,  hyutacpcrr);
+	    //	    GetdNdydUt(1, iy, ipt, huy);
+	    GetdNdydUt(1, iy, ipt, hyutacpcrr);
 
 	    ///$$$$$////
 	    utn   = acpcorr[0];
-	    hdndydut->Fill(ymean, utmean, acpcorr[0]);
+	    hdndydut->Fill(yrange1nrm[iy], dpt1*ipt, acpcorr[0]);
 	  }
 	}
 	//---------------------
@@ -695,15 +699,17 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
 	  if( !hyutacpcrr -> IsZombie() ) {
 	    //	    GetdNdydPt(ymean, ptmean);
-	    //GetdNdydUt(ymean, utmean, hyutacpcrr);
-	    GetdNdydUt(ymean, utmean, huy);
+	    //      GetdNdydUt(ymean, utmean, hyutacpcrr);
+	    //	    GetdNdydUt(ymean, utmean, huy);
+	    //	    GetdNdydUt(iy, ipt, huy);
+	    //	    GetdNdydUt(2, iy, ipt, huy);
+	    GetdNdydUt(2, iy, ipt, hyutacpcrr);
 
 	    if( acpcorr[0] > 0 )
 	      utn    = acpcorr[0];
 
 	  }
 	}
-
 
 	v2ut  = v2u / rpresall[0] * utn;
 	v2ute = GetError(v2u, rpresall[0], v2ue, rpresall[1]) ;
@@ -1037,9 +1043,66 @@ void GetYUtCorrection(TH2D &h2, TH2D &h2c)
   }
 }
 
+void GetdNdydUt( Int_t ih, Int_t ixbin, Int_t iybin, TH2D *h2c)
+{
+  acpcorr[0] = 0.;
+  acpcorr[1] = 0.;
+  
+  Double_t x[2] = {0.,0.};
+  Double_t y[2] = {0.,0.};
+
+  if( ih == 1 ) {
+    if( ixbin < 0 || ixbin > ybin1 ) return;
+    if( iybin < 0 || iybin > ptbin1 ) return;
+
+    x[0] = yrange1nrm[ixbin];
+    x[1] = yrange1nrm[ixbin+1];
+    y[0] = dpt1*iybin;
+    y[1] = y[0] + dpt1;
+
+  }
+  else if( ih == 2 ) {
+    if( ixbin < 0 || ixbin > ybin2 ) return;
+    if( iybin < 0 || iybin > ptbin2 ) return;
+
+    x[0] = yrange2nrm[ixbin];
+    x[1] = yrange2nrm[ixbin+1];
+    y[0] = dpt2*iybin;
+    y[1] = y[0] + dpt2;
+  }
+  else
+    return;
+    
+  ///$$$$$////
+  auto xbin_frst = h2c->GetXaxis()->FindBin(x[0]);
+  auto xbin_last = h2c->GetXaxis()->FindBin(x[1])-1;
+  auto ybin_frst = h2c->GetYaxis()->FindBin(y[0]);
+  auto ybin_last = h2c->GetYaxis()->FindBin(y[1])-1;
+
+
+  Double_t content = 0.;
+  Double_t error = 0.;
+
+  content = h2c->IntegralAndError(xbin_frst, xbin_last, ybin_frst, ybin_last, error, "");
+
+
+  // cout << ih << " :: irapid = " << ixbin << " ipt = " << iybin << endl;	
+  // cout << " rapid " << xbin_frst << " : " << x[0] <<" - " << xbin_last << " "<< x[1] 
+  //      << " pt " << ybin_frst << " : " << y[0] << " - " << ybin_last << " " << y[1] << endl;
+  // cout << " --> " << content << " +- " << error << endl;
+
+
+  //test
+  // TF1 *utslp = new TF1("utslp","exp(-x/1.)+1000.",0.,2.);
+  // content = utslp->Eval(ut);
+  // error   = 0.;
+
+  acpcorr[0] = content;
+  acpcorr[1] = error;
+}
+
 void GetdNdydUt( Double_t ycm, Double_t ut, TH2D *h2c)
 {
-  ///$$$$$////
   Int_t wbin = 1;
 
   auto ybin     = h2c->GetXaxis()->FindBin(ycm);
@@ -1123,6 +1186,10 @@ UInt_t GetV2cmRapidityIndex(Double_t y)
 
 UInt_t GetV1PtIndex(Double_t val)
 {
+  return UInt_t(val/dpt1);
+
+
+
   UInt_t ipt = ptbin1 - 1;
   for(UInt_t i = 0; i < ptbin1; i++){
     if( val < dpt1*(i+1)) {
@@ -1135,6 +1202,9 @@ UInt_t GetV1PtIndex(Double_t val)
 
 UInt_t GetV2PtIndex(Double_t val)
 {
+  return UInt_t(val/dpt2);
+
+
   UInt_t ipt = ptbin2 - 1;
   for(UInt_t i = 0; i < ptbin2; i++){
     if( val < dpt2*(i+1)) {

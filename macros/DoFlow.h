@@ -42,9 +42,10 @@ Double_t y_cm[] =  { 0.382006, 0.36444,  0.389983, 0.353648, 0.371326, 0.382006,
 const UInt_t   ptbin1  = 8; //16
 const UInt_t   ptbin2  = 5; //10
 Double_t pt_max = 800.;
-Double_t dpt1;
-Double_t dpt2;
 
+const Double_t ut_max[] = {2.2, 1.6, 1.2, 1.2, 1.0, 2.2} ;
+Double_t dpt1 = 0.275;
+Double_t dpt2 = 0.44;
 // Psi bin
 const UInt_t  psibin = 12;
 
