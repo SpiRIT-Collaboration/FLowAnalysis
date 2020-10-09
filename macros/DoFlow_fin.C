@@ -117,8 +117,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
   ///------>>>> Acceptance Correction Option: --------
   ///$$$$$////
-  //Bool_t bAcc_corr = kFALSE;
-  Bool_t bAcc_corr = kTRUE;
+  Bool_t bAcc_corr = kFALSE;
+  //Bool_t bAcc_corr = kTRUE;
 
   if( bAcc_corr && LoadAcceptanceCorrection(selid) ) {
     LOG(INFO) << " Acceptance correction is found. " << FairLogger::endl;

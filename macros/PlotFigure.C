@@ -20,8 +20,8 @@ Color_t  pcolor[4] = {2, 3, 4, 5}; // p,d,t,3He
 
 
 gplot gnames[] = {
-  //{".v52.10.16" ,"finYPt_", "M0-50"},
-  {".v52.10.28" ,"finYPt_", "b3fm"},
+  {".v52.11.9" ,"finYPt_", "b3fm corr"},
+  //{".v52.10.28" ,"finYPt_", "b3fm"},
   // {".v52.9.15" ,"advYPt_","M55-80"},
   // {".v52.9.14" ,"advYPt_","M0-50"},
   //  {".v52.8.4" ,"advYPt_","y_sys/y_sys"},

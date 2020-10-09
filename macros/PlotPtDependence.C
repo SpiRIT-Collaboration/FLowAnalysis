@@ -29,7 +29,7 @@ Bool_t bplot[] =
     0, // 5 Acceptance ypt => never be plotted 
     0, // 6 <px>/A
     0, // 7 v1 vs part system dependence
-    0, // 8 v2_min system dependence 
+    1, // 8 v2_min system dependence 
     0, // 9 v1 slope(V11) and v2 max dependence on m
     0, //10 v1 slope(v11) and v2 max dependence on impact parameter
     0, //11 v1 slop and v2 max systematic error check
@@ -46,8 +46,8 @@ Bool_t bstyle[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 0, 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
-Bool_t bpid[]  = { 1, 0, 0, 0, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
+Bool_t bpid[]  = { 0, 0, 0, 1, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
