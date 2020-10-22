@@ -37,7 +37,7 @@ export MNUC=52
 export MNSFX=BTt
 export MDCUT=0. #0.0               ##   <------@@ mid-rapidity cut
 export MNINVERSION=52.9             ##   <------@@ input
-export MNOUTVERSION=52.11           ##   <------@@ output 
+export MNOUTVERSION=52.14           ##   <------@@ output 
 
 
 ##-- DATA

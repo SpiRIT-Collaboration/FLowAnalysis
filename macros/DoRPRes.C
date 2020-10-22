@@ -954,6 +954,13 @@ Double_t  GetError(Double_t x, Double_t y, Double_t xe, Double_t ye)
   return  xc * sqrt(pow(xe/x,2) + pow(ye/y,2));
 }
 
+Double_t  GetNError(Double_t x, Double_t y, Double_t xe, Double_t ye)
+{
+  if( y == 0 ) return 0.;
+  Double_t xc = abs(x*y);
+  return  xc * sqrt(pow(xe/x,2) + pow(ye/y,2));
+}
+
 Double_t GetRPBaseAngle(STFlowInfo *aflow) {
   auto RPangle   = aflow->unitP_fc.Phi();
 

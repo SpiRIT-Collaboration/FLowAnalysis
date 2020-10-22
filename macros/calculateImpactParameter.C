@@ -102,7 +102,7 @@ void help() {
 }
 
 void calculateImpactParameter() {
-  auto db = new TFile("bDB.root");
+  auto db = new TFile("data/bDB.root");
   if (!db -> IsOpen()) {
     cout << endl;
     cout << " = No bDB.root file is found!" << endl;
@@ -112,7 +112,7 @@ void calculateImpactParameter() {
   }
 
 //  for (auto system : {108, 112, 124, 132}) {
-  for (auto system : {108, 132}) {
+  for (auto system : {108, 132, 112, 124}) {
     // [barn]
     xsAbs[system] = ((TParameter<Double_t> *) db -> Get(Form("xsAbs%d", system))) -> GetVal();
     xsAbsSigma[system] = ((TParameter<Double_t> *) db -> Get(Form("xsAbsSigma%d", system))) -> GetVal();

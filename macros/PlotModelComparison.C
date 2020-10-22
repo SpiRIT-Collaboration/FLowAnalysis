@@ -149,7 +149,7 @@ Double_t FittingAndIntegral(TGraphErrors *gr)
 
 
 
-void PlotModelComparison()
+void PlotModelComparison2()
 {
   
   gStyle->SetOptStat(0);

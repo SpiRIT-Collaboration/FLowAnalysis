@@ -117,8 +117,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
   ///------>>>> Acceptance Correction Option: --------
   ///$$$$$////
-  Bool_t bAcc_corr = kFALSE;
-  //Bool_t bAcc_corr = kTRUE;
+  //Bool_t bAcc_corr = kFALSE;
+  Bool_t bAcc_corr = kTRUE;
 
   if( bAcc_corr && LoadAcceptanceCorrection(selid) ) {
     LOG(INFO) << " Acceptance correction is found. " << FairLogger::endl;
@@ -580,8 +580,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       utn   = hdydut1cut[iy][ipt]->GetEntries();
 
       if( utn > 0 ) {
-	v1u   = hdydutcos1cut[iy][ipt]->GetMean();
-	v1ue  = hdydutcos1cut[iy][ipt]->GetStdDev()/sqrt(utn);
 
 	///--------------------
 	// acceptance correction
@@ -596,28 +594,27 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	    GetdNdydUt(1, iy, ipt, hyutacpcrr);
 
 	    ///$$$$$////
-	    utn   = acpcorr[0];
 	    hdndydut->Fill(yrange1nrm[iy], dpt1*ipt, acpcorr[0]);
 	  }
 	}
 	//---------------------
 
-
-	v1ut  = v1u / rpresall[0] * utn;
+	v1u   = hdydutcos1cut[iy][ipt]->GetMean();
+	v1ue  = hdydutcos1cut[iy][ipt]->GetStdDev()/sqrt(utn);
+	v1ut  = v1u / rpresall[0];
 	v1ute = GetError(v1u, rpresall[0], v1ue, rpresall[1]);
-	Double_t omg = v1ute;
+	v1ut *= acpcorr[0];
+	v1ute = pow(v1ute,2) /acpcorr[0];
 
-	v1u_sum += v1ut;// * omg;	
-	v1u_ste += omg ;
-	v1u_n   += utn;
+	v1u_sum += v1ut;	
+	v1u_ste += v1ute ;
+	v1u_n   += acpcorr[0];
       }
     }
 
     if( yn > 0 && v1u_n > 0) {
       Double_t v1u_ave = v1u_sum / v1u_n;
-      Double_t v1u_err = sqrt(v1u_ste /  v1u_n);
-      //     Double_t v1u_err = 1./sqrt(v1u_n);
-
+      Double_t v1u_err = sqrt(v1u_ste);
       
       gu_v1->SetPoint( iyv, ymean, v1u_ave);
       gu_v1->SetPointError( iyv, ystdv, v1u_err);
@@ -690,9 +687,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       ///$$$$$////
       if( utn > 0 ) {
 	///--------------------
-	v2u   = hdydutcos2cut[iy][ipt] -> GetMean();
-	v2ue  = hdydutcos2cut[iy][ipt] -> GetStdDev()/ sqrt(utn);
-          
 	// acceptance correction   
 	if( bAcc_corr ) {
 	  Double_t ptmean = utmean * fmass * u_p /1000.;
@@ -704,20 +698,20 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	    //	    GetdNdydUt(iy, ipt, huy);
 	    //	    GetdNdydUt(2, iy, ipt, huy);
 	    GetdNdydUt(2, iy, ipt, hyutacpcrr);
-
-	    if( acpcorr[0] > 0 )
-	      utn    = acpcorr[0];
-
 	  }
 	}
 
-	v2ut  = v2u / rpresall[0] * utn;
-	v2ute = GetError(v2u, rpresall[0], v2ue, rpresall[1]) ;
-	Double_t omg = v2ute;
+	v2u   = hdydutcos2cut[iy][ipt] -> GetMean();
+	v2ue  = hdydutcos2cut[iy][ipt] -> GetStdDev()/ sqrt(utn);          
+	v2ut  = v2u / rpresall[0];
+	v2ute = GetError(v2u, rpresall[0], v2ue, rpresall[1]) ;	
+	v2ut *= acpcorr[0];
+	//	v2ute = GetNError(v2ut, acpcorr[0],  v2ute, acpcorr[1]);
+	v2ute = pow(v2ute,2)/acpcorr[0] ;
 
 	v2u_sum += v2ut;
-	v2u_ste += omg;
-	v2u_n   += utn;
+	v2u_ste += pow(v2ute,2);
+	v2u_n   += acpcorr[0];
       }
 
       hdydutcos2[iy][ipt]->Write();
@@ -727,8 +721,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     if( v2u_n > 0 ) {
                
       Double_t v2u_ave = v2u_sum / v2u_n;
-      Double_t v2u_err = sqrt(v2u_ste / v2u_n );
-      //Double_t v2u_err = 1./sqrt(v2u_n);
+      Double_t v2u_err = sqrt(v2u_ste);
       
       gu_v2->SetPoint( iyv, ymean, v2u_ave);
       gu_v2->SetPointError( iyv, ystdv, v2u_err );
@@ -1098,7 +1091,8 @@ void GetdNdydUt( Int_t ih, Int_t ixbin, Int_t iybin, TH2D *h2c)
   // error   = 0.;
 
   acpcorr[0] = content;
-  acpcorr[1] = error;
+  acpcorr[1] = error/sqrt(content);
+  //  acpcorr[1] = sqrt(content);
 }
 
 void GetdNdydUt( Double_t ycm, Double_t ut, TH2D *h2c)

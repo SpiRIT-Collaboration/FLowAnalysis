@@ -3,6 +3,7 @@
 #include "FlowFunction.C"
 #include "SetColor.C"
 #include "calculateImpactParameter.C"
+#include "PlotTransport.C"
 
 FairLogger *logger = FairLogger::GetLogger();
 
@@ -24,7 +25,7 @@ Bool_t bplot[] =
   { 1, // 0 data   It should be set to 1 in the code.
     0, // 1 model  It should be set to 1 in the code.
     1, // 2 v1 and v2 rapidity 
-    1, // 3 v1 and v2 on pt in one window
+    0, // 3 v1 and v2 on pt in one window
     0, // 4 v1 and v2 in individual windows
     0, // 5 Acceptance ypt => never be plotted 
     0, // 6 <px>/A
@@ -46,16 +47,19 @@ Bool_t bstyle[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
-Bool_t bpid[]  = { 0, 0, 0, 1, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bsys[]  = { 1, 1, 0, 1, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
+Bool_t bpid[]  = { 1, 1, 1, 1, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
+Bool_t bmdl[]  = { 0,      0,         0,       0,      0,       0,       0      }; 
+TString nmTrs[]= {"AMD",   "ChiBUU",  "IBUU",  "IQMD", "SMF",   "UrQMD", "dcQMD"};
 UInt_t cntw = 1;
 UInt_t iv2at = 4;
 //-----------
 
 gplot gnames[] = {  
-  {".v52.11.0" ,"finYPt_","ut>0.4 crr.b3fm"},
-  {".v52.11.9" ,"finYPt_","ut>0.crr.b3fm"},
+  //  {".v52.14.10" ,"finYPt_","ut>0 w/ocrr.b3fm"},
+  {".v52.14.12" ,"finYPt_","ut>0 wcrr.b3fm"},
+  //  {".v52.11.9" ,"finYPt_","ut>0.crr.b3fm"},
   //  {".v52.11.9" ,"finYPt_","w/ocorr.b3fm"},
   // {".v52.11.3" ,"finYPt_","ut>0.w/ocrr.b3fm"},
   // {".v52.11.2" ,"finYPt_","ut>0.crr.b3fm"},
@@ -170,23 +174,6 @@ void PlotPtDependence()
   std::vector< TString > fname;
   std::vector< std::vector< UInt_t >> index(6);
 
-  TGraphErrors *g_pBUUv2g5 = new TGraphErrors();
-  g_pBUUv2g5->SetName("g_pBUUv2g5");
-  g_pBUUv2g5->SetTitle("; (N-P)/A; v2");
-
-  TGraphErrors *g_pBUUv2g17 = new TGraphErrors();
-  g_pBUUv2g17->SetName("g_pBUUv2g17");
-  g_pBUUv2g17->SetTitle("; (N-P)/A; v2");
-
-
-  TGraphErrors *g_pBUUFg5 = new TGraphErrors();
-  g_pBUUFg5->SetName("g_pBUUFg5");
-  g_pBUUFg5->SetTitle("; (N-P)/A; F{MeV/c]");
-
-  TGraphErrors *g_pBUUFg17 = new TGraphErrors();
-  g_pBUUFg17->SetName("g_pBUUFg17");
-  g_pBUUFg17->SetTitle("; (N-P)/A; F{MeV/c]");
-
 
   TGraphErrors *g_mpxslp = new TGraphErrors();
   g_mpxslp->SetName("g_mpxslp");
@@ -235,7 +222,7 @@ void PlotPtDependence()
   auto mmpx  = new TMultiGraph("mmpx","; y/y_{nn}-1 ; <px>/A");
   //  mv1slp->GetXaxis()->SetAlphanumeric(kTRUE);
 
-  auto lgr1 = new TLegend(0.5 , 0.15, 0.70, 0.40, sVer[0]); 
+  auto lgr1 = new TLegend(0.3 , 0.65, 0.60, 0.90,""); 
   auto lgr2 = new TLegend(0.5 , 0.60, 0.70, 0.9, "");
   //  auto lgr2 = new TLegend(0.5 , 0.20, 0.70, 0.45, "");
   auto lgr3 = new TLegend(0.35, 0.13, 0.7, 0.33, "");
@@ -303,8 +290,34 @@ void PlotPtDependence()
 	  bplot[0] = 1;
 	}
       }
+
+
+      for(UInt_t imdl = 0; imdl < (UInt_t)sizeof(bmdl)/sizeof(Bool_t); imdl++){
+	if( !bmdl[imdl] ) continue;
+	
+	for( UInt_t iypt = 0; iypt < 2; iypt++ ) {
+	  if( iypt == 0 && !bplot[2] ) continue; 
+	  if( iypt == 1 && ( !bplot[3] && !bplot[4] )) continue;
+
+	  auto foundfile = FindTransportData(imdl, iypt, ip);
+	  if( foundfile != "" ) {
+	    std::cout << foundfile << std::endl;
+	    fname.push_back( foundfile );
+
+	    index[0].push_back(is); // system
+	    index[1].push_back(ip); // pid
+	    index[2].push_back(0); // centrality
+	    index[3].push_back(0);
+	    index[4].push_back(0); // version
+	    index[5].push_back(5+imdl);  // transport
+	    
+	  }
+	}
+      }
     }
   }
+
+
 
 
   cout << " Number of data files --> " << fname.size() << endl;
@@ -341,12 +354,6 @@ void PlotPtDependence()
 
   for(UInt_t igr = 0; igr < (UInt_t)fname.size(); igr++ ) {
 
-    fOpen = TFile::Open(fname.at(igr)); 
-
-    if( fOpen == NULL ) continue;
-    else
-      std::cout << fname.at(igr) << " is opened. " << std::endl;
-
     UInt_t is = index[0].at(igr);
     UInt_t ip = index[1].at(igr);
     UInt_t it = index[2].at(igr);
@@ -359,7 +366,6 @@ void PlotPtDependence()
       iss = is;
     }
 
-
     TString ohtitle = lsys[is];//+" "+lpid[ip]+" ";
     TString otitle  = ohtitle;
 
@@ -367,54 +373,59 @@ void PlotPtDependence()
     // 1 : data
     //-------------------
     if( ia == 1 ) { //data
+      fOpen = TFile::Open(fname.at(igr)); 
+
+      if( fOpen == NULL ) continue;
+      else
+	std::cout << fname.at(igr) << " is opened. " << std::endl;
+
       std::cout << "mnt " << cmnt[iz] << " " << iz << endl;
       otitle += "("+ lpid[ip]+")"+cmnt[iz];
-    }
+      //    }
 
     //acceptance
-    if( bplot[0] && bplot[5] && kFALSE ) {
-      hyptacp[igr] = (TH2D*)fOpen->Get("hyptacp");
-      if( hyptacp[igr] == NULL) {
-	cout <<" NULL 222" << endl;
-      } 
-      else {
-	hyptacp[igr]->Print();
-	hyptacp[igr]->SetName(Form("hyptacp_%d",igr));
-	cout << " igr " << igr << " " <<hyptacp[igr]->GetName() << endl;
-	cout << hyptacp[igr] << endl;
-	hyptacp[igr]->Draw("colz");
+      if( bplot[0] && bplot[5] && kFALSE ) {
+	hyptacp[igr] = (TH2D*)fOpen->Get("hyptacp");
+	if( hyptacp[igr] == NULL) {
+	  cout <<" NULL 222" << endl;
+	} 
+	else {
+	  hyptacp[igr]->Print();
+	  hyptacp[igr]->SetName(Form("hyptacp_%d",igr));
+	  cout << " igr " << igr << " " <<hyptacp[igr]->GetName() << endl;
+	  cout << hyptacp[igr] << endl;
+	  hyptacp[igr]->Draw("colz");
+	}
+	//    }
+	
+	//    if( igr < ngr ) {
+	TH1D *fevt = (TH1D*)fOpen->Get("hphi0_180");
+	
+	if( fevt != NULL ) {
+	  UInt_t tevt = fevt->GetEntries();
+	  
+	  auto ff = (TH2D*)fOpen->Get("hyptacp");
+	  ff->SetTitle(otitle);
+	  ff->SetDirectory(gROOT);
+	  
+	  gROOT->cd();
+	  ff->ProjectionX("_px");
+	  TH1D* ff1 = (TH1D*)gROOT->Get((TString)ff->GetName()+"_px");
+	  
+	  Double_t xwd = (Double_t)ff1->GetXaxis()->GetNbins()/(ff1->GetXaxis()->GetXmax() - ff1->GetXaxis()->GetXmin());
+	  
+	  if( fpid[ip] == "neutron" )
+	    ff1->Scale( xwd / tevt /0.26);
+	  else
+	    ff1->Scale(xwd / tevt);
+	  
+	  ff1->SetTitle("; Y_{cm}; dN/dy");
+	  ff1->SetLineColor(icolor);
+	  lgr3->AddEntry(ff1, otitle );
+	}
       }
+      fOpen->cd();
     }
-
-    if( igr < ngr ) {
-      TH1D *fevt = (TH1D*)fOpen->Get("hphi0_180");
-      
-      if( fevt != NULL ) {
-	UInt_t tevt = fevt->GetEntries();
-
-	auto ff = (TH2D*)fOpen->Get("hyptacp");
-	ff->SetTitle(otitle);
-	ff->SetDirectory(gROOT);
-
-	gROOT->cd();
-	ff->ProjectionX("_px");
-	TH1D* ff1 = (TH1D*)gROOT->Get((TString)ff->GetName()+"_px");
-	
-	Double_t xwd = (Double_t)ff1->GetXaxis()->GetNbins()/(ff1->GetXaxis()->GetXmax() - ff1->GetXaxis()->GetXmin());
-	
-	if( fpid[ip] == "neutron" )
-	  ff1->Scale( xwd / tevt /0.26);
-	else
-	  ff1->Scale(xwd / tevt);
-	
-	ff1->SetTitle("; Y_{cm}; dN/dy");
-	ff1->SetLineColor(icolor);
-	lgr3->AddEntry(ff1, otitle );
-      }
-    }
-
-    fOpen->cd();
-
     //------------------------------    
 
 
@@ -425,20 +436,17 @@ void PlotPtDependence()
       TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gu_v1");
       //      TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gy_v1");
 
-      gROOT->ls();
 
-      if( yv1 == NULL && ia == 3 ) // pBUU 
-	yv1 = (TGraphErrors*)fOpen->Get("gv_v1");
-      
+      if( ia >= 5 ) { // transport model
+	yv1 = ReadTransportData( fname.at(igr) , 1);
 
-      if( yv1 != NULL && ia == 5 ) // TuQMD
-	DividebyTwo(yv1);
-
+	otitle += nmTrs[ ia - 5 ];
+      }
 
       if( yv1 != NULL ) {
 
 	LOG(INFO) << " yv1 : " << yv1->GetName() << FairLogger::endl;
-	yv1->Print();
+	//	yv1->Print();
 
 
 	auto yv1_rev = new TGraphErrors();
@@ -474,7 +482,13 @@ void PlotPtDependence()
 	yv1_rev->SetLineColor(icolor);
 
 	fv1fit->SetLineColor(icolor);
-	//	fv1fit->SetParameter(1,0.7);
+
+	Double_t v1para1[4]={0.4, 0.4, 0.5, 0.6};
+
+	fv1fit->SetParameter(0,0.);
+	fv1fit->SetParameter(1,v1para1[ip]);
+	fv1fit->SetParameter(2,-0.2);
+	fv1fit->SetParameter(3,-0.01);
 	  
 	if( kFALSE ) {//is == 2 ) {
 	  mrv1->Add(yv1_rev,"p");
@@ -484,7 +498,7 @@ void PlotPtDependence()
 	else {
 	  mrv1->Add(yv1,"p");
 	  lgr1->AddEntry(yv1,  otitle ,"lp");
-	  yv1->Fit("fv1fit","Q0","",-0.6, 0.8); //"Q0","");
+	  yv1->Fit("fv1fit","","",-0.6, 0.8); //"Q0","");
 	}
 
 	if( bplot[12] ) {
@@ -500,6 +514,10 @@ void PlotPtDependence()
       //--- y vs v2 ---
       TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gu_v2");
       //       TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gy_v2");
+
+      if( ia >= 5 ) { // transport model
+	yv2 = ReadTransportData( fname.at(igr) , 2);
+      }
 
       
       if( yv2 != NULL ) {
@@ -523,11 +541,16 @@ void PlotPtDependence()
 	yv2->SetLineColor(icolor);
 	fv2fit->SetLineColor(icolor);
 	
+
+	Double_t v2para0[4]={-0.03, -0.04, -0.05, -0.05};
 	if( ip == 3 )
 	  yv2->Fit("fv2fit","","",-0.48,1.);
-	else
+	else {
+	  fv2fit->SetParameter(0,v2para0[ip]);
+	  fv2fit->SetParameter(1,0.05);
+	  fv2fit->SetParameter(2,0.02);
 	  yv2->Fit("fv2fit","","",-0.5,0.5);
-
+	}
 
 	d_v20.push_back(fv2fit->GetParameter(0));
 	d_v20e.push_back(fv2fit->GetParError(0));
@@ -542,28 +565,26 @@ void PlotPtDependence()
       }
 
 
-      if( bplot[10] &&  ia == 1 ) {
+      if( (bplot[10] || bplot[7] || bplot[8]) &&  ia == 1 ) {
 
 	TH1I *hmult  = (TH1I*)fOpen->Get("hmult");
 	if( hmult == NULL ) 
 	  continue;
-
+	
+	// hmultX = " Impact Parameter [fm] ";
+	// Int_t mmin = hmult->GetXaxis()->GetXmin();;
+	// Int_t mmax = hmult->GetXaxis()->GetXmax();
+	// FindFirstBin(hmult, mmin, mmax);
+	  
+	// mstd  = GetMinB( Asys[is], mmean-mstd, mmean+mstd );
+	// mmean = GetMinB( Asys[is], mmin, mmax);
+	// cout << "getminB  mean " << mmean << " +-" << mstd << endl;
+	
 	hmultX = "Multiplicity";
 	Double_t mmean = hmult->GetMean();
 	//Double_t mstd  = hmult->GetMeanError();
 	Double_t mstd  = hmult->GetStdDev()/sqrt(hmult->GetEntries());
 	cout << "get mean " << mmean << " +- " << mstd<< endl;
-	
-	hmultX = " Impact Parameter [fm] ";
-	Int_t mmin = hmult->GetXaxis()->GetXmin();;
-	Int_t mmax = hmult->GetXaxis()->GetXmax();
-	FindFirstBin(hmult, mmin, mmax);
-	  
-	mstd  = GetMinB( Asys[is], mmean-mstd, mmean+mstd );
-	mmean = GetMinB( Asys[is], mmin, mmax);
-	cout << "getminB  mean " << mmean << " +-" << mstd << endl;
-	
-
 
 	//v1
 	Double_t constlslope = fv1fit->GetParameter(0);
@@ -595,7 +616,11 @@ void PlotPtDependence()
 	
 	//v2
 	Double_t v2x, v2y, v2ye;
-	GetMinimumv2(yv2, v2y, v2ye);
+	//	GetMinimumv2(yv2, v2y, v2ye);
+
+	v2y  = fv2fit->GetParameter(0);
+	v2ye = fv2fit->GetParError(0);
+
 	cout << " v2y " << v2y << " +- " << v2ye << endl;
 
 	g_v2max->SetPoint(isp , mmean, -v2y);
@@ -774,6 +799,9 @@ void PlotPtDependence()
 
   //--- v1 and v2 vs rapidity ---
   if( ( bplot[0] || bplot[1]) && bplot[2] ) {
+
+    Double_t Ymin, Ymax, Xmin, Xmax;
+    //--- v1 vs rapidity ---
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
 
     mrv1->GetXaxis()->SetRangeUser(-1.2,1.2);
@@ -785,10 +813,10 @@ void PlotPtDependence()
     mrv1->Draw("ALP");
     lgr1->Draw();
 
-    auto Ymin = mrv1->GetYaxis()->GetXmin();
-    auto Ymax = mrv1->GetYaxis()->GetXmax();
-    auto Xmin = mrv1->GetXaxis()->GetXmin();
-    auto Xmax = mrv1->GetXaxis()->GetXmax();
+    Ymin = mrv1->GetYaxis()->GetXmin();
+    Ymax = mrv1->GetYaxis()->GetXmax();
+    Xmin = mrv1->GetXaxis()->GetXmin();
+    Xmax = mrv1->GetXaxis()->GetXmax();
 
     auto aLineX1 = new TLine(Xmin, 0., Xmax, 0.);
     aLineX1->SetLineColor(1);
@@ -800,7 +828,6 @@ void PlotPtDependence()
     aLineY1->SetLineStyle(3);
     aLineY1->Draw();
 
-  
     //--- v2 vs rapidity ---
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
 
@@ -808,8 +835,6 @@ void PlotPtDependence()
 
     if( bstyle[0] )
       mrv2->GetXaxis()->SetRangeUser(-0.55,1.2);
-
-
     
     mrv2->Draw("ALP");
     lgr2->Draw();
@@ -817,7 +842,6 @@ void PlotPtDependence()
     if( bstyle[2] ) {
       fv2y->Draw("same");
     }
-
 
     Ymin = mrv2->GetYaxis()->GetXmin();
     Ymax = mrv2->GetYaxis()->GetXmax();
@@ -839,7 +863,6 @@ void PlotPtDependence()
       lgr2->AddEntry("fv2y","initial","lp");
       lgr2->Draw();
     }
-
   }
 
   if( bplot[0] && bplot[5] ) {
@@ -948,6 +971,7 @@ void PlotPtDependence()
 
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     for(UInt_t jj = 0; jj < 6; jj++){
+      cout << " g_v1slpsys[jj]->GetN() " << g_v1slpsys[jj]->GetN() << endl;
       if(g_v1slpsys[jj]->GetN() > 0) {
 	g_v1slpsys[jj]->SetMarkerStyle(20);
 	g_v1slpsys[jj]->SetMarkerSize(1.5);
@@ -1005,7 +1029,7 @@ void PlotPtDependence()
     for(UInt_t jj = 0; jj < 6; jj++){
       if(g_v2maxsys[jj]->GetN() > 0) {
 	g_v2maxsys[jj]->SetMarkerStyle(20);
-	g_v2maxsys[jj]->SetMarkerSize(0.6);
+	g_v2maxsys[jj]->SetMarkerSize(1.);
 	g_v2maxsys[jj]->SetMarkerColor(icol[jj]);
 	g_v2maxsys[jj]->SetLineColor(icol[jj]);
 
@@ -1053,19 +1077,6 @@ void PlotPtDependence()
     msysD->Add(g_mpxslp, "LP");
     lgr0->AddEntry(g_mpxslp,"DATA x 1.4");
 
-    if( bplot[1] ) {
-      g_pBUUFg5 ->SetMarkerStyle(21);
-      g_pBUUFg5 ->SetMarkerColor(6);
-      g_pBUUFg5 ->SetLineColor(6);
-      g_pBUUFg17->SetMarkerStyle(21);
-      g_pBUUFg17->SetMarkerColor(8);
-      g_pBUUFg17->SetLineColor(8);
-	
-      msysD->Add(g_pBUUFg5,"LP");
-      msysD->Add(g_pBUUFg17,"LP");
-      lgr0->AddEntry(g_pBUUFg5,"pBUU b4 g0.5");
-      lgr0->AddEntry(g_pBUUFg17,"pBUU b4 g1.75");
-    }
     msysD->Draw("ALP");
     lgr0->Draw();
 
@@ -1096,20 +1107,6 @@ void PlotPtDependence()
       g_v2sysD->SetLineColor(4);
       mv2sysD->Add(g_v2sysD,"LP");
       lgr10->AddEntry(g_mpxslp,"DATA");
-
-      if( bplot[1] ) {
-	g_pBUUv2g5 ->SetMarkerStyle(21);
-	g_pBUUv2g5 ->SetMarkerColor(6);
-	g_pBUUv2g5 ->SetLineColor(6);
-	g_pBUUv2g17->SetMarkerStyle(21);
-	g_pBUUv2g17->SetMarkerColor(8);
-	g_pBUUv2g17->SetLineColor(8);
-	
-	mv2sysD->Add(g_pBUUv2g5,"LP");
-	mv2sysD->Add(g_pBUUv2g17,"LP");
-	lgr10->AddEntry(g_pBUUv2g5,"pBUU b4 g0.5");
-	lgr10->AddEntry(g_pBUUv2g17,"pBUU b4 g1.75");
-      }
 
       ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
       mv2sysD->Draw("AP");
