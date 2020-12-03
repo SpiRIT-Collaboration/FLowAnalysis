@@ -1006,7 +1006,7 @@ Bool_t   LoadAcceptanceCorrection(UInt_t selid, UInt_t Low, UInt_t Up)
 
   LOG(INFO) << fname << " is selected for efficiency correction. " << FairLogger::endl;
 
-  if( !gSystem->FindFile("/home/mizuki/EffCorrection/rootfiles/LCPSpectra",fname) ){
+  if( !gSystem->FindFile("data/rootfiles/LCPSpectra",fname) ){
     LOG(ERROR) << fname << " is not found " << FairLogger::endl; 
     return kFALSE;
   }
