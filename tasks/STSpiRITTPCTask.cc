@@ -476,8 +476,6 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
 
     ntrack[1]++;
 
-    cout << " ntrack[1] " << ntrack[1] << endl;
-
     STParticle *aParticle = new STParticle();
     aParticle->SetRecoTrack(trackFromArray);
 

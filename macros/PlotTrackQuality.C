@@ -1,72 +1,153 @@
+#include "openRunAna.C" 
+#include "DoFlow.h"
+
+void PlotTrackQuality()
 {
-  if( kFALSE ){
 
-    TCanvas cvx1("cvx1","cvx1",1200,1500);
-    cvx1.Divide(3,4);
-    UInt_t idd = 1;
+  gROOT->Reset();
+  openRunAna();
 
-    cvx1.cd(idd); idd++;
-    rChain->Draw("fdEdx:fP>>h(200,0.,2500,200,0,800)","fReactionPlanef%2==1","colz");
+  if(rChain != NULL)
+    LOG(INFO) << " DoFLow_adv: System " << isys << "  -> " << sysName << FairLogger::endl;
 
-    cvx1.cd(idd); 
-    rChain->Draw("fBBMass:fP>>h2(200,0.,3500,200,0,8000)","fReactionPlanef%2==1","colz");
-    cvx1.GetPad(idd)->SetLogz(); idd++;
+  else
+    exit(0);
 
-    cvx1.cd(idd); idd++;
-    rChain->Draw("fRotatedP3.Phi():fRotatedP3.Theta()","fReactionPlanef%2==1","colz");
+  UInt_t isys = 1; //180Sn
+  Int_t   embedPartID[]   = {2212,1000010020,1000010030,1000020030};
+  TString embedPartName[] = {"H", "2H", "3H", "3He"};
+  UInt_t mult[][2] = { {42, 52}, {55, 80}, {40, 55}, {30, 40}, {0, 30}};
+  const Int_t mmax = sizeof(mult)/sizeof(UInt_t)/2;
+  y_norm = y_cm[isys+6];
 
-    cvx1.cd(idd); 
-    rChain->Draw("fRotatedP3.Phi():fRotatedP3.Theta()","fReactionPlanef%2==0","colz");
-    cvx1.GetPad(idd)->SetLogz(); idd++;
+  //--------------------------------------------------                                                        
+  //--- Booking
+  //--------------------------------------------------                                                                                                    
+  TFile *outFile = TFile::Open("data/Acceptance_108Sn.root","recreate");
 
-    cvx1.cd(idd); idd++;
-    rChain->Draw("mtrack4>>h3(65,0,65)");
+  TH2D *hyuteff[4][mmax];
+  TH2D *hypteff[4][mmax];
+  TH1I *hmtrack2[4][mmax];
+  TH1I *hmtrack6[4][mmax];
+  
+  Double_t u_p = 0.355151 * 1.06974; //p+p(268.9MeV/u)     
 
-    cvx1.cd(idd); idd++;
-    rChain->Draw("TVector2::Phi_mpi_pi(unitP_2fc.Phi()-unitP_1fc.Phi()):unitP_fc.Phi()","","colz");
+  
+  for(auto i: ROOT::TSeqI(4))for(auto j: ROOT::TSeqI(mmax) ){
 
-    TH1D *h4 = new TH1D("h4","h4",100,-3.14,3.14);
-    rChain->Project("h4","unitP_fc.Phi()");
-    h4->SetNormFactor(100);
-    cvx1.cd(idd); idd++;
-    h4->Draw("e");
+      TString hlabel = Form("hyuteff_"+lpid[i]+"_%dto%d",mult[j][0],mult[j][1]);
+      hyuteff[i][j]  = new TH2D(hlabel, hlabel , 40, -2., 2., 50, 0., 2.5);
+      hlabel         = Form("hypteff_"+lpid[i]+"_%dto%d",mult[j][0],mult[j][1]);
+      hypteff[i][j]  = new TH2D(hlabel, hlabel , 40, -2., 2., 50, 0., 2.);
+      hlabel         = Form("hmtrack2_"+lpid[i]+"_%dto%d",mult[j][0],mult[j][1]);
+      hmtrack2[i][j] = new TH1I(hlabel, hlabel, 80, 0, 80);
+      hlabel         = Form("hmtrack6_"+lpid[i]+"_%dto%d",mult[j][0],mult[j][1]);
+      hmtrack6[i][j] = new TH1I(hlabel, hlabel, 80, 0, 80);
+
+    }
+
+
+  //--------------------------------------------------                                                                                                    
+  //--- Event Loop                                                                                                                                        
+  //--------------------------------------------------                                                                                                    
+  Long64_t nEntry = SetBranch();
+  for(Long64_t i = 0; i < nEntry; i++){
+
+    ShowProcess(i);
+
+    rChain->GetEntry(i);
+
+    STFlowInfo *aflow = (STFlowInfo*)aFlowArray->At(0);
+    /// centrality selection                                                                                                                              
+    Int_t trackselection = aflow->mtrack2;
+
+    Int_t hmult = -1;
+    for( auto j: ROOT::TSeqI(mmax) ) {
+      if( trackselection >= mult[j][0] && trackselection < mult[j][1] ) {
+	hmult = j;
+	break;
+      }
+    }
+    
+    if( hmult < 0 ) continue;
+
+    TIter next(aArray);
+    STParticle *aPart = NULL;
+
+    //--------------------------------------------------                                                                                                  
+    //----- Main loop                                                                                                                                     
+    //--------------------------------------------------                                                                                                  
+    UInt_t mtk = 0;
+
+    while( (aPart = (STParticle*)next()) ) {
+    
+      if(aPart->GetGoodTrackFlag() != 1111 || aPart->GetReactionPlaneFlag() == 0 ) continue;
+
+      auto pid   = aPart->GetPID();
+      auto pt    = aPart->GetRotatedMomentum().Pt()/1000.;
+      auto rapid  = aPart->GetRapiditycm();;
+      auto rapidn = rapid / y_norm;
+      auto fmass  = aPart->GetMass();
+      Double_t u_t0  = aPart->GetRotatedMomentum().Pt()/fmass/u_p;
+
+      Int_t hpid = -1;
+      for( auto i: ROOT::TSeqI(4) ){
+	if( pid == embedPartID[i] ) {
+	  hpid = i;
+	  break;
+	}
+      }
+
+      if( hpid > -1 ) {
+	hyuteff[hpid][hmult] -> Fill( rapidn, u_t0);
+	hypteff[hpid][hmult] -> Fill( rapidn, pt);
+	hmtrack2[hpid][hmult]-> Fill(aflow->mtrack2);
+	hmtrack6[hpid][hmult]-> Fill(aflow->mtrack6);
+      }
+    }
   }
 
-  TCanvas cvx2("cvx2","cvx2",1200,1500);
-  cvx2.Divide(3,4);
-  idd = 1;
 
-  cvx2.cd(idd); idd++;
-  rChain->Draw("fRotatedP3.Pt():fRapiditycm>>hpid11(200,-1.,1.3,200,0.,800)","fPID_norm==2212","colz");
-  cvx2.cd(idd); idd++;
-  rChain->Draw("fRotatedP3.Pt():fRapiditycm>>hpid12(200,-1.,1.3,200,0.,800)","fPID_tight==2212","colz");
-  cvx2.cd(idd); idd++;
-  rChain->Draw("fRotatedP3.Pt():fRapiditycm>>hpid13(200,-1.,1.3,200,0.,800)","fPID_loose==2212","colz");
+  outFile->Write();
 
+  TCanvas *ccv;
+  Int_t id;
 
-  cvx2.cd(idd); idd++;
-  rChain->Draw("fRotatedP3.Pt():fRapiditycm>>hpid21(200,-0.5,1.,200,0.,800)","fPID_norm==1000010020","colz");
-  cvx2.cd(idd); idd++;
-  rChain->Draw("fRotatedP3.Pt():fRapiditycm>>hpid22(200,-0.5,1.,200,0.,800)","fPID_tight==1000010020","colz");
-  cvx2.cd(idd); idd++;
-  rChain->Draw("fRotatedP3.Pt():fRapiditycm>>hpid23(200,-0.5,1.,200,0.,800)","fPID_loose==1000010020","colz");
+  ccv = new TCanvas("ccv2","ccv2",1000,1000);
+  ccv->Divide(4,mmax);
+  id = 1;
 
-  cvx2.cd(idd); idd++;
-  rChain->Draw("fRotatedP3.Pt():fRapiditycm>>hpid31(200,-0.5,1.,200,0.,800)","fPID_norm==1000010030","colz");
-  cvx2.cd(idd); idd++;
-  rChain->Draw("fRotatedP3.Pt():fRapiditycm>>hpid32(200,-0.5,1.,200,0.,800)","fPID_tight==1000010030","colz");
-  cvx2.cd(idd); idd++;
-  rChain->Draw("fRotatedP3.Pt():fRapiditycm>>hpid33(200,-0.5,1.,200,0.,800)","fPID_loose==1000010030","colz");
+  for( auto i: ROOT::TSeqI(4))for( auto j: ROOT::TSeqI(mmax) ){
+      ccv->cd(id); id++;
+      hmtrack2[i][j]->Draw();
+    }
 
-  cvx2.cd(idd); idd++;
-  rChain->Draw("fRotatedP3.Pt():fRapiditycm>>hpid41(200,-0.5,1.,200,0.,800)","fPID_norm==1000020030","colz");
-  cvx2.cd(idd); idd++;
-  rChain->Draw("fRotatedP3.Pt():fRapiditycm>>hpid42(200,-0.5,1.,200,0.,800)","fPID_tight==1000020030","colz");
-  cvx2.cd(idd); idd++;
-  rChain->Draw("fRotatedP3.Pt():fRapiditycm>>hpid43(200,-0.5,1.,200,0.,800)","fPID_loose==1000020030","colz");
+  ccv = new TCanvas("ccv3","ccv3",1000,1000);
+  ccv->Divide(4,mmax);
+   id = 1;
 
+  for( auto i: ROOT::TSeqI(4))for( auto j: ROOT::TSeqI(mmax) ){
+      ccv->cd(id); id++;
+      hmtrack6[i][j]->Draw();
+    }
 
+  ccv = new TCanvas("ccv1","ccv1",1000,1000);
+  ccv->Divide(4,mmax);
+  id = 1;
 
+  for( auto i: ROOT::TSeqI(4))for( auto j: ROOT::TSeqI(mmax) ){
+      ccv->cd(id); id++;
+      hyuteff[i][j]->Draw("colz");
+    }
+
+  ccv = new TCanvas("ccv4","ccv4",1000,1000);
+  ccv->Divide(4,mmax);
+  id = 1;
+
+  for( auto i: ROOT::TSeqI(4))for( auto j: ROOT::TSeqI(mmax) ){
+      ccv->cd(id); id++;
+      hypteff[i][j]->Draw("colz");
+    }
 
 }
 

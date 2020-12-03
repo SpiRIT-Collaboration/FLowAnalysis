@@ -25,12 +25,12 @@ Bool_t bplot[] =
   { 1, // 0 data   It should be set to 1 in the code.
     0, // 1 model  It should be set to 1 in the code.
     1, // 2 v1 and v2 rapidity 
-    0, // 3 v1 and v2 on pt in one window
+    1, // 3 v1 and v2 on pt in one window
     0, // 4 v1 and v2 in individual windows
     0, // 5 Acceptance ypt => never be plotted 
     0, // 6 <px>/A
     0, // 7 v1 vs part system dependence
-    1, // 8 v2_min system dependence 
+    0, // 8 v2_min system dependence 
     0, // 9 v1 slope(V11) and v2 max dependence on m
     0, //10 v1 slope(v11) and v2 max dependence on impact parameter
     0, //11 v1 slop and v2 max systematic error check
@@ -47,8 +47,8 @@ Bool_t bstyle[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 1, 0, 1, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
-Bool_t bpid[]  = { 1, 1, 1, 1, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
+Bool_t bpid[]  = { 1, 0, 1, 1, 1, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 Bool_t bmdl[]  = { 0,      0,         0,       0,      0,       0,       0      }; 
 TString nmTrs[]= {"AMD",   "ChiBUU",  "IBUU",  "IQMD", "SMF",   "UrQMD", "dcQMD"};
@@ -57,28 +57,17 @@ UInt_t iv2at = 4;
 //-----------
 
 gplot gnames[] = {  
-  //  {".v52.14.10" ,"finYPt_","ut>0 w/ocrr.b3fm"},
-  {".v52.14.12" ,"finYPt_","ut>0 wcrr.b3fm"},
-  //  {".v52.11.9" ,"finYPt_","ut>0.crr.b3fm"},
-  //  {".v52.11.9" ,"finYPt_","w/ocorr.b3fm"},
-  // {".v52.11.3" ,"finYPt_","ut>0.w/ocrr.b3fm"},
-  // {".v52.11.2" ,"finYPt_","ut>0.crr.b3fm"},
-  // {".v52.11.1" ,"finYPt_","crr.b3fm"},
-  //  {".v52.10.28" ,"finYPt_","b3fm"},
-  //  {".v52.10.26" ,"finYPt_",""},
-
-  //  {".v52.10.27" ,"finYPt_",""},
-  //  {".v22.0.0" ,"finYPt_","SIM full"},
-  //  {".v50.8.0" ,"finYPt_","SIM TPC"},
-  //  {".v52.10.30" ,"finYPt_","M65-80"},
-  // {".v52.10.31" ,"finYPt_","M60-65"},
-  // {".v52.10.32" ,"finYPt_","M55-60"},
-  // {".v52.10.33" ,"finYPt_","M50-55"},
-  // {".v52.10.34" ,"finYPt_","M45-50"},
-  // {".v52.10.35" ,"finYPt_","M40-45"},
-  // {".v52.10.36" ,"finYPt_","M30-40"},
-  // {".v52.10.37" ,"finYPt_","M0-30"},
-  // {".v52.0.13" ,"advYPt_","y_nn"},
+  // {".v52.15.8" ,"finYPt_","ut>0 wocrr.N30to50"},
+  // {".v52.15.9" ,"finYPt_","ut>0.4 crr.N30to50"},
+  //  {".v52.15.13" ,"finYPt_","ut>0 wcrr.N0to45"},
+  {".v52.15.16" ,"finYPt_","ut>0 wcrr.N42to52"},
+  //  {".v52.15.12" ,"finYPt_","ut>0 wcrr.N0to45"},
+  //
+  // {".v52.15.7" ,"finYPt_","ut>0 crr.N30to50"},
+  // {".v52.15.6" ,"finYPt_","ut>0 crr.N0to30"},
+  // {".v52.15.5" ,"finYPt_","ut>0 crr.N30to40"},
+  // {".v52.15.4" ,"finYPt_","ut>0 crr.N40to55"},
+  // {".v52.15.3" ,"finYPt_","ut>0 crr.N55to80"},
 };
 //const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 const UInt_t nmax = (UInt_t)sizeof(gnames)/sizeof(gplot);
@@ -222,8 +211,8 @@ void PlotPtDependence()
   auto mmpx  = new TMultiGraph("mmpx","; y/y_{nn}-1 ; <px>/A");
   //  mv1slp->GetXaxis()->SetAlphanumeric(kTRUE);
 
-  auto lgr1 = new TLegend(0.3 , 0.65, 0.60, 0.90,""); 
-  auto lgr2 = new TLegend(0.5 , 0.60, 0.70, 0.9, "");
+  auto lgr1 = new TLegend(0.4 , 0.2, 0.60, 0.40,""); 
+  auto lgr2 = new TLegend(0.2 , 0.70, 0.50, 0.9, "");
   //  auto lgr2 = new TLegend(0.5 , 0.20, 0.70, 0.45, "");
   auto lgr3 = new TLegend(0.35, 0.13, 0.7, 0.33, "");
   auto lgr4 = new TLegend(0.15, 0.63, 0.5, 0.85, "");
@@ -542,15 +531,16 @@ void PlotPtDependence()
 	fv2fit->SetLineColor(icolor);
 	
 
-	Double_t v2para0[4]={-0.03, -0.04, -0.05, -0.05};
-	if( ip == 3 )
-	  yv2->Fit("fv2fit","","",-0.48,1.);
-	else {
-	  fv2fit->SetParameter(0,v2para0[ip]);
-	  fv2fit->SetParameter(1,0.05);
-	  fv2fit->SetParameter(2,0.02);
-	  yv2->Fit("fv2fit","","",-0.5,0.5);
-	}
+	Double_t v2para0[4][5]={{-0.03, 0.05, 0.02, -0.5, 0.5},
+				{ -0.04,0.05, 0.02, -0.5, 0.5},
+				{ -0.05,0.05, 0.02, -0.5, 0.5},
+				{ -0.1, 0.05, 0.02, -0.3, 0.8}};
+
+	fv2fit->SetParameter(0,v2para0[ip][0]);
+	fv2fit->SetParameter(1,v2para0[ip][1]);
+	fv2fit->SetParameter(2,v2para0[ip][2]);
+	yv2->Fit("fv2fit","","",v2para0[ip][3], v2para0[ip][4]);
+
 
 	d_v20.push_back(fv2fit->GetParameter(0));
 	d_v20e.push_back(fv2fit->GetParError(0));
@@ -565,7 +555,7 @@ void PlotPtDependence()
       }
 
 
-      if( (bplot[10] || bplot[7] || bplot[8]) &&  ia == 1 ) {
+      if( (bplot[10] || bplot[7] || bplot[8] || bplot[9] ) &&  ia == 1 ) {
 
 	TH1I *hmult  = (TH1I*)fOpen->Get("hmult");
 	if( hmult == NULL ) 
@@ -887,6 +877,11 @@ void PlotPtDependence()
     cc->Divide((ybin1-1)/3,3);
     for(UInt_t k = 0; k < ybin1-1; k++){
       cc->cd(k+1);
+      
+      // mv1[k]->GetYaxis()->SetRangeUser(-0.74,0.74);
+      mv1[k]->GetYaxis()->SetNdivisions(505);
+      //      mv1[k]->GetXaxis()->SetRangeUser(0., 2.2);
+      //mv1[k]->GetXaxis()->SetNdivisions(505);
       mv1[k]->Draw("ALP");
       if( k == ybin1-2 )
 	lg1[k]->Draw();
@@ -967,11 +962,10 @@ void PlotPtDependence()
   if( bplot[0] && bplot[7]) {
     auto m_v1sys = new TMultiGraph();
     auto lgv1sys = new TLegend(0.2,0.7,0.5,0.9,"");
-    m_v1sys->SetTitle(";(n-p)/A; v_{11}");
+    m_v1sys->SetTitle(";(n-p)/(n+p); v_{11}");
 
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     for(UInt_t jj = 0; jj < 6; jj++){
-      cout << " g_v1slpsys[jj]->GetN() " << g_v1slpsys[jj]->GetN() << endl;
       if(g_v1slpsys[jj]->GetN() > 0) {
 	g_v1slpsys[jj]->SetMarkerStyle(20);
 	g_v1slpsys[jj]->SetMarkerSize(1.5);
@@ -996,12 +990,13 @@ void PlotPtDependence()
 
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     for(UInt_t jj = 0; jj < 20; jj++){
+      
+      cout << " ----??? " << g_v1slpm[jj]->GetN() << endl;
       if(g_v1slpm[jj]->GetN() > 0) {
 	g_v1slpm[jj]->SetMarkerStyle(20);
 	g_v1slpm[jj]->SetMarkerSize(0.9);
 	g_v1slpm[jj]->SetMarkerColor(icol[jj]);
 	g_v1slpm[jj]->SetLineColor(icol[jj]);
-	
 	m_v1m->Add(g_v1slpm[jj]);
 	lgv1slpm->AddEntry(g_v1slpm[jj],g_v1slpm[jj]->GetTitle(),"lp");		
       }
@@ -1022,7 +1017,7 @@ void PlotPtDependence()
 
     auto m_v2sys  = new TMultiGraph();
     auto lgv2sys  =  new TLegend(0.2,0.7,0.5,0.9,"");
-    m_v2sys->SetTitle(";(n-p)/A; -v2 max");
+    m_v2sys->SetTitle(";(n-p)/(n+p); -v_{20}");
 
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
 
@@ -1046,7 +1041,7 @@ void PlotPtDependence()
 
     auto m_v2m  = new TMultiGraph();
     auto lgv2m  =  new TLegend(0.5,0.7,0.8,0.9,"");
-    m_v2m->SetTitle(";"+hmultX+"; -v2 max");
+    m_v2m->SetTitle(";"+hmultX+"; -v_{20}");
 
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
 
@@ -1170,10 +1165,7 @@ void PlotPtDependence()
       aLinev20->Draw();
       aBoxv20->Draw();
     }
-
-
   }
-
 }
 
 

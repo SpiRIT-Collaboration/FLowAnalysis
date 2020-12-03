@@ -66,7 +66,13 @@ void DoFlow(UInt_t isel = 2)
 
 
   // Multiplicity cut ================================
-  TString su = gSystem -> Getenv("UC");
+
+  TString su = gSystem -> Getenv("TRK");
+  if( su != "" )
+    Seltrk = (UInt_t)atoi(su);
+
+
+  su = gSystem -> Getenv("UC");
   if( su != "" ) {
     Ucent = (UInt_t)atoi(su);
     if( Ucent < 0 )

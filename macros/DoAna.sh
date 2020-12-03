@@ -1,4 +1,4 @@
-#! /BinRUN/Bash
+#! /Bin/Bash
 #
 # Dorpanalysis.Sh
 # (C) Mizuki Nishimura
@@ -17,7 +17,9 @@ unset OSUBV
 unset MXEVT
 unset REDO
 unset MNMXEVT
+unset TRK
 unset UC
+unset LC
 unset RPBS
 unset RUNNUMBER1
 unset MNRNF
@@ -26,18 +28,29 @@ unset MNOUTVERSION
 unset CCPSI
 
 ##------>>> EDIT HERE 
-export MNLC=0
-export MNUC=50
+#export MNLC=0
+#export MNUC=50
+
 #export MNLC=55
 #export MNUC=80
-export MNLC=47
-export MNUC=52
+
+##-->> b3fm
+##-->(132:52> 2.9fm)
+##-->(132:42> 5.2fm)
+
+export MNTRK=2
+export MNLC=42 #47
+export MNUC=52 #52
+
+#export MNTRK=6
+#export MNLC=42
+#export MNUC=45
 
 
 export MNSFX=BTt
 export MDCUT=0. #0.0               ##   <------@@ mid-rapidity cut
-export MNINVERSION=52.9             ##   <------@@ input
-export MNOUTVERSION=52.14           ##   <------@@ output 
+export MNINVERSION=52.15             ##   <------@@ input
+export MNOUTVERSION=52.15           ##   <------@@ output 
 
 
 ##-- DATA
@@ -146,6 +159,7 @@ function commonsetup()
     export MNMXEVT=
     export UC=$MNUC
     export LC=$MNLC
+    export TRK=$MNTRK
     export RPBS=0
     export CCPSI=1 #phi dependent correction
 
@@ -361,6 +375,7 @@ function showenv()
     echo "Output           ::"  $OVER
     echo "DataBase         ::"  $DBVER
     echo "Output subVer    ::"  $RPBS
+    echo "Selected track   ::"  $TRK
     echo "Max maltiplicity ::"  $UC
     echo "Min multiplicity ::"  $LC
     echo "Number of event  ::"  $MXEVT
