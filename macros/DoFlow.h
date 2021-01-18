@@ -1,4 +1,3 @@
-
 TString fsys[] = {"^{132}Sn+^{124}Sn","^{108}Sn+^{112}Sn","^{124}Sn+^{112}Sn","^{112}Sn+^{124}Sn", "pp", "RPSim"};
 TString lsys[] = {"^{132}Sn",        "^{108}Sn",            "^{124}Sn",           "^{112}Sn"     , "pp","^{100}Sn"  };
 TString rsys[] = {"132",        "108",        "124",        "112"};
@@ -11,7 +10,7 @@ const UInt_t nsys = 4;
 const UInt_t nprt = 5;
 TString  iopt[]     = {"","same","same","same","same", "same", "same"};
 UInt_t   imark[]    = {20, 25, 26, 32, 24, 21, 22, 23};  
-Color_t  icol[] = {  kRed, kBlue, kGreen+2, kMagenta, kOrange, kViolet};
+Color_t  icol[] = {  kRed, kBlue, kGreen+2, kOrange, kMagenta,  kViolet};
 
 UInt_t ic = 0;
 TCanvas *cc;

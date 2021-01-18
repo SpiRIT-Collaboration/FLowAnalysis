@@ -17,6 +17,16 @@ struct gplot{
 TString  bName[]   = {"132Sn_","108Sn_","124Sn_","112Sn_","100Sn_"};
 Double_t sysdlt[]  = {0.22,    0.09,      0.15,   0.15   , 0.22};
 Double_t sysA[]    = {256.,    220.,      236.,   236.   ,  256.};
+Double_t u_p = 0.355151 * 1.06974; 
+Double_t mass[]    = {938.2720813, 1875.612762, 2808.921112, 2808.39132, 3727.379378};
+Double_t charge[]  = {1.,          1.,          1.,          2.,         2.};
+  // auto mpi  =    139.57018;
+  // auto mp   =    938.2720813;
+  // auto mn   =    939.565346;
+  // auto md   =   1875.612762;
+  // auto mt   =   2808.921112;
+  // auto mhe3 =   2808.39132;
+  // auto mhe4 =   3727.379378;
 
 //==================================================
 //-- plot configuration
@@ -35,6 +45,8 @@ Bool_t bplot[] =
     0, //10 v1 slope(v11) and v2 max dependence on impact parameter
     0, //11 v1 slop and v2 max systematic error check
     0, //12 v11 and v20 plot
+    0, //13 v1 and v2 with Ut
+    0, //14 ut->pt;
   };
 
 Bool_t bstyle[] =
@@ -47,8 +59,8 @@ Bool_t bstyle[] =
 
 // --> Plotting selection
 //--- Data
-Bool_t bsys[]  = { 1, 0, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
-Bool_t bpid[]  = { 1, 0, 1, 1, 1, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bsys[]  = { 0, 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
+Bool_t bpid[]  = { 0, 0, 0, 1, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 Bool_t bmdl[]  = { 0,      0,         0,       0,      0,       0,       0      }; 
 TString nmTrs[]= {"AMD",   "ChiBUU",  "IBUU",  "IQMD", "SMF",   "UrQMD", "dcQMD"};
@@ -57,17 +69,12 @@ UInt_t iv2at = 4;
 //-----------
 
 gplot gnames[] = {  
-  // {".v52.15.8" ,"finYPt_","ut>0 wocrr.N30to50"},
-  // {".v52.15.9" ,"finYPt_","ut>0.4 crr.N30to50"},
-  //  {".v52.15.13" ,"finYPt_","ut>0 wcrr.N0to45"},
-  {".v52.15.16" ,"finYPt_","ut>0 wcrr.N42to52"},
-  //  {".v52.15.12" ,"finYPt_","ut>0 wcrr.N0to45"},
-  //
-  // {".v52.15.7" ,"finYPt_","ut>0 crr.N30to50"},
-  // {".v52.15.6" ,"finYPt_","ut>0 crr.N0to30"},
-  // {".v52.15.5" ,"finYPt_","ut>0 crr.N30to40"},
-  // {".v52.15.4" ,"finYPt_","ut>0 crr.N40to55"},
-  // {".v52.15.3" ,"finYPt_","ut>0 crr.N55to80"},
+  //  {".v52.15.38" ,"finYPt_","ndf20"},
+  {".v52.15.36" ,"finYPt_","ndf50&#phi<45"},
+  {".v52.15.39" ,"finYPt_","ndf20&#phi<45"},
+  {".v52.15.40" ,"finYPt_","ndf20&#phi>135"},
+  ////{".v52.15.37" ,"finYPt_","ndf50&#phi>135"},
+  //  {".v52.15.35" ,"finYPt_","ndf20&#phi45/135"},
 };
 //const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
 const UInt_t nmax = (UInt_t)sizeof(gnames)/sizeof(gplot);
@@ -231,6 +238,13 @@ void PlotPtDependence()
   g_v2n = new TGraphErrors();
   g_v2n -> SetTitle("v_{2n}");
 
+
+  auto mutv1 = new TMultiGraph();
+  auto mutv11 = new TMultiGraph();
+  auto mutv2 = new TMultiGraph();
+  auto lgutv1  = new TLegend(0.3,0.15,0.8,0.4,"");
+  auto lgutv11 = new TLegend(0.3,0.15,0.8,0.4,"");
+  auto lgutv2  = new TLegend(0.3,0.3,0.4,0.55,"");
   
   TString fOutName = "";
 
@@ -369,7 +383,13 @@ void PlotPtDependence()
 	std::cout << fname.at(igr) << " is opened. " << std::endl;
 
       std::cout << "mnt " << cmnt[iz] << " " << iz << endl;
-      otitle += "("+ lpid[ip]+")"+cmnt[iz];
+
+      otitle += "("+ lpid[ip]+")";
+      //      otitle += cmnt[iz];
+
+      if( bplot[14] )
+	otitle = ohtitle + "("+ lpid[ip]+")";// + cmnt[iz];
+
       //    }
 
     //acceptance
@@ -472,7 +492,7 @@ void PlotPtDependence()
 
 	fv1fit->SetLineColor(icolor);
 
-	Double_t v1para1[4]={0.4, 0.4, 0.5, 0.6};
+	Double_t v1para1[5]={0.4, 0.4, 0.5, 0.6, 0.8};
 
 	fv1fit->SetParameter(0,0.);
 	fv1fit->SetParameter(1,v1para1[ip]);
@@ -488,6 +508,7 @@ void PlotPtDependence()
 	  mrv1->Add(yv1,"p");
 	  lgr1->AddEntry(yv1,  otitle ,"lp");
 	  yv1->Fit("fv1fit","","",-0.6, 0.8); //"Q0","");
+	  //yv1->Fit("fv1fit","","",-0.2, 0.8); //"Q0","");
 	}
 
 	if( bplot[12] ) {
@@ -502,7 +523,7 @@ void PlotPtDependence()
 
       //--- y vs v2 ---
       TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gu_v2");
-      //       TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gy_v2");
+      //      TGraphErrors *yv2 = (TGraphErrors*)fOpen->Get("gy_v2");
 
       if( ia >= 5 ) { // transport model
 	yv2 = ReadTransportData( fname.at(igr) , 2);
@@ -531,10 +552,12 @@ void PlotPtDependence()
 	fv2fit->SetLineColor(icolor);
 	
 
-	Double_t v2para0[4][5]={{-0.03, 0.05, 0.02, -0.5, 0.5},
+	Double_t v2para0[5][5]={{-0.03, 0.05, 0.02, -0.5, 0.5},
 				{ -0.04,0.05, 0.02, -0.5, 0.5},
 				{ -0.05,0.05, 0.02, -0.5, 0.5},
-				{ -0.1, 0.05, 0.02, -0.3, 0.8}};
+				//			{ -0.1, 0.05, 0.02,  0.0, 0.8}};
+				{ -0.07, 0.05, 0.1, -0.4, 0.8},
+				{ -0.08, 0.05, 0.1, -0.5, 0.5}};
 
 	fv2fit->SetParameter(0,v2para0[ip][0]);
 	fv2fit->SetParameter(1,v2para0[ip][1]);
@@ -776,11 +799,68 @@ void PlotPtDependence()
 
 	//      mv2[k]->GetYaxis()->SetRangeUser(v2mn, v2mx);
       }
-    }	
+    }
 
+
+    if( bplot[13] || bplot[14] ) {
+      TGraphErrors *gUt_v1  = (TGraphErrors*)fOpen->Get("g_utv1_0");
+      TGraphErrors *gUt_v11 = (TGraphErrors*)fOpen->Get("g_utv1_1");
+      if( !gUt_v1 )
+	gUt_v1 = (TGraphErrors*)fOpen->Get("g_utv1");
+
+      TGraphErrors *gUt_v2 = (TGraphErrors*)fOpen->Get("g_utv2");
+      cout << " mutv1 titile " << gUt_v1->GetTitle() << endl;
+
+      mutv1 ->SetTitle(gUt_v1 ->GetTitle());
+      mutv11->SetTitle(gUt_v11->GetTitle());
+      mutv2->SetTitle(gUt_v2  ->GetTitle());
+
+           
+      if( bplot[14] ){
+	lgutv1->SetHeader(cmnt[0]);
+	for( UInt_t iut = 0; iut < (UInt_t)gUt_v1->GetN(); iut++ ) {
+	  Double_t x, y;
+	  gUt_v1->GetPoint(iut, x, y);
+	  Double_t xb = x*u_p*mass[ip]/1000./partA[ip+2];
+	  gUt_v1->SetPoint(iut, xb, y);
+	}
+	for( UInt_t iut = 0; iut < (UInt_t)gUt_v2->GetN(); iut++ ) {
+	  Double_t x, y;
+	  gUt_v2->GetPoint(iut, x, y);
+	  Double_t xb = x*u_p*mass[ip]/1000./partA[ip+2];
+	  gUt_v2->SetPoint(iut, xb, y);
+	}
+
+      }
+
+      gUt_v1->SetMarkerStyle(imark[is]);
+      gUt_v1->SetMarkerColor(icolor);
+      gUt_v1->SetLineColor(icolor);
+      gUt_v1->SetMarkerSize(imsz[is]);
+      mutv1->Add(gUt_v1,"lp");
+      lgutv1->AddEntry(gUt_v1, otitle, "lp");
+
+      gUt_v2->SetMarkerStyle(imark[is]);
+      gUt_v2->SetMarkerColor(icolor);
+      gUt_v2->SetLineColor(icolor);
+      gUt_v2->SetMarkerSize(imsz[is]);
+      mutv2->Add(gUt_v2,"lp");
+      lgutv2->AddEntry(gUt_v2, otitle, "lp");
+
+      gUt_v11->SetMarkerStyle(imark[is]);
+      gUt_v11->SetMarkerColor(icolor);
+      gUt_v11->SetLineColor(icolor);
+      gUt_v11->SetMarkerSize(imsz[is]);
+      mutv11 ->Add(gUt_v11,"lp");
+      lgutv11->AddEntry(gUt_v11, otitle, "lp");
+
+    }  
+       
     icolor++;
     if( icolor == 10 )
       icolor++;
+
+
 
     fOpen->Close();
   }
@@ -1166,6 +1246,57 @@ void PlotPtDependence()
       aBoxv20->Draw();
     }
   }
+
+  if(bplot[13]) {
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),1200,500);
+    cc->Divide(3,1);
+
+    cc->cd(1);
+    
+    Double_t xmin =  mutv1->GetXaxis()->GetXmin();
+    Double_t ymax =  mutv1->GetYaxis()->GetXmax();
+    cout << "v1 xmin " << xmin << " ymin " << ymax << endl;
+    
+    if( bplot[14] )
+      mutv1->GetXaxis()->SetTitle("Pt/A [GeV/c]");
+      //      mutv1->GetXaxis()->SetTitle("Pt [GeV/c]");
+
+    mutv1->GetXaxis()->SetNdivisions(505);
+    mutv1->Draw("ALP");
+    
+    if( bplot[14] ) {
+      auto line_p = new TLine(0.763, mutv1->GetYaxis()->GetXmin(), 0.763, mutv1->GetYaxis()->GetXmax());
+      line_p -> SetLineStyle(3);
+      line_p -> Draw();
+    }
+
+    lgutv1->Draw();
+
+
+    cc->cd(2);
+
+    xmin =  mutv2->GetXaxis()->GetXmin();
+    ymax =  mutv2->GetYaxis()->GetXmax();
+    cout << "v2 xmin " << xmin << " ymin " << ymax << endl;
+
+
+    if( bplot[14] )
+      mutv2->GetXaxis()->SetTitle("Pt/A [GeV/c]");
+      //mutv2->GetXaxis()->SetTitle("Pt [GeV/c]");
+
+    mutv2->GetXaxis()->SetNdivisions(505);
+    mutv2->Draw("ALP");
+    //    lgutv2->Draw();
+
+
+    cc->cd(3);
+
+    mutv11->GetXaxis()->SetNdivisions(505);
+    mutv11->Draw("ALP");
+    //    lgutv2->Draw();
+
+  }
+
 }
 
 

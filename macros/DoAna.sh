@@ -54,6 +54,22 @@ export MNOUTVERSION=52.15           ##   <------@@ output
 
 
 ##-- DATA
+function data108s()    ##CONFIG
+{
+##--
+    export MNSN=108
+    export MNRNF=$RNF108s
+    export MNOSUBV=
+
+    if [ -n "$1" ]; then
+	export MNINVERSION=$1            ##   <------@@ input
+	export MNOUTVERSION=$2           ##   <------@@ output 
+    fi
+
+    commonsetup
+##<----
+}
+
 function data132()    ##CONFIG
 {
 ##-- 
@@ -163,6 +179,7 @@ function commonsetup()
     export RPBS=0
     export CCPSI=1 #phi dependent correction
 
+    export RUN={$MNRNF} 
     RUNNUMBER1=(${MNRNF})
     showenv
     anahelp

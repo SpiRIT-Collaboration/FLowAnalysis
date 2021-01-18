@@ -15,7 +15,7 @@ export RCVER=develop.1988.bf2b00e
 export SUFX=BTt
 
 ##g4 data
-export TPCDIR=/home/isobe/20200909MizukiGeant4/recoData.20200910/
+#export TPCDIR=/home/isobe/20200909MizukiGeant4/recoData.20200910/
 #mizuki_000003_s0.reco.v1.04.root
 
 ##export STBBFITTER=db/BBFitter.root
@@ -54,16 +54,16 @@ source runList.sh
 # Set RUNNUMBER1 
 DBVERSION=0
 
-#export TPCDIR=$TPCDIR/Sn132
+export TPCDIR=$TPCDIR/Sn124
 
 #RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
-#RUNNUMBER1=(${RNF124})
+RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RNFTEMP})
 #RUNNUMBER1=(${RNF132r})
 #RUNNUMBER1=(${RNF132t})
-RUNNUMBER1=(${RNFG4})
+#RUNNUMBER1=(${RNFG4})
 
 
 function execa() { ## Job for the 2841 with maximum event number = MXEVT

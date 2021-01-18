@@ -57,7 +57,7 @@ void RapidityShift()
   
 }
 
-void Kinema_org(UInt_t isel = 0)
+void Kinema(UInt_t isel = 0)
 {
   
   TGraph *grph = new TGraph();
@@ -241,6 +241,7 @@ TVector3 GetLorentzBoost(UInt_t isel = 4)
   cout << " Gamma_cm "    << totalVec.Gamma(); 
   cout << " Rapidity_cm " << totalVec.Rapidity(); 
   cout << " boostVec Z "     << boostVec.Z(); 
+  cout << " momentum_cm "  << totalVec.P();
   cout << endl;
 
   cout << " Beam   Boost " << bmVec->BoostVector().Z() << endl;
@@ -296,7 +297,7 @@ TVector3 GetLorentzBoost(UInt_t isel = 4)
 
 
 
-void Kinema(UInt_t isel = 0)
+void Kinema_test(UInt_t isel = 0)
 {
 
   auto vboost0 = STLorentzBoostVector::GetBoostVector(0);
@@ -307,8 +308,6 @@ void Kinema(UInt_t isel = 0)
   auto vboost5 = STLorentzBoostVector::GetBoostVector(5);
   auto vboost6 = STLorentzBoostVector::GetBoostVector(6);
   auto vboost7 = STLorentzBoostVector::GetBoostVector(7);
-
-  
 
 
 }

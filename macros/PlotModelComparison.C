@@ -33,7 +33,7 @@ Bool_t bplot[] =
     0, // 9 v1 slope(V11) and v2 max dependence on m
     0, //10 v1 slope(v11) and v2 max dependence on impact parameter
     0, //11 v1 slop and v2 max systematic error check
-    1, //12 v11 and v22 comparison with models 
+    0, //12 v11 and v22 comparison with models 
   };
 
 Bool_t bstyle[] =
@@ -54,7 +54,7 @@ UInt_t iv2at = 4;
 //-----------
 
 gplot gnames[] = {  
-  {".v52.10.28" ,"finYPt_","b3fm"},
+  {".v52.15.31" ,"finYPt_","b3to5"},
   //  {".v52.10.26" ,"finYPt_",""},
 };
 
@@ -93,7 +93,7 @@ Double_t pBUU_v2[4][4] = { //v2 b2 g0.5, b2 g1.75, b4 g0.5, b4 g1.75
 };
 
 //-- AMD
-Bool_t  amdEOS[]= {0, 0};
+Bool_t  amdEOS[]= {1, 0};
 //-----------
 TString amdName[] = {"SLy4",
 		     "SLy4-L108"};
@@ -149,7 +149,7 @@ Double_t FittingAndIntegral(TGraphErrors *gr)
 
 
 
-void PlotModelComparison2()
+void PlotModelComparison()
 {
   
   gStyle->SetOptStat(0);

@@ -2,6 +2,9 @@
 
 //drawing
 UInt_t selReactionPlanef = 10000;
+UInt_t  phicutID = 3;
+UInt_t  cutndf   = 20;
+Float_t cutdist  = 20.;
 
 TFile* fefffile;
 
@@ -211,9 +214,9 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   TH1D *hdydut2cut[ybin2][ptbin2];
   TH1D *hdydutcos2cut[ybin2][ptbin2];
 
-  TH1D *hdut1[ptbin1];
+  TH1D *hdut1[ptbin1][2];
   TH1D *hdut2[ptbin2];
-  TH1D *hdutcos1[ptbin1];
+  TH1D *hdutcos1[ptbin1][2];
   TH1D *hdutcos2[ptbin2];
 
   //-----  Booking
@@ -260,12 +263,14 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   }
 
   for( UInt_t ipt = 0; ipt < ptbin1; ipt++ ) {
-    hdut1[ipt]    = new TH1D(Form("hdut1_ut%d",ipt), "ut", 500,0., 2.5);
-    hdutcos1[ipt] = new TH1D(Form("hdutcos1_%d",ipt),"<cos(#phi)>", 100, -1, 1.);
+    hdut1[ipt][0]    = new TH1D(Form("hdut1_ut%d_0",ipt), "0.2<y_{0}<0.6", 500,0., 2.5);
+    hdutcos1[ipt][0] = new TH1D(Form("hdutcos1_%d_0",ipt),"<cos(#phi)>", 100, -1, 1.);
+    hdut1[ipt][1]    = new TH1D(Form("hdut1_ut%d_1",ipt), "0.4<y_{0}<0.8", 500,0., 2.5);
+    hdutcos1[ipt][1] = new TH1D(Form("hdutcos1_%d_1",ipt),"<cos(#phi)>", 100, -1, 1.);
   }
 
   for( UInt_t ipt = 0; ipt < ptbin2; ipt++ ) {
-    hdut2[ipt]    = new TH1D(Form("hdut2_ut%d",ipt),"; Ut", 500,0., 2.5);
+    hdut2[ipt]    = new TH1D(Form("hdut2_ut%d",ipt),"-0.4<y_{0}<0.4", 500,0., 2.5);
     hdutcos2[ipt] = new TH1D(Form("hdutcos2_%d",ipt), "<cos(2#phi)>",100, -1, 1.);
   }
 
@@ -327,12 +332,31 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       mtk++;
       //&&&&&
       if( isys != 5 && 
-	  //	  ((selid >= 2 && aPart->GetReactionPlaneFlag()%2 != 1) ||
-	  //	   (selid <= 1 && aPart->GetGoodTrackFlag() != 1111)) )
-
-	  (aPart->GetGoodTrackFlag() != 1111 || aPart->GetReactionPlaneFlag() == 0 ))
-	  //	  (aPart->GetGoodTrackFlag() != 1111))
+	  (aPart->GetGoodTrackFlag() != 1111 || aPart->GetReactionPlaneFlag() == 0 ) )
 	continue;
+
+      if( aPart->GetNDF() < cutndf ) continue;
+      if( aPart->GetDistanceAtVertex() > cutdist ) continue;
+
+      // phi cut
+      auto phi    = aPart->GetRotatedMomentum().Phi();
+      // w phicut                                                                                                                                              
+      switch(phicutID) {
+      case 0:
+	if( abs(phi) > 45*TMath::DegToRad() && abs(phi) < 135*TMath::DegToRad()) continue;
+	break;
+      case 1:
+	if( abs(phi) > 45*TMath::DegToRad()) continue;
+	break;
+      case 2:
+	if( abs(phi) < 135*TMath::DegToRad() ) continue;
+	break;
+      case 3:
+	if( abs(phi) < 45*TMath::DegToRad() || abs(phi) > 135*TMath::DegToRad()) continue;
+	break;
+      }
+
+
       //------------------------------
 
       auto yaw   = aPart->GetYawAngle();
@@ -340,12 +364,11 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       auto pt    = aPart->GetRotatedMomentum().Pt();
       auto mom   = aPart->GetRotatedMomentum().Mag();
       auto bmass = aPart->GetBBMass();
-      auto phi   = aPart->GetRotatedMomentum().Phi();
       auto theta = aPart->GetRotatedMomentum().Theta();
       auto charge= aPart->GetCharge();
 
       auto pid   = aPart->GetPID();  
-      //auto pid   = aPart->GetPIDTight();
+      //      auto pid   = aPart->GetPIDTight();
       //  auto pid   = aPart->GetPIDLoose();  
       //  auto pid   = aPart->GetPIDNorm();  
 
@@ -391,23 +414,10 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 	bpart = kTRUE;
       }
 
-      //&&&----------------------------------------
-      //if( theta > 45.*TMath::DegToRad() ) continue;
-      //if( theta > 40.*TMath::DegToRad() && theta < 50.*TMath::DegToRad()) continue;
-      
-      //      if( phi < 0 ) continue;
-      //      if( phi > 0 ) continue;
-
-      //if( yaw < 0 ) continue; 
-      //if( yaw > 0 ) continue; 
-
-      //if( abs( phi ) >  30.*TMath::DegToRad() ) continue;
-      //if( abs( phi ) < 150.*TMath::DegToRad() ) continue;
-      //*********************************************
 
       hpid->Fill(aPart->GetRotatedMomentum().Mag()*aPart->GetCharge(), aPart->GetdEdx());
 
-      //-----------------
+      //-------------------
       if( !bpart && isys != 5 ) continue; //default
       //-----------------
 
@@ -455,11 +465,14 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       hirap2 -> Fill( rapid/y_norm , (Double_t)irapid2 );
 
 
-      if( rapid/y_norm >= 0.4 && rapid/y_norm <= 0.8 ) {
-	hdut1[ipt1]     -> Fill( u_t0 );
-	hdutcos1[ipt1]  -> Fill( cos(dphi) );
+      if( rapid/y_norm >= 0.2 && rapid/y_norm <= 0.6 ) {
+	hdut1[ipt1][0]     -> Fill( u_t0 );
+	hdutcos1[ipt1][0]  -> Fill( cos(dphi) );
       }
-
+      if( rapid/y_norm >= 0.4 && rapid/y_norm <= 0.8 ) {
+	hdut1[ipt1][1]     -> Fill( u_t0 );
+	hdutcos1[ipt1][1]  -> Fill( cos(dphi) );
+      }
       
       if( abs(rapid/y_norm) <= 0.4 ) {
 	hdut2[ipt2]     -> Fill( u_t0 );
@@ -467,12 +480,13 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       }
       
 
-
       //@@@@@
       //v1 -----------
       hutphi10[irapid1] -> Fill( subevt_phi );
-      if( selid != 4 || ( u_t0 > 0.2 && abs(rapid/y_norm) > 0.05) ){
 
+      //      if( selid != 4 || ( u_t0 > 0.2 && abs(rapid/y_norm) > 0.05) ){
+      if( kTRUE ){
+      
 	hdy1[irapid1]    -> Fill( rapid/y_norm );
 	hdycos1[irapid1] -> Fill( cos(dphi) );
 	
@@ -549,14 +563,14 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   gu_v2->SetName("gu_v2");
   gu_v2->SetTitle("u_{t0}; y_{cm}/y_{cm}; v2");
 
-  TGraphErrors *g_utv1 = new TGraphErrors();
-  g_utv1 -> SetName("g_utv1");
-  g_utv1 -> SetTitle("; u_{t0}; v1" );
-  
+  TGraphErrors *g_utv1[2];
+  for( UInt_t in = 0; in < 2; in++ ) {
+    g_utv1[in] = new TGraphErrors();
+    g_utv1[in] -> SetName(Form("g_utv1_%d",in));
+  }
+
   TGraphErrors *g_utv2 = new TGraphErrors();
   g_utv2 -> SetName("g_utv2");
-  g_utv2 -> SetTitle("; u_{t0}; v2" );
-  
 
   TGraphErrors *gUt_v1[ybin1];
   TGraphErrors *gUt_v2[ybin2];
@@ -584,22 +598,28 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
   //--- v1 ------------------------------
   UInt_t iutv = 0;
-  for( UInt_t ipt = 0; ipt < ptbin1; ipt++ ) { 
-    Double_t utn    = (Double_t)hdut1[ipt]->GetEntries();
-    if( utn == 0 ) continue;
+  for( UInt_t in = 0; in < 2; in++ ) {
 
-    Double_t utmean = hdut1[ipt]->GetMean();
-    Double_t ute    = hdut1[ipt]->GetStdDev()/sqrt(utn);
 
-    Double_t v1u   = hdutcos1[ipt]->GetMean();
-    Double_t v1ue  = hdutcos1[ipt]->GetStdDev()/sqrt(utn);
+    for( UInt_t ipt = 0; ipt < ptbin1; ipt++ ) { 
+      Double_t utn    = (Double_t)hdut1[ipt][in]->GetEntries();
+      if( utn == 0 ) continue;
 
-    Double_t v1ut  = v1u / rpresall[0];
-    Double_t v1ute = GetError(v1u, rpresall[0], v1ue, rpresall[1]);
+      Double_t utmean = hdut1[ipt][in]->GetMean();
+      Double_t ute    = hdut1[ipt][in]->GetStdDev()/sqrt(utn);
 
-    g_utv1 -> SetPoint( iutv,utmean, v1ut );
-    g_utv1 -> SetPointError( iutv, ute, v1ute );
-    iutv++;
+      Double_t v1u   = hdutcos1[ipt][in]->GetMean();
+      Double_t v1ue  = hdutcos1[ipt][in]->GetStdDev()/sqrt(utn);
+      
+      Double_t v1ut  = v1u / rpresall[0];
+      Double_t v1ute = GetError(v1u, rpresall[0], v1ue, rpresall[1]);
+      
+      g_utv1[in] -> SetPoint( iutv, utmean, v1ut );
+      g_utv1[in] -> SetPointError( iutv, ute, v1ute );
+      iutv++;
+    }
+
+    g_utv1[in] -> SetTitle( (TString)hdut1[0][in]->GetTitle()+"; u_{t0}; v1" );
   }
 
 
@@ -619,10 +639,12 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     auto mcosee= GetError(mcos, rpresall[0], mcose, rpresall[1]);
       
     auto cosc = mcos/rpresall[0];
-    gy_v1->SetPoint(iyy, ymean, cosc);
-    gy_v1->SetPointError(iyy, ystdv, mcosee );
-    iyy++;
 
+    if( ymean != 0 ) {
+      gy_v1->SetPoint(iyy, ymean, cosc);
+      gy_v1->SetPointError(iyy, ystdv, mcosee );
+      iyy++;
+    }
     
     UInt_t iptv    = 0;
     //--- Acceptance correction
@@ -695,7 +717,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       }
     }
 
-    if( yn > 0 && v1u_n > 0) {
+    if( yn > 0 && v1u_n > 0 && ystdv != 0) {
       Double_t v1u_ave = v1u_sum / v1u_n;
       Double_t v1u_err = sqrt(v1u_ste) / v1u_n;
       
@@ -716,6 +738,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   GetRPResolutionwChi(rpresall, hdphi0_180, hdphi90_180, 2.);
 
 
+  
   iutv = 0;
   for( UInt_t ipt = 0; ipt < ptbin2; ipt++ ) { 
     Double_t utn    = (Double_t)hdut2[ipt]->GetEntries();
@@ -735,6 +758,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
     g_utv2 -> SetPointError( iutv, ute, v2ute );
     iutv++;
   }
+  g_utv2 -> SetTitle((TString)hdut2[0]->GetTitle()+"; u_{t0}; v2" );
 
 
   iyv = 0;
@@ -835,7 +859,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       Double_t v2u_ave = v2u_sum / v2u_n;
       Double_t v2u_err = sqrt(v2u_ste)/v2u_n;
       
-      if( ymean > -1.) {
+      if( ymean > -1. && ystdv != 0) {
 	gu_v2->SetPoint( iyv, ymean, v2u_ave);
 	gu_v2->SetPointError( iyv, ystdv, v2u_err );
 	
@@ -875,7 +899,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   hphi      ->Write();
   hpid      ->Write();
   hpidsel   ->Write();
-  g_utv1    ->Write();
+  g_utv1[0]    ->Write();
+  g_utv1[1]    ->Write();
   g_utv2    ->Write();
   
 
@@ -967,7 +992,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   gy_v2->Draw("same");
   
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
-  g_utv1->Draw("ALP");
+  g_utv1[0]->Draw("ALP");
 
   ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),600,400);
   g_utv2->Draw("ALP");
@@ -982,7 +1007,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 //**************************************************
 Bool_t   LoadAcceptanceCorrection(UInt_t selid, UInt_t Low, UInt_t Up)
 {
-  //  TString fname = "LCPSpectra_b0.15.root";
   Int_t seltrk = -1;
     
   for( UInt_t i = 0; i < 4; i++ ){
@@ -1002,18 +1026,21 @@ Bool_t   LoadAcceptanceCorrection(UInt_t selid, UInt_t Low, UInt_t Up)
     }
   }
 
-  TString fname = "UnfoldedLCPSpectra"+trklabel[seltrk]+".slim.root";
+  TString phiname[] = { "45or135", "45", "135", "45to135","all"};
 
-  LOG(INFO) << fname << " is selected for efficiency correction. " << FairLogger::endl;
+  TString flabel = Form("_ndf%d_dis%d",cutndf, (Int_t)cutdist);           
+  TString fname = "data/rootfiles/UnfoldedLCPSpectra_"+ phiname[phicutID] + flabel + trklabel[seltrk]+".slim.root";
 
-  if( !gSystem->FindFile("data/rootfiles/LCPSpectra",fname) ){
-    LOG(ERROR) << fname << " is not found " << FairLogger::endl; 
+  LOG(INFO) << fname << " is selected for efficiency correction. " << trklabel[seltrk] << " : " << seltrk << FairLogger::endl;
+  
+  TFile *fopen = TFile::Open(fname);
+  if( fopen )
+    LOG(INFO) << fname << " is opened. " << FairLogger::endl;
+  else {
+    LOG(ERROR) << fname << " is not found " << FairLogger::endl;    
     return kFALSE;
   }
-  
 
-  TFile *fopen = TFile::Open(fname);
-  LOG(INFO) << fname << " is opened. " << FairLogger::endl;
 
   //  TString hname = "h2PtY_"+ sysName + "_" +Partname[selid];
   TString hname = "h2UtYCorr_108Sn_" +Partname[selid]+"_mbin0_iter1";
@@ -1043,6 +1070,7 @@ Bool_t   LoadAcceptanceCorrection(UInt_t selid, UInt_t Low, UInt_t Up)
 void DrawUt(TH2D *h2, UInt_t sel, TString opt)
 {
   TString hname = h2->GetName();
+  cout << " DrawUt -> " << hname << endl;
 
   if( opt != "same" ) {
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
@@ -1065,21 +1093,28 @@ void DrawUt(TH2D *h2, UInt_t sel, TString opt)
   }
 
   for( UInt_t i = 0; i < ybin; i++ ) {
+    cc->cd(i+1);
+
     auto firstbin = h2->GetXaxis()->FindBin(*(yrange+i));
     auto lastbin  = h2->GetXaxis()->FindBin(*(yrange+i+1));
 
-    //    cout << " ybin " << i << " " << *(yrange+i) << " y " << firstbin << " ~ " << *(yrange+
+    cout << " ybin " << i << " " << *(yrange+i) << " y " << firstbin << " ~ " << *(yrange+i+1) << endl;
+
     hacp = (TH1D*) h2->ProjectionY(hname+Form("_%d_%d",sel,i), firstbin, lastbin);
     hacp -> SetTitle(Form("%3.2f < y < %3.2f" , *(yrange+i), *(yrange+i+1))); 
-    if( hacp->GetEntries() > 0)
+    if( hacp->GetEntries() > 0) {
       hacp -> SetNormFactor(50);
       //      hacp -> Scale(1./hacp->GetEntries() );
-    cc->cd(i+1);
 
-    if( opt == "same" )
-      hacp->SetLineColor(2);
 
-    hacp -> Draw(opt);
+      if( opt == "same" )
+	hacp->SetLineColor(2);
+      
+      hacp -> Draw(opt);
+    }
+    else 
+      cout << " NO entry in ybin " << i << endl;
+
   }
 }
 
@@ -1094,27 +1129,32 @@ void GetdNdydPt( Double_t ycm, Double_t pt)
 
 void GetYUtCorrection(TH2D &h2, TH2D &h2c)
 {
-  auto xnbins = h2.GetXaxis()->GetNbins();
-  auto ynbins = h2.GetYaxis()->GetNbins();
+  h2c = h2;
+
+  h2c.Divide(hAcpYUtCorr);
+  
+
+  // auto xnbins = h2.GetXaxis()->GetNbins();
+  // auto ynbins = h2.GetYaxis()->GetNbins();
 
 
-  for( UInt_t i = 1; i <= xnbins; i++ ) {
-      auto xcenter = h2.GetXaxis()->GetBinCenter(i); 
-      auto xbin = hAcpYUtCorr->GetXaxis()->FindBin(xcenter);
+  // for( UInt_t i = 1; i <= xnbins; i++ ) {
+  //     auto xcenter = h2.GetXaxis()->GetBinCenter(i); 
+  //     auto xbin = hAcpYUtCorr->GetXaxis()->FindBin(xcenter);
 
-      for( UInt_t j = 1; j <= ynbins; j++ ){
-	auto ycenter = h2.GetYaxis()->GetBinCenter(j);
-	auto ybin = hAcpYUtCorr->GetYaxis()->FindBin(ycenter);
+  //     for( UInt_t j = 1; j <= ynbins; j++ ){
+  // 	auto ycenter = h2.GetYaxis()->GetBinCenter(j);
+  // 	auto ybin = hAcpYUtCorr->GetYaxis()->FindBin(ycenter);
 
-	auto crf = hAcpYUtCorr->GetBinContent(xbin, ybin);
-	auto cre = hAcpYUtCorr->GetBinError(xbin, ybin);
+  // 	auto crf = hAcpYUtCorr->GetBinContent(xbin, ybin);
+  // 	auto cre = hAcpYUtCorr->GetBinError(xbin, ybin);
 
-	auto binCont = h2.GetBinContent(i,j);
+  // 	auto binCont = h2.GetBinContent(i,j);
 	
-	if( crf != 0 )
-	  h2c.Fill(xcenter, ycenter, binCont/crf);
-      }
-  }
+  // 	if( crf > 0 )
+  // 	  h2c.Fill(xcenter, ycenter, binCont/crf);
+  //     }
+  // }
 }
 
 void GetdNdydUt( Int_t ih, Int_t ixbin, Int_t iybin, TH2D *h2c)
@@ -1158,7 +1198,6 @@ void GetdNdydUt( Int_t ih, Int_t ixbin, Int_t iybin, TH2D *h2c)
   Double_t error = 0.;
 
   content = h2c->IntegralAndError(xbin_frst, xbin_last, ybin_frst, ybin_last, error, "");
-
 
   // cout << ih << " :: irapid = " << ixbin << " ipt = " << iybin << endl;	
   // cout << " rapid " << xbin_frst << " : " << x[0] <<" - " << xbin_last << " "<< x[1] 

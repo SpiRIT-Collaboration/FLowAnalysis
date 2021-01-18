@@ -225,7 +225,7 @@ Bool_t STSpiRITTPCTask::SetupInputDataFile()
     if( bmA == 100 )
       recoFile = Form("mizuki_%06d_s%02d.reco.v1.04.root",iRun,i);
 
-    LOG(INFO) << i << " recoFile " << recoFile << FairLogger::endl;
+    LOG(INFO) << i << " recoFile " << rootDir << " / " << recoFile << FairLogger::endl;
 
 
     if(gSystem->FindFile(rootDir,recoFile)) 
