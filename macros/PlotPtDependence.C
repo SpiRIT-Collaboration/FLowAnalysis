@@ -7,19 +7,67 @@
 
 FairLogger *logger = FairLogger::GetLogger();
 
+// --> Plotting selection
+//--- Data
+std::vector< UInt_t > sqSys  = {3}; //0:132Sn, 1:108Sn, 2:124Sn, 3:112Sn, 4:Sim
+std::vector< UInt_t > sqPart = {0,1,2,3,4}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+Bool_t bcnt[]  = { 1, 0, 0}; 
+Bool_t bmdl[]  = { 0,      0,         0,       0,      0,       0,       0      }; 
+TString nmTrs[]= {"AMD",   "ChiBUU",  "IBUU",  "IQMD", "SMF",   "UrQMD", "dcQMD"};
+
+UInt_t cntw = 1;
+UInt_t iv2at = 4;
+//-----------
+
 struct gplot{
   TString Version;
   TString fileHeader;
-  TString comment;
+  TString config1;
+  TString config2;
+  TString config3;
 };
 
+gplot gnames[] = {  
+  // {".v52.15.70","finYPt_","m55to80","|#phi|<45","acr"},
+  // {".v52.15.72","finYPt_","m50to65","|#phi|<45","acr"},
+  // {".v52.15.74","finYPt_","m40to55","|#phi|<45","acr"},
+  // {".v52.15.76","finYPt_","m35to35","|#phi|<45","acr"},
+  // {".v52.15.78","finYPt_","m20to40","|#phi|<45","acr"},
+  // {".v52.15.80","finYPt_","m0to35" ,"|#phi|<45","acr"},
+  //
+  {".v52.15.84","finYPt_","2to5fm","|#phi|<45","acr"},
+  //  {".v52.15.85","finYPt_","2to5fm","|#phi|>135","acr"},
+  //    {".2to5fm"       ,"ut_finYPt_" ,"2to5fm" ,"ave","y_nn"},
+  //  {".v52.15.71","finYPt_","m55to80","|#phi|>135","acr"},
+  //  {".v52.15.73","finYPt_","m50to65","|#phi|>135","acr"},
+  //  {".v52.15.75","finYPt_","m40to55","|#phi|>135","acr"},
+  //  {".v52.15.77","finYPt_","m35to35","|#phi|>135","acr"},
+  //  {".v52.15.79","finYPt_","m20to40","|#phi|>135","acr"},
+  //  {".v52.15.81","finYPt_","m0to35" ,"|#phi|>135","acr"},
+  //
+  //
+  // 2020.Mar.7
+  // {".v52.15.43.v52.15.44" ,"finYPt_","m55to80","ave","ndf20"},
+  //{".v52.15.45.v52.15.46" ,"finYPt_","m40to55","ave","ndf20"},
+  // {".v52.15.47.v52.15.48" ,"finYPt_","m30to40","ave","ndf20"},
+  //  {".v52.15.49.v52.15.50" ,"finYPt_","m0to30","ave","ndf20"},
+  //
+  //  {".v52.15.51.v52.15.52" ,"finYPt_" ,"m55to80","ave","y_nn"},
+  //  {".v52.15.53.v52.15.54" ,"finYPt_" ,"m50to65","ave","y_nn"},
+  //  {".v52.15.55.v52.15.56" ,"finYPt_" ,"m40to55","ave","y_nn"},
+  //  {".v52.15.57.v52.15.58" ,"finYPt_" ,"m35to45","ave","y_nn"},
+  //  {".v52.15.59.v52.15.60" ,"finYPt_" ,"m20to40","ave","y_nn"},
+  //  {".v52.15.61.v52.15.62" ,"finYPt_" ,"m0to35" ,"ave","y_nn"},
+  //
+  //
 
-TString  bName[]   = {"132Sn_","108Sn_","124Sn_","112Sn_","100Sn_"};
-Double_t sysdlt[]  = {0.22,    0.09,      0.15,   0.15   , 0.22};
-Double_t sysA[]    = {256.,    220.,      236.,   236.   ,  256.};
-Double_t u_p = 0.355151 * 1.06974; 
-Double_t mass[]    = {938.2720813, 1875.612762, 2808.921112, 2808.39132, 3727.379378};
-Double_t charge[]  = {1.,          1.,          1.,          2.,         2.};
+  //
+};
+//const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
+const UInt_t nmax = (UInt_t)sizeof(gnames)/sizeof(gplot);
+
+TString sHeader = gnames[0].config1+" "+gnames[0].config2;
+
   // auto mpi  =    139.57018;
   // auto mp   =    938.2720813;
   // auto mn   =    939.565346;
@@ -35,7 +83,7 @@ Bool_t bplot[] =
   { 1, // 0 data   It should be set to 1 in the code.
     0, // 1 model  It should be set to 1 in the code.
     1, // 2 v1 and v2 rapidity 
-    1, // 3 v1 and v2 on pt in one window
+    0, // 3 v1 and v2 on pt in one window
     0, // 4 v1 and v2 in individual windows
     0, // 5 Acceptance ypt => never be plotted 
     0, // 6 <px>/A
@@ -45,39 +93,16 @@ Bool_t bplot[] =
     0, //10 v1 slope(v11) and v2 max dependence on impact parameter
     0, //11 v1 slop and v2 max systematic error check
     0, //12 v11 and v20 plot
-    0, //13 v1 and v2 with Ut
-    0, //14 ut->pt;
+    1, //13 v1 and v2 with Ut
+    1, //14 ut->pt;
   };
 
 Bool_t bstyle[] =
-  { 0,  // 0 132Sn p,d,t, v1v2-y (for NUSYM2019)
+  { 1,  // 0 132Sn p,d,t, v1v2-y (for NUSYM2019)
     0,  // 1 Model comparison 
     0,  //   RPSim fv1y and fv2y is plotted.
   };
 //==================================================
-
-
-// --> Plotting selection
-//--- Data
-Bool_t bsys[]  = { 0, 1, 0, 0, 0};    //132Sn, 108Sn, 124Sn, 112Sn, Sim
-Bool_t bpid[]  = { 0, 0, 0, 1, 0, 0, 0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
-Bool_t bcnt[]  = { 1, 0, 0}; 
-Bool_t bmdl[]  = { 0,      0,         0,       0,      0,       0,       0      }; 
-TString nmTrs[]= {"AMD",   "ChiBUU",  "IBUU",  "IQMD", "SMF",   "UrQMD", "dcQMD"};
-UInt_t cntw = 1;
-UInt_t iv2at = 4;
-//-----------
-
-gplot gnames[] = {  
-  //  {".v52.15.38" ,"finYPt_","ndf20"},
-  {".v52.15.36" ,"finYPt_","ndf50&#phi<45"},
-  {".v52.15.39" ,"finYPt_","ndf20&#phi<45"},
-  {".v52.15.40" ,"finYPt_","ndf20&#phi>135"},
-  ////{".v52.15.37" ,"finYPt_","ndf50&#phi>135"},
-  //  {".v52.15.35" ,"finYPt_","ndf20&#phi45/135"},
-};
-//const UInt_t nmax = (UInt_t)sizeof(bver)/sizeof(UInt_t);
-const UInt_t nmax = (UInt_t)sizeof(gnames)/sizeof(gplot);
 
 //APR2019
 //  {".v50.7.1","advYPt_","(A)TPC"}, //APR2019
@@ -85,18 +110,9 @@ const UInt_t nmax = (UInt_t)sizeof(gnames)/sizeof(gplot);
 //  {".v50.0"  ,"advYPt_","(A)TPC"},
 //  {".v22.0.8","advYPt_","(B)Full"},
 
-TString *sVer  = new TString[nmax];
-TString *sName = new TString[nmax];
-TString *cmnt  = new TString[nmax];
-
 
 //==================================================
 UInt_t   ccvid = 0;
-
-// --> configuration
-Size_t  imsz[] = {1, 1, 1.3, 1.3, 1.3, 1.3, 1.3};
-//Color_t icolnn[]={ kPink, kBlue+1, kDeepSea+2, kViolet-1};
-
 
 TMultiGraph  *mv1[ybin1];
 TMultiGraph  *mv2[ybin2];
@@ -146,24 +162,6 @@ void PlotPtDependence()
 
   if( bplot[10] )
     calculateImpactParameter();
-
-
-  UInt_t ndata = 0;
-  for(UInt_t i = 0; i < nmax; i++){
-    ndata++;
-    sVer[i]  = gnames[i].Version;
-    sName[i] = gnames[i].fileHeader;
-    cmnt[i]  = gnames[i].comment;
-
-    if( gnames[i].Version == "" ) {
-      std::cout << " Version? v##.# ";
-      TString svv; 
-      std::cin  >> svv;
-      sVer[i] = ".v" + svv;
-    }
-  }
-
-  TString ltitle;
 
 
   UInt_t ngr = 0;
@@ -218,8 +216,8 @@ void PlotPtDependence()
   auto mmpx  = new TMultiGraph("mmpx","; y/y_{nn}-1 ; <px>/A");
   //  mv1slp->GetXaxis()->SetAlphanumeric(kTRUE);
 
-  auto lgr1 = new TLegend(0.4 , 0.2, 0.60, 0.40,""); 
-  auto lgr2 = new TLegend(0.2 , 0.70, 0.50, 0.9, "");
+  auto lgr1 = new TLegend(0.5 , 0.18, 0.80, 0.50,""); 
+  auto lgr2 = new TLegend(0.2 , 0.70,0.50, 0.9, "");
   //  auto lgr2 = new TLegend(0.5 , 0.20, 0.70, 0.45, "");
   auto lgr3 = new TLegend(0.35, 0.13, 0.7, 0.33, "");
   auto lgr4 = new TLegend(0.15, 0.63, 0.5, 0.85, "");
@@ -232,12 +230,12 @@ void PlotPtDependence()
   auto lgr10= new TLegend(0.16, 0.70, 0.46, 0.85,"");
 
   g_v11 = new TGraphErrors();
-  g_v11 -> SetTitle("v_{11}");
   g_v20 = new TGraphErrors();
-  g_v20 -> SetTitle("v_{20}");
   g_v2n = new TGraphErrors();
   g_v2n -> SetTitle("v_{2n}");
-
+  auto g_v1off = new TGraphErrors();
+  g_v1off -> SetName("g_v11off");
+  g_v1off -> SetTitle("v_{11}offset");
 
   auto mutv1 = new TMultiGraph();
   auto mutv11 = new TMultiGraph();
@@ -250,11 +248,12 @@ void PlotPtDependence()
 
   UInt_t inx = 0;
   UInt_t nextp = 0;
-  for(UInt_t is = 0; is < 5; is++){
+  //  for(UInt_t is = 0; is < 5; is++){
+  for( auto is : sqSys )for( auto ip : sqPart ) {
 
-    for(UInt_t ip = 0; ip < (UInt_t)sizeof(bpid)/sizeof(Bool_t); ip++){
+      //    for(UInt_t ip = 0; ip < (UInt_t)sizeof(bpid)/sizeof(Bool_t); ip++){
 
-      if( !bsys[is] || !bpid[ip] ) continue;
+      //      if( !bsys[is] || !bpid[ip] ) continue;
 
       for(UInt_t it = 0; it < (UInt_t)sizeof(bcnt)/sizeof(Bool_t); it++){
 	
@@ -262,15 +261,12 @@ void PlotPtDependence()
 
 	for(UInt_t iz = 0; iz < nmax; iz++){
 	  
-	  fname.push_back( "data/"+ sName[iz] + bName[is] + fpid[ip] + sVer[iz] + ".root" );
+	  fname.push_back( "data/"+ gnames[iz].fileHeader + bName[is] + fpid[ip] + gnames[iz].Version + ".root" );
 
 	  if( fOutName == "" )
-	    fOutName = "data/" + bName[is] + fpid[ip] + sVer[iz] + "_plt.root";
+	    fOutName = "data/" + bName[is] + fpid[ip] + gnames[iz].Version + "_plt.root";
 
 	  std::cout << fname.at(ngr) << std::endl;
-	  ltitle = "";
-	  //	  ltitle = Form("mult %d ~ %d",cent[it],cent[it+cntw]);
-	  //	  std::cout << " label title " << ltitle << std::endl;
 
 	  index[0].push_back(is); // system
 	  index[1].push_back(ip); // pid
@@ -318,7 +314,7 @@ void PlotPtDependence()
 	}
       }
     }
-  }
+  //  }
 
 
 
@@ -369,8 +365,8 @@ void PlotPtDependence()
       iss = is;
     }
 
-    TString ohtitle = lsys[is];//+" "+lpid[ip]+" ";
-    TString otitle  = ohtitle;
+    TString otitle  = lsys[is];//+" "+lpid[ip]+" ";
+
 
     // ia: -------------
     // 1 : data
@@ -382,15 +378,15 @@ void PlotPtDependence()
       else
 	std::cout << fname.at(igr) << " is opened. " << std::endl;
 
-      std::cout << "mnt " << cmnt[iz] << " " << iz << endl;
-
       otitle += "("+ lpid[ip]+")";
-      //      otitle += cmnt[iz];
 
-      if( bplot[14] )
-	otitle = ohtitle + "("+ lpid[ip]+")";// + cmnt[iz];
 
-      //    }
+      lgr1 -> SetHeader(sHeader);
+      lgr2 -> SetHeader(sHeader);
+
+      if( nmax > 1 )
+	otitle += gnames[iz].config2;
+      
 
     //acceptance
       if( bplot[0] && bplot[5] && kFALSE ) {
@@ -445,7 +441,6 @@ void PlotPtDependence()
       TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gu_v1");
       //      TGraphErrors *yv1 = (TGraphErrors*)fOpen->Get("gy_v1");
 
-
       if( ia >= 5 ) { // transport model
 	yv1 = ReadTransportData( fname.at(igr) , 1);
 
@@ -472,7 +467,7 @@ void PlotPtDependence()
 	yv1_rev->SetMarkerStyle(imark[is]);
 
 	// --- check it
-	if( kFALSE ) { //|| is != 5 ) {
+	if( kFALSE ) { // is != 5 ) {
 	  yv1->RemovePoint(10);
 	  yv1->RemovePoint(9);
 	  yv1->RemovePoint(8);
@@ -497,26 +492,26 @@ void PlotPtDependence()
 	fv1fit->SetParameter(0,0.);
 	fv1fit->SetParameter(1,v1para1[ip]);
 	fv1fit->SetParameter(2,-0.2);
-	fv1fit->SetParameter(3,-0.01);
+	fv1fit->SetParameter(3, 0.0);
 	  
-	if( kFALSE ) {//is == 2 ) {
+	if( 0 && (is == 3 || is == 1 )) {
 	  mrv1->Add(yv1_rev,"p");
 	  lgr1->AddEntry(yv1_rev,  otitle+"_rev" ,"lp");
-	  yv1_rev->Fit("fv1fit","Q0","",-1.1,1.1); //"Q0","");
+	  yv1_rev->Fit("fv1fit","","",v1fit[0], v1fit[1]); //"Q0","");
 	}
 	else {
 	  mrv1->Add(yv1,"p");
 	  lgr1->AddEntry(yv1,  otitle ,"lp");
-	  yv1->Fit("fv1fit","","",-0.6, 0.8); //"Q0","");
+	  yv1->Fit("fv1fit","","",v1fit[0], v1fit[1]); //"Q0","");
 	  //yv1->Fit("fv1fit","","",-0.2, 0.8); //"Q0","");
 	}
-
+      
 	if( bplot[12] ) {
 	  d_v11.push_back(fv1fit->GetParameter(1));
 	  d_v11e.push_back(fv1fit->GetParError(1));
 	  
-	  g_v11->SetPoint((UInt_t)lx_v11.size(), (UInt_t)lx_v11.size()+0.5, fv1fit->GetParameter(1) );
-	  g_v11->SetPointError((UInt_t)lx_v11.size(),                 0., fv1fit->GetParError(1) );
+	  g_v11->SetPoint((UInt_t)lx_v11.size(),    sysdlt[is], fv1fit->GetParameter(1) );
+	  g_v11->SetPointError((UInt_t)lx_v11.size(),       0., fv1fit->GetParError(1) );
 	  lx_v11.push_back(otitle);
 	}
       }
@@ -550,27 +545,20 @@ void PlotPtDependence()
 	yv2->SetMarkerSize(imsz[is]);
 	yv2->SetLineColor(icolor);
 	fv2fit->SetLineColor(icolor);
-	
-
-	Double_t v2para0[5][5]={{-0.03, 0.05, 0.02, -0.5, 0.5},
-				{ -0.04,0.05, 0.02, -0.5, 0.5},
-				{ -0.05,0.05, 0.02, -0.5, 0.5},
-				//			{ -0.1, 0.05, 0.02,  0.0, 0.8}};
-				{ -0.07, 0.05, 0.1, -0.4, 0.8},
-				{ -0.08, 0.05, 0.1, -0.5, 0.5}};
 
 	fv2fit->SetParameter(0,v2para0[ip][0]);
 	fv2fit->SetParameter(1,v2para0[ip][1]);
 	fv2fit->SetParameter(2,v2para0[ip][2]);
 	yv2->Fit("fv2fit","","",v2para0[ip][3], v2para0[ip][4]);
 
-
-	d_v20.push_back(fv2fit->GetParameter(0));
-	d_v20e.push_back(fv2fit->GetParError(0));
+	if( abs( fv2fit->GetParError(2) ) < 0.1 ){
+	  d_v20.push_back(fv2fit->GetParameter(0));
+	  d_v20e.push_back(fv2fit->GetParError(0));
 	
-	g_v20->SetPoint((UInt_t)lx_v20.size(), (UInt_t)lx_v20.size()+0.5, fv2fit->GetParameter(0) );
-	g_v20->SetPointError((UInt_t)lx_v20.size(),                   0., fv2fit->GetParError(0) );
-	lx_v20.push_back(otitle);
+	  g_v20->SetPoint((UInt_t)lx_v20.size(),       sysdlt[is], fv2fit->GetParameter(0) );
+	  g_v20->SetPointError((UInt_t)lx_v20.size(),          0., fv2fit->GetParError(0) );
+	  lx_v20.push_back(otitle);
+	}
 
 	mrv2->Add(yv2,"p");
 	lgr2->AddEntry(yv2,  otitle ,"lp");
@@ -596,16 +584,22 @@ void PlotPtDependence()
 	hmultX = "Multiplicity";
 	Double_t mmean = hmult->GetMean();
 	//Double_t mstd  = hmult->GetMeanError();
-	Double_t mstd  = hmult->GetStdDev()/sqrt(hmult->GetEntries());
+	Double_t mstd  = hmult->GetStdDev();///sqrt(hmult->GetEntries());
 	cout << "get mean " << mmean << " +- " << mstd<< endl;
 
 	//v1
-	Double_t constlslope = fv1fit->GetParameter(0);
-	Double_t slope = fv1fit->GetParameter(1);
-	Double_t slopee= fv1fit->GetParError(1);
+	Double_t slopeoff  = fv1fit->GetParameter(3);
+	Double_t slopeoffe = fv1fit->GetParError(3);
+	Double_t slope     = fv1fit->GetParameter(1);
+	Double_t slopee    = fv1fit->GetParError(1);
+	
 	
 	std::cout << "************" << std::endl;
 	std::cout << otitle << " " << slope << " +- " << slopee << std::endl;      
+
+	g_v1off -> SetPoint(iv1f, iv1f, slopeoff);
+	g_v1off -> SetPointError(iv1f, 0, slopeoffe);
+
 
 	g_v1slp -> SetPoint(iv1f, mmean, slope);
 	g_v1slp -> SetPointError(iv1f, mstd, slopee);	
@@ -617,15 +611,16 @@ void PlotPtDependence()
 	}
 	cout << " nextp " << nextp << " " << inx << endl;
 
-	g_v1slpm[inx]->SetTitle(fsys[is]);
+	g_v1slpm[inx]->SetTitle(lsys[is]+"("+lpid[ip]+")");
 	g_v1slpm[inx]->SetPoint     (isp1[inx], mmean, slope);
 	g_v1slpm[inx]->SetPointError(isp1[inx], mstd, slopee);
 	isp1[inx]++;
 
 
-	g_v1slpsys[ip]->SetPoint     (ips1[ip], sysdlt[is], slope);
+	g_v1slpsys[ip]->SetPoint     (ips1[ip], ips1[ip], slope);
 	g_v1slpsys[ip]->SetPointError(ips1[ip], 0., slopee);
 	ips1[ip]++;
+
 	
 	//v2
 	Double_t v2x, v2y, v2ye;
@@ -641,7 +636,7 @@ void PlotPtDependence()
 	isp++;
 	
 
-	g_v2maxm[inx]->SetTitle(fsys[is]);
+	g_v2maxm[inx]->SetTitle(lsys[is]+"("+lpid[ip]+")");
 	g_v2maxm[inx]->SetPoint     (isp2[inx] , mmean, -v2y);
 	g_v2maxm[inx]->SetPointError(isp2[inx] , mstd, v2ye);
 	isp2[inx]++;
@@ -653,14 +648,14 @@ void PlotPtDependence()
 	ipp++;
 	
 
-	if( bsys[ik] ) {
+	//	if( bsys[ik] ) {
 	  g_v2sysA->SetPoint(isk, sysA[is], v2y);
 	  g_v2sysA->SetPointError(isk, 0., v2ye);
 	  
 	  g_v2sysD->SetPoint(isk, sysdlt[is], v2y);
 	  g_v2sysD->SetPointError(isk,  0.,  v2ye);
 	  isk++;
-	}
+	  //	}
       }
     }
       
@@ -808,8 +803,12 @@ void PlotPtDependence()
       if( !gUt_v1 )
 	gUt_v1 = (TGraphErrors*)fOpen->Get("g_utv1");
 
+      if( !gUt_v1 ) continue;
+
       TGraphErrors *gUt_v2 = (TGraphErrors*)fOpen->Get("g_utv2");
-      cout << " mutv1 titile " << gUt_v1->GetTitle() << endl;
+      //      cout << " mutv1 titile " << gUt_v1->GetTitle() << endl;
+
+      if( !gUt_v2 ) continue;
 
       mutv1 ->SetTitle(gUt_v1 ->GetTitle());
       mutv11->SetTitle(gUt_v11->GetTitle());
@@ -817,7 +816,7 @@ void PlotPtDependence()
 
            
       if( bplot[14] ){
-	lgutv1->SetHeader(cmnt[0]);
+	lgutv1->SetHeader(gnames[0].config1);
 	for( UInt_t iut = 0; iut < (UInt_t)gUt_v1->GetN(); iut++ ) {
 	  Double_t x, y;
 	  gUt_v1->GetPoint(iut, x, y);
@@ -874,10 +873,10 @@ void PlotPtDependence()
     //--- v1 vs rapidity ---
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
 
-    mrv1->GetXaxis()->SetRangeUser(-1.2,1.2);
+
     if( bstyle[0] ) {
       mrv1->GetXaxis()->SetRangeUser(-0.65,1.2);
-      mrv1->GetYaxis()->SetRangeUser(-0.4, 0.6);
+      mrv1->GetYaxis()->SetRangeUser(-0.3, 0.3);
     }
 
     mrv1->Draw("ALP");
@@ -1031,6 +1030,23 @@ void PlotPtDependence()
     }
   }
 
+  if( kFALSE ) {
+    g_v1off -> Print();
+
+    for(UInt_t i = 0; i < nmax; i++ ){
+      auto fbin = g_v1off -> GetXaxis() -> FindBin(i);
+      if( fbin != 101 ) 
+	g_v1off -> GetXaxis() -> SetBinLabel( fbin, gnames[i].config1);
+    }
+
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
+    g_v1off -> SetMarkerStyle(20);
+    g_v1off -> SetMarkerColor(2);
+    g_v1off -> Draw("AP");
+
+  }
+
+
   if( kFALSE ) { //bplot[0] && bplot[7] ) {
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     g_v1slp->SetMarkerStyle(20);
@@ -1051,7 +1067,8 @@ void PlotPtDependence()
 	g_v1slpsys[jj]->SetMarkerSize(1.5);
 	g_v1slpsys[jj]->SetMarkerColor(icol[jj]);
 	g_v1slpsys[jj]->SetLineColor(icol[jj]);
-	
+
+	g_v1slpsys[jj]->Print();
 	m_v1sys->Add(g_v1slpsys[jj]);
 	lgv1sys->AddEntry(g_v1slpsys[jj],lpid[jj],"lp");	
       }
@@ -1071,7 +1088,6 @@ void PlotPtDependence()
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     for(UInt_t jj = 0; jj < 20; jj++){
       
-      cout << " ----??? " << g_v1slpm[jj]->GetN() << endl;
       if(g_v1slpm[jj]->GetN() > 0) {
 	g_v1slpm[jj]->SetMarkerStyle(20);
 	g_v1slpm[jj]->SetMarkerSize(0.9);
@@ -1190,61 +1206,63 @@ void PlotPtDependence()
   }
 
 
-  for( UInt_t j = 0; j < (UInt_t)lx_v11.size(); j++ ) {
-    auto fbin = g_v11 -> GetXaxis() -> FindBin( j+0.5 );
-    if( fbin != 101 )
-      g_v11 -> GetXaxis() -> SetBinLabel( fbin, lx_v11.at(j) );
-  }
+  //  for( UInt_t j = 0; j < (UInt_t)lx_v11.size(); j++ ) {
+  //   auto fbin = g_v11 -> GetXaxis() -> FindBin( j+0.5 );
+  //   if( fbin != 101 )
+  //     g_v11 -> GetXaxis() -> SetBinLabel( fbin, lx_v11.at(j) );
+  // }
 
   if( bplot[12] && g_v11 != NULL) {
 
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     cc  -> GetPad(0)->SetBottomMargin(0.30);
 
+    g_v11 -> SetTitle(";(N-P)/A;v_{11}");
     g_v11->SetMarkerColor(3);
     g_v11->SetMarkerStyle(20);
     g_v11->Draw("AP");
 
-    cout << "d_v11.size() = " << d_v11.size() << endl;
-    if( d_v11.size() > 0 ) {
-      auto Xmin = g_v11->GetXaxis()->GetXmin();
-      auto Xmax = g_v11->GetXaxis()->GetXmax();
-      auto aLinev11 = new TLine(Xmin, d_v11.at(0), Xmax, d_v11.at(0));
-      aLinev11->SetLineColor(2);
-      aLinev11->SetLineStyle(3);
-      auto aBoxv11 = new TBox(Xmin, d_v11.at(0)+d_v11e.at(0), Xmax, d_v11.at(0)-d_v11e.at(0) ); 
-      aBoxv11->SetFillStyle(3008);
-      aBoxv11->SetFillColor(4);
-      aLinev11->Draw();
-      aBoxv11->Draw();
-    }
+    // cout << "d_v11.size() = " << d_v11.size() << endl;
+    // if( d_v11.size() > 0 ) {
+    //   auto Xmin = g_v11->GetXaxis()->GetXmin();
+    //   auto Xmax = g_v11->GetXaxis()->GetXmax();
+    //   auto aLinev11 = new TLine(Xmin, d_v11.at(0), Xmax, d_v11.at(0));
+    //   aLinev11->SetLineColor(2);
+    //   aLinev11->SetLineStyle(3);
+    //   auto aBoxv11 = new TBox(Xmin, d_v11.at(0)+d_v11e.at(0), Xmax, d_v11.at(0)-d_v11e.at(0) ); 
+    //   aBoxv11->SetFillStyle(3008);
+    //   aBoxv11->SetFillColor(4);
+    //   aLinev11->Draw();
+    //   aBoxv11->Draw();
+    // }
 
 
-    for( UInt_t j = 0; j < (UInt_t)lx_v20.size(); j++ ) {
-      auto fbin = g_v20 -> GetXaxis() -> FindBin( j+0.5 );
-      if( fbin != 101 )
-	g_v20 -> GetXaxis() -> SetBinLabel( fbin, lx_v20.at(j) );
-    }
+    // for( UInt_t j = 0; j < (UInt_t)lx_v20.size(); j++ ) {
+    //   auto fbin = g_v20 -> GetXaxis() -> FindBin( j+0.5 );
+    //   if( fbin != 101 )
+    // 	g_v20 -> GetXaxis() -> SetBinLabel( fbin, lx_v20.at(j) );
+    // }
 
     ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic));
     cc  -> GetPad(0)->SetBottomMargin(0.30);
 
+    g_v20 -> SetTitle(";(M-P)/A;v_{20}");
     g_v20->SetMarkerColor(3);
     g_v20->SetMarkerStyle(20);
     g_v20->Draw("AP");
 
-    if( d_v20.size() > 0 ) {
-      auto Xmin = g_v20->GetXaxis()->GetXmin();
-      auto Xmax = g_v20->GetXaxis()->GetXmax();
-      auto aLinev20 = new TLine(Xmin, d_v20.at(0), Xmax, d_v20.at(0));
-      aLinev20->SetLineColor(2);
-      aLinev20->SetLineStyle(3);
-      auto aBoxv20 = new TBox(Xmin, d_v20.at(0)+d_v20e.at(0), Xmax, d_v20.at(0)-d_v20e.at(0) ); 
-      aBoxv20->SetFillStyle(3008);
-      aBoxv20->SetFillColor(4);
-      aLinev20->Draw();
-      aBoxv20->Draw();
-    }
+    // if( d_v20.size() > 0 ) {
+    //   auto Xmin = g_v20->GetXaxis()->GetXmin();
+    //   auto Xmax = g_v20->GetXaxis()->GetXmax();
+    //   auto aLinev20 = new TLine(Xmin, d_v20.at(0), Xmax, d_v20.at(0));
+    //   aLinev20->SetLineColor(2);
+    //   aLinev20->SetLineStyle(3);
+    //   auto aBoxv20 = new TBox(Xmin, d_v20.at(0)+d_v20e.at(0), Xmax, d_v20.at(0)-d_v20e.at(0) ); 
+    //   aBoxv20->SetFillStyle(3008);
+    //   aBoxv20->SetFillColor(4);
+    //   aLinev20->Draw();
+    //   aBoxv20->Draw();
+    // }
   }
 
   if(bplot[13]) {
@@ -1270,10 +1288,16 @@ void PlotPtDependence()
       line_p -> Draw();
     }
 
+    lgutv1->SetHeader(sHeader);
     lgutv1->Draw();
 
-
     cc->cd(2);
+
+    mutv11->GetXaxis()->SetNdivisions(505);
+    mutv11->Draw("ALP");
+    //    lgutv2->Draw();
+
+    cc->cd(3);
 
     xmin =  mutv2->GetXaxis()->GetXmin();
     ymax =  mutv2->GetYaxis()->GetXmax();
@@ -1289,11 +1313,6 @@ void PlotPtDependence()
     //    lgutv2->Draw();
 
 
-    cc->cd(3);
-
-    mutv11->GetXaxis()->SetNdivisions(505);
-    mutv11->Draw("ALP");
-    //    lgutv2->Draw();
 
   }
 

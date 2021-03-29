@@ -80,6 +80,9 @@ void Kinema(UInt_t isel = 0)
   vec = GetLorentzBoost(0);
   grph->SetPoint(3, 132., vec.Z() );
 
+  vec = GetLorentzBoost(6);
+
+
 
   TCanvas *cc;
   grph->SetMarkerStyle(20);
@@ -97,16 +100,16 @@ void Kinema(UInt_t isel = 0)
 
 TVector3 GetLorentzBoost(UInt_t isel = 4)
 {
-  if( isel >= 6 ) exit(0);
+  if( isel >= 7 ) exit(0);
 
   Double_t amu  = 931.4940954; //MeV/c2  
   Double_t c    = 299792458.; //m/s                                                                 
 
-  TString system[6];
-  Double_t AB[6];
-  Double_t mB[6];
-  Double_t eB_lb[6];
-  Double_t mT[6];     
+  TString system[7];
+  Double_t AB[7];
+  Double_t mB[7];
+  Double_t eB_lb[7];
+  Double_t mT[7];     
 
   system[0] =  "(132Sn + 124Sn)";
   AB[0]     =  132.;
@@ -144,6 +147,12 @@ TVector3 GetLorentzBoost(UInt_t isel = 4)
   eB_lb[4]  = 268.9;
   mT[4]     = 1.00727646688;
 
+  system[6] = "(p + p)";
+  AB[6]     = 1.;
+  mB[6]     = 1.00727646688;
+  eB_lb[6]  = 270.2;
+  mT[6]     = 1.00727646688;
+
   TVector3 nnBoost(0.,0., 0.355151);
 
   system[5] = "(112Sn + XSn)";
@@ -151,6 +160,11 @@ TVector3 GetLorentzBoost(UInt_t isel = 4)
   mB[5]     = 111.8773895;
   eB_lb[5]  = 270.2;
   mT[5]     = 123.8773895 * 112./124.;;
+
+
+
+
+
 
   //Sn-108    107.911892833   +- 0.000005900    0+                        10.30M 8 
   //Sn-112    111.904821807   +- 0.000001813    0+               0.97     stable  

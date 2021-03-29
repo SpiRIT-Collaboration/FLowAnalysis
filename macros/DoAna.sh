@@ -26,6 +26,7 @@ unset MNRNF
 unset MNINVERSION
 unset MNOUTVERSION
 unset CCPSI
+unset PHICUT
 
 ##------>>> EDIT HERE 
 #export MNLC=0
@@ -38,19 +39,25 @@ unset CCPSI
 ##-->(132:52> 2.9fm)
 ##-->(132:42> 5.2fm)
 
-export MNTRK=2
-export MNLC=42 #47
-export MNUC=52 #52
 
-#export MNTRK=6
-#export MNLC=42
-#export MNUC=45
+multL="0,20,35,40,50,55,42,42,40,42"
+multU="35,40,45,55,65,80,52,56,54,55"
+
+export MNTRK=2
+export PHICUT=1 #phi<45
+export PHICUT=2 #phi>135
+
+#########----------------------
+MLC=(${multL})
+MUC=(${multU})
+export MNLC=${MLC[$MNTRK]}
+export MNUC=${MUC[$MNTRK]}
 
 
 export MNSFX=BTt
 export MDCUT=0. #0.0               ##   <------@@ mid-rapidity cut
-export MNINVERSION=52.15             ##   <------@@ input
-export MNOUTVERSION=52.15           ##   <------@@ output 
+export MNINVERSION=52.15           ##   <------@@ input
+export MNOUTVERSION=52.15          ##   <------@@ output 
 
 
 ##-- DATA
@@ -134,6 +141,7 @@ function data112()    ##CONFIG
     commonsetup
 ##<----
 }
+
 
 ##-- for simulation
 function simtpc()   ##CONFIG
@@ -287,10 +295,26 @@ function dorpres()
 
 function doflowmdependence() 
 {
-    LC=0  UC=30 OSUBV=15 doflowbatch $1
-    LC=30 UC=40 OSUBV=16 doflowbatch $1
-    LC=40 UC=50 OSUBV=17 doflowbatch $1
-    LC=50 UC=80 OSUBV=18 doflowbatch $1
+    PARTICLES=("6" "5" "4" "3" "2" )
+    export MNTRK=9
+    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=1 doflowmulti 84
+    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=2 doflowmulti 85
+#    export MNTRK=4
+#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=1 doflowmulti 72
+#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=2 doflowmulti 73
+#    export MNTRK=3
+#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=1 doflowmulti 74
+#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=2 doflowmulti 75
+#    export MNTRK=2
+#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=1 doflowmulti 76
+#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=2 doflowmulti 77
+#    export MNTRK=1
+#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=1 doflowmulti 78
+#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=2 doflowmulti 79
+#    export MNTRK=5
+#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=1 doflowmulti 70
+#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=2 doflowmulti 71
+#
 }
 
 function doflowmultiHeavy()
@@ -332,7 +356,7 @@ function doflowbatch()
     if [ -n "$2" ]; then
 	export OSUBV=$2
     fi
-   RPBS=0 RUN={$MNRNF} root -b -q $MNMACRO\($1\)
+   RPBS=0 RUN={$MNRNF} root -b -q $MNMACRO\($1\) 
    unset OSUBV
 }
 
@@ -393,10 +417,11 @@ function showenv()
     echo "DataBase         ::"  $DBVER
     echo "Output subVer    ::"  $RPBS
     echo "Selected track   ::"  $TRK
-    echo "Max maltiplicity ::"  $UC
-    echo "Min multiplicity ::"  $LC
     echo "Number of event  ::"  $MXEVT
     echo "Mid-Y cut        ::"  $MDCUT
+    echo "Min multiplicity ::"  $LC
+    echo "Max maltiplicity ::"  $UC
+    echo "Phi Angle cut    ::"  $PHICUT
     echo "++++++++++++++++++++++++++++++++++++++++"
 }
 

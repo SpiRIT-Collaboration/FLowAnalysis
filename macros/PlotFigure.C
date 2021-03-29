@@ -2,165 +2,171 @@
 #include "SetStyle.C"
 #include "FlowFunction.C"
 #include "SetColor.C"
-
-void CanvasPartitionY(TCanvas *C, const Int_t Ny = 3,
-		    Float_t lMargin = 0.15, Float_t rMargin = 0.05,
-		    Float_t bMargin = 0.15, Float_t tMargin = 0.05);
-
-void CanvasPartition(TCanvas *C,const Int_t Nx = 2,const Int_t Ny = 2,
-		    Float_t lMargin = 0.15, Float_t rMargin = 0.05,
-		    Float_t bMargin = 0.15, Float_t tMargin = 0.05);
-
-void CanvasPartitionTwoColumn(TCanvas *C,const Int_t Nx = 2,const Int_t Ny = 2,
-			      Float_t lMargin = 0.15, Float_t rMargin = 0.05,
-			      Float_t bMargin = 0.15, Float_t tMargin = 0.05,
-			      Float_t midMargin=0.05);
+#include "CanvasPartition.C"
 
 struct gplot{
   TString Version;
   TString fileHeader;
-  TString comment;
+  TString config1;
+  TString config2;
+  TString config3;
 };
 
-TString  bName[]   = {"132Sn_","108Sn_","124Sn_","112Sn_","pp",    "100Sn_"};
-Double_t sysD[]    = {0.22,    0.09,      0.15,   0.15   ,   0,      0.22};
-Double_t sysA[]    = {256.,    220.,      236.,   236.   ,   2,    256.};
-Double_t sysBN[]   = {82./50., 58./50.,   74./50.,62./50.,   0,     50./50.};
-Double_t sysN[]    = {156.,    110.,      136.,   136.   ,   0,    156.};
-Double_t sysNA[]   = {156./100.,110./100.,136./100.,136./100., 0,  156./100.};
-Size_t   imsz[]    = {1, 1, 1.3, 1.3, 1.3, 1.3, 1.3};
-Color_t  pcolor[]  = {2, 3, 4, 5, 6}; // p,d,t,3He
+gplot gnames[] = {
+  {".v52.15.84"        ,"finYPt_","2to5fm","|#phi|<45" ,"acr"},
+  //  {".2to5fm"       ,"ut_finYPt_" ,"2to5fm" ,"ave","y_nn"},
+  //  {".v52.15.85"        ,"finYPt_","2to5fm","|#phi|>135" ,"acr"},
+  // {".v52.15.70.v52.15.71" ,"ut_finYPt_" ,"m55to80","ave","y_nn"},
+  // {".v52.15.72.v52.15.73" ,"ut_finYPt_" ,"m50to65","ave","y_nn"},
+  // {".v52.15.74.v52.15.75" ,"ut_finYPt_" ,"m40to55","ave","y_nn"},
+  // {".v52.15.76.v52.15.77" ,"ut_finYPt_" ,"m35to45","ave","y_nn"},
+  // {".v52.15.78.v52.15.79" ,"ut_finYPt_" ,"m20to40","ave","y_nn"},
+  // {".v52.15.80.v52.15.81" ,"ut_finYPt_" ,"m0to35" ,"ave","y_nn"},
+  // {".v52.15.45.v52.15.46" ,"finYPt_","m40to55","ave","ndf20"},
+  // {".v52.15.47.v52.15.48" ,"finYPt_","m30to40","ave","ndf20"},
+  // {".v52.15.49.v52.15.50" ,"finYPt_","m0to30","ave","ndf20"},
+  //{".v52.15.51" ,"finYPt_" ,"m55to80","|#phi|<45","y_nn"},
+  //{".v52.15.55" ,"finYPt_" ,"m40to55","|#phi|<45","y_nn"},
+};
+const UInt_t ndata = (UInt_t)sizeof(gnames)/sizeof(gplot);
+TString vfitfname = "PlotFigure.v52.15.51.v52.15.52.root";
+
+const UInt_t npart = 5;
+std::vector<UInt_t> sqPart = {4,3,2,1,0};
+std::vector<UInt_t> sqSys =  {1,3,0};
+
+std::vector<UInt_t> sqv1sel = {10, 8, 2, 1};
+std::vector<UInt_t> sqv2sel = { 4, 3, 2, 1};
+
+UInt_t ix = 0;
 
 TString FOPI_data_sys[] = {"Au","Ru","Ca"};
 
+Double_t FOPI_AuAu_v11x[4]={0,1,2,4};
+Double_t FOPI_AuAu_v11y[4]={0.384, 0.641, 0.800, 1.032};
 
+Double_t FOPI_AuAu_v20[4]={0.048, 0.105, 0.170, 0.247720};
 
-std::vector<UInt_t> sqv1sel = {10, 8, 2, 1};
-std::vector<UInt_t> sqv2sel = {4,3,2,1};
-std::vector<UInt_t> sqPart  = {0,1,2,3,4};
-const UInt_t npart = 5;
-
-gplot gnames[] = {
-  {".v52.15.39","finYPt_", "45>|#phi|"}
-};
-
-Double_t FOPI_AuAu_v10[][2]={
-  {1.0, 0.384},  //p
-  {2.0, 0.641},  //d
-  {3.0, 0.800}}; //A=3
-Double_t FOPI_AuAu_v20[][2]={
-  {1.0, -0.048},
-  {2.0, -0.105},
-  {3.0, -0.170}};
-
-
+TFile *outFile;
 TCanvas *ccv; UInt_t iccv = 0;
 TString xlabel;
 TLatex  plabel;
-
+TLatex  clabel;
 
 Double_t *syslabel;
-TGraphErrors* g_v1slp[npart];
-TGraphErrors* g_v2max[npart];
-TGraphErrors* g_v2n[npart];
-TGraphErrors* g_v1pslp[npart];
-TMultiGraph* mrv1[npart];
-TMultiGraph* mrv2[npart];
-TLegend*     lrv1[npart];
-TLegend*     lrv2[npart];
-TMultiGraph* g_v1sysD;
-TLegend*     l_v1sysD;
-TMultiGraph* g_v2sysD;
-TLegend*     l_v2sysD;
-TMultiGraph* g_v1psysD;
-TLegend*     l_v1psysD;
-TMultiGraph* g_v2nsysD;
-TLegend*     l_v2nsysD;
+
+
 TGraphErrors *v1Ut;;
 TGraphErrors *v2Ut;
 
-
-
 FairLogger *logger = FairLogger::GetLogger();
 void GetMinimumv2(TGraphErrors *gr, Double_t &min, Double_t &mer);
-void Draw_v1Ratio();
-void Draw_v1v2SystemD();
-void Draw_v1v2SystemD_fit();
-void Draw_Indiv_v1SystemD();
-void Draw_Indiv_v2SystemD();
-void Draw_Indiv_v2SystemD();
-void Draw_Indiv_v1SystemD_Three();
-void Draw_v2SystemD();
-void Draw_v2nSystemD();
-void Draw_v2SystemD_one();
-void Draw_v1Ut_SystemD(UInt_t ipart);
-void Draw_v2Ut_SystemD(UInt_t ipart);
-void Draw_Ut_SystemD();
-void Draw_Ut_Comparison(UInt_t isys);
-void Draw_Ut_Comparison_FOPI(UInt_t isys);
-void Draw_Ut_Particle();
-void Draw_v_y(UInt_t vn);
-void LoadData();
-TGraphErrors* LoadAMD(UInt_t isys, UInt_t ipart, UInt_t iflow);
-TGraphErrors* LoadAMD(UInt_t isys, UInt_t ipart, TString grname);
+void Draw_Indiv_v1SystemD(UInt_t igname);
+void Draw_Indiv_v2SystemD(UInt_t igname);
+void Draw_SystemD(UInt_t igname, TString gname);
+
+void Draw_Ut_ParticleSystemD(UInt_t igname, TString gname);
+void Draw_Ut_SystemD(UInt_t igname);
+void Draw_Ut_Comparison(UInt_t igname, UInt_t isys);
+void Draw_Ut_Comparison_FOPI(UInt_t igname, UInt_t isys);
+void Draw_Ut_Particle(Int_t igname, UInt_t isys);
+void Draw_v_y(UInt_t igname, UInt_t vn = 1);
+void Draw_MultiplicityD(TString gname);
+void Draw_ParticleD(TString gname, UInt_t igname);
+void Draw_v20_Edependence();
+void Draw_Ut_Ratio(UInt_t igname, TString gname);
+void Draw_Ut_RatioToOne(UInt_t igname, TString gname);
+
+TGraphErrors* LoadAMD(UInt_t isys, UInt_t ipart, TString grname, TString eos);
 TGraphErrors* LoadFOPI(UInt_t ipart, TString fdir, TString sysname );
 TGraphErrors* LoadTextGraph(TString fname);
 
+
 void PlotFigure()
 {
+
 
   gStyle->SetOptStat(0);
 
   SetStyle();
   SetColor();
 
-  //  LoadData();
-
 
   // Draw function
+  for( auto igname : ROOT::TSeqI( ndata ) ) {
 
-  if( 0 ) { //v11 v20 system dependence
-    Draw_Indiv_v1SystemD();
-    Draw_Indiv_v2SystemD();
+    //--- v10 and v20 system dependece
+
+    if( 0 ) 
+      Draw_Indiv_v1SystemD(igname);
+    if( 0 ) 
+      Draw_Indiv_v2SystemD(igname);
+
+     if( 0 )
+      Draw_SystemD(igname, "gu_v2");
+    if( 0 )
+      Draw_SystemD(igname, "gu_v1");
+    //--------------------
+
+    // //edit
+    if( 0 ) 
+      Draw_Ut_ParticleSystemD(igname,"g_utv1_0");
+    if( 0 ) 
+      Draw_Ut_ParticleSystemD(igname,"g_utv2");
+
+    if( 0 )
+      Draw_Ut_Ratio(igname, "g_utv1_0");
+    if( 0 )
+      Draw_Ut_Ratio(igname, "g_utv2");
+
+    if( 1 )
+      Draw_Ut_RatioToOne(igname, "g_utv1_0");
+    if( 1 )
+      Draw_Ut_RatioToOne(igname, "g_utv2");
+
+
+    if( 0 ) //OK
+      Draw_Ut_SystemD(igname); // Final
+
+    if( 0 ) 
+      Draw_Ut_Comparison(igname,0); // Comparison with AMD (0:system) 
+
+    if( 0 ) 
+      Draw_Ut_Comparison_FOPI(igname, 0); // Comparison with FOPI
+
+    // if( 0 )
+    //   Draw_Ut_Particle();
+
+    if( 0 ) {
+      Draw_v_y(igname, 1);
+      Draw_v_y(igname, 2);
+    }
   }
 
-  if( 0 )
-    Draw_v2SystemD_one();
+
   
-  if( 0 )
-    Draw_v1Ratio();
+  //---  Multiplicioty dependence
+  if( 0 && ndata > 1) {
+    if( outFile ) outFile->Close();
+    outFile = new TFile("data/PlotFigureMD_"+gnames[0].Version+".root","recreate");
+    if( 1 )
+      Draw_MultiplicityD("gu_v1");
+    if( 1  )
+      Draw_MultiplicityD("gu_v2");
+  }
 
-  if( 0 )   // fitting results for v1 and v2 vs y
-    Draw_v1v2SystemD_fit();
-
-  if( 0 )
-    Draw_v1v2SystemD();
-
-  if( 0 )
-    Draw_v2SystemD();
-  
-  //edit
   if( 0 ) {
-    Draw_v1Ut_SystemD(1);
-    Draw_v2Ut_SystemD(1);
+    Draw_ParticleD("gu_v1", 0);
+    Draw_ParticleD("gu_v2", 0);
+    // Draw_ParticleD("gu_v1", 2);
+    // Draw_ParticleD("gu_v2", 2);
   }
 
-  if( 0 ) //OK
-    Draw_Ut_SystemD(); // Final
-
-  if( 1 ) 
-    Draw_Ut_Comparison(3); // Comparison with AMD (0:system) 
 
   if( 0 ) 
-    Draw_Ut_Comparison_FOPI(0); // Comparison with FOPI
-
-  if( 0 )
-    Draw_Ut_Particle();
-
-  if( 0 )
-    Draw_v_y(2);
-
+    Draw_v20_Edependence();
 }
+
 //------------------------------------------------
 //------------------------------------------------
 //------------------------------------------------
@@ -185,7 +191,7 @@ TGraphErrors* LoadFOPI(UInt_t ipart=0, TString fdir="PRC89/Fig8_v1Ut_0.25", TStr
   return grph;
 }
 
-TGraphErrors* LoadAMD(UInt_t isys, UInt_t ipart, TString grname="v1_ut" )
+TGraphErrors* LoadAMD(UInt_t isys, UInt_t ipart, TString grname="v1_ut", TString eos="SLy4")
 {
   TGraphErrors *grv = NULL;
 
@@ -193,14 +199,24 @@ TGraphErrors* LoadAMD(UInt_t isys, UInt_t ipart, TString grname="v1_ut" )
   // 			"Sn132/SLy4_L108/flow_deuteron.root",
   // 			"Sn132/SLy4_L108/flxoxw_triton.root"};
 
-  TString filename[] = {"Sn132/SLy4/flow_proton.root",
-			"Sn132/SLy4/flow_deuteron.root",
-			"Sn132/SLy4/flow_triton.root",
-			"Sn132/SLy4/flow_alpha.root"};
+  TString dirname  = "../../TransportModel/AMD/Sn132/"+eos;
 
-  auto ifile = new TFile("../../TransportModel/AMD/"+filename[ipart],"READ");
+  TString filename[] = {"flow_proton.root",
+			"flow_deuteron.root",
+			"flow_triton.root",
+			"",
+			"flow_alpha.root"};
 
-  if( !ifile ) return NULL;
+  TString tfile = filename[ipart];
+  cout << " tfile " << tfile << endl;
+  TFile *ifile = NULL;
+  if( gSystem -> FindFile(dirname, tfile ) ){
+    ifile = new TFile(tfile,"READ");
+    if( !ifile ) return NULL;
+    LOG(INFO) << tfile << " is opened. " << FairLogger::endl;
+  }
+  else
+    return NULL;
 
   grv = (TGraphErrors*)ifile->Get(grname);
   if( grv == NULL ) return NULL;
@@ -214,12 +230,12 @@ TGraphErrors* LoadAMD(UInt_t isys, UInt_t ipart, TString grname="v1_ut" )
 }
 
 
-TGraphErrors* LoadData(UInt_t isys, UInt_t ipart, TString gname)
+TGraphErrors* LoadData(UInt_t igname, UInt_t isys, UInt_t ipart, TString gname)
 {
   TGraphErrors* grv = NULL;
 
   TFile *fOpen;
-  TString fname = gnames[0].fileHeader + bName[isys] + fpid[ipart] + gnames[0].Version + ".root";
+  TString fname = gnames[igname].fileHeader + bName[isys] + fpid[ipart] + gnames[igname].Version + ".root";
 
   if( !gSystem->FindFile("data", fname) ) {
     LOG(ERROR) << fname << " is not found " << FairLogger::endl;
@@ -242,6 +258,36 @@ TGraphErrors* LoadData(UInt_t isys, UInt_t ipart, TString gname)
   return grv;
 }
 
+TH1I* LoadHistogram(UInt_t isys, UInt_t igname, UInt_t ipart, TString gname)
+{
+  TH1I* grv = NULL;
+
+  TFile *fOpen;
+  TString fname = gnames[igname].fileHeader + bName[isys] + fpid[ipart] + gnames[igname].Version + ".root";
+
+  if( !gSystem->FindFile("data", fname) ) {
+    LOG(ERROR) << fname << " is not found " << FairLogger::endl;
+    return NULL;
+  }
+  else {
+    fOpen = TFile::Open( fname );
+    LOG(INFO) << fname << " is opened. " << FairLogger::endl;
+  }
+
+  grv =  (TH1I*)fOpen->Get(gname);
+  if( grv == NULL ) return NULL;
+
+
+  gname += "_" + rsys[isys] + "_" + lpid[ipart];
+  grv -> SetName(gname);
+
+
+  grv -> SetDirectory(gROOT);
+  fOpen->Close();
+
+  return grv;
+}
+
 
 TGraphErrors* LoadTextGraph(TString fname)
 {
@@ -259,6 +305,7 @@ TGraphErrors* LoadTextGraph(TString fname)
     fread >> sget;
     y = (Double_t)atof(sget);
 
+    cout << "x = " << x << " y= " << y << endl;
     if( !std::isnan(x) ) {
       vut -> SetPoint(in, x, y);
       in++;
@@ -271,16 +318,111 @@ TGraphErrors* LoadTextGraph(TString fname)
   return vut;
 }
 
-
-
-void LoadData()
+Double_t *ReadVfit(TString gname, UInt_t isys, UInt_t iPart, UInt_t imult)
 {
-  Color_t fcolor = 2;
-  UInt_t ix = 0;
+  Double_t *vfit = new Double_t[2]; 
+  vfit[0] = 0.;
+  vfit[1] = 0.;
+
+  TFile* fin = TFile::Open("data/"+vfitfname);
+  TIter next(fin->GetListOfKeys());
+  while( TGraphErrors* obj = (TGraphErrors*)next() ) {
+
+    if( obj->GetName() == gname ) {
+      TGraphErrors *grp = (TGraphErrors*)fin->Get(obj->GetName());
+      if( grp ) {
+	Double_t x, xe;
+	grp -> GetPoint(imult, x, vfit[0]);
+	xe      = grp -> GetErrorX(imult);
+	vfit[1] = grp -> GetErrorY(imult);
+	return vfit;
+      }
+    }
+  }
+  
+  LOG(ERROR) << "Failer to read " << gname << FairLogger::endl;
+  return vfit;
+}
+
+Double_t* GetV11(UInt_t igname, UInt_t isys, UInt_t ipart)
+{
+  Double_t *vfit = new Double_t[2];
+  auto yv1 = (TGraphErrors*)LoadData(igname, isys, ipart, "gu_v1");
+  
+  auto yv1_rev = new TGraphErrors();
+  if( isys == 3 ) {
+    for( UInt_t i = 0; i < yv1->GetN(); i++ ) {
+      Double_t x = 0, y = 0;
+      yv1->GetPoint( yv1->GetN()-1-i, x, y );
+      yv1_rev->SetPoint( i, -x, -y );
+    }
+
+    yv1 = yv1_rev;
+  }
+
+  vfit[0] = 0.;
+  vfit[1] = 0.;
+  if( yv1 ) {
+    yv1->Fit("fv1fit","","",v1fit[0], v1fit[1]); //"Q0","");     
+
+    vfit[0] = fv1fit->GetParameter(1);
+    vfit[1] = fv1fit->GetParError(1); 
+  }
+
+  return vfit;
+}
+
+Double_t* GetV20(UInt_t igname, UInt_t isys, UInt_t ipart)
+{
+  Double_t *vfit = new Double_t[2];
+  vfit[0] = 0.;
+  vfit[1] = 0.;
+
+  auto yv2 = (TGraphErrors*)LoadData(igname, isys, ipart, "gu_v2");
+
+  if( yv2 ) { 
+    fv2fit->SetParameter(0,v2para0[ipart][0]);
+    fv2fit->SetParameter(1,v2para0[ipart][1]);
+    fv2fit->SetParameter(2,v2para0[ipart][2]);
+
+    auto ptr = yv2->Fit("fv2fit","","",v2para0[ipart][3],v2para0[ipart][4]); //"Q0","");         
+
+
+    if( fv2fit -> GetParameter(1) > 0 ) {
+      vfit[0] = -fv2fit->GetParameter(0);
+      vfit[1] =  fv2fit->GetParError(0); 
+    }
+    else {
+      std::vector< Double_t > sqPara = {0.05, 0.1, 0.15, 0.2};
+      for( auto ck : sqPara ) {
+	fv2fit->SetParameter(0, -0.12);
+
+	auto lpar = v2para0[ipart][3] + ck;
+	auto hpar = v2para0[ipart][4] + ck;
+	ptr = yv2->Fit("fv2fit","","",lpar, hpar); //"Q0","");    
+	//@	yv2->Draw("ALP");
+
+	cout << " refit v2  " << ck << ", " << lpar << " , "  << endl;
+	
+	if( fv2fit -> GetParameter(1) > 0 ) {
+	  vfit[0] = -fv2fit->GetParameter(0);
+	  vfit[1] =  fv2fit->GetParError(0); 
+	  break;
+	}
+      }
+    }
+  }
+  return vfit;
+}
+
+TGraphErrors* GetSDGraph(TString gname, UInt_t igname, UInt_t ipart)
+{
+  Double_t sysBN[]   = {82./50., 58./50.,   74./50.,62./50.,   0,     50./50.};
+  Double_t sysNA[]   = {156./100.,110./100.,136./100.,136./100., 0,  156./100.};
   switch(ix) {
   case 0:
     xlabel = "(N-P)/A";
-    syslabel = sysD;
+    syslabel = sysdlt;
     break;
   case 1:
     xlabel = "N";
@@ -296,280 +438,39 @@ void LoadData()
     break;
   }
 
-  TGraphErrors *yv1;
-  TGraphErrors *yv2;
-
-  Double_t v1_slp [4][npart];
-  Double_t v1_slpe[4][npart];
-  Double_t v2_max [4][npart];
-  Double_t v2_maxe[4][npart];
-  Double_t  v20[4][npart];
-  Double_t v20e[4][npart];
-  Double_t  v21[4][npart];
-  Double_t v21e[4][npart];
-  Double_t  v2n[4][npart];
-  Double_t v2ne[4][npart];
+  auto grp = new TGraphErrors();
+  grp -> SetName(gname+Form("_%d",ipart));
   
 
-  for(UInt_t i = 0; i < npart; i++ ){
-    mrv1[i] = new TMultiGraph(Form("mrv1_%d",i)  ,";y/y_{nn}-1; v1");
-    mrv2[i] = new TMultiGraph(Form("mrv2_%d",i)  ,";y/y_{nn}-1; v2");
-    lrv1[i] = new TLegend(0.6 , 0.15, 0.90, 0.50, lsys[i]);
-    lrv2[i] = new TLegend(0.75 , 0.15, 0.90, 0.50, lsys[i]); 
-  }
-
-  auto g_v1off = new TGraphErrors();
-  std::vector< TString > g_v1label;
-  UInt_t iv1off = 0;
-
-  TFile *fOpen;
-
-  for( UInt_t is = 0; is < 4; is++ ) {
-
-    if( is == 2 ) continue;
-
-    for( UInt_t ip = 0; ip < npart; ip++ ) {
-
-      TString fname = gnames[0].fileHeader + bName[is] + fpid[ip] + gnames[0].Version + ".root";
-
-      if( !gSystem->FindFile("data", fname) ) {
-	LOG(ERROR) << fname << " is not found " << FairLogger::endl;
-	continue;
-      }
-      else {
-	fOpen = TFile::Open( fname );
-	LOG(INFO) << fname << " is opened. " << FairLogger::endl;
-      }
-
-
-      //yv1 = (TGraphErrors*)fOpen->Get("gy_v1");
-      //yv2 = (TGraphErrors*)fOpen->Get("gy_v2");
-      yv1 = (TGraphErrors*)fOpen->Get("gu_v1");
-      yv2 = (TGraphErrors*)fOpen->Get("gu_v2");
-
-      if( yv1 && yv2 ) {
-	fcolor = pcolor[ip];
-	yv1->SetMarkerColor(fcolor);
-	yv1->SetMarkerStyle(imark[0]);
-	yv1->SetLineColor(fcolor);
-
-	yv2->SetMarkerColor(fcolor);
-        yv2->SetMarkerStyle(imark[0]);
-        yv2->SetMarkerSize(imsz[0]);
-        yv2->SetLineColor(fcolor);
-
-	for( Int_t j = (Int_t)yv2->GetN()-1; j >= 0; j-- ) {
-	  Double_t xx, yy;
-	  yv2->GetPoint(j, xx, yy);
-	  if( xx > 1. )
-	    yv2->RemovePoint(j);
-	}
-      }	
-
-
-      mrv1[is] -> Add(yv1,"p");
-      lrv1[is] -> AddEntry(yv1,  lpid[ip] ,"lp");
-      // mrv1[ip] -> Add(yv1,"p");
-      // lrv1[ip] -> AddEntry(yv1,  lsys[is] ,"lp");
-
-      fv1fit->SetLineColor(fcolor);
-      fv1fit->SetParameter(1,0.2);
-      yv1->Fit("fv1fit","","",-0.6,0.6); //"Q0","");    
-
-      v1_slp [is][ip]   = fv1fit->GetParameter(1);
-      v1_slpe[is][ip]   = fv1fit->GetParError(1);
-
-      if( ip != 3 ) {
-	g_v1label.push_back( bName[is] + lpid[ip] ) ;
-	g_v1off -> SetPoint(iv1off, iv1off, fv1fit->GetParameter(3) );
-	g_v1off -> SetPointError(iv1off, 0, fv1fit->GetParError(3) );
-	iv1off++;
-      }
-
-      if( yv2 != NULL ) {
-        for( Int_t iip = (Int_t)yv2->GetN()-1; iip >= 0; iip-- ){
-
-          Double_t xpnt, ypnt;
-          ypnt = yv2->GetErrorY(iip);
-          if( ypnt > 0.05 )
-            yv2->RemovePoint(iip);
-        }
-
-	Double_t v2x, v2y, v2ye;
-        GetMinimumv2(yv2, v2_max[is][ip], v2_maxe[is][ip]);	
-	yv2   ->SetLineColor(fcolor);
-	fv2fit->SetLineColor(fcolor);
-
-	fv2fit->SetParameter(0, -0.01);
-	fv2fit->SetParameter(1,  0.15);
-	fv2fit->SetParameter(2,  0.);
-
-	// if( ip == 3 )
-	//   yv2->Fit("fv2fit","","",-0.48,1.);
-	// else
-	  yv2->Fit("fv2fit","","",-0.4,0.45);
-
-	mrv2[is]->Add(yv2,"p");
-	lrv2[is]->AddEntry(yv2, lpid[ip], "p");
-	// mrv2[ip]->Add(yv2,"p");
-	// lrv2[ip]->AddEntry(yv2, lsys[is], "p");
-
-	v20[is][ip]  = fv2fit->GetParameter(0);
-	v20e[is][ip] = fv2fit->GetParError(0);
-
-	v21[is][ip]  = fv2fit->GetParameter(1);
-	v21e[is][ip] = fv2fit->GetParError(1);
-	
-	v2n[is][ip]  = abs(v21[is][ip]) + abs(v20[is][ip]);
-	v2ne[is][ip] = 0.; sqrt( pow(v21[is][ip],2) + pow(v20[is][ip],2) );
-
-      }
-     
-      // Getting Ut plots
-      TString gname = "g_utv1";
-      v1Ut =  (TGraphErrors*)fOpen->Get(gname);
-      cout << gname << endl;
-      gname += "_" + rsys[is] + "_" + lpid[ip];
-      v1Ut -> SetName(gname);
-      cout << gname << endl;
-      gROOT->Add(v1Ut);
-
-      gname = "g_utv2";
-      v2Ut =  (TGraphErrors*)fOpen->Get(gname);
-      gname += "_" + rsys[is] + "_" + lpid[ip];
-      v2Ut -> SetName(gname);
-      gROOT->Add(v2Ut);
-
-
-      for(auto k: sqv1sel) {
-	gname = (TString)Form("gUt_v1%d",k);
-	v1Ut = (TGraphErrors*)fOpen->Get(gname);
-	gname += "_" + rsys[is] + "_" + lpid[ip];
-	v1Ut -> SetName(gname);
-	gROOT->Add(v1Ut);
-      }
-
-      for(auto k: sqv2sel) {
-	gname = (TString)Form("gUt_v2%d",k);
-	v2Ut = (TGraphErrors*)fOpen->Get(gname);
-	gname += "_" + rsys[is] + "_" + lpid[ip];
-	v2Ut -> SetName(gname);
-	gROOT-> Add(v2Ut);
-      }
- 
-      fOpen->Close();
+  UInt_t isyss = 0;
+  for(auto isys: sqSys ) {
+    Double_t *vfit;
+    if( gname == "gu_v1" ) {
+      vfit = GetV11(igname,isys,ipart);
+      grp -> SetTitle(";"+gnames[igname].config1+" "+xlabel+"; v10");
     }
-    fcolor++;
-    if( fcolor == 10 ) fcolor++;
-    
-  }
-
-  //----------
-  for( UInt_t ip = 0; ip < npart; ip++ ){
-    g_v1slp[ip]  = new TGraphErrors();
-    g_v1slp[ip]  -> SetName(Form("g_v1slp_%d",ip));
-    g_v1slp[ip]  -> SetTitle(";"+xlabel+";");
-    //    if( ip == 0 )
-      g_v1slp[ip]  -> SetTitle(";"+xlabel+";v_{11}");
-
-    g_v2max[ip]  = new TGraphErrors();
-    g_v2max[ip]  -> SetName(Form("g_v2max_%d",ip));
-    g_v2max[ip]  -> SetTitle(";"+xlabel+"; -v_{20}");
-    g_v2n[ip]    = new TGraphErrors();
-    g_v2n[ip]    -> SetName(Form("g_v2n_%d",ip));
-    g_v2n[ip]    -> SetTitle(";"+xlabel+"; -v_{2n}");
-
-    g_v1pslp[ip] = new TGraphErrors();
-  }
-
-  
-  g_v1sysD = new TMultiGraph("g_v1slpD", ";"+xlabel+"; v_{11}");
-  l_v1sysD = new TLegend(0.2, 0.7, 0.5, 0.9, "");
-  g_v2sysD = new TMultiGraph("g_v2sysD", ";"+xlabel+"; -v20");
-  l_v2sysD = new TLegend(0.35, 0.13, 0.7, 0.33, "");
-
-  g_v1psysD = new TMultiGraph("g_v1pslpD", ";"+xlabel+"; v_{11}/ v_{11}(proton)");
-  l_v1psysD = new TLegend(0.2, 0.7, 0.5, 0.9, "");
-
-  g_v2nsysD = new TMultiGraph("g_v2bsysD", ";"+xlabel+"; -v2n");
-  l_v2nsysD = new TLegend(0.35, 0.13, 0.7, 0.33, "");
-
-  for( UInt_t ip = 0; ip < npart; ip++ ) {
-
-    UInt_t iss = 0;
-    for( UInt_t is = 0; is < 4; is++ ) {
-      
-      if( is == 2 ) continue;
-
-      if( kTRUE ) {
-	LOG(INFO) << " v1slp " << v1_slp[is][ip]
-		  << " v2max " << v2_max[is][ip]
-		  << FairLogger::endl;
-
-	g_v1slp[ip] -> SetPoint     ( iss,  *(syslabel+is), v1_slp[is][ip] ); 
-	g_v1slp[ip] -> SetPointError( iss, 0,   v1_slpe[is][ip] );
-
-	// g_v2max[ip] -> SetPoint     ( iss,  *(syslabel+is), -v2_max[is][ip] ); 
-	// g_v2max[ip] -> SetPointError( iss,  0., v2_maxe[is][ip] ); 
-	g_v2max[ip] -> SetPoint     ( iss,  *(syslabel+is), -v20[is][ip] ); 
-	g_v2max[ip] -> SetPointError( iss,  0., v20e[is][ip] ); 
-
-	g_v2n[ip]   -> SetPoint     ( iss,  *(syslabel+is), v2n[is][ip] );
-	g_v2n[ip]   -> SetPointError( iss,  0., v2ne[is][ip] );
-	
-
-	if( ip > 0 ) {
-	  auto ratio = v1_slp[is][ip]/v1_slp[is][0];
-	  auto ratie = ratio * sqrt( pow(v1_slpe[is][ip]/v1_slp[is][ip],2) + pow(v1_slpe[is][0]/v1_slp[is][0],2) );
-	  g_v1pslp[ip] -> SetPoint     ( iss, *(syslabel+is), ratio );
-	  g_v1pslp[ip] -> SetPointError( iss,        0., ratie );
-	}
-
-	iss++;
-      }
+    else {
+      vfit = GetV20(igname,isys,ipart);
+      grp -> SetTitle(";"+gnames[igname].config1+" "+xlabel+"; v20");
     }
 
-    g_v1slp[ip]->SetMarkerStyle(20);
-    g_v1slp[ip]->SetMarkerSize(1.5);
-    g_v1slp[ip]->SetMarkerColor(icol[ip]);
-    g_v1slp[ip]->SetLineColor(icol[ip]);
-
-    g_v2max[ip]->SetMarkerStyle(20);
-    g_v2max[ip]->SetMarkerSize(1.5);
-    g_v2max[ip]->SetMarkerColor(icol[ip]);
-    g_v2max[ip]->SetLineColor(icol[ip]);
-
-    g_v2n[ip]->SetMarkerStyle(20);
-    g_v2n[ip]->SetMarkerSize(1.5);
-    g_v2n[ip]->SetMarkerColor(icol[ip]);
-    g_v2n[ip]->SetLineColor(icol[ip]);
-
-    
-    g_v1sysD -> Add( g_v1slp[ip], "p" );
-    l_v1sysD -> AddEntry( g_v1slp[ip], lpid[ip], "P" );
-
-    g_v2sysD -> Add( g_v2max[ip],"p");
-    l_v2sysD -> AddEntry( g_v2max[ip], lpid[ip] ,"P");
-
-    g_v2nsysD -> Add( g_v2n[ip],"p");
-    l_v2nsysD -> AddEntry( g_v2n[ip], lpid[ip] ,"P");
-
-    g_v1pslp[ip]->SetMarkerStyle(20);
-    g_v1pslp[ip]->SetMarkerSize(1.5);
-    g_v1pslp[ip]->SetMarkerColor(icol[ip]);
-    g_v1pslp[ip]->SetLineColor(icol[ip]);
-
-    
-    if( ip > 1 ) {
-      g_v1psysD -> Add( g_v1pslp[ip], "p" );
-      l_v1psysD -> AddEntry( g_v1slp[ip], lpid[ip], "P" );
+    if( vfit[1] != 0. ) {
+      grp -> SetPoint     (isyss, *(syslabel+isys), vfit[0] );
+      grp -> SetPointError(isyss, 0,                vfit[1] );
+      isyss++;
     }
-
   }
 
-}
+  if( grp->GetN() > 0 )
+    return grp;
+  else
+    return NULL;
+} 
 
 
+//------------------------------------------------
+//------------------------------------------------
+//------------------------------------------------
 
 void GetMinimumv2(TGraphErrors *gr, Double_t &min, Double_t &mer)
 {
@@ -590,30 +491,215 @@ void GetMinimumv2(TGraphErrors *gr, Double_t &min, Double_t &mer)
     }
   }
 
-
   mer = gr->GetErrorY(mid);
 }
 
 //----------------------------
 //------- Draw ---------------
 //----------------------------
-void Draw_Ut_Comparison(UInt_t isys)
+//void Draw_
+void Draw_ParticleD(TString gname, UInt_t igname)
+{
+  LOG(INFO) << "Draw_PartileD " << FairLogger::endl;  
+
+  auto mv = new TMultiGraph("mv","");
+  auto lg = new TLegend(0.18,0.6,0.3,0.9,gnames[igname].config1);
+
+  Double_t y ;
+  for( auto isys : sqSys ) {      
+    UInt_t ipp = 0;
+    UInt_t iparts = 0;
+    auto grp = new TGraphErrors();
+    grp -> SetName(gname+Form("_%d",isys) );
+    for( auto ipart : sqPart ){
+
+      Double_t *vfit;
+
+      if( gname == "gu_v1") {
+	vfit = GetV11(igname, isys, ipart);
+	mv -> SetTitle(";Particle; v11");
+      }
+      else {
+	vfit = GetV20(igname,isys,ipart);
+	mv -> SetTitle(";Particle; v20");
+      }
+
+      // TString ggname = gname + "_" + bName[isys]+lpid[ipart];
+      // vfit = ReadVfit(ggname, isys, ipart, igname);
+
+      grp -> SetPoint     (ipp, (Float_t)ipart, vfit[0] );
+      grp -> SetPointError(ipp, 0, vfit[1] );
+      ipp++;
+
+      y = vfit[0];
+    }
+      
+    grp -> SetMarkerStyle( imark[isys] );
+    grp -> SetMarkerColor( icol[isys] );
+    grp -> SetLineColor( icol[isys] );
+    grp -> GetXaxis() -> SetRangeUser(-1.,(Float_t)sqSys.size()+2.);      
+
+    mv -> Add( grp, "pl");
+    lg -> AddEntry(grp, lsys[isys]);
+  }
+
+  auto grp = new TGraphErrors();
+  grp -> SetPoint( 0,-0.5,y+0.01);
+  grp -> SetPoint( 1, 4.5,y+0.01);
+  grp -> SetLineColor(10);
+  mv -> Add(grp,"");
+  
+  for( auto k : sqPart ) {
+    auto fbin = mv -> GetXaxis() -> FindBin(k);
+    mv -> GetXaxis() -> SetBinLabel( fbin+1, lpid[k]);
+  }	
+
+  if( 0 ) {  // FOPI
+    if( gname == "gu_v1" ) {
+      auto FOPI = new TGraph(4, FOPI_AuAu_v11x, FOPI_AuAu_v11y);    
+      FOPI -> SetMarkerStyle(29);
+      FOPI -> SetMarkerSize(1);
+      mv -> Add(FOPI,"p");
+      lg -> AddEntry(FOPI,"(FOPI)Au0.25 Ut>0.8");
+    }
+    else {
+      auto FOPI = new TGraph(4, FOPI_AuAu_v11x, FOPI_AuAu_v20);    
+      FOPI -> SetMarkerStyle(29);
+      FOPI -> SetMarkerSize(1);
+      mv -> GetYaxis() -> SetRangeUser(0.02,0.14);
+      mv -> Add(FOPI,"p");
+      lg -> AddEntry(FOPI,"(FOPI)Au0.25 Ut>0.8");
+    }
+  }
+
+
+  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv)); iccv++;
+  mv -> Draw("ALP");
+  lg -> Draw();
+}
+
+void Draw_MultiplicityD(TString gname) 
+{
+  LOG(INFO) << "Draw_MultiplicityD " << FairLogger::endl;  
+
+  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 500, 800); iccv++;
+  const Int_t Nx = 1;
+  const Int_t Ny = 3;
+
+  Float_t lMargin = 0.12;
+  Float_t rMargin = 0.05;
+  Float_t bMargin = 0.10;
+  Float_t tMargin = 0.03;
+  Float_t mMargin = 0.08;
+
+  CanvasPartitionTwoColumn(ccv,Nx,Ny,lMargin,rMargin,bMargin,tMargin,mMargin);
+
+  TPad *pad[Nx][Ny];
+
+  for( auto l : ROOT::TSeqI(Nx) )for( auto m : ROOT::TSeqI(Ny) ) {
+      ccv->cd(0);
+
+      TString pname = Form("pad_%i_%i",l,m);
+      pad[l][m] = (TPad*)gROOT->FindObject(pname);
+
+      if( pad[l][m] == NULL ) {
+	cout << " pad is not found " << pname << endl;
+	continue;
+      }
+      pad[l][m] -> Draw();
+      pad[l][m] -> SetFillStyle(4000);
+      pad[l][m] -> SetFrameFillStyle(4000);
+
+      Float_t xFactor = pad[0][0]->GetAbsWNDC()/pad[l][m]->GetAbsWNDC();
+      Float_t yFactor = pad[0][0]->GetAbsHNDC()/pad[l][m]->GetAbsHNDC();
+
+      auto mv = new TMultiGraph(Form("mv_%d",sqSys[l]),"");
+      auto lg = new TLegend(0.15,0.05,0.3,0.25,""); 
+      auto ltx= new TLatex(55,1.0, fsys[sqSys[m]]);
+      ltx -> SetTextSize( ltx->GetTextSize() * yFactor );
+      for( auto ipart : sqPart ) {
+	UInt_t isyss = 0;
+	TGraphErrors* grp = new TGraphErrors();
+	grp -> SetName(gname+"_"+bName[sqSys[m]]+lpid[ipart]);
+
+	for( auto igname : ROOT::TSeqI(ndata) ){
+      
+	  Double_t *vfit;
+	  if( gname == "gu_v1" ) {
+	    vfit = GetV11(igname,sqSys[m],ipart);
+	    mv -> SetTitle(";Multiplicity; v11"); 
+	  }
+	  else {
+	    vfit = GetV20(igname,sqSys[m],ipart);
+	    mv -> SetTitle(";multiplicity; v20");
+	  }
+
+	  TH1I *hmult  = (TH1I*)LoadHistogram(sqSys[m],igname,ipart,"hmult");
+	  if( hmult == NULL ) continue;
+	  Double_t mmean = hmult->GetMean();
+	  Double_t mstd  = hmult->GetStdDev();///sqrt(hmult->GetEntries());
+	  
+	  if( vfit[1] != 0. ) {
+	    grp -> SetPoint     (isyss, mmean, vfit[0] );
+	    grp -> SetPointError(isyss, mstd,  vfit[1] );
+	    isyss++;
+	  }
+	}
+
+	grp -> SetMarkerStyle(imark[ipart]);
+	grp -> SetMarkerColor(pcolor[ipart]);
+	grp -> SetLineColor(pcolor[ipart]);
+	
+	mv -> Add(grp,"p");
+	lg -> AddEntry(grp, lpid[ipart] );
+
+	if(outFile) {
+	  outFile -> cd();
+	  grp -> Write();
+	  gROOT -> cd();
+	}
+	  
+      }
+      
+      mv -> GetYaxis()->SetTitleOffset(1.0 / yFactor);
+      mv -> GetYaxis()->SetTitleSize(0.06 * yFactor);
+      mv -> GetXaxis()->SetNdivisions(505);
+
+      if( gname == "gu_v1" ) 
+	mv -> GetYaxis() -> SetRangeUser(0.,1.1);
+      else {
+	mv -> GetYaxis() -> SetRangeUser(-0.041,0.181);
+	ltx -> SetY(0.15);
+
+      }
+
+      pad[l][m] -> cd();
+      mv -> Draw("AP");
+      ltx-> Draw();
+
+      if( m == Ny-1 )
+	lg -> Draw();
+    }
+}    
+
+void Draw_Ut_Comparison(UInt_t igname, UInt_t isys)
 {
   LOG(INFO) << "Draw_Ut_Comparison " << FairLogger::endl;
-
 
   auto mv1 = new TMultiGraph(Form("mv1_%d",isys),";U_{t0}; v1");
   auto mv2 = new TMultiGraph(Form("mv2_%d",isys),";U_{t0}; v2");
   auto lg1 = new TLegend(0.64,0.15,0.8,0.5,"");
-  auto lg2 = new TLegend(0.18 ,0.15,0.4,0.5,"");
+  auto lg2 = new TLegend(0.18 ,0.15,0.4,0.55,"");
 
+  TString utv1name[] = {"g_utv1_0","g_utv1_1"};
+  TString gtitle;
 
   // --------- DATA _______
   if( 1 ) {
-    std::vector<UInt_t> sqPart  = {0,1,2,3,4};
+
     for(auto ipart: sqPart ) {
-      TString gname = "g_utv1_1" ;
-      v1Ut = (TGraphErrors*)LoadData(isys, ipart, gname);
+      TString gname = utv1name[1] ;
+      v1Ut = (TGraphErrors*)LoadData(igname, isys, ipart, gname);
       v1Ut -> SetName(gname);
 
       if( v1Ut != NULL ) {
@@ -623,6 +709,7 @@ void Draw_Ut_Comparison(UInt_t isys)
 	v1Ut -> SetLineColor(icol[ipart]);
 	v1Ut -> SetMarkerColor(icol[ipart]);
 
+	gtitle = v1Ut->GetTitle();
 	mv1 -> Add( v1Ut, "pl");
 	lg1 -> AddEntry(v1Ut,lpid[ipart]);
       }
@@ -630,7 +717,7 @@ void Draw_Ut_Comparison(UInt_t isys)
 	LOG(ERROR) << " v1ut " << gname << " is not found." << FairLogger::endl;
 
       gname = "g_utv2";
-      v2Ut = (TGraphErrors*)LoadData(isys, ipart, gname);
+      v2Ut = (TGraphErrors*)LoadData(igname,isys, ipart, gname);
       v2Ut -> SetName(gname);
 
       if( v2Ut != NULL ) {
@@ -649,15 +736,15 @@ void Draw_Ut_Comparison(UInt_t isys)
     }
   }
   //------ FOPI ____
-  if( 1 ) {
-    TString FOPI_v1Ut[][3] = { {"PRC89/Fig8_v1Ut_" , "0.25" ,"Au"}, //[0]
-			       {"PRC89/Fig8_v1Ut_" , "0.4"  ,"Au"}, //[1]
-			       {"NPA876/Fig8_v1Ut_", "0.25","Au"},  //[2]
+  if( 0 ) {
+    TString FOPI_v1Ut[][3] = { {"PRC89/Fig8_v1Ut_" , "0.25","Au"},  //[2]
+			       {"PRC89/Fig8_v1Ut_" , "0.4" ,"Au"}, //[1]
 			       {"NPA876/Fig9_v1Ut_", "0.4","Au"},   //[3]
 			       {"NPA876/Fig11_v1Ut_","0.4","Au"},   //[4]
 			       {"NPA876/Fig11_v1Ut_","0.4","Ru"},   //[5]
 			       {"NPA876/Fig11_v1Ut_","0.4","Ca"}};  //[6]
-			    
+
+
     TString FOPI_v2Ut[][3] = { {"PRC89/Fig8_v2Ut_","0.25","Au"},
 			       {"PRC89/Fig8_v2Ut_","0.4" ,"Au"}};
 
@@ -666,7 +753,7 @@ void Draw_Ut_Comparison(UInt_t isys)
 
     // system comparison
     UInt_t ipart = 1;
-    std::vector< UInt_t > sqFOPIfig1  = {3};
+    std::vector< UInt_t > sqFOPIfig1  = {1,0};
     std::vector< UInt_t > sqFOPIpart = {0,1,2,4};
     for(auto ifig: sqFOPIfig1)for(auto ipart: sqFOPIpart) {
 	v1Ut = (TGraphErrors*)LoadFOPI(ipart, FOPI_v1Ut[ifig][0]+FOPI_v1Ut[ifig][1], FOPI_v1Ut[ifig][2]);
@@ -683,7 +770,7 @@ void Draw_Ut_Comparison(UInt_t isys)
 	}
       }
   
-    std::vector< UInt_t > sqFOPIfig2  = {1};
+    std::vector< UInt_t > sqFOPIfig2  = {1,0};
     for(auto ifig: sqFOPIfig2)for(auto ipart: sqFOPIpart) {
 	v2Ut = (TGraphErrors*)LoadFOPI(ipart, FOPI_v2Ut[ifig][0]+FOPI_v2Ut[ifig][1],FOPI_v2Ut[ifig][2]);
 	if( v2Ut != NULL ) {
@@ -702,9 +789,9 @@ void Draw_Ut_Comparison(UInt_t isys)
   
 
   //-------- AMD ___
-  if( 0 ) {
+  if( 1 ) {
     for(auto ipart: sqPart ) {
-      v1Ut = (TGraphErrors*)LoadAMD(isys, ipart, "v1_ut");
+      v1Ut = (TGraphErrors*)LoadAMD(isys, ipart, "v1_ut","SLy4");
       if( v1Ut != NULL ) {
 	v1Ut -> SetMarkerStyle(25);
 	v1Ut -> SetMarkerSize(1.);
@@ -713,10 +800,21 @@ void Draw_Ut_Comparison(UInt_t isys)
 
 
 	mv1 -> Add( v1Ut, "p");
-	lg1 -> AddEntry(v1Ut,lpid[ipart]+"(AMD)");
+	lg1 -> AddEntry(v1Ut,lpid[ipart]+"(AMD)SLy4");
       }
 
-      v2Ut = (TGraphErrors*)LoadAMD(isys, ipart, "v2_ut");    
+      v1Ut = (TGraphErrors*)LoadAMD(isys, ipart, "v1_ut","SLy4_L108");
+      if( v1Ut != NULL ) {
+	v1Ut -> SetMarkerStyle(26);
+	v1Ut -> SetMarkerSize(1.);
+	v1Ut -> SetLineColor(icol[ipart]);
+	v1Ut -> SetMarkerColor(icol[ipart]);
+
+	mv1 -> Add( v1Ut, "p");
+	lg1 -> AddEntry(v1Ut,lpid[ipart]+"(AMD)SLy4_L108");
+      }
+
+      v2Ut = (TGraphErrors*)LoadAMD(isys, ipart, "v2_ut","SLy4");    
       if( v2Ut != NULL ) {
 	v2Ut -> SetMarkerStyle(25);
 	v2Ut -> SetMarkerSize(1.);
@@ -725,13 +823,24 @@ void Draw_Ut_Comparison(UInt_t isys)
 
 
 	mv2 -> Add( v2Ut, "p" );
-	lg2 -> AddEntry(v2Ut,lpid[ipart]+"(AMD)");
+	lg2 -> AddEntry(v2Ut,lpid[ipart]+"(AMD)SLy4");
+      }
+      v2Ut = (TGraphErrors*)LoadAMD(isys, ipart, "v2_ut","SLy4_L108");    
+      if( v2Ut != NULL ) {
+	v2Ut -> SetMarkerStyle(26);
+	v2Ut -> SetMarkerSize(1.);
+	v2Ut -> SetLineColor(icol[ipart]);
+	v2Ut -> SetMarkerColor(icol[ipart]);
+
+
+	mv2 -> Add( v2Ut, "p" );
+	lg2 -> AddEntry(v2Ut,lpid[ipart]+"(AMD)L108");
       }
     }
   }
   //----
 
-  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 800, 800); iccv++;
+  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 800, 1000); iccv++;
   ccv -> Divide(1, 2);
 
   ccv -> cd(1);
@@ -740,25 +849,25 @@ void Draw_Ut_Comparison(UInt_t isys)
   mv1->GetYaxis()->SetRangeUser(-0.05,0.62);
   mv1->GetXaxis()->SetNdivisions(505);
   mv1 -> Draw("AP");
-  lg1 -> Draw();
-  TLatex *v1label = new TLatex(0.3,0.62," 0.25 < b_{0} < 0.45 0.4 < y_{norm} < 0.8");
+  //  lg1 -> Draw();
+  TLatex *v1label = new TLatex(0.3,0.62,gnames[igname].config1+" "+gtitle(0,gtitle.First(";")));
   v1label -> Draw();
-  auto labelv1 = new TLatex(1.3,  0.5, fsys[isys]);
+  auto labelv1 = new TLatex(1.6,  0.55, fsys[isys]);
   labelv1 -> Draw();
 
 
   ccv -> cd(2);
   mv2->GetXaxis()->SetRangeUser( 0.,  2.2);
-  mv2->GetYaxis()->SetRangeUser(-0.32,0.01);
+  mv2->GetYaxis()->SetRangeUser(-0.32,0.02);
   mv2->GetXaxis()->SetNdivisions(505);
   mv2 -> Draw("AP");
   lg2 -> Draw();
-  TLatex *v2label = new TLatex(0.3,0.02," 0.25 < b_{0} < 0.45  -0.4 < y_{norm} < 0.4");
+  TLatex *v2label = new TLatex(0.3,0.02,gnames[igname].config1+" "+" -0.4 < y_{0} < 0.4");
   v2label -> Draw();
-  auto labelv2 = new TLatex(1.3, -0.05, fsys[isys]);
+  auto labelv2 = new TLatex(1.6, -0.02, fsys[isys]);
   labelv2 -> Draw();
 }
-void Draw_Ut_Comparison_FOPI(UInt_t isys)
+void Draw_Ut_Comparison_FOPI(UInt_t igname, UInt_t isys)
 {
   LOG(INFO) << "Draw_Ut_Comparison_FOPI " << FairLogger::endl;
 
@@ -777,7 +886,7 @@ void Draw_Ut_Comparison_FOPI(UInt_t isys)
   std::vector<UInt_t> sqPart  = {0,1};
   for(auto ipart: sqPart ) {
     TString gname = "g_utv1_1" ;
-    v1Ut = (TGraphErrors*)LoadData(isys, ipart, gname);
+    v1Ut = (TGraphErrors*)LoadData(igname, isys, ipart, gname);
     v1Ut -> SetName(gname);
 
     if( v1Ut != NULL ) {
@@ -797,7 +906,7 @@ void Draw_Ut_Comparison_FOPI(UInt_t isys)
     // system comparison
     std::vector< UInt_t> sqFOPI = {0,1,2};
     for(auto isys: sqFOPI ) {
-      v1Ut = (TGraphErrors*)LoadFOPI(ipart,"NPA876/Fig7_v1Ut_0.4", FOPI_data_sys[isys]);
+      v1Ut = (TGraphErrors*)LoadFOPI( ipart,"NPA876/Fig7_v1Ut_0.4", FOPI_data_sys[isys]);
       if( v1Ut != NULL ) {
 	v1Ut -> SetMarkerStyle(25);
 	v1Ut -> SetMarkerSize(1.);
@@ -830,10 +939,8 @@ void Draw_Ut_Comparison_FOPI(UInt_t isys)
   }
 }
 
-void Draw_Ut_Particle()
+void Draw_Ut_Particle(UInt_t igname, UInt_t isys)
 {
-  std::vector<UInt_t> sqSys   = {1,3,0};
-  std::vector<UInt_t> sqPart  = {0,1,2,3,4};
 
   LOG(INFO) << "Draw_Ut_Particle " << FairLogger::endl;
   
@@ -883,7 +990,7 @@ void Draw_Ut_Particle()
 	labelv1[j] = new TLatex(0.4,  0.4, lpid[sqPart[j]]);
        
 	for(auto isys: sqSys) {
-	  v1Ut = (TGraphErrors*)LoadData(isys, sqPart[j], "g_utv1");
+	  v1Ut = (TGraphErrors*)LoadData(igname, isys, sqPart[j], "g_utv1");
 	  if( v1Ut != NULL ) {
 	    LOG(INFO) << " v1Ut :: " << v1Ut->GetName() << " is registered." << FairLogger::endl;
 
@@ -945,7 +1052,7 @@ void Draw_Ut_Particle()
 	labelv2[j] = new TLatex(0.5,  -0.1, lpid[sqPart[j]]);
 
 	for(auto isys: sqSys) {
-	  v2Ut = (TGraphErrors*)LoadData(isys, sqPart[j], "g_utv2");
+	  v2Ut = (TGraphErrors*)LoadData(igname, isys, sqPart[j], "g_utv2");
 
 	  if( v2Ut != NULL ) {
 	    LOG(INFO) << " v2Ut " << v2Ut->GetName() << " is registered." << FairLogger::endl;
@@ -1016,7 +1123,7 @@ void Draw_Ut_Particle()
 }
 
 
-void Draw_Ut_SystemD()
+void Draw_Ut_SystemD(UInt_t igname)
 {
   LOG(INFO) << "Draw_Ut_SystemD " << FairLogger::endl;
 
@@ -1036,7 +1143,6 @@ void Draw_Ut_SystemD()
 
   TPad *pad[Nx][Ny];
 
-  std::vector<UInt_t> sqSys   = {1,3,0};
   for( auto i : ROOT::TSeqI(Nx) ) for( auto j : ROOT::TSeqI(Ny) ) {
       //  std::vector<UInt_t> vv={3};
       //  for( auto i : vv ) for( auto j : vv ) {
@@ -1056,6 +1162,7 @@ void Draw_Ut_SystemD()
 
       Float_t xFactor = pad[0][0]->GetAbsWNDC()/pad[i][j]->GetAbsWNDC();
       Float_t yFactor = pad[0][0]->GetAbsHNDC()/pad[i][j]->GetAbsHNDC();
+      TString gtitle;
 
       if( i == 0 ) {
 
@@ -1065,13 +1172,14 @@ void Draw_Ut_SystemD()
 
 	for(auto ipart: sqPart ) {
 
-	  auto v1Ut = (TGraphErrors*)LoadData(sqSys[j], ipart, "g_utv1");
+	  auto v1Ut = (TGraphErrors*)LoadData(igname, sqSys[j], ipart, "g_utv1_0");
 	  if( v1Ut != NULL ) {
-
+	    
+	    gtitle = v1Ut->GetTitle();
 	    v1Ut -> SetMarkerStyle(20);
 	    v1Ut -> SetMarkerSize(1.);
-	    v1Ut -> SetLineColor(icol[ipart]);
-	    v1Ut -> SetMarkerColor(icol[ipart]);
+	    v1Ut -> SetLineColor(pcolor[ipart]);
+	    v1Ut -> SetMarkerColor(pcolor[ipart]);
 	    if( mv1 ) {
 	      mv1 -> Add( v1Ut, "pl" );
 	      LOG(INFO) << " v1Ut :: " << v1Ut->GetName() << " is registered." << FairLogger::endl;
@@ -1115,7 +1223,7 @@ void Draw_Ut_SystemD()
 	labelv1 -> Draw();
 
 	if( j == Ny - 1 ){
-	  TLatex *v1label = new TLatex(0.4,0.65,"0.25 < b_{0} < 0.45; 0.4 < y_{norm} < 0.8");
+	  TLatex *v1label = new TLatex(0.4,0.65,gnames[igname].config1+" "+gtitle);
 	  v1label -> SetTextSize(0.08);
 	  v1label -> Draw();; 
 	}
@@ -1127,14 +1235,14 @@ void Draw_Ut_SystemD()
 	auto labelv2 = new TLatex(1.6,  0.50, fsys[sqSys[j]]);
 
 	for(auto ipart: sqPart ) {
-	  auto v2Ut = (TGraphErrors*)LoadData(sqSys[j], ipart, "g_utv2");
+	  auto v2Ut = (TGraphErrors*)LoadData(igname, sqSys[j], ipart, "g_utv2");
 
 	  if( v2Ut != NULL ) {
-
+	    gtitle = v2Ut->GetTitle();
 	    v2Ut -> SetMarkerStyle(20);
 	    v2Ut -> SetMarkerSize(1.);
-	    v2Ut -> SetLineColor(icol[ipart]);
-	    v2Ut -> SetMarkerColor(icol[ipart]);
+	    v2Ut -> SetLineColor(pcolor[ipart]);
+	    v2Ut -> SetMarkerColor(pcolor[ipart]);
 
 	    if( mv2 ) {
 	      mv2 -> Add( v2Ut, "pl" );
@@ -1173,7 +1281,6 @@ void Draw_Ut_SystemD()
 
 	// TICKS X Axis                                                                                                                             
 	mv2->GetXaxis()->SetTickLength(yFactor*0.06/xFactor);
-	
 	mv2-> Draw("AP");
       
 	labelv2 -> SetTextSize(0.07*yFactor);
@@ -1184,7 +1291,7 @@ void Draw_Ut_SystemD()
 	//mv2 -> Print();
 	
 	if( j == Ny - 1 ){
-	  TLatex *v2label = new TLatex(0.4,0.02,"0.25 < b_{0} < 0.45; -0.4 < y_{norm} < 0.4");
+	  TLatex *v2label = new TLatex(0.4,0.02,gnames[igname].config1+" "+gtitle);
 	  v2label -> SetTextSize(0.08);
 	  v2label -> Draw();; 
 	}
@@ -1193,16 +1300,12 @@ void Draw_Ut_SystemD()
     }
 }
 
-
-void Draw_v1Ut_SystemD(UInt_t ipart)
+void Draw_Ut_RatioToOne(UInt_t igname, TString gname)
 {
-  LoadData();
-  std::vector<UInt_t> sqSys   = {1,3,0};
-
   ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 512, 800); iccv++;
   gStyle->SetOptTitle(0);
 
-  const Int_t Ny = 4;
+  const Int_t Ny = 2;
 
   Float_t lMargin = 0.02;
   Float_t rMargin = 0.05;
@@ -1212,431 +1315,425 @@ void Draw_v1Ut_SystemD(UInt_t ipart)
 
   TPad *pad[Ny];
 
-  ccv->Divide((Int_t)sqv1sel.size(), 1);
-  //  ccv->Divide(6, 1);
-
-  TLegend     *lgv1 = new TLegend(0.5, 0.18, 0.85, 0.31);
+  TLegend   *lgv = new TLegend(0.6, 0.05, 0.9, 0.3);
+  TString gtitle;
 
   UInt_t ii = 0;
-  for(auto i: sqv1sel ) {
-    auto mv1Ut = new TMultiGraph(Form("mv1Ut_%d",i) ,";Ut ; v1");
+  std::vector<UInt_t> sqRSys = {3,0};
+  for(auto isys : sqRSys) {
 
-    // gROOT->ls();
-      
-    for(auto k:sqSys) {
-      TString gname = (TString)Form("gUt_v1%d",i) +  "_" + rsys[k] + "_" + lpid[ipart];
-      v1Ut = (TGraphErrors*)gROOT->Get(gname);
-      //      v1Ut -> SetName(gname+"cp");
+    auto mvUt = new TMultiGraph(Form("mvUt_%d",isys),"");
+    auto tlabel = new TLatex(1.2,  1.4, fsys[isys]); 
 
-      if( v1Ut != NULL ) {
-	cout << " v1ut " << gname << " is registered." << endl;
+    std::vector<UInt_t> sqPart = {0, 1, 2, 3, 4};
+    for(auto ipart: sqPart ) {
 
-	v1Ut -> SetMarkerStyle(20);
-	v1Ut -> SetMarkerSize(1.);
-	v1Ut -> SetLineColor(icol[k]);
-	v1Ut -> SetMarkerColor(icol[k]);
+    TGraphErrors *vUt = (TGraphErrors*)LoadData(igname,1,ipart,gname);
+    if( vUt != NULL ) {
+      cout << " vut " << gname << " is registered." << endl;
 
-	mv1Ut -> Add( v1Ut, "pl" );
-	if( ii == 0)
-	  lgv1  -> AddEntry( v1Ut,  rsys[k]+"-"+lpid[ipart] , "lp");
+      std::vector<Double_t> dx, dy, dye;
+      for(UInt_t i = 0; i < vUt->GetN(); i++){
+	Double_t x, y, ye;
+	vUt -> GetPoint(i,x,y);
+	ye  =  vUt->GetErrorY(i);
+	dx.push_back(x);
+	dy.push_back(y);
+	dye.push_back(ye/y);
       }
-      else 
-	cout << " v1Ut " << gname << " not be found. " << endl;
-    }
-    ccv->cd(0);
-    TString pname = Form("pad_%i",ii);
-    pad[ii] = (TPad*)gROOT->FindObject(pname);
-    pad[ii] -> Draw();
-    pad[ii] -> SetFillStyle(4000);
-    pad[ii] -> SetFrameFillStyle(4000);
-    pad[ii] -> cd();
 
-    mv1Ut -> SetTitle(v1Ut->GetTitle());
-    mv1Ut -> Draw("AP");
-    if( ii == 0)
-      lgv1  -> Draw();
+	TGraphErrors *vUtR = (TGraphErrors*)LoadData(igname,isys,ipart,gname);    
+	if( vUtR == NULL ) {
+	  LOG(ERROR) << gname << " is not found. " << FairLogger::endl;
+	  continue;
+	}
 
-    ii++;
-  }
-}
 
-void Draw_v2Ut_SystemD(UInt_t ipart)
-{
-  std::vector<UInt_t> sqSys   = {1,3,0};
+	for(UInt_t i = 0; i < vUtR->GetN(); i++){
+	  Double_t nx, ny, ye;
+	  vUtR -> GetPoint(i, nx, ny);
+	  ye = vUtR->GetErrorY(i);
 
-  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 512, 800); iccv++;
-  gStyle->SetOptTitle(0);
+	  if( dy.at(i) != 0 ) {
+	    Double_t ry = ny/dy.at(i);
+	    Double_t nye = sqrt( pow(ry,2) * (pow(ye/ny,2) + pow(dye.at(i),2)) );
+	    vUtR -> SetPoint(i, nx, ry);
+	    vUtR -> SetPointError(i, 0., nye);
+	  }
+	  else
+	    vUtR -> SetPoint(i, ny, 0.);
+	}
 
-  const Int_t Ny = 4;
+	gtitle = vUt->GetTitle();
+	vUtR -> SetMarkerStyle(20);
+	vUtR -> SetMarkerSize(1.);
+	vUtR -> SetLineColor(icol[ipart]);
+	vUtR -> SetMarkerColor(icol[ipart]);
 
-  Float_t lMargin = 0.02;
-  Float_t rMargin = 0.05;
-  Float_t bMargin = 0.10;
-  Float_t tMargin = 0.05;
-  CanvasPartitionY(ccv,Ny,lMargin,rMargin,bMargin,tMargin);
-
-  TPad *pad[Ny];
-
-  ccv->Divide((Int_t)sqv2sel.size(), 1);
-  //  ccv->Divide(6, 1);
-
-  TLegend  *lgv2 = new TLegend(0.8, 0.75, 0.9, 0.98);
-
-  UInt_t ii = 0;
-  for(auto i: sqv2sel ) {
-    auto mv2Ut = new TMultiGraph(Form("mv2Ut_%d",i) ,";Ut ; v2");
-
-    // gROOT->ls();
-      
-    for(auto k:sqSys) {
-      TString gname = (TString)Form("gUt_v2%d",i) +  "_" + rsys[k] + "_" + lpid[ipart];
-      v2Ut = (TGraphErrors*)gROOT->Get(gname);
-      //      v2Ut -> SetName(gname+"cp");
-
-      if( v2Ut != NULL ) {
-	cout << " v2ut " << gname << " is registered." << endl;
-
-	v2Ut -> SetMarkerStyle(20);
-	v2Ut -> SetMarkerSize(1.);
-	v2Ut -> SetLineColor(icol[k]);
-	v2Ut -> SetMarkerColor(icol[k]);
-
-	mv2Ut -> Add( v2Ut, "pl" );
-	if( ii == 0)
-	  lgv2  -> AddEntry( v2Ut,  rsys[k]+"-"+lpid[ipart] , "lp");
+	mvUt -> Add( vUtR, "pl" );
+	if( ii == Ny - 1 )
+	  lgv  -> AddEntry( vUtR, lpid[ipart]);
       }
-      else 
-	cout << " v2Ut " << gname << " not be found. " << endl;
     }
-    ccv->cd(0);
-    TString pname = Form("pad_%i",ii);
-    pad[ii] = (TPad*)gROOT->FindObject(pname);
-    pad[ii] -> Draw();
-    pad[ii] -> SetFillStyle(4000);
-    pad[ii] -> SetFrameFillStyle(4000);
-    pad[ii] -> cd();
-
-    mv2Ut -> SetTitle(v2Ut->GetTitle());
-    mv2Ut -> Draw("AP");
-    TLatex *Lv1 = new TLatex(-0.25,0.2,(TString)v2Ut->GetTitle() );
-    cout << v2Ut->GetTitle() << endl;
-    Lv1->Draw();
-
-    if( ii == 0)
-      lgv2  -> Draw();
-
-    ii++;
-  }
-
-}
-
-
-
-void Draw_v2SystemD_one()
-{
-  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 700, 500); iccv++;
-  auto gmv2n = new TMultiGraph("gmv2n", ";"+xlabel+"; v2n");
-  auto lmv2n = new TLegend(0.35,0.13,0.7,0.33,"");
-
-  gmv2n -> Add( g_v2n[0],  "p");
-  gmv2n -> Add( g_v2n[1],  "p");
-  gmv2n -> Add( g_v2n[2],  "p");
-  gmv2n -> Add( g_v2n[3],  "p");
-
-  lmv2n -> AddEntry( g_v2n[0], lpid[0], "p");
-  lmv2n -> AddEntry( g_v2n[1], lpid[1], "p");
-  lmv2n -> AddEntry( g_v2n[2], lpid[2], "p");
-  lmv2n -> AddEntry( g_v2n[3], lpid[3], "p");
-
-  gmv2n -> Draw("ALP");
-  lmv2n -> Draw();
-  
-}
-void Draw_v2SystemD()
-{
-  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 500, 800); iccv++;
-
-  Double_t BYs = 0.1;            // Bottom Y space
-  Double_t BYm = 0.1;            // Bottom Y mergin
-  Double_t TYm = 0.01;            // Top Y mergin
-
-  Double_t Ny  = 4;               // Number of pads along Y  
-  Double_t H   = (1.0 - (TYm+BYm+BYs))/Ny; // pad height
-  cout << " H= " << H << endl;
-
-  Double_t Yl = BYs;  Double_t Yu = Yl + H;
-  cout << " low " << Yl << " up " << Yu << endl;
-  TPad *p1 = new TPad("p1", "p1", 0., Yl, 1.,  Yu, 0, 0, 0);
-  p1->SetTopMargin(0);
-  p1->SetBottomMargin(BYm);
-  p1->Draw();
-
-
-  Yl = Yu;  Yu = Yl + H;
-  cout << " low " << Yl << " up " << Yu << endl;
-  TPad *p2 = new TPad("p2", "p2", 0., Yl, 1., Yu, 0, 0, 0);
-  p2->SetTopMargin(0);
-  p2->SetBottomMargin(0);
-  p2->Draw();
-
-  Yl = Yu;  Yu = Yl + H;
-  cout << " low " << Yl << " up " << Yu << endl;
-  TPad *p3 = new TPad("p3", "p3", 0., Yl, 1., Yu, 0, 0, 0);  
-  p3->SetTopMargin(0);
-  p3->SetBottomMargin(0);
-  p3->Draw();
-
-  Yl = Yu;  Yu = Yl +  H;
-  cout << " low " << Yl << " up " << Yu << endl;
-  TPad *p4 = new TPad("p4", "p4", 0., Yl, 1., Yu, 0, 0, 0);  
-  p4->SetTopMargin(TYm);
-  p4->SetBottomMargin(0);
-  p4->Draw();
-
-
-  //  gStyle->SetLabelSize(0.08);
-  g_v2max[0]->SetTitle(";"+xlabel+";"); 
-  g_v2max[3]->SetTitle(";; v_{20} ");
-
-  p1->cd(); 
-  g_v2max[0] -> GetYaxis() -> SetLabelOffset(0.01);
-  g_v2max[0] -> GetYaxis() -> SetLabelSize(0.08);
-  g_v2max[0] -> GetXaxis() -> SetLabelSize(0.1);
-  g_v2max[0] -> GetXaxis() -> SetTitleOffset(1.);
-  g_v2max[0] -> GetXaxis() -> SetTitleSize(1);
-  //  g_v2max[0] -> GetXaxis() -> SetTitleOffSet(0.5);
-  g_v2max[0] -> Draw("AP");  
-  plabel.DrawLatexNDC(0.2, 0.9, fpid[0]);
-
-
-  p2->cd();
-  g_v2max[1] -> GetYaxis() -> SetLabelOffset(0.01);
-  g_v2max[1] -> GetYaxis() -> SetLabelSize(0.1);
-  g_v2max[1] -> Draw("AP");  
-  plabel.DrawLatexNDC(0.2,0.9,fpid[1]);
-
-  p3->cd(); 
-  g_v2max[2] -> GetYaxis() -> SetLabelOffset(0.01);
-  g_v2max[2] -> GetYaxis() -> SetLabelSize(0.1);
-  g_v2max[2] -> Draw("AP");  
-  plabel.DrawLatexNDC(0.2,0.9,fpid[2]);
-
-  p4->cd(); 
-  g_v2max[3] -> GetYaxis() -> SetTitleOffset(1.);
-  g_v2max[3] -> GetYaxis() -> SetTitleSize(0.1);
-  g_v2max[3] -> GetYaxis() -> SetLabelOffset(0.01);
-  g_v2max[3] -> GetYaxis() -> SetLabelSize(0.1);
-  g_v2max[3] -> Draw("AP");  
-  plabel.DrawLatexNDC(0.2,0.9,fpid[3]);
-
-}
-
-void Draw_v2nSystemD()
-{
-  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 500, 800); iccv++;
-
-  Double_t BYs = 0.1;            // Bottom Y space
-  Double_t BYm = 0.1;            // Bottom Y mergin
-  Double_t TYm = 0.01;            // Top Y mergin
-
-  Double_t Ny  = 4;               // Number of pads along Y  
-  Double_t H   = (1.0 - (TYm+BYm+BYs))/Ny; // pad height
-  cout << " H= " << H << endl;
-
-  Double_t Yl = BYs;  Double_t Yu = Yl + H;
-  cout << " low " << Yl << " up " << Yu << endl;
-  TPad *p1 = new TPad("p1", "p1", 0., Yl, 1.,  Yu, 0, 0, 0);
-  p1->SetTopMargin(0);
-  p1->SetBottomMargin(BYm);
-  p1->Draw();
-
-
-  Yl = Yu;  Yu = Yl + H;
-  cout << " low " << Yl << " up " << Yu << endl;
-  TPad *p2 = new TPad("p2", "p2", 0., Yl, 1., Yu, 0, 0, 0);
-  p2->SetTopMargin(0);
-  p2->SetBottomMargin(0);
-  p2->Draw();
-
-  Yl = Yu;  Yu = Yl + H;
-  cout << " low " << Yl << " up " << Yu << endl;
-  TPad *p3 = new TPad("p3", "p3", 0., Yl, 1., Yu, 0, 0, 0);  
-  p3->SetTopMargin(0);
-  p3->SetBottomMargin(0);
-  p3->Draw();
-
-  Yl = Yu;  Yu = Yl +  H;
-  cout << " low " << Yl << " up " << Yu << endl;
-  TPad *p4 = new TPad("p4", "p4", 0., Yl, 1., Yu, 0, 0, 0);  
-  p4->SetTopMargin(TYm);
-  p4->SetBottomMargin(0);
-  p4->Draw();
-
-
-  //  gStyle->SetLabelSize(0.08);
-  g_v2n[0]->SetTitle(";"+xlabel+";"); 
-  g_v2n[3]->SetTitle(";; v_{21} ");
-
-  p1->cd(); 
-  g_v2n[0] -> GetYaxis() -> SetLabelOffset(0.01);
-  g_v2n[0] -> GetYaxis() -> SetLabelSize(0.08);
-  g_v2n[0] -> GetXaxis() -> SetLabelSize(0.1);
-  g_v2n[0] -> GetXaxis() -> SetTitleOffset(1.);
-  g_v2n[0] -> GetXaxis() -> SetTitleSize(1);
-  //  g_v2n[0] -> GetXaxis() -> SetTitleOffSet(0.5);
-  g_v2n[0] -> Draw("AP");  
-  plabel.DrawLatexNDC(0.2, 0.9, fpid[0]);
-
-
-  p2->cd();
-  g_v2n[1] -> GetYaxis() -> SetLabelOffset(0.01);
-  g_v2n[1] -> GetYaxis() -> SetLabelSize(0.1);
-  g_v2n[1] -> Draw("AP");  
-  plabel.DrawLatexNDC(0.2,0.9,fpid[1]);
-
-  p3->cd(); 
-  g_v2n[2] -> GetYaxis() -> SetLabelOffset(0.01);
-  g_v2n[2] -> GetYaxis() -> SetLabelSize(0.1);
-  g_v2n[2] -> Draw("AP");  
-  plabel.DrawLatexNDC(0.2,0.9,fpid[2]);
-
-  p4->cd(); 
-  g_v2n[3] -> GetYaxis() -> SetTitleOffset(1.);
-  g_v2n[3] -> GetYaxis() -> SetTitleSize(0.1);
-  g_v2n[3] -> GetYaxis() -> SetLabelOffset(0.01);
-  g_v2n[3] -> GetYaxis() -> SetLabelSize(0.1);
-  g_v2n[3] -> Draw("AP");  
-  plabel.DrawLatexNDC(0.2,0.9,fpid[3]);
-
-}
-
-
-void Draw_v1Ratio()
-{
-  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 500, 800); iccv++;
-
-  Double_t BYs = 0.1;            // Bottom Y space
-  Double_t TYm = 0.05;            // Top Y mergin
-  Double_t BYm = 0.1;            // Bottom Y mergin
-  Double_t Ny  = 3;               // Number of pads along Y  
-  Double_t H   = (1.0 - (TYm+BYm+BYs))/Ny; // pad height
-
-  Double_t Yl = BYs;   Double_t Yu = Yl + H;
-  cout << " low " << Yl << " up " << Yu << endl;
-  TPad *pp1 = new TPad("pp1", "pp1", 0., Yl, 1.,  Yu, 0, 0, 0);
-  pp1->SetTopMargin(0);
-  pp1->Draw();
-
-  Yl = Yu;  Yu = Yl + H;
-  cout << " low " << Yl << " up " << Yu << endl;
-  TPad *pp2 = new TPad("pp2", "pp2", 0., Yl, 1., Yu, 0, 0, 0);
-  pp2->SetTopMargin(0);
-  pp2->SetBottomMargin(0);
-  pp2->Draw();
-
-  Yl = Yu;  Yu = Yl + H ;
-  cout << " low " << Yl << " up " << Yu << endl;
-  TPad *pp3 = new TPad("pp3", "pp3", 0., Yl, 1., Yu, 0, 0, 0);  
-  pp3->SetBottomMargin(0);
-  pp3->Draw();
-
-  plabel.SetTextSize(0.1);
-
-  g_v1pslp[1]->SetTitle(";"+xlabel+";"); 
-  g_v1pslp[3]->SetTitle(";; v11/ v11_{p} ");
-
-  pp1->cd(); 
-  plabel.DrawLatexNDC(0.2,0.9,fpid[1]);
-  g_v1pslp[1] -> GetYaxis() -> SetLabelSize(0.05);
-  g_v1pslp[1] -> GetXaxis() -> SetLabelSize(0.05);
-  g_v1pslp[1] -> Draw("AP");  
-
-  pp2->cd();
-  plabel.DrawLatexNDC(0.2,0.9,fpid[3]);
-  g_v1pslp[2] -> GetYaxis() -> SetLabelSize(0.05);
-  g_v1pslp[2] -> Draw("AP");  
-
-  pp3->cd(); 
-  plabel.DrawLatexNDC(0.2,0.9,fpid[4]);
-  g_v1pslp[3] -> GetYaxis() -> SetLabelSize(0.05);
-  g_v1pslp[3] -> Draw("AP");  
-  //---
-} 
-
-
-void Draw_v1v2SystemD_fit()
-{
-  LoadData();
-
-  plabel.SetTextAlign(13);
-  plabel.SetTextSize(0.08);
-
-  for(UInt_t i = 0; i < 4; i++ ){
-
-    if( mrv1[i]->GetListOfGraphs() != NULL ) {
-      ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv)); iccv++;
-
-      mrv1[i]->SetTitle();
-
-      mrv1[i]->GetXaxis()->SetRangeUser(-0.8, 1.2);
-      mrv1[i]->GetYaxis()->SetRangeUser(-0.5, 0.6);
-      mrv1[i]->Draw("ALP");
-      lrv1[i]->Draw();
-    }
-
-    auto aLineX1 = new TLine( mrv1[i]->GetXaxis()->GetXmin(), 0.,
-			      mrv1[i]->GetXaxis()->GetXmax(), 0.);
-    auto aLineY1 = new TLine( 0., mrv1[i]->GetYaxis()->GetXmin(), 
-			      0., mrv1[i]->GetYaxis()->GetXmax());
-
-    aLineX1->SetLineColor(1);
-    aLineX1->SetLineStyle(3);
-    aLineX1->Draw();
     
-    aLineY1->SetLineColor(1);
-    aLineY1->SetLineStyle(3);
-    aLineY1->Draw();
-  }
+    auto vUt = new TGraphErrors();
+    vUt -> SetPoint( 0, 0. , 0.);
+    vUt -> SetPoint( 1, 2.2, 0.);
+    vUt -> SetLineColor(10);
+    mvUt-> Add(vUt,"");
 
+    ccv->cd(0);
+    TString pname = Form("pad_%i",ii);
+    pad[ii] = (TPad*)gROOT->FindObject(pname);
+    pad[ii] -> Draw();
+    pad[ii] -> SetFillStyle(4000);
+    pad[ii] -> SetFrameFillStyle(4000);
+    pad[ii] -> cd();
+    Float_t xFactor = pad[0]->GetAbsWNDC()/pad[ii]->GetAbsWNDC();
+    Float_t yFactor = pad[0]->GetAbsHNDC()/pad[ii]->GetAbsHNDC();
 
+    mvUt -> SetTitle( gtitle );
+    mvUt -> GetYaxis()->SetTitle("R(v1)");
+    mvUt ->GetYaxis()->SetLabelFont(43);
+    mvUt ->GetYaxis()->SetLabelSize(16);
+    mvUt ->GetYaxis()->SetLabelOffset(0.02);
+    mvUt ->GetYaxis()->SetTitleFont(43);
+    mvUt ->GetYaxis()->SetTitleSize(18);
+    mvUt ->GetYaxis()->SetTitleOffset(3.5);
+    mvUt ->GetYaxis()->CenterTitle();
+    mvUt ->GetYaxis()->SetNdivisions(505);
+    mvUt ->GetYaxis()->SetTickLength(xFactor*0.04/yFactor);
+    
+    mvUt ->GetXaxis()->SetLabelFont(43);
+    mvUt ->GetXaxis()->SetLabelSize(16);
+    mvUt ->GetXaxis()->SetLabelOffset(0.02);
+    mvUt ->GetXaxis()->SetTitleFont(43);
+    mvUt ->GetXaxis()->SetTitleSize(18);
+    mvUt ->GetXaxis()->SetTitleOffset(4);
+    mvUt ->GetXaxis()->CenterTitle();
+    mvUt ->GetXaxis()->SetTickLength(xFactor*0.04/yFactor);
+    mvUt ->GetXaxis()->SetNdivisions(505);
 
-  for(UInt_t i = 0; i <4; i++ ){
-
-    if( mrv2[i]->GetListOfGraphs() != NULL ) {
-      ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv)); iccv++;
-
-      mrv2[i]->GetYaxis()->SetRangeUser(-0.13, 0.02);
-      mrv2[i]->Draw("ALP");
-      lrv2[i]->Draw();
+    Double_t yrange[2][2] = {{0.5,1.5}, {0.5,1.5}};
+    UInt_t iyrange = 0;
+    if( gname == "g_utv2"){
+      iyrange = 1;
     }
+
+    mvUt ->GetYaxis()->SetRangeUser(yrange[iyrange][0], yrange[iyrange][1]);
+      // lgv -> SetX1(1.8);
+      // lgv -> SetX2(2.0);
+      // lgv -> SetY1(-0.05);
+      // lgv -> SetY2(-0.01);
+
+    mvUt -> Draw("AP");
+    if(ii == Ny-1) lgv  -> Draw();
+
+    tlabel -> SetTextSize(0.07*yFactor);
+    tlabel -> Draw();
+
+    if( ii == Ny - 1 ){
+      lgv  -> Draw();
+
+      TLatex *vlabel = new TLatex(0.3,1.55,gnames[igname].config1+" "+gtitle);
+      vlabel -> SetTextSize(0.08);
+      vlabel -> Draw();; 
+    }
+
+    ii++;
   }
 }
 
-void Draw_v1v2SystemD()
+void Draw_Ut_Ratio(UInt_t igname, TString gname)
 {
-  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv)); iccv++;
-  g_v2sysD -> Draw("ALP");
-  l_v2sysD -> Draw();
+  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 512, 800); iccv++;
+  gStyle->SetOptTitle(0);
+
+  const Int_t Ny = 5;
+
+  Float_t lMargin = 0.02;
+  Float_t rMargin = 0.05;
+  Float_t bMargin = 0.10;
+  Float_t tMargin = 0.05;
+  CanvasPartitionY(ccv,Ny,lMargin,rMargin,bMargin,tMargin);
+
+  TPad *pad[Ny];
+
+  TLegend   *lgv = new TLegend(0.8, 0.1, 0.9, 0.3);
+  TString gtitle;
+
+  UInt_t ii = 0;
+  std::vector<UInt_t> sqPart = {0, 1, 2, 3, 4};
+  for(auto ipart: sqPart ) {
+
+    auto mvUt = new TMultiGraph(Form("mvUt_%d",ipart),"");
+    auto tlabel = new TLatex(1.8,  0.5, lpid[ipart]); 
+
+    TGraphErrors *vUt = (TGraphErrors*)LoadData(igname,1,ipart,gname);
+    if( vUt != NULL ) {
+      cout << " vut " << gname << " is registered." << endl;
+
+      std::vector<Double_t> dx, dy, dye;
+      for(UInt_t i = 0; i < vUt->GetN(); i++){
+	Double_t x, y, ye;
+	vUt -> GetPoint(i,x,y);
+	ye  =  vUt->GetErrorY(i);
+	dx.push_back(x);
+	dy.push_back(y);
+	dye.push_back(ye/y);
+      }
+
+      std::vector<UInt_t> sqRSys = {0,3};
+      for(auto isys : sqRSys) {
+
+	TGraphErrors *vUtR = (TGraphErrors*)LoadData(igname,isys,ipart,gname);    
+	if( vUtR == NULL ) {
+	  LOG(ERROR) << gname << " is not found. " << FairLogger::endl;
+	  continue;
+	}
 
 
-  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv)); iccv++;
-  g_v1psysD -> Draw("ALP");
-  l_v1psysD -> Draw();
+	for(UInt_t i = 0; i < vUtR->GetN(); i++){
+	  Double_t nx, ny, ye;
+	  vUtR -> GetPoint(i, nx, ny);
+	  ye = vUtR->GetErrorY(i);
 
+	  if( dy.at(i) != 0 ) {
+	    Double_t ry = ny/dy.at(i);
+	    Double_t nye = sqrt( pow(ry,2) * (pow(ye/ny,2) + pow(dye.at(i),2)) );
+	    vUtR -> SetPoint(i, nx, ry);
+	    vUtR -> SetPointError(i, 0., nye);
+	  }
+	  else
+	    vUtR -> SetPoint(i, ny, 0.);
+	}
 
-  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv)); iccv++;
-  g_v1sysD -> Draw("ALP");
-  l_v1sysD -> Draw();
-  //<<<---
+	gtitle = vUt->GetTitle();
+	vUtR -> SetMarkerStyle(20);
+	vUtR -> SetMarkerSize(1.);
+	vUtR -> SetLineColor(icol[isys]);
+	vUtR -> SetMarkerColor(icol[isys]);
+
+	mvUt -> Add( vUtR, "pl" );
+
+      }
+    }
+    
+    vUt = new TGraphErrors();
+    vUt -> SetPoint( 0, 0. , 0.);
+    vUt -> SetPoint( 1, 2.2, 0.);
+    vUt -> SetLineColor(10);
+    mvUt-> Add(vUt,"");
+
+    ccv->cd(0);
+    TString pname = Form("pad_%i",ii);
+    pad[ii] = (TPad*)gROOT->FindObject(pname);
+    pad[ii] -> Draw();
+    pad[ii] -> SetFillStyle(4000);
+    pad[ii] -> SetFrameFillStyle(4000);
+    pad[ii] -> cd();
+    Float_t xFactor = pad[0]->GetAbsWNDC()/pad[ii]->GetAbsWNDC();
+    Float_t yFactor = pad[0]->GetAbsHNDC()/pad[ii]->GetAbsHNDC();
+
+    mvUt -> SetTitle( gtitle );
+    mvUt ->GetYaxis()->SetLabelFont(43);
+    mvUt ->GetYaxis()->SetLabelSize(16);
+    mvUt ->GetYaxis()->SetLabelOffset(0.02);
+    mvUt ->GetYaxis()->SetTitleFont(43);
+    mvUt ->GetYaxis()->SetTitleSize(18);
+    mvUt ->GetYaxis()->SetTitleOffset(3.5);
+    mvUt ->GetYaxis()->CenterTitle();
+    mvUt ->GetYaxis()->SetNdivisions(505);
+    mvUt ->GetYaxis()->SetTickLength(xFactor*0.04/yFactor);
+    
+    mvUt ->GetXaxis()->SetLabelFont(43);
+    mvUt ->GetXaxis()->SetLabelSize(16);
+    mvUt ->GetXaxis()->SetLabelOffset(0.02);
+    mvUt ->GetXaxis()->SetTitleFont(43);
+    mvUt ->GetXaxis()->SetTitleSize(18);
+    mvUt ->GetXaxis()->SetTitleOffset(4);
+    mvUt ->GetXaxis()->CenterTitle();
+    mvUt ->GetXaxis()->SetTickLength(xFactor*0.04/yFactor);
+    mvUt ->GetXaxis()->SetNdivisions(505);
+
+    Double_t yrange[2][2] = {{0.5,1.5}, {0.5,1.5}};
+    UInt_t iyrange = 0;
+    if( gname == "g_utv2"){
+      iyrange = 1;
+    }
+
+    mvUt ->GetYaxis()->SetRangeUser(yrange[iyrange][0], yrange[iyrange][1]);
+      lgv -> SetX1(1.8);
+      lgv -> SetX2(2.0);
+      lgv -> SetY1(-0.05);
+      lgv -> SetY2(-0.01);
+
+    mvUt -> Draw("AP");
+
+    tlabel -> SetTextSize(0.07*yFactor);
+    tlabel -> Draw();
+
+    if( ii == Ny - 1 ){
+      lgv  -> Draw();
+
+      TLatex *vlabel = new TLatex(0.4,0.65,gnames[igname].config1+" "+gtitle);
+      vlabel -> SetTextSize(0.08);
+      vlabel -> Draw();; 
+    }
+
+    ii++;
+  }
 }
 
-void Draw_Indiv_v1SystemD_Three() 
+void Draw_Ut_ParticleSystemD(UInt_t igname, TString gname)
 {
-  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 512, 640); iccv++;
+
+  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 512, 800); iccv++;
+  gStyle->SetOptTitle(0);
+
+  const Int_t Ny = 5;
+
+  Float_t lMargin = 0.02;
+  Float_t rMargin = 0.05;
+  Float_t bMargin = 0.10;
+  Float_t tMargin = 0.05;
+  CanvasPartitionY(ccv,Ny,lMargin,rMargin,bMargin,tMargin);
+
+  TPad *pad[Ny];
+
+  TLegend   *lgv = new TLegend(0.8, 0.1, 0.9, 0.3);
+  TString gtitle;
+
+  UInt_t ii = 0;
+  std::vector<UInt_t> sqPart = {0, 1, 2, 3, 4};
+  for(auto ipart: sqPart ) {
+    auto mvUt = new TMultiGraph(Form("mvUt_%d",ipart),"");
+    auto tlabel = new TLatex(1.8,  0.5, lpid[ipart]); 
+    TGraphErrors *vUt = NULL;
+    
+    for(auto isys : sqSys) {
+      vUt = (TGraphErrors*)LoadData(igname,isys,ipart,gname);
+
+      if( vUt != NULL ) {
+	cout << " vut " << gname << " is registered." << endl;
+
+	gtitle = vUt->GetTitle();
+	vUt -> SetMarkerStyle(20);
+	vUt -> SetMarkerSize(1.);
+	vUt -> SetLineColor(icol[isys]);
+	vUt -> SetMarkerColor(icol[isys]);
+
+	mvUt -> Add( vUt, "pl" );
+	if( ii == 0)
+	  lgv  -> AddEntry( vUt,  fsys[isys], "lp");
+      }
+      else 
+	cout << " vUt " << gname << " not be found. " << endl;
+    }
+    
+    vUt = new TGraphErrors();
+    vUt -> SetPoint( 0, 0. , 0.);
+    vUt -> SetPoint( 1, 2.2, 0.);
+    vUt -> SetLineColor(10);
+    mvUt -> Add(vUt,"");
+
+    ccv->cd(0);
+    TString pname = Form("pad_%i",ii);
+    pad[ii] = (TPad*)gROOT->FindObject(pname);
+    pad[ii] -> Draw();
+    pad[ii] -> SetFillStyle(4000);
+    pad[ii] -> SetFrameFillStyle(4000);
+    pad[ii] -> cd();
+    Float_t xFactor = pad[0]->GetAbsWNDC()/pad[ii]->GetAbsWNDC();
+    Float_t yFactor = pad[0]->GetAbsHNDC()/pad[ii]->GetAbsHNDC();
+
+    mvUt -> SetTitle( gtitle );
+    mvUt ->GetYaxis()->SetLabelFont(43);
+    mvUt ->GetYaxis()->SetLabelSize(16);
+    mvUt ->GetYaxis()->SetLabelOffset(0.02);
+    mvUt ->GetYaxis()->SetTitleFont(43);
+    mvUt ->GetYaxis()->SetTitleSize(18);
+    mvUt ->GetYaxis()->SetTitleOffset(3.5);
+    mvUt ->GetYaxis()->CenterTitle();
+    mvUt ->GetYaxis()->SetNdivisions(505);
+    mvUt ->GetYaxis()->SetTickLength(xFactor*0.04/yFactor);
+    
+    mvUt ->GetXaxis()->SetLabelFont(43);
+    mvUt ->GetXaxis()->SetLabelSize(16);
+    mvUt ->GetXaxis()->SetLabelOffset(0.02);
+    mvUt ->GetXaxis()->SetTitleFont(43);
+    mvUt ->GetXaxis()->SetTitleSize(18);
+    mvUt ->GetXaxis()->SetTitleOffset(4);
+    mvUt ->GetXaxis()->CenterTitle();
+    mvUt ->GetXaxis()->SetTickLength(xFactor*0.04/yFactor);
+    mvUt ->GetXaxis()->SetNdivisions(505);
+
+    Double_t yrange[2][2] = {{-0.05,0.62}, {-0.26,0.05}};
+    UInt_t iyrange = 0;
+    if( gname == "g_utv2"){
+      iyrange = 1;
+    }
+
+    mvUt ->GetYaxis()->SetRangeUser(yrange[iyrange][0], yrange[iyrange][1]);
+      lgv -> SetX1(1.8);
+      lgv -> SetX2(2.0);
+      lgv -> SetY1(-0.05);
+      lgv -> SetY2(-0.01);
+
+    mvUt -> Draw("AP");
+
+    tlabel -> SetTextSize(0.07*yFactor);
+    tlabel -> Draw();
+
+    if( ii == Ny - 1 ){
+      lgv  -> Draw();
+
+      TLatex *vlabel = new TLatex(0.4,0.65,gnames[igname].config1+" "+gtitle);
+      vlabel -> SetTextSize(0.08);
+      vlabel -> Draw();; 
+    }
+
+    ii++;
+  }
+}
+
+
+void Draw_SystemD(UInt_t igname, TString gname)
+{
+  
+  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv)); iccv++;
+  auto mv = new TMultiGraph();
+  auto lg = new TLegend(0.3,0.6,0.6,0.9,"");  
+
+  for(auto j: sqPart ) {
+    TGraphErrors* gv = GetSDGraph(gname,igname,j);
+    if( gv == NULL ) continue;
+
+    gv -> SetMarkerStyle(imark[j]);
+    gv -> SetMarkerColor(pcolor[j]);
+    gv -> SetLineColor(pcolor[j]);
+
+    mv -> Add(gv);
+    mv -> SetTitle(gv -> GetTitle() );
+    lg -> AddEntry(gv, lpid[j]);
+  }
+
+
+  mv -> Draw("ALP");
+  //  lg -> Draw();
+}
+
+
+
+
+void Draw_Indiv_v1SystemD(UInt_t igname)
+{
+
+  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 512, 840); iccv++;
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
 
-  const Int_t Ny = 4;
+  const Int_t Ny = sqPart.size();
 
   Float_t lMargin = 0.02;
   Float_t rMargin = 0.05;
@@ -1661,65 +1758,52 @@ void Draw_Indiv_v1SystemD_Three()
     Float_t xFactor = pad[0]->GetAbsWNDC()/pad[j]->GetAbsWNDC();
     Float_t yFactor = pad[0]->GetAbsHNDC()/pad[j]->GetAbsHNDC();
 
-
-    // if( j == 2 ) {
-    // 	auto mg_T3He = new TMultiGraph("mg_T3He",";;v_{11}");
-    // 	auto l_T3He  = new TLegend(0.2,0.7,0.4,0.9,"");
-    // 	mg_T3He->Add(g_v1slp[2], "AP");
-    // 	mg_T3He->Add(g_v1slp[3], "AP");
-    // 	l_T3He->AddEntry(g_v1slp[2],"Triton");
-    // 	l_T3He->AddEntry(g_v1slp[3],"^{3}He");
-
-    // 	mg_T3He -> GetXaxis() -> SetLimits(g_v1slp[0]->GetXaxis()->GetXmin(), g_v1slp[0]->GetXaxis()->GetXmax());
-    // 	mg_T3He -> SetMaximum(0.794);
-    // 	// mg_T3He -> GetYaxis() -> SetTitleOffset(0.75);
-    // 	// mg_T3He -> GetYaxis() -> SetTitleSize(0.1);
-    // 	// mg_T3He -> GetYaxis() -> SetLabelOffset(0.01);
-    // 	// mg_T3He -> GetYaxis() -> SetLabelSize(0.1);
-    // 	mg_T3He -> Draw("AP");  
-    // 	l_T3He  -> Draw();
-    // }
-
-    // else {
-      
     //@@@
     // Format for y axis
-    g_v1slp[j] -> GetYaxis()->SetLabelFont(43);
-    g_v1slp[j] -> GetYaxis()->SetLabelSize(20);
-    g_v1slp[j] -> GetYaxis()->SetLabelOffset(0.02);
-    g_v1slp[j] -> GetYaxis()->SetTitleFont(43);
-    g_v1slp[j] -> GetYaxis()->SetTitleSize(20);
-    g_v1slp[j] -> GetYaxis()->SetTitleOffset(2.5);
-    g_v1slp[j] -> GetYaxis()->CenterTitle();
-    g_v1slp[j] -> GetYaxis()->SetNdivisions(504);
-    g_v1slp[j] -> GetYaxis()->SetTickLength(xFactor*0.04/yFactor);
+    TGraphErrors* gv1slp = GetSDGraph("gu_v1",igname,j);
+    gv1slp->Print();
+    if( gv1slp == NULL ) continue;
+    
+    gv1slp -> SetMarkerStyle(20);
+    gv1slp -> SetMarkerColor(icol[j]);
+    gv1slp -> SetLineColor(icol[j]);
 
-    cout << j << " min " << g_v1slp[j]->GetEXlow() << " max " << g_v1slp[j]->GetEX() << endl; 
-    Float_t Ymin = g_v1slp[j]->GetYaxis()->GetXmin();
-    Ymin = Int_t(Ymin/0.01);
-    Float_t Ymax = g_v1slp[j]->GetYaxis()->GetXmax();
-    Ymax = Int_t(Ymax/0.01);
-    g_v1slp[j] -> GetYaxis() -> SetRangeUser((Ymin*0.01)-0.003, (Ymax*0.01+0.003));
+    gv1slp -> GetYaxis()->SetLabelFont(43);
+    gv1slp -> GetYaxis()->SetLabelSize(20);
+    gv1slp -> GetYaxis()->SetLabelOffset(0.04);
+    gv1slp -> GetYaxis()->SetTitleFont(43);
+    gv1slp -> GetYaxis()->SetTitleSize(20);
+    gv1slp -> GetYaxis()->SetTitleOffset(2.5);
+    gv1slp -> GetYaxis()->CenterTitle();
+    gv1slp -> GetYaxis()->SetNdivisions(504);
+    gv1slp -> GetYaxis()->SetTickLength(xFactor*0.04/yFactor);
+
+    cout << j << " min " << gv1slp->GetEXlow() << " max " << gv1slp->GetEX() << endl; 
+    Float_t Ymin = gv1slp->GetYaxis()->GetXmin();
+    //    Ymin = Int_t(Ymin/0.01);
+    Float_t Ymax = gv1slp->GetYaxis()->GetXmax();
+    //    Ymax = Int_t(Ymax/0.01);
+    gv1slp -> GetYaxis() -> SetRangeUser(Ymin*(1-0.003), Ymax*(1+0.003));
 
     // Format for x axis
-    g_v1slp[j] -> GetXaxis()->SetLabelFont(43);
-    g_v1slp[j] -> GetXaxis()->SetLabelSize(20);
-    g_v1slp[j] -> GetXaxis()->SetLabelOffset(0.02);
-    g_v1slp[j] -> GetXaxis()->SetTitleFont(43);
-    g_v1slp[j] -> GetXaxis()->SetTitleSize(16);
-    g_v1slp[j] -> GetXaxis()->SetTitleOffset(5);
-    g_v1slp[j] -> GetXaxis()->SetNdivisions(505);
+    gv1slp -> GetXaxis()->SetLabelFont(43);
+    gv1slp -> GetXaxis()->SetLabelSize(20);
+    gv1slp -> GetXaxis()->SetLabelOffset(0.02);
+    gv1slp -> GetXaxis()->SetTitleFont(43);
+    gv1slp -> GetXaxis()->SetTitleSize(16);
+    gv1slp -> GetXaxis()->SetTitleOffset(5);
+    gv1slp -> GetXaxis()->SetNdivisions(505);
  
     // TICKS X Axis
-    g_v1slp[j] -> GetXaxis()->SetTickLength(yFactor*0.06/xFactor);
+    gv1slp -> GetXaxis()->SetTickLength(yFactor*0.06/xFactor);
       
-    g_v1slp[j] -> Draw("AP");
+    gv1slp -> Draw("AP");
 
     cout << yFactor << endl;
     plabel.SetTextAlign(13);
     plabel.SetTextSize(0.09*yFactor);
 
-    if( j == 0 )  plabel.DrawLatexNDC(0.25, 0.5/yFactor, fpid[j]);
+    if( j == 0 )  plabel.DrawLatexNDC(0.25, 0.7/yFactor, fpid[j]);
     else
       plabel.DrawLatexNDC(0.25, 0.7, fpid[j]);
 
@@ -1727,92 +1811,15 @@ void Draw_Indiv_v1SystemD_Three()
   }
 }
 
-void Draw_Indiv_v1SystemD() 
+void Draw_Indiv_v2SystemD(UInt_t igname)
 {
-  LOG(INFO) << "Draw_Indiv_v1SystemD ... " << FairLogger::endl;
-
-  LoadData();
+  LOG(INFO) << "Draw_Indiv_v2SystemD " << igname << FairLogger::endl;
 
   ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 512, 850); iccv++;
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
 
-  const Int_t Ny = 5;
-
-  Float_t lMargin = 0.02;
-  Float_t rMargin = 0.05;
-  Float_t bMargin = 0.10;
-  Float_t tMargin = 0.05;
-
-  CanvasPartitionY(ccv,Ny,lMargin,rMargin,bMargin,tMargin);
-
-  TPad *pad[Ny];
-  
-  for(Int_t j = 0; j < Ny; j++ ) {
-      
-    ccv->cd(0);
-    TString pname = Form("pad_%i",j);
-    pad[j] = (TPad*)gROOT->FindObject(pname);
-    pad[j] -> Draw();
-    pad[j] -> SetFillStyle(4000);
-    pad[j] -> SetFrameFillStyle(4000);
-    pad[j] -> cd();
-
-    Float_t xFactor = pad[0]->GetAbsWNDC()/pad[j]->GetAbsWNDC();
-    Float_t yFactor = pad[0]->GetAbsHNDC()/pad[j]->GetAbsHNDC();
-
-
-    // Format for y axis
-    g_v1slp[j] -> GetYaxis()->SetLabelFont(43);
-    g_v1slp[j] -> GetYaxis()->SetLabelSize(20);
-    g_v1slp[j] -> GetYaxis()->SetLabelOffset(0.02);
-    g_v1slp[j] -> GetYaxis()->SetTitleFont(43);
-    g_v1slp[j] -> GetYaxis()->SetTitleSize(20);
-    g_v1slp[j] -> GetYaxis()->SetTitleOffset(3.);
-    g_v1slp[j] -> GetYaxis()->CenterTitle();
-    g_v1slp[j] -> GetYaxis()->SetNdivisions(504);
-    g_v1slp[j] -> GetYaxis()->SetTickLength(xFactor*0.04/yFactor);
-
-    Float_t Ymin = g_v1slp[j]->GetYaxis()->GetXmin();
-    Ymin = Int_t(Ymin/0.01);
-    Float_t Ymax = g_v1slp[j]->GetYaxis()->GetXmax();
-    Ymax = Int_t(Ymax/0.01);
-    //    g_v1slp[j] -> GetYaxis() -> SetRangeUser((Ymin*0.01)-0.003, (Ymax*0.01+0.003));
-
-    // Format for x axis
-    g_v1slp[j] -> GetXaxis()->SetLabelFont(43);
-    g_v1slp[j] -> GetXaxis()->SetLabelSize(20);
-    g_v1slp[j] -> GetXaxis()->SetLabelOffset(0.02);
-    g_v1slp[j] -> GetXaxis()->SetTitleFont(43);
-    g_v1slp[j] -> GetXaxis()->SetTitleSize(16);
-    g_v1slp[j] -> GetXaxis()->SetTitleOffset(5);
-    g_v1slp[j] -> GetXaxis()->SetNdivisions(505);
- 
-    // TICKS X Axis
-    g_v1slp[j] -> GetXaxis()->SetTickLength(yFactor*0.06/xFactor);
-      
-    g_v1slp[j] -> Draw("AP");
-
-    cout << yFactor << endl;
-    plabel.SetTextAlign(13);
-    plabel.SetTextSize(0.09*yFactor);
-
-    if( j == 0 )  plabel.DrawLatexNDC(0.3, 0.5/yFactor, fpid[j]);
-    else
-      plabel.DrawLatexNDC(0.3, 0.7, fpid[j]);
-
-    //      }
-  }
-}
-
-
-void Draw_Indiv_v2SystemD() 
-{
-  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 512, 850); iccv++;
-  gStyle->SetOptStat(0);
-  gStyle->SetOptTitle(0);
-
-  const Int_t Ny = 5;
+  const Int_t Ny = sqPart.size();;
 
   Float_t lMargin = 0.02;
   Float_t rMargin = 0.05;
@@ -1832,43 +1839,51 @@ void Draw_Indiv_v2SystemD()
     pad[j] -> Draw();
     pad[j] -> SetFillStyle(4000);
     pad[j] -> SetFrameFillStyle(4000);
-    pad[j] -> cd();
+
 
     Float_t xFactor = pad[0]->GetAbsWNDC()/pad[j]->GetAbsWNDC();
     Float_t yFactor = pad[0]->GetAbsHNDC()/pad[j]->GetAbsHNDC();
 
 
     // Format for y axis
-    g_v2max[j] -> GetYaxis()->SetLabelFont(43);
-    g_v2max[j] -> GetYaxis()->SetLabelSize(20);
-    g_v2max[j] -> GetYaxis()->SetLabelOffset(0.02);
-    g_v2max[j] -> GetYaxis()->SetTitleFont(43);
-    g_v2max[j] -> GetYaxis()->SetTitleSize(20);
-    g_v2max[j] -> GetYaxis()->SetTitleOffset(3);
-    g_v2max[j] -> GetYaxis()->CenterTitle();
-    g_v2max[j] -> GetYaxis()->SetNdivisions(504);
-    g_v2max[j] -> GetYaxis()->SetTickLength(xFactor*0.04/yFactor);
+    TGraphErrors* gv2max = GetSDGraph("gu_v2",igname,j);
+    if( gv2max == NULL ) continue;
 
-    cout << j << " min " << g_v2max[j]->GetEXlow() << " max " << g_v2max[j]->GetEX() << endl; 
-    Float_t Ymin = g_v2max[j]->GetYaxis()->GetXmin();
+    gv2max -> SetMarkerStyle(20);
+    gv2max -> SetMarkerColor(icol[j]);
+    gv2max -> SetLineColor(icol[j]);
+    
+    gv2max -> GetYaxis()->SetLabelFont(43);
+    gv2max -> GetYaxis()->SetLabelSize(20);
+    gv2max -> GetYaxis()->SetLabelOffset(0.02);
+    gv2max -> GetYaxis()->SetTitleFont(43);
+    gv2max -> GetYaxis()->SetTitleSize(20);
+    gv2max -> GetYaxis()->SetTitleOffset(3);
+    gv2max -> GetYaxis()->CenterTitle();
+    gv2max -> GetYaxis()->SetNdivisions(504);
+    gv2max -> GetYaxis()->SetTickLength(xFactor*0.04/yFactor);
+
+    cout << j << " min " << gv2max->GetEXlow() << " max " << gv2max->GetEX() << endl; 
+    Float_t Ymin = gv2max->GetYaxis()->GetXmin();
     Ymin = Int_t(Ymin/0.001);
-    Float_t Ymax = g_v2max[j]->GetYaxis()->GetXmax();
+    Float_t Ymax = gv2max->GetYaxis()->GetXmax();
     Ymax = Int_t(Ymax/0.001);
-    g_v2max[j] -> GetYaxis() -> SetRangeUser((Ymin*0.001)-0.0001, (Ymax*0.001+0.0006));
+    gv2max -> GetYaxis() -> SetRangeUser((Ymin*0.001)-0.0001, (Ymax*0.001+0.0006));
 
     // Format for x axis
-    g_v2max[j] -> GetXaxis()->SetLabelFont(43);
-    g_v2max[j] -> GetXaxis()->SetLabelSize(20);
-    g_v2max[j] -> GetXaxis()->SetLabelOffset(0.02);
-    g_v2max[j] -> GetXaxis()->SetTitleFont(43);
-    g_v2max[j] -> GetXaxis()->SetTitleSize(16);
-    g_v2max[j] -> GetXaxis()->SetTitleOffset(5);
-    g_v2max[j] -> GetXaxis()->SetNdivisions(505);
+    gv2max -> GetXaxis()->SetLabelFont(43);
+    gv2max -> GetXaxis()->SetLabelSize(20);
+    gv2max -> GetXaxis()->SetLabelOffset(0.02);
+    gv2max -> GetXaxis()->SetTitleFont(43);
+    gv2max -> GetXaxis()->SetTitleSize(16);
+    gv2max -> GetXaxis()->SetTitleOffset(5);
+    gv2max -> GetXaxis()->SetNdivisions(505);
  
     // TICKS X Axis
-    g_v2max[j] -> GetXaxis()->SetTickLength(yFactor*0.06/xFactor);
+    gv2max -> GetXaxis()->SetTickLength(yFactor*0.06/xFactor);
       
-    g_v2max[j] -> Draw("AP");
+    pad[j] -> cd();
+    gv2max -> Draw("AP");
 
     cout << yFactor << endl;
     plabel.SetTextAlign(13);
@@ -1882,23 +1897,29 @@ void Draw_Indiv_v2SystemD()
   }
 }
 
-void Draw_v_y(UInt_t vn = 1) 
+void Draw_v_y(UInt_t igname, UInt_t vn = 1) 
 {
   if( vn > 2 ) vn = 1;
 
   LOG(INFO) << "Draw_v" << vn << "_y"  << FairLogger::endl;
 
-  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 1000, 800); iccv++;
+  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 500, 800); iccv++;
   gStyle->SetOptTitle(0);
 
-  std::vector<UInt_t> sqSys   = {0,1};
-  std::vector<UInt_t> sqPart  = {0,1,2,3};
-  const Int_t Nx = (Int_t)sqSys.size();
+  const Int_t Nx = 1;//(Int_t)sqSys.size();
   const Int_t Ny = (Int_t)sqPart.size();
 
-  Double_t vRange[2][5][2] ={ { {-0.24, 0.24}, {-0.4 , 0.4},  {-0.6 , 0.6 }, {-0.8 , 0.8},  {-1.0 , 1.0}},
-			       { {-0.05, 0.01}, {-0.08, 0.01}, {-0.10, 0.01}, {-0.10, 0.01}, {-0.10, 0.01} }};
-
+  Double_t vRange[2][5][2] ={ { {-1.0 , 1.0},
+				{-0.8 , 0.8},  
+				{-0.6 , 0.6 }, 
+				{-0.4 , 0.4},  
+				{-0.24, 0.24} }, 
+			      {	{-0.10, 0.02}, 
+				{-0.10, 0.02}, 
+				{-0.10, 0.02}, 
+				{-0.08, 0.02}, 
+				{-0.05, 0.02} }};
+  
   Float_t lMargin = 0.08;
   Float_t rMargin = 0.05;
   Float_t bMargin = 0.10;
@@ -1916,7 +1937,7 @@ void Draw_v_y(UInt_t vn = 1)
   for(auto i: ROOT::TSeqI(Nx) )for(auto j: ROOT::TSeqI(Ny) ) {
       ccv->cd(0);
 
-
+      
       TString pname = Form("pad_%i_%i",i,j);
       pad[i][j] = (TPad*)gROOT->FindObject(pname);
       cout << " pad " << pname << endl;
@@ -1936,9 +1957,11 @@ void Draw_v_y(UInt_t vn = 1)
       mv -> SetName(Form("mv%d_%d",i,j));
       mv -> SetTitle(";y; v1");
 
-      TLegend *lg = new TLegend(0.6,0.3/yFactor,0.9,0.55/yFactor,lpid[sqPart[j]]);
+      TLegend *lg = new TLegend(0.6,0.4/yFactor,0.9,0.65/yFactor,lpid[sqPart[j]]);
 
-      v_y = LoadData(sqSys[i], sqPart[j], Form("gu_v%d",vn));
+      UInt_t isys = 0;
+      v_y = LoadData(igname, isys, sqPart[j], Form("gu_v%d",vn));
+      LOG(INFO) << v_y -> GetName() << " is registred. " << FairLogger::endl;
 
       if( v_y != NULL ) {
 	v_y -> SetMarkerStyle(20);
@@ -1946,14 +1969,14 @@ void Draw_v_y(UInt_t vn = 1)
 	v_y -> SetLineColor(icol[sqPart[j]]);
 	v_y -> SetMarkerColor(icol[sqPart[j]]);
 
-	mv -> Add( v_y, "pl" );
-	lg -> AddEntry(v_y, "Data : "+lsys[sqSys[i]]);
+	mv -> Add( v_y, "p" );
+	lg -> AddEntry(v_y, "Data : "+lsys[isys]);
       }
       else
-	LOG(ERROR) << " gu_v1  is not found. " << sqSys[i] << " : " << sqPart[j] << FairLogger::endl;
+	LOG(ERROR) << " gu_v1  is not found. " << isys << " : " << sqPart[j] << FairLogger::endl;
       
 
-      v_y = LoadAMD(sqSys[i], sqPart[j], Form("v%d_y",vn));
+      v_y = LoadAMD(sqSys[i], sqPart[j], Form("v%d_y",vn), "SLy4");
       
       if( v_y != NULL ) {
 	v_y -> SetMarkerStyle(25);
@@ -1962,253 +1985,39 @@ void Draw_v_y(UInt_t vn = 1)
 	v_y -> SetMarkerColor(icol[sqPart[j]]);
 
 	mv -> Add( v_y, "pl" );
-	lg -> AddEntry(v_y, "AMD");
+	lg -> AddEntry(v_y, "AMD-SLy4");
+      }
+
+      v_y = LoadAMD(sqSys[i], sqPart[j], Form("v%d_y",vn), "SLy4_L108");
+      
+      if( v_y != NULL ) {
+	v_y -> SetMarkerStyle(26);
+	v_y -> SetMarkerSize(1.);
+	v_y -> SetLineColor(icol[sqPart[j]]);
+	v_y -> SetMarkerColor(icol[sqPart[j]]);
+
+	mv -> Add( v_y, "pl" );
+	lg -> AddEntry(v_y, "AMD-L108");
       }
 
       //      gROOT->Add(mv);
       
 
-      mv->GetYaxis()->SetRangeUser(vRange[vn][j][0], vRange[vn][j][0]);
+      mv->GetYaxis()->SetRangeUser(vRange[vn-1][j][0], vRange[vn-1][j][1]);
+      //      mv->Print();
 
       mv->Draw("AP");
-      //      lg->Draw();
+      if( j == 0 )
+	lg->Draw();
     }  
 }
 
-void CanvasPartitionY(TCanvas *C,const Int_t Ny,
-                     Float_t lMargin, Float_t rMargin,
-                     Float_t bMargin, Float_t tMargin)
+
+void Draw_v20_Edependence()
 {
-  if (!C) return;
- 
-  // Setup Pad layout:
-  Float_t vSpacing = 0.0;
-  Float_t vStep  = (1.- bMargin - tMargin - (Ny-1) * vSpacing) / Ny;
- 
-  Float_t hStep  = (1.- lMargin - rMargin );;
+  auto v20E = (TGraphErrors*)LoadFOPI(6, "NPA876/Fig29_v2E", "Au");
+  ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 500, 800); iccv++;
+  ccv -> SetLogx(1);
+  v20E -> Draw("ALP");
 
-  Float_t vposd,vposu,vmard,vmaru,vfactor;
-  Float_t hposl,hposr,hmarl,hmarr,hfactor;
- 
-  hposl = lMargin;
-  hposr = 1.-rMargin;
-  hfactor = hposr-hposl;
-  hmarl = 0.18;
-  hmarr = 0.01;
-
-  for (Int_t j=0;j<Ny;j++) {
- 
-    if (j==0) {
-      vposd = 0.0;
-      vposu = bMargin + vStep;
-      vfactor = vposu-vposd;
-      vmard = bMargin / vfactor;
-      vmaru = 0.0;
-    } else if (j == Ny-1) {
-      vposd = vposu + vSpacing;
-      vposu = vposd + vStep + tMargin;
-      vfactor = vposu-vposd;
-      vmard = 0.0;
-	vmaru = tMargin / (vposu-vposd);
-    } else {
-      vposd = vposu + vSpacing;
-      vposu = vposd + vStep;
-      vfactor = vposu-vposd;
-      vmard = 0.0;
-      vmaru = 0.0;
-    }
- 
-    C->cd(0);
- 
-    char name[16];
-    sprintf(name,"pad_%i",j);
-    TPad *pad = (TPad*) gROOT->FindObject(name);
-    if (pad) delete pad;
-    pad = new TPad(name,"",hposl,vposd,hposr,vposu);
-    pad->SetLeftMargin(hmarl);
-    pad->SetRightMargin(hmarr);
-    pad->SetBottomMargin(vmard);
-    pad->SetTopMargin(vmaru);
- 
-    pad->SetFrameBorderMode(0);
-    pad->SetBorderMode(0);
-    pad->SetBorderSize(0);
-    
-    pad->Draw();
-    
-  }
-}
-
-
-
-
- 
-void CanvasPartition(TCanvas *C,const Int_t Nx,const Int_t Ny,
-                     Float_t lMargin, Float_t rMargin,
-                     Float_t bMargin, Float_t tMargin)
-{
-  if (!C) return;
- 
-  // Setup Pad layout:
-  Float_t vSpacing = 0.0;
-  Float_t vStep  = (1.- bMargin - tMargin - (Ny-1) * vSpacing) / Ny;
- 
-  Float_t hSpacing = 0.0;
-  Float_t hStep  = (1.- lMargin - rMargin - (Nx-1) * hSpacing) / Nx;
- 
-  Float_t vposd,vposu,vmard,vmaru,vfactor;
-  Float_t hposl,hposr,hmarl,hmarr,hfactor;
- 
-  for (Int_t i=0;i<Nx;i++) {
- 
-    if (i==0) {
-      hposl = 0.0;
-      hposr = lMargin + hStep;
-      hfactor = hposr-hposl;
-      hmarl = lMargin / hfactor;
-      hmarr = 0.0;
-    } else if (i == Nx-1) {
-      hposl = hposr + hSpacing;
-      hposr = hposl + hStep + rMargin;
-      hfactor = hposr-hposl;
-      hmarl = 0.0;
-      hmarr = rMargin / (hposr-hposl);
-    } else {
-      hposl = hposr + hSpacing;
-      hposr = hposl + hStep;
-      hfactor = hposr-hposl;
-      hmarl = 0.0;
-      hmarr = 0.0;
-    }
- 
-    for (Int_t j=0;j<Ny;j++) {
- 
-      if (j==0) {
-	vposd = 0.0;
-	vposu = bMargin + vStep;
-	vfactor = vposu-vposd;
-	vmard = bMargin / vfactor;
-	vmaru = 0.0;
-      } else if (j == Ny-1) {
-	vposd = vposu + vSpacing;
-	vposu = vposd + vStep + tMargin;
-	vfactor = vposu-vposd;
-	vmard = 0.0;
-	vmaru = tMargin / (vposu-vposd);
-      } else {
-	vposd = vposu + vSpacing;
-	vposu = vposd + vStep;
-	vfactor = vposu-vposd;
-	vmard = 0.0;
-	vmaru = 0.0;
-      }
- 
-      C->cd(0);
- 
-      char name[16];
-      sprintf(name,"pad_%i_%i",i,j);
-      TPad *pad = (TPad*) gROOT->FindObject(name);
-      if (pad) delete pad;
-      pad = new TPad(name,"",hposl,vposd,hposr,vposu);
-      pad->SetLeftMargin(hmarl);
-      pad->SetRightMargin(hmarr);
-      pad->SetBottomMargin(vmard);
-      pad->SetTopMargin(vmaru);
- 
-      pad->SetFrameBorderMode(0);
-      pad->SetBorderMode(0);
-      pad->SetBorderSize(0);
- 
-      pad->Draw();
-    }
-  }
-}
-
-
-void CanvasPartitionTwoColumn(TCanvas *C,const Int_t Nx,const Int_t Ny,
-			      Float_t lMargin, Float_t rMargin,
-			      Float_t bMargin, Float_t tMargin,
-			      Float_t midMargin)
-{
-  if (!C) return;
- 
-  // Setup Pad layout:
-  Float_t vSpacing = 0.0;
-  Float_t vStep  = (1.- bMargin - tMargin - (Ny-1) * vSpacing) / Ny;
- 
-  Float_t hSpacing = midMargin;
-  Float_t hStep  = (1.- lMargin - rMargin - (Nx-1) * hSpacing) / Nx;
- 
-  Float_t vposd,vposu,vmard,vmaru,vfactor;
-  Float_t hposl,hposr,hmarl,hmarr,hfactor;
- 
-  Float_t midl = 0.01;
-  Float_t midr = midMargin - midl;
-
-
-  cout << " hStep " << hStep << " vStep " << vStep << endl;
-
-  for (Int_t i=0;i<Nx;i++) {
- 
-    if (i==0) {
-      hposl = 0.0;
-      hposr = lMargin + hStep;
-      hfactor = hposr-hposl;
-      hmarl = lMargin / hfactor;
-      hmarr = midl;
-    } else if (i == Nx-1) {
-      hposl = hposr;
-      hposr = hposl + hStep + rMargin + hSpacing;
-      hfactor = hposr-hposl;
-      hmarl = hSpacing / hfactor;
-      hmarr = rMargin / (hposr-hposl);
-    } else {
-      hposl = hposr + hSpacing;;
-      hposr = hposl + hStep;
-      hfactor = hposr-hposl;
-      hmarl = 0.0;
-      hmarr = 0.0;
-    }
- 
-    for (Int_t j=0;j<Ny;j++) {
- 
-      if (j==0) {
-	vposd = 0.0;
-	vposu = bMargin + vStep;
-	vfactor = vposu-vposd;
-	vmard = bMargin / vfactor;
-	vmaru = 0.0;
-      } else if (j == Ny-1) {
-	vposd = vposu + vSpacing;
-	vposu = vposd + vStep + tMargin;
-	vfactor = vposu-vposd;
-	vmard = 0.0;
-	vmaru = tMargin / (vposu-vposd);
-      } else {
-	vposd = vposu + vSpacing;
-	vposu = vposd + vStep;
-	vfactor = vposu-vposd;
-	vmard = 0.0;
-	vmaru = 0.0;
-      }
- 
-      C->cd(0);
- 
-      char name[16];
-      sprintf(name,"pad_%i_%i",i,j);
-      TPad *pad = (TPad*) gROOT->FindObject(name);
-      if (pad) delete pad;
-      pad = new TPad(name,"",hposl,vposd,hposr,vposu);
-      pad->SetLeftMargin(hmarl);
-      pad->SetRightMargin(hmarr);
-      pad->SetBottomMargin(vmard);
-      pad->SetTopMargin(vmaru);
- 
-      pad->SetFrameBorderMode(1);
-      pad->SetBorderMode(0);
-      pad->SetBorderSize(0);
- 
-      pad->Draw();
-    }
-  }
 }

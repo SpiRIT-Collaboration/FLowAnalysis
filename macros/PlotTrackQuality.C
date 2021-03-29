@@ -8,23 +8,23 @@ void PlotTrackQuality()
   openRunAna();
 
   if(rChain != NULL)
-    LOG(INFO) << " DoFLow_adv: System " << isys << "  -> " << sysName << FairLogger::endl;
+    LOG(INFO) << " System " << isys << "  -> " << sysName << FairLogger::endl;
 
   else
     exit(0);
 
-  UInt_t isys = 1; //180Sn
+  //  UInt_t isys = 1; //180Sn
   Int_t   embedPartID[]   = {2212,1000010020,1000010030,1000020030,1000020040};
   TString embedPartName[] = {"H", "2H", "3H", "3He", "4He"};
   const Int_t pidmax = sizeof(embedPartID)/sizeof(Int_t);
 
   //mtrack2 cut condition
-  UInt_t mult[][2] = { {42, 52}, {55, 80}, {40, 55}, {30, 40}, {0, 30}};
+  UInt_t mult[][2] = {{55, 80}, {50,65}, {40, 55}, {35, 45}, {20,40},{0, 35}, {42, 52}, {42,56}};
   const Int_t mmax = sizeof(mult)/sizeof(UInt_t)/2;
   Bool_t bmult[mmax];
 
-  UInt_t  phicutID = 4;
-  UInt_t  cutndf   = 50;
+  UInt_t  phicutID = 2;
+  UInt_t  cutndf   = 20;
   Float_t cutdist  = 20.;
 
   TString phiname[] = { "45or135", "45", "135", "45to135","all" };
@@ -40,8 +40,8 @@ void PlotTrackQuality()
   //  TString trklabel = "data/Acceptance_108Sn_45or135_ndf50_dis20.root";           
   //  TString trklabel = "data/Acceptance_108Sn_45or135_ndf20_dis20.root";           
   //  TString trklabel = "data/Acceptance_108Sn_45_ndf50_dis20.root";           
-  TString trklabel = "data/Acceptance_108Sn_" + phiname[phicutID];
-  trklabel += Form("_ndf%d_dis%d.root",cutndf, (Int_t)cutdist);           
+  TString trklabel = "data/Acceptance_"+rsys[isys]+"Sn_" + phiname[phicutID] + ".root";
+  ///  trklabel += Form("_ndf%d_dis%d.root",cutndf, (Int_t)cutdist);           
 
   TFile *outFile = TFile::Open(trklabel,"recreate");
   LOG(INFO) << " output file " << trklabel << FairLogger::endl;

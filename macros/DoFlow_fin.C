@@ -2,7 +2,7 @@
 
 //drawing
 UInt_t selReactionPlanef = 10000;
-UInt_t  phicutID = 3;
+UInt_t  phicutID = 1;
 UInt_t  cutndf   = 20;
 Float_t cutdist  = 20.;
 
@@ -12,11 +12,11 @@ Bool_t bccPsi;
 
 
 // functions
-void     PlotPtDependence(UInt_t selid);
+void     PlotPtDependence(UInt_t selid, UInt_t seltrk);
 TString  SetupOutputFile(TString fopt);
 Bool_t   SetupEffCorrection();
 
-Bool_t   LoadAcceptanceCorrection(UInt_t selid, UInt_t Low, UInt_t Up);
+Bool_t   LoadAcceptanceCorrection(UInt_t selid, UInt_t seltrk);
 Double_t *GetPsiRPResolution (Double_t *rpcor, UInt_t ival);
 Double_t *Get2PsiRPResolution(Double_t *rpcor, UInt_t ival);
 Double_t *GetMultRPResolution(Double_t *rpcor, UInt_t vn, UInt_t mult);
@@ -60,6 +60,9 @@ void DoFlow_fin(Int_t isel = 0)
 
   // Configuration ================================
   TString su = gSystem -> Getenv("TRK");
+  cout << " TRK " << su << endl;
+
+  UInt_t Seltrk = 0;
   if( su != "" )
     Seltrk = (UInt_t)atoi(su);
 
@@ -80,7 +83,7 @@ void DoFlow_fin(Int_t isel = 0)
 
 
 
-  LOG(INFO) << "Multiplicity :: " << Lcent << " to " << Ucent << FairLogger::endl;
+  LOG(INFO) << "Multiplicity :: " << Lcent << " to " << Ucent << " Seltrk = " << Seltrk <<  FairLogger::endl;
 
   //--------------------------------------------------
   TString rpBase = gSystem -> Getenv("RPBS");
@@ -95,9 +98,22 @@ void DoFlow_fin(Int_t isel = 0)
     LOG(INFO) << " !!! ON !!!"  << FairLogger::endl;
   else
     LOG(INFO) << " OFF " << FairLogger::endl;
-
-
   //==================================================
+
+  //--------------------------------------------------
+  // phi angle cut
+  //----
+  TString PhiCut = gSystem -> Getenv("PHICUT"); 
+  phicutID = PhiCut != "" ? atoi(PhiCut) : 4;
+  
+  TString PhiCutDef[] = {"|phi|<45 or |phi|>135",
+			 "|phi|<45",
+			 "|phi|>135",
+			 "45<|phi|<135",
+			 "all"};
+
+  LOG(INFO) << "Phi angle cut " << phicutID << " : "  << PhiCutDef[phicutID]  << FairLogger::endl;
+  
   acpcorr[0] = 1.;
   acpcorr[1] = 0.;
 
@@ -106,15 +122,15 @@ void DoFlow_fin(Int_t isel = 0)
 
 
   if( isel > 0 ) 
-    PlotPtDependence((UInt_t)isel);  
+    PlotPtDependence((UInt_t)isel, Seltrk);  
   else if( isel == -1 )
-    PlotPtDependence(0);  
+    PlotPtDependence(0,0);  
 }
 
 
 //@@/--- pdt ------------------------------------------------------- 
 //******************** Main ****************************************
-void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
+void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable :
 {
 
   TDatime beginTime;
@@ -128,7 +144,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   //  Bool_t bAcc_corr = kFALSE;
   Bool_t bAcc_corr = kTRUE;
 
-  if( bAcc_corr && LoadAcceptanceCorrection(selid, Lcent, Ucent) ) {
+  if( bAcc_corr && LoadAcceptanceCorrection(selid, seltrk) ) {
     LOG(INFO) << " Acceptance correction is found. " << FairLogger::endl;
   }
   else {
@@ -301,9 +317,6 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
     /// centrality selection
     Int_t trackselection = aflow->mtrack2;
-    if( Seltrk == 6 ) 
-      trackselection = aflow->mtrack6;
-
     
     if(trackselection > Ucent || trackselection <= Lcent || aflow->mtrack4 < 6) continue;
     hmult->Fill( trackselection );
@@ -426,6 +439,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
       bFill = kTRUE;
 
       y_norm = y_cm[isys+6];
+      //      y_norm = y_cm[isys];
 
       auto rapidl = aPart->GetRapidity();
       auto rapid  = aPart->GetRapiditycm();;	
@@ -597,9 +611,8 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
   //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   //--- v1 ------------------------------
-  UInt_t iutv = 0;
   for( UInt_t in = 0; in < 2; in++ ) {
-
+    UInt_t iutv = 0;
 
     for( UInt_t ipt = 0; ipt < ptbin1; ipt++ ) { 
       Double_t utn    = (Double_t)hdut1[ipt][in]->GetEntries();
@@ -739,7 +752,7 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
 
   
-  iutv = 0;
+  UInt_t iutv = 0;
   for( UInt_t ipt = 0; ipt < ptbin2; ipt++ ) { 
     Double_t utn    = (Double_t)hdut2[ipt]->GetEntries();
     
@@ -1005,33 +1018,20 @@ void PlotPtDependence(UInt_t selid = 2)       //%% Executable :
 
 
 //**************************************************
-Bool_t   LoadAcceptanceCorrection(UInt_t selid, UInt_t Low, UInt_t Up)
+Bool_t   LoadAcceptanceCorrection(UInt_t selid, UInt_t seltrk)
 {
-  Int_t seltrk = -1;
-    
-  for( UInt_t i = 0; i < 4; i++ ){
-    if( Low == trkcut[i][0] && Up == trkcut[i][1] ) {
-      seltrk = i;
-      break;
-    }
-  }
-
-  if( seltrk < 0 ) {
-    seltrk = 0;
-    for( UInt_t i = 0; i < 4; i++ ){
-      if( (Low+Up)/2. >= trkcut[i][0] ) {
-	seltrk = i;
-	break;
-      }
-    }
-  }
 
   TString phiname[] = { "45or135", "45", "135", "45to135","all"};
 
-  TString flabel = Form("_ndf%d_dis%d",cutndf, (Int_t)cutdist);           
-  TString fname = "data/rootfiles/UnfoldedLCPSpectra_"+ phiname[phicutID] + flabel + trklabel[seltrk]+".slim.root";
+  //  TString flabel = Form("_ndf%d_dis%d",cutndf, (Int_t)cutdist);           
+  //  TString fname = "data/rootfiles/UnfoldedLCPSpectra_"+ phiname[phicutID] + flabel + trklabel[seltrk]+".slim.root";
 
-  LOG(INFO) << fname << " is selected for efficiency correction. " << trklabel[seltrk] << " : " << seltrk << FairLogger::endl;
+  if( seltrk >= 8 ) seltrk = 3;
+
+  TString trklabel = Form("_%dto%02d",trkcut[seltrk][0],trkcut[seltrk][1]);
+  TString fname = "data/rootfiles/UnfoldedLCPSpectra_"+ phiname[phicutID] + trklabel+".slim.root";
+
+  LOG(INFO) << fname << " is selected for efficiency correction. " << trklabel << " : " << seltrk << FairLogger::endl;
   
   TFile *fopen = TFile::Open(fname);
   if( fopen )
