@@ -28,7 +28,7 @@ UInt_t   GetV2cmRapidityIndex(Double_t y);
 UInt_t   GetV1PtIndex(Double_t val);
 UInt_t   GetV2PtIndex(Double_t val);
 
-void     DrawUt(TH2D *h2, UInt_t sel, TString opt="");
+void     DrawUt(TH2D *h2, UInt_t sel, TString opt="", Color_t scol=1);
 TString  GetPsiRPLoadFileName();
 void     GetdNdydPt(Double_t ycm, Double_t pt);
 void     GetdNdydUt( Double_t ycm, Double_t ut, TH2D* h2c);
@@ -59,14 +59,14 @@ void DoFlow_fin(Int_t isel = 0)
 
 
   // Configuration ================================
-  TString su = gSystem -> Getenv("TRK");
-  cout << " TRK " << su << endl;
+  //  TString su = gSystem -> Getenv("TRK");
+  // cout << " TRK " << su << endl;
 
-  UInt_t Seltrk = 0;
-  if( su != "" )
-    Seltrk = (UInt_t)atoi(su);
+  //UInt_t Seltrk = 0;
+  // if( su != "" )
+  //   Seltrk = (UInt_t)atoi(su);
 
-  su = gSystem -> Getenv("UC");
+  TString su = gSystem -> Getenv("UC");
   if( su != "" ) {
     Ucent = (UInt_t)atoi(su);
     if( Ucent < 0 )
@@ -81,7 +81,24 @@ void DoFlow_fin(Int_t isel = 0)
       Lcent = 0;
   }
 
+  Double_t x  = (Lcent + Ucent)/2.;
+  Double_t mmean = -0.0002*pow(x,3)+0.0306*pow(x,2)-0.3121*x+19.0;
 
+  Double_t diff_save = 100;
+  UInt_t   m_save = 0;
+  for( auto i : ROOT::TSeqI(sizeof(trkcut)/sizeof(UInt_t)/2) ){
+    x = (trkcut[i][0] + trkcut[i][1])/2.;
+    Double_t ave = -0.0002*pow(x,3)+0.0306*pow(x,2)-0.3121*x+19.0;
+
+    auto diff = abs(mmean - ave);
+    if( diff < diff_save ) {
+      diff_save = diff;
+      m_save    = i;
+    }
+  }
+  UInt_t Seltrk = m_save;
+
+  //  if( Seltrk >= 8 ) Seltrk = 3;
 
   LOG(INFO) << "Multiplicity :: " << Lcent << " to " << Ucent << " Seltrk = " << Seltrk <<  FairLogger::endl;
 
@@ -117,8 +134,11 @@ void DoFlow_fin(Int_t isel = 0)
   acpcorr[0] = 1.;
   acpcorr[1] = 0.;
 
-  dpt1 = ut_max[isel-2]/(Double_t)ptbin1;
-  dpt2 = ut_max[isel-2]/(Double_t)ptbin2;
+  // dpt1 = ut_max[isel-2]/(Double_t)ptbin1;
+  // dpt2 = ut_max[isel-2]/(Double_t)ptbin2;
+
+  dpt1 = 2.0/(Double_t)ptbin1;
+  dpt2 = 2.0/(Double_t)ptbin2;
 
 
   if( isel > 0 ) 
@@ -203,6 +223,8 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
   auto hRPPsi     = new TH1D("hRPPsi",";Indiv. #Psi"  ,100,-TMath::Pi(),TMath::Pi());
   auto hRPPsipsi  = new TH2D("hRPPsipsi",";RP #Psi; Indiv #Psi"  ,100,-TMath::Pi(),TMath::Pi(),100,-TMath::Pi(),TMath::Pi());
   auto hphi       = new TH1D("hphi",     ";#phi"  ,100,-TMath::Pi(),TMath::Pi());
+  auto hcostm     = new TH1D("hcostm", ";cosphi", 100,-TMath::Pi(),TMath::Pi());
+
 
   TH1I *hmult = new TH1I("hmult",";Multiplicity",100,0,100);
   TH1D *hdphi0_180   = new TH1D("hdphi0_180"  , " 0to180",100,0.,3.2);
@@ -474,10 +496,14 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
 
       // cout << "irapid1 "<< irapid1 << " irapid2  "<< irapid2 << endl;
 
+      // Comparison with Tommy
+      if( rapid/y_norm >0.7 && rapid/y_norm < 0.8 )
+	hcostm -> Fill( cos(dphi) );
+
+
 
       hirap1 -> Fill( rapid/y_norm , (Double_t)irapid1 );
       hirap2 -> Fill( rapid/y_norm , (Double_t)irapid2 );
-
 
       if( rapid/y_norm >= 0.2 && rapid/y_norm <= 0.6 ) {
 	hdut1[ipt1][0]     -> Fill( u_t0 );
@@ -551,10 +577,12 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
   if( bAcc_corr ) {
     GetYUtCorrection(*hyutacp, *hyutacpcrr);
     DrawUt(hyutacpcrr,1);
-    DrawUt(huy,1,"same");
+    DrawUt(hyutacp,1,"same",2);
+    DrawUt(hAcpYUtCorr,1,"same",4);
 
     DrawUt(hyutacpcrr,2);
-    DrawUt(huy,2,"same");
+    DrawUt(hyutacp,2,"same",2);
+    DrawUt(hAcpYUtCorr,2,"same",4);
   }
 
   //--------------------------------------------------
@@ -647,6 +675,7 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
     ymean = hdy1[iy]->GetMean() ;
     ystdv = hdy1[iy]->GetStdDev()/sqrt(yn);
 
+
     auto mcos  = hdyv1[iy]->GetMean();   // ut>0.4
     auto mcose = hdyv1[iy]->GetStdDev()/sqrt(yn);
     auto mcosee= GetError(mcos, rpresall[0], mcose, rpresall[1]);
@@ -675,6 +704,7 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
 
       Double_t v1u   = hdydutcos1[iy][ipt]->GetMean();
       Double_t v1ue  = hdydutcos1[iy][ipt]->GetStdDev()/sqrt(utn);
+
 
       //      hdydutcos1[iy][ipt]->Write();
 	
@@ -744,6 +774,7 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
   }
   
 
+  LOG(INFO) <<" Comparison with Tommy " << hcostm->GetMean() << " => " <<hcostm->GetMean()/ rpresall[0]  << " : " << hmult->GetMean() << FairLogger::endl;
   
   //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   //--- v2
@@ -766,6 +797,7 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
 
     Double_t v2ut  = v2u / rpresall[0];
     Double_t v2ute = GetError(v2u, rpresall[0], v2ue, rpresall[1]);
+
 
     g_utv2 -> SetPoint( iutv,utmean, v2ut );
     g_utv2 -> SetPointError( iutv, ute, v2ute );
@@ -915,7 +947,7 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
   g_utv1[0]    ->Write();
   g_utv1[1]    ->Write();
   g_utv2    ->Write();
-  
+  hcostm    ->Write();
 
   if( hAcpCorr ) {
     hAcpYUtCorr->Write();
@@ -1026,8 +1058,6 @@ Bool_t   LoadAcceptanceCorrection(UInt_t selid, UInt_t seltrk)
   //  TString flabel = Form("_ndf%d_dis%d",cutndf, (Int_t)cutdist);           
   //  TString fname = "data/rootfiles/UnfoldedLCPSpectra_"+ phiname[phicutID] + flabel + trklabel[seltrk]+".slim.root";
 
-  if( seltrk >= 8 ) seltrk = 3;
-
   TString trklabel = Form("_%dto%02d",trkcut[seltrk][0],trkcut[seltrk][1]);
   TString fname = "data/rootfiles/UnfoldedLCPSpectra_"+ phiname[phicutID] + trklabel+".slim.root";
 
@@ -1067,7 +1097,7 @@ Bool_t   LoadAcceptanceCorrection(UInt_t selid, UInt_t seltrk)
   fopen->Close();
   return kTRUE;
 }
-void DrawUt(TH2D *h2, UInt_t sel, TString opt)
+void DrawUt(TH2D *h2, UInt_t sel, TString opt, Color_t scol)
 {
   TString hname = h2->GetName();
   cout << " DrawUt -> " << hname << endl;
@@ -1098,7 +1128,7 @@ void DrawUt(TH2D *h2, UInt_t sel, TString opt)
     auto firstbin = h2->GetXaxis()->FindBin(*(yrange+i));
     auto lastbin  = h2->GetXaxis()->FindBin(*(yrange+i+1));
 
-    cout << " ybin " << i << " " << *(yrange+i) << " y " << firstbin << " ~ " << *(yrange+i+1) << endl;
+    //    cout << " ybin " << i << " " << *(yrange+i) << " y " << firstbin << " ~ " << *(yrange+i+1) << endl;
 
     hacp = (TH1D*) h2->ProjectionY(hname+Form("_%d_%d",sel,i), firstbin, lastbin);
     hacp -> SetTitle(Form("%3.2f < y < %3.2f" , *(yrange+i), *(yrange+i+1))); 
@@ -1106,9 +1136,7 @@ void DrawUt(TH2D *h2, UInt_t sel, TString opt)
       hacp -> SetNormFactor(50);
       //      hacp -> Scale(1./hacp->GetEntries() );
 
-
-      if( opt == "same" )
-	hacp->SetLineColor(2);
+      hacp->SetLineColor(scol);
       
       hacp -> Draw(opt);
     }
@@ -1129,10 +1157,10 @@ void GetdNdydPt( Double_t ycm, Double_t pt)
 
 void GetYUtCorrection(TH2D &h2, TH2D &h2c)
 {
+  TString hname = h2c.GetName(); 
   h2c = h2;
-
+  h2c.SetName(hname);
   h2c.Divide(hAcpYUtCorr);
-  
 
   // auto xnbins = h2.GetXaxis()->GetNbins();
   // auto ynbins = h2.GetYaxis()->GetNbins();
@@ -1183,6 +1211,7 @@ void GetdNdydUt( Int_t ih, Int_t ixbin, Int_t iybin, TH2D *h2c)
     x[1] = yrange2nrm[ixbin+1];
     y[0] = dpt2*iybin;
     y[1] = y[0] + dpt2;
+
   }
   else
     return;

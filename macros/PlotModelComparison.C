@@ -13,10 +13,6 @@ struct gplot{
 };
 
 
-TString  bName[]   = {"132Sn_","108Sn_","124Sn_","112Sn_","100Sn_"};
-Double_t sysdlt[]  = {0.22,    0.09,      0.15,   0.15   , 0.22};
-Double_t sysA[]    = {256.,    220.,      236.,   236.   ,  256.};
-
 //==================================================
 //-- plot configuration
 //--------------------------------------------------
@@ -106,8 +102,6 @@ TString amdHeader[] = {"amd_132Sn124Sn270AMeV_cluster_",
 UInt_t   ccvid = 0;
 
 // --> configuration
-Size_t  imsz[] = {1, 1, 1.3, 1.3, 1.3, 1.3, 1.3};
-//Color_t icolnn[]={ kPink, kBlue+1, kDeepSea+2, kViolet-1};
 
 
 TMultiGraph  *mv1[ybin1];

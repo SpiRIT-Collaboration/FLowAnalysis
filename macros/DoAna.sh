@@ -39,13 +39,13 @@ unset PHICUT
 ##-->(132:52> 2.9fm)
 ##-->(132:42> 5.2fm)
 
+multL=" 0,20,35,40,50,55,42,42,40,42, 0, 0"
+multU="35,40,45,55,65,80,52,56,54,55,54,55"
+##      0  1  2  3  4  5  6  7  8  9 10 11
 
-multL="0,20,35,40,50,55,42,42,40,42"
-multU="35,40,45,55,65,80,52,56,54,55"
-
-export MNTRK=2
-export PHICUT=1 #phi<45
+export MNTRK=3
 export PHICUT=2 #phi>135
+export PHICUT=1 #phi<45
 
 #########----------------------
 MLC=(${multL})
@@ -183,7 +183,6 @@ function commonsetup()
     export MNMXEVT=
     export UC=$MNUC
     export LC=$MNLC
-    export TRK=$MNTRK
     export RPBS=0
     export CCPSI=1 #phi dependent correction
 
@@ -293,28 +292,53 @@ function dorpres()
 
 }
 
+function doflowmid132() 
+{
+    data132
+    PARTICLES=("6" "5" "4" "3" "2" )
+    LC=45  UC=57 PHICUT=1 doflowmulti 122
+    LC=45  UC=57 PHICUT=2 doflowmulti 123
+}
+function doflowmid108() 
+{
+    data108
+    PARTICLES=("6" "5" "4" "3" "2" )
+    LC=44  UC=55 PHICUT=1 doflowmulti 122
+    LC=44  UC=55 PHICUT=2 doflowmulti 123
+}
+function doflowmid112() 
+{
+    data112
+    PARTICLES=("6" "5" "4" "3" "2" )
+    LC=44  UC=55 PHICUT=1 doflowmulti 122
+    LC=44  UC=54 PHICUT=2 doflowmulti 123
+}
+
 function doflowmdependence() 
 {
     PARTICLES=("6" "5" "4" "3" "2" )
-    export MNTRK=9
-    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=1 doflowmulti 84
-    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=2 doflowmulti 85
-#    export MNTRK=4
-#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=1 doflowmulti 72
-#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=2 doflowmulti 73
-#    export MNTRK=3
-#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=1 doflowmulti 74
-#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=2 doflowmulti 75
-#    export MNTRK=2
-#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=1 doflowmulti 76
-#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=2 doflowmulti 77
-#    export MNTRK=1
-#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=1 doflowmulti 78
-#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=2 doflowmulti 79
-#    export MNTRK=5
-#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=1 doflowmulti 70
-#    TRK=$MNTRK LC=${MLC[$MNTRK]} UC=${MUC[$MNTRK]} PHICUT=2 doflowmulti 71
-#
+    LC=0  UC=20 PHICUT=1 doflowmulti 100
+    LC=0  UC=20 PHICUT=2 doflowmulti 101
+    LC=20 UC=30 PHICUT=1 doflowmulti 102
+    LC=20 UC=30 PHICUT=2 doflowmulti 103
+    LC=30 UC=35 PHICUT=1 doflowmulti 104
+    LC=30 UC=35 PHICUT=2 doflowmulti 105
+    LC=35 UC=40 PHICUT=1 doflowmulti 106
+    LC=35 UC=40 PHICUT=2 doflowmulti 107
+    LC=40 UC=45 PHICUT=1 doflowmulti 108
+    LC=40 UC=45 PHICUT=2 doflowmulti 109
+    LC=44 UC=48 PHICUT=1 doflowmulti 110
+    LC=44 UC=48 PHICUT=2 doflowmulti 111
+    LC=45 UC=50 PHICUT=1 doflowmulti 112
+    LC=45 UC=50 PHICUT=2 doflowmulti 113
+    LC=50 UC=55 PHICUT=1 doflowmulti 114
+    LC=50 UC=55 PHICUT=2 doflowmulti 115
+    LC=55 UC=60 PHICUT=1 doflowmulti 116
+    LC=55 UC=60 PHICUT=2 doflowmulti 117
+    LC=60 UC=65 PHICUT=1 doflowmulti 118
+    LC=60 UC=65 PHICUT=2 doflowmulti 119
+    LC=65 UC=80 PHICUT=1 doflowmulti 120
+    LC=65 UC=80 PHICUT=2 doflowmulti 121
 }
 
 function doflowmultiHeavy()

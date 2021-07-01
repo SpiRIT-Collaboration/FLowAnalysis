@@ -19,9 +19,8 @@ void PlotTrackQuality()
   const Int_t pidmax = sizeof(embedPartID)/sizeof(Int_t);
 
   //mtrack2 cut condition
-  UInt_t mult[][2] = {{55, 80}, {50,65}, {40, 55}, {35, 45}, {20,40},{0, 35}, {42, 52}, {42,56}};
-  const Int_t mmax = sizeof(mult)/sizeof(UInt_t)/2;
-  Bool_t bmult[mmax];
+  const Int_t mmax = sizeof(trkcut)/sizeof(UInt_t)/2;
+  Bool_t btrkcut[mmax];
 
   UInt_t  phicutID = 2;
   UInt_t  cutndf   = 20;
@@ -56,16 +55,16 @@ void PlotTrackQuality()
   
   for(auto i: ROOT::TSeqI(pidmax))for(auto j: ROOT::TSeqI(mmax) ){
 
-      TString hlabel = Form("hyuteff_"+lpid[i]+"_%dto%d",mult[j][0],mult[j][1]);
+      TString hlabel = Form("hyuteff_"+lpid[i]+"_%dto%d",trkcut[j][0],trkcut[j][1]);
       hyuteff[i][j]  = new TH2D(hlabel, hlabel , 40, -2., 2., 50, 0., 2.5);
-      hlabel         = Form("hypteff_"+lpid[i]+"_%dto%d",mult[j][0],mult[j][1]);
+      hlabel         = Form("hypteff_"+lpid[i]+"_%dto%d",trkcut[j][0],trkcut[j][1]);
       hypteff[i][j]  = new TH2D(hlabel, hlabel , 40, -2., 2., 50, 0., 2.5);
-      hlabel         = Form("hypheff_"+lpid[i]+"_%dto%d",mult[j][0],mult[j][1]);
+      hlabel         = Form("hypheff_"+lpid[i]+"_%dto%d",trkcut[j][0],trkcut[j][1]);
       hypheff[i][j]  = new TH2D(hlabel, hlabel , 40,-2.,2.,60,-3.15,3.15);
 
-      hlabel         = Form("hmtrack2_"+lpid[i]+"_%dto%d",mult[j][0],mult[j][1]);
+      hlabel         = Form("hmtrack2_"+lpid[i]+"_%dto%d",trkcut[j][0],trkcut[j][1]);
       hmtrack2[i][j] = new TH1I(hlabel, hlabel, 80, 0, 80);
-      hlabel         = Form("hmtrack6_"+lpid[i]+"_%dto%d",mult[j][0],mult[j][1]);
+      hlabel         = Form("hmtrack6_"+lpid[i]+"_%dto%d",trkcut[j][0],trkcut[j][1]);
       hmtrack6[i][j] = new TH1I(hlabel, hlabel, 80, 0, 80);
 
     }
@@ -86,11 +85,11 @@ void PlotTrackQuality()
     Int_t trackselection = aflow->mtrack2;
 
     for( auto j: ROOT::TSeqI(mmax) ) {
-      if( trackselection >= mult[j][0] && trackselection < mult[j][1] ) {
-	bmult[j] = kTRUE;
+      if( trackselection >= trkcut[j][0] && trackselection < trkcut[j][1] ) {
+	btrkcut[j] = kTRUE;
       }
       else
-	bmult[j] = kFALSE;
+	btrkcut[j] = kFALSE;
     }
 
 
@@ -148,7 +147,7 @@ void PlotTrackQuality()
       if( hpid > -1 ) {
 	
 	for( auto i : ROOT::TSeqI(mmax) ){
-	  if( bmult[i] ) {
+	  if( btrkcut[i] ) {
 	    hyuteff[hpid][i] -> Fill( rapidn, u_t0);
 	    hypteff[hpid][i] -> Fill( rapidn, pt);
 	    hypheff[hpid][i] -> Fill( rapidn, phi);

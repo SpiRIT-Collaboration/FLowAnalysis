@@ -9,8 +9,8 @@ FairLogger *logger = FairLogger::GetLogger();
 
 // --> Plotting selection
 //--- Data
-std::vector< UInt_t > sqSys  = {3}; //0:132Sn, 1:108Sn, 2:124Sn, 3:112Sn, 4:Sim
-std::vector< UInt_t > sqPart = {0,1,2,3,4}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
+std::vector< UInt_t > sqSys  = {0}; //0:132Sn, 1:108Sn, 2:124Sn, 3:112Sn, 4:Sim
+std::vector< UInt_t > sqPart = {0}; //0:p, 1:d, 2:t, 3:3He, 4:4He, 5:n 6:H
 Bool_t bcnt[]  = { 1, 0, 0}; 
 Bool_t bmdl[]  = { 0,      0,         0,       0,      0,       0,       0      }; 
 TString nmTrs[]= {"AMD",   "ChiBUU",  "IBUU",  "IQMD", "SMF",   "UrQMD", "dcQMD"};
@@ -28,20 +28,23 @@ struct gplot{
 };
 
 gplot gnames[] = {  
-  // {".v52.15.70","finYPt_","m55to80","|#phi|<45","acr"},
-  // {".v52.15.72","finYPt_","m50to65","|#phi|<45","acr"},
-  // {".v52.15.74","finYPt_","m40to55","|#phi|<45","acr"},
-  // {".v52.15.76","finYPt_","m35to35","|#phi|<45","acr"},
-  // {".v52.15.78","finYPt_","m20to40","|#phi|<45","acr"},
-  // {".v52.15.80","finYPt_","m0to35" ,"|#phi|<45","acr"},
+  // {".v52.15.90","finYPt_","m0to50","|#phi|<45","acr"},
+  // {".v52.15.91","finYPt_","m0to50","|#phi|>135","acr"},
+  //  {".2to7fmUt","ut_finYPt_" ,"m0to50","ave","acr"},
+   {".v52.15.70","finYPt_","m55to80","|#phi|<45","acr"},
+   {".v52.15.72","finYPt_","m50to65","|#phi|<45","acr"},
+   {".v52.15.74","finYPt_","m40to55","|#phi|<45","acr"},
+   {".v52.15.76","finYPt_","m35to45","|#phi|<45","acr"},
+   {".v52.15.78","finYPt_","m20to40","|#phi|<45","acr"},
+   {".v52.15.80","finYPt_","m0to35" ,"|#phi|<45","acr"},
   //
-  {".v52.15.84","finYPt_","2to5fm","|#phi|<45","acr"},
+  //  {".v52.15.84","finYPt_","2to5fm","|#phi|<45","acr"},
   //  {".v52.15.85","finYPt_","2to5fm","|#phi|>135","acr"},
   //    {".2to5fm"       ,"ut_finYPt_" ,"2to5fm" ,"ave","y_nn"},
   //  {".v52.15.71","finYPt_","m55to80","|#phi|>135","acr"},
   //  {".v52.15.73","finYPt_","m50to65","|#phi|>135","acr"},
-  //  {".v52.15.75","finYPt_","m40to55","|#phi|>135","acr"},
-  //  {".v52.15.77","finYPt_","m35to35","|#phi|>135","acr"},
+  //   {".v52.15.75","finYPt_","m40to55","|#phi|>135","acr"},
+  // {".v52.15.77","finYPt_","m35to45","|#phi|>135","acr"},
   //  {".v52.15.79","finYPt_","m20to40","|#phi|>135","acr"},
   //  {".v52.15.81","finYPt_","m0to35" ,"|#phi|>135","acr"},
   //
@@ -513,6 +516,11 @@ void PlotPtDependence()
 	  g_v11->SetPoint((UInt_t)lx_v11.size(),    sysdlt[is], fv1fit->GetParameter(1) );
 	  g_v11->SetPointError((UInt_t)lx_v11.size(),       0., fv1fit->GetParError(1) );
 	  lx_v11.push_back(otitle);
+
+	  // Double_t x,y;
+	  // yv1->GetPoint(
+	  // g_vTM->SetPoint( (UInt_t)itm,  
+
 	}
       }
 

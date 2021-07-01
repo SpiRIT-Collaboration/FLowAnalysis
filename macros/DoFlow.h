@@ -23,14 +23,19 @@ UInt_t   imark[]    = {20, 21, 22, 23, 32, 24, 21, 22, 23};
 Color_t  icol[] = {  kRed, kBlue, kGreen+2, kYellow+1, kMagenta,  kViolet};
 Size_t   imsz[]    = {1, 1, 1.3, 1.3, 1.3, 1.3, 1.3};
 Color_t  pcolor[]  = {kRed, kBlue, kGreen+2, kYellow+1, kMagenta}; // p,d,t,3He
+Color_t  mdlcol[]  = {kRed,  kOrange+1,kCyan-7,  kMagenta-9,kBlue-9, kOrange,kGreen-6 }; //data, AMD(Soft,Stiff), pBUU(Soft,Stiff), ImQMD(Soft,Stiff)
+UInt_t   mstyle[]  = {kFullCircle,  kOpenCircle,  kOpenSquare, kOpenTriangleUp}; //data, AMD, pBUU, ImQMD
+
+
 
 UInt_t ic = 0;
 TCanvas *cc;
 const Int_t nbinx = 30;
 UInt_t id = 0;
 
-UInt_t  trkcut[][2] =  { {0, 35}, {20,40}, {35, 45},{40, 55},{50,65},{55, 80},{42, 52},{42,56}};
-
+//                        0        1       2        3      4       5        6       7       8       9      
+UInt_t trkcut[][2] = {{0, 35},{20,40},{35, 45},{40, 55},{50,65},{55, 80},{42, 52},{42,56},{40,54},{42,55},
+		      {0,54},{0,55}};
 
 Double_t yrange1[]    = {-0.5,  -0.25,  -0.20, -0.15,  -0.1,  -0.05, 0.05,  0.1,  0.15,  0.2,  0.25,  0.3,  0.35,  0.45, 0.5}; //by v52.10
 Double_t yrange1nrm[] = {-1.5, -0.75, -0.6, -0.45, -0.3, -0.15, -0.07, 0.07, 0.15, 0.3, 0.45, 0.6, 0.75, 1.0,  3.5};
@@ -78,7 +83,9 @@ Bool_t bCorr = kFALSE;
 
 Double_t y_norm = 1.;
 
-Float_t  v1fit[2] = {-0.6, 0.8};
+Float_t  v1fit[2] = {-0.5, 0.6};
+Float_t  v1para[5] = {0.35, 0.4, 0.55, 0.55, 0.8};
+
 
 Double_t v2para0[5][5]={{ -0.001,0.05, 0.0, -0.6, 0.6},
 			{ -0.05, 0.05, 0.0, -0.6, 0.6},

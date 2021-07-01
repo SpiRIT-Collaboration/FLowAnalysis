@@ -17,8 +17,8 @@ struct gplot{
 std::vector< TString > ssPart = {"proton","deuteron","triton","3He","4He"};
 
 gplot gnames[] = {
-  {".v52.15.84","finYPt_","gu_v1","2to5fm","|#phi|<45" ,"acr"},
-  {".v52.15.85","finYPt_","gu_v1","2to5fm","|#phi|>135","acr"},
+  {".v52.15.122","finYPt_","gu_v1","5fm","|#phi|<45" ,"acr"},
+  {".v52.15.123","finYPt_","gu_v1","5fm","|#phi|>135","acr"},
     // {".v52.15.82","finYPt_","gu_v1","m42to56","|#phi|<45" ,"acr"},
     // {".v52.15.83","finYPt_","gu_v1","m42to56","|#phi|>135","acr"},
     // {".v52.15.70","finYPt_","gu_v1","m55to80","|#phi|<45" ,"acr"},
@@ -46,7 +46,7 @@ gplot gnames[] = {
 
 const UInt_t ncp = sizeof(gnames)/sizeof(gplot);
 
-std::vector<UInt_t> sqSys = {1,3};
+std::vector<UInt_t> sqSys = {0,1,3};
 
 TCanvas *ccv; UInt_t iccv = 0;
 std::vector< TString > g_v1label;
