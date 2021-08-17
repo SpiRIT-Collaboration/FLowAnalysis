@@ -23,9 +23,28 @@ UInt_t   imark[]    = {20, 21, 22, 23, 32, 24, 21, 22, 23};
 Color_t  icol[] = {  kRed, kBlue, kGreen+2, kYellow+1, kMagenta,  kViolet};
 Size_t   imsz[]    = {1, 1, 1.3, 1.3, 1.3, 1.3, 1.3};
 Color_t  pcolor[]  = {kRed, kBlue, kGreen+2, kYellow+1, kMagenta}; // p,d,t,3He
+
 Color_t  mdlcol[]  = {kRed,  kOrange+1,kCyan-7,  kMagenta-9,kBlue-9, kOrange,kGreen-6 }; //data, AMD(Soft,Stiff), pBUU(Soft,Stiff), ImQMD(Soft,Stiff)
 UInt_t   mstyle[]  = {kFullCircle,  kOpenCircle,  kOpenSquare, kOpenTriangleUp}; //data, AMD, pBUU, ImQMD
 
+const UInt_t dTmy = 0;
+const UInt_t dKnk = 1;
+struct PlotStyle {
+  UInt_t  index;
+  Color_t fColor;
+  UInt_t  mStyle;
+  UInt_t  mSize;
+  TString comment;
+};
+PlotStyle CStyle[] = { {0,kRed,      kFullCircle,    1, "DATA_Tmy"},
+		       {1,kBlue,     kFullCircle,    1, "DATA_Knk"},
+		       {2,kOrange+1 ,kFullCircle,    1, "AMD"},
+		       {3,kCyan-7,   kFullCircle,    1, "AMD"},
+		       {4,kMagenta-9,kOpenSquare,    1, "pBUU"},
+		       {5,kBlue-9,   kOpenSquare,    1, "pBUU"},
+		       {6,kOrange,   kOpenTriangleUp,1, "ImQMD"},
+		       {7,kOrange,   kOpenTriangleUp,1, "ImQMD"},
+		       {8,kRed,      kOpenCircle,    1, "DATA_TmyRev"}};
 
 
 UInt_t ic = 0;

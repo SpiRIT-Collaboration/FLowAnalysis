@@ -211,6 +211,8 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
   // auto hyutacpcrr = new TH2D("hyutacpcrr", hlabel ,200, -1., 1.4, 100, 0., 1.5);  // corrected y-ut
   auto hyutacp    = new TH2D("hyutacp"   , hlabel , 40, -2., 2., 50, 0., 2.5);
   auto hyutacpcrr = new TH2D("hyutacpcrr", hlabel , 40, -2., 2., 50, 0., 2.5);
+  auto hdndy      = new TH1D("hdndy",      hlabel , 40, -2., 2.);
+  auto gdndycrr   = new TGraphErrors();   gdndycrr -> SetName("gdndycrr");
 
   auto hyptacp    = new TH2D("hyptacp"   , hlabel ,200, -1., 1.4, 200, 0., 1100);
   auto huy        = new TH2D("huy","; y_{cm}/y_{beam}; u_{t0} ", 200,-1., 1.8, 200,0.,2.5);
@@ -484,7 +486,7 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
       hypteff  ->Fill(rapid/y_norm, pt/1000.);
       hyuteff  ->Fill(rapid/y_norm, u_t0);
       hyutacp  ->Fill(rapid/y_norm, u_t0);
-
+      
       hyawpitch->Fill(yaw,   pitch);
       hmass    ->Fill(aPart->GetRotatedMomentum().Mag(), bmass);
 
@@ -579,6 +581,20 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
     DrawUt(hyutacpcrr,1);
     DrawUt(hyutacp,1,"same",2);
     DrawUt(hAcpYUtCorr,1,"same",4);
+    
+    auto xBin = hyutacpcrr->GetXaxis()->GetNbins();
+    auto yBin = hyutacpcrr->GetYaxis()->GetNbins();
+    Double_t err;
+    UInt_t ii = 0;
+    for( auto ibin : ROOT::TSeqI( xBin ) ) {
+      auto counts = hyutacpcrr -> IntegralAndError(ibin, ibin+1, 0, yBin, err) / (Double_t)hmult->GetEntries() * 
+	hyutacpcrr->GetXaxis()->;
+      if(  !std::isnan(counts) ) {
+	gdndycrr -> SetPoint( ii, hyutacpcrr->GetXaxis()->GetBinCenter(ibin), counts);
+	gdndycrr -> SetPointError(ii, 0, err);
+	ii++;
+      }
+    }
 
     DrawUt(hyutacpcrr,2);
     DrawUt(hyutacp,2,"same",2);
@@ -953,6 +969,9 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
     hAcpYUtCorr->Write();
     hAcpCorr   ->Write();
   }
+
+  gdndycrr   ->Write();
+
   //  hdyucos2 ->Write();
   //--------------------------------------------------
   //--- Plotting
@@ -1221,7 +1240,6 @@ void GetdNdydUt( Int_t ih, Int_t ixbin, Int_t iybin, TH2D *h2c)
   auto xbin_last = h2c->GetXaxis()->FindBin(x[1])-1;
   auto ybin_frst = h2c->GetYaxis()->FindBin(y[0]);
   auto ybin_last = h2c->GetYaxis()->FindBin(y[1])-1;
-
 
   Double_t content = 0.;
   Double_t error = 0.;

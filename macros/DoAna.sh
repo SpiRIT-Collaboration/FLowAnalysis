@@ -301,10 +301,10 @@ function doflowmid132()
 }
 function doflowmid108() 
 {
-    data108
+    data108s
     PARTICLES=("6" "5" "4" "3" "2" )
-    LC=44  UC=55 PHICUT=1 doflowmulti 122
-    LC=44  UC=55 PHICUT=2 doflowmulti 123
+    LC=44  UC=55 PHICUT=1 doflowmulti 124
+#    LC=44  UC=55 PHICUT=2 doflowmulti 125
 }
 function doflowmid112() 
 {
