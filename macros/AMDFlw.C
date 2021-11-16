@@ -8,7 +8,7 @@ TCanvas *cc[20];
 TCanvas *ccv;
 UInt_t ic  = 0;
 TString pfname[] = {"pi-","pi+","proton","deuteron" ,"triton"};
-TString pname[] = {"pi-","pi+","prot","deut" ,"trit","neut"};
+TString pname[]  = {"pi-","pi+","prot","deut" ,"trit","neut"};
 UInt_t PID[] = {211,    211,    2212, 1000010020, 1000010030,  2112};
 
 TString printHeader;
@@ -274,7 +274,14 @@ void AMDFlw(UInt_t isel = 0, UInt_t ipid = 2)
     fname[1] = "108Sn112Sn270AMeV_cluster_SLy4_bimp13.root";
     fname[2] = "108Sn112Sn270AMeV_cluster_SLy4_bimp35.root";
     fname[3] = "108Sn112Sn270AMeV_cluster_SLy4_bimp57.root";
+
+  case 8:
+    fname[0] = "amd_132Sn124Sn270AMeV_cluster_SLy4-L108_bimp01.root";
+
+
   }                    
+
+
 
 
   beamHeader  = fname[0](0,5);
@@ -282,8 +289,8 @@ void AMDFlw(UInt_t isel = 0, UInt_t ipid = 2)
 
   fChain = new TChain("amdTree");
 
-  TString ffdir = "/cache/scr/spirit/mizuki/SpiRITAnalysis/macros/data/AMD/";
-  for(UInt_t i = 0; i < 3; i++){
+  TString ffdir = "ModelData/AMD/2019HighStat/";
+  for(UInt_t i = 0; i < 1; i++){
     if( gSystem->FindFile(ffdir, fname[i]) ) {
 	fChain->Add(fname[i]);
 	std::cout << " File : " << fname[i] << " is added. " << std::endl;

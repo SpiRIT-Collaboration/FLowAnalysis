@@ -112,7 +112,7 @@ void calculateImpactParameter() {
   }
 
 //  for (auto system : {108, 112, 124, 132}) {
-  for (auto system : {108, 132, 112, 124}) {
+  for (auto system : {108, 132, 112}) {
     // [barn]
     xsAbs[system] = ((TParameter<Double_t> *) db -> Get(Form("xsAbs%d", system))) -> GetVal();
     xsAbsSigma[system] = ((TParameter<Double_t> *) db -> Get(Form("xsAbsSigma%d", system))) -> GetVal();

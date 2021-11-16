@@ -1,6 +1,6 @@
 #! /Bin/Bash
 #
-# Dorpanalysis.Sh
+# DoAna.Sh
 # (C) Mizuki Nishimura
 #
 # ----------------------
@@ -39,12 +39,13 @@ unset PHICUT
 ##-->(132:52> 2.9fm)
 ##-->(132:42> 5.2fm)
 
-multL=" 0,20,35,40,50,55,42,42,40,42, 0, 0"
-multU="35,40,45,55,65,80,52,56,54,55,54,55"
-##      0  1  2  3  4  5  6  7  8  9 10 11
+multL=" 0,20,35,40,50,55,42,42,40,42, 0, 0,52,47,46"
+multU="35,40,45,55,65,80,52,56,54,55,54,55,55,55,54"
+##      0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
 
-export MNTRK=3
-export PHICUT=2 #phi>135
+export MNTRK=5
+#export PHICUT=2 #phi>135
+#export PHICUT=5 #-20<phi<30
 export PHICUT=1 #phi<45
 
 #########----------------------
@@ -53,13 +54,31 @@ MUC=(${multU})
 export MNLC=${MLC[$MNTRK]}
 export MNUC=${MUC[$MNTRK]}
 
-
 export MNSFX=BTt
 export MDCUT=0. #0.0               ##   <------@@ mid-rapidity cut
-export MNINVERSION=52.15           ##   <------@@ input
-export MNOUTVERSION=52.15          ##   <------@@ output 
+export MNINVERSION=53.0            ##   <------@@ input
+export MNOUTVERSION=53.0           ##   <------@@ output 
 
-
+function doflow3fm132() 
+{
+    data132
+    PARTICLES=("2" "3" "4" "5" "6" )
+    doflowmulti 2
+}
+function doflow3fm108() 
+{
+    data108
+    PARTICLES=("2" "3" "4" "5" "6")
+    doflowmulti 2
+}
+function doflow3fm112() 
+{
+    data112
+    PARTICLES=("2" "3" "4" "5" "6" )
+    doflowmulti 2
+}
+##--
+#
 ##-- DATA
 function data108s()    ##CONFIG
 {
@@ -80,6 +99,12 @@ function data108s()    ##CONFIG
 function data132()    ##CONFIG
 {
 ##-- 
+    if [ $MNTRK -eq 14 ]; then
+	export MNTRK=13
+    fi
+    export MNLC=${MLC[$MNTRK]}
+    export MNUC=${MUC[$MNTRK]}
+
     export MNSN=132
     export MNRNF=$RNF132
     export MNMXEVT=
@@ -292,54 +317,6 @@ function dorpres()
 
 }
 
-function doflowmid132() 
-{
-    data132
-    PARTICLES=("6" "5" "4" "3" "2" )
-    LC=45  UC=57 PHICUT=1 doflowmulti 122
-    LC=45  UC=57 PHICUT=2 doflowmulti 123
-}
-function doflowmid108() 
-{
-    data108s
-    PARTICLES=("6" "5" "4" "3" "2" )
-    LC=44  UC=55 PHICUT=1 doflowmulti 124
-#    LC=44  UC=55 PHICUT=2 doflowmulti 125
-}
-function doflowmid112() 
-{
-    data112
-    PARTICLES=("6" "5" "4" "3" "2" )
-    LC=44  UC=55 PHICUT=1 doflowmulti 122
-    LC=44  UC=54 PHICUT=2 doflowmulti 123
-}
-
-function doflowmdependence() 
-{
-    PARTICLES=("6" "5" "4" "3" "2" )
-    LC=0  UC=20 PHICUT=1 doflowmulti 100
-    LC=0  UC=20 PHICUT=2 doflowmulti 101
-    LC=20 UC=30 PHICUT=1 doflowmulti 102
-    LC=20 UC=30 PHICUT=2 doflowmulti 103
-    LC=30 UC=35 PHICUT=1 doflowmulti 104
-    LC=30 UC=35 PHICUT=2 doflowmulti 105
-    LC=35 UC=40 PHICUT=1 doflowmulti 106
-    LC=35 UC=40 PHICUT=2 doflowmulti 107
-    LC=40 UC=45 PHICUT=1 doflowmulti 108
-    LC=40 UC=45 PHICUT=2 doflowmulti 109
-    LC=44 UC=48 PHICUT=1 doflowmulti 110
-    LC=44 UC=48 PHICUT=2 doflowmulti 111
-    LC=45 UC=50 PHICUT=1 doflowmulti 112
-    LC=45 UC=50 PHICUT=2 doflowmulti 113
-    LC=50 UC=55 PHICUT=1 doflowmulti 114
-    LC=50 UC=55 PHICUT=2 doflowmulti 115
-    LC=55 UC=60 PHICUT=1 doflowmulti 116
-    LC=55 UC=60 PHICUT=2 doflowmulti 117
-    LC=60 UC=65 PHICUT=1 doflowmulti 118
-    LC=60 UC=65 PHICUT=2 doflowmulti 119
-    LC=65 UC=80 PHICUT=1 doflowmulti 120
-    LC=65 UC=80 PHICUT=2 doflowmulti 121
-}
 
 function doflowmultiHeavy()
 {
@@ -373,7 +350,6 @@ function doflowmulti()
 	fi
     done
 }
-
 
 function doflowbatch() 
 {

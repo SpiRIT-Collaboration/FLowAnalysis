@@ -22,11 +22,11 @@ void PlotTrackQuality()
   const Int_t mmax = sizeof(trkcut)/sizeof(UInt_t)/2;
   Bool_t btrkcut[mmax];
 
-  UInt_t  phicutID = 2;
-  UInt_t  cutndf   = 20;
+  UInt_t  phicutID = 1;
+  UInt_t  cutndf   = 15;
   Float_t cutdist  = 20.;
 
-  TString phiname[] = { "45or135", "45", "135", "45to135","all" };
+  TString phiname[] = { "45or135", "45", "135", "45to135","all","-20to30"};
 
   y_norm = y_cm[isys+6];
   //--------------------------------------------------                                                        
@@ -49,6 +49,7 @@ void PlotTrackQuality()
   TH2D *hypteff[pidmax][mmax];
   TH2D *hypheff[pidmax][mmax];
   TH1I *hmtrack2[pidmax][mmax];
+  TH1I *hmtrack3[pidmax][mmax];
   TH1I *hmtrack6[pidmax][mmax];
   
   Double_t u_p = 0.355151 * 1.06974; //p+p(268.9MeV/u)     
@@ -64,6 +65,8 @@ void PlotTrackQuality()
 
       hlabel         = Form("hmtrack2_"+lpid[i]+"_%dto%d",trkcut[j][0],trkcut[j][1]);
       hmtrack2[i][j] = new TH1I(hlabel, hlabel, 80, 0, 80);
+      hlabel         = Form("hmtrack3_"+lpid[i]+"_%dto%d",trkcut[j][0],trkcut[j][1]);
+      hmtrack3[i][j] = new TH1I(hlabel, hlabel, 80, 0, 80);
       hlabel         = Form("hmtrack6_"+lpid[i]+"_%dto%d",trkcut[j][0],trkcut[j][1]);
       hmtrack6[i][j] = new TH1I(hlabel, hlabel, 80, 0, 80);
 
@@ -82,7 +85,7 @@ void PlotTrackQuality()
 
     STFlowInfo *aflow = (STFlowInfo*)aFlowArray->At(0);
     /// centrality selection                                                                                                                              
-    Int_t trackselection = aflow->mtrack2;
+    Int_t trackselection = aflow->mtrack3;
 
     for( auto j: ROOT::TSeqI(mmax) ) {
       if( trackselection >= trkcut[j][0] && trackselection < trkcut[j][1] ) {
@@ -125,6 +128,9 @@ void PlotTrackQuality()
       case 3:
 	if( abs(phi) < 45*TMath::DegToRad() || abs(phi) > 135*TMath::DegToRad()) continue;
 	break;
+      case 5:
+	if( phi > 30*TMath::DegToRad() || phi < -20*TMath::DegToRad() ) continue;
+	break;
       }
 
 
@@ -152,6 +158,7 @@ void PlotTrackQuality()
 	    hypteff[hpid][i] -> Fill( rapidn, pt);
 	    hypheff[hpid][i] -> Fill( rapidn, phi);
 	    hmtrack2[hpid][i]-> Fill(aflow->mtrack2);
+	    hmtrack3[hpid][i]-> Fill(aflow->mtrack3);
 	    hmtrack6[hpid][i]-> Fill(aflow->mtrack6);
 	  }
 	}
@@ -180,7 +187,7 @@ void PlotTrackQuality()
 
   for( auto i: ROOT::TSeqI(pidmax))for( auto j: ROOT::TSeqI(mmax) ){
       ccv->cd(id); id++;
-      hmtrack6[i][j]->Draw();
+      hmtrack3[i][j]->Draw();
     }
 
    ccv = new TCanvas("ccv1","ccv1",1000,1000);

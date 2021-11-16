@@ -1,4 +1,4 @@
-TString fsys[] = {"^{132}Sn+^{124}Sn","^{108}Sn+^{112}Sn","^{124}Sn+^{112}Sn","^{112}Sn+^{124}Sn", "pp", "RPSim"};
+TString fsys[] = {"^{132}Sn+^{124}Sn","^{108}Sn+^{112}Sn","^{124}Sn+^{112}Sn(Rev)","^{112}Sn+^{124}Sn", "pp", "RPSim"};
 TString lsys[] = {"^{132}Sn",        "^{108}Sn",            "^{124}Sn",           "^{112}Sn"     , "pp","^{100}Sn"  };
 TString rsys[] = {"132",        "108",        "124",        "112"};
 TString tsys[] = {"124",        "112",        "112",        "124"};
@@ -42,8 +42,8 @@ PlotStyle CStyle[] = { {0,kRed,      kFullCircle,    1, "DATA_Tmy"},
 		       {3,kCyan-7,   kFullCircle,    1, "AMD"},
 		       {4,kMagenta-9,kOpenSquare,    1, "pBUU"},
 		       {5,kBlue-9,   kOpenSquare,    1, "pBUU"},
-		       {6,kOrange,   kOpenTriangleUp,1, "ImQMD"},
-		       {7,kOrange,   kOpenTriangleUp,1, "ImQMD"},
+		       {6,kViolet-1, kOpenTriangleUp,1, "ImQMD"},
+		       {7,kViolet-1, kOpenTriangleUp,1, "ImQMD"},
 		       {8,kRed,      kOpenCircle,    1, "DATA_TmyRev"}};
 
 
@@ -54,7 +54,7 @@ UInt_t id = 0;
 
 //                        0        1       2        3      4       5        6       7       8       9      
 UInt_t trkcut[][2] = {{0, 35},{20,40},{35, 45},{40, 55},{50,65},{55, 80},{42, 52},{42,56},{40,54},{42,55},
-		      {0,54},{0,55}};
+		      {0,54}, {0,55}, {52, 55},{47, 55},{46,54}};
 
 Double_t yrange1[]    = {-0.5,  -0.25,  -0.20, -0.15,  -0.1,  -0.05, 0.05,  0.1,  0.15,  0.2,  0.25,  0.3,  0.35,  0.45, 0.5}; //by v52.10
 Double_t yrange1nrm[] = {-1.5, -0.75, -0.6, -0.45, -0.3, -0.15, -0.07, 0.07, 0.15, 0.3, 0.45, 0.6, 0.75, 1.0,  3.5};

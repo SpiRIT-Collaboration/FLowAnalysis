@@ -132,7 +132,7 @@ Bool_t STSpiRITTPCTask::SetupParameters()
     bmA = 132;  
 
   if( bmA != 100 ) {
-    massCal->LoadCalibrationParameters("db/PIDCalib.root",bmA);
+    //    massCal->LoadCalibrationParameters("db/PIDCalib.root",bmA);
     massCal->LoadCalibrationParameters("db/FlattenPID.root",bmA);
     
 
@@ -346,7 +346,7 @@ void STSpiRITTPCTask::FinishEvent()
 
 
   if( fIsFlowAnalysis ) {
-    LOG(INFO) << "beam " << BeamPID << " event " << rEventID << FairLogger::endl;
+    LOG(DEBUG) << "beam " << BeamPID << " event " << rEventID << FairLogger::endl;
 
     fflowtask->SetupEventInfo(rEventID, BeamPID);
     fflowtask->FinishEvent();
@@ -409,11 +409,11 @@ Bool_t STSpiRITTPCTask::GetVertexQuality(TVector3 vert)
   auto BeamIndex = STRunToBeamA::GetSystemID(iRun);
   if(BeamIndex >= 4) return kFALSE;
 
-  if( abs( vert.Z() - VtxMean[BeamIndex].Z() ) > 2.*VtxSigm[BeamIndex] ||
+  if( abs( vert.Z() - VtxMean[BeamIndex].Z() ) > 3.*VtxSigm[BeamIndex] ||
       abs( vert.X() - VtxMean[BeamIndex].X() ) > 15. ||
       abs( vert.Y() - VtxMean[BeamIndex].Y() ) > 20. )
-   return kFALSE;;
-
+    return kFALSE;;
+  
   return kTRUE;
 }
 
@@ -424,12 +424,12 @@ void STSpiRITTPCTask::SetupTrackQualityFlag(STParticle *apart)
     return ;
   }
 
-  if( apart->GetDistanceAtVertex() > 25 )
-    apart->SetDistanceAtVertexFlag(0);
+   if( apart->GetDistanceAtVertex() > 25 )
+     apart->SetDistanceAtVertexFlag(0);
 
-  if( apart->GetNDF() < 10) 
-    apart->SetNDFFlag(0);
 
+   if( apart->GetNDF() < 10) 
+     apart->SetNDFFlag(0);
 
 }
 
@@ -479,7 +479,7 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
     STParticle *aParticle = new STParticle();
     aParticle->SetRecoTrack(trackFromArray);
 
-    cout << " ndf --> " << aParticle->GetNDFvertex() << endl;
+    //    cout << " ndf --> " << aParticle->GetNDFvertex() << endl;
 
     //--- Set event and track quality ---;  
     aParticle->SetVertex(vertex);

@@ -112,7 +112,11 @@ void SetEnvironment()
   TString sRedo  = gSystem -> Getenv("REDO");
   
   if(sRun =="" || sSuf == "" || sVer == "" || !DefineVersion()) {
-    cout << " Please type " << endl;
+    cout << " Please type " 
+	 << " sRun = " << sRun
+	 << " sSuf = " << sSuf
+	 << " sVer = " << sVer
+	 << endl;
     cout << "Check settings of environments " << endl;
     exit(0);
   }

@@ -26,22 +26,63 @@ gplot gnames[] = {
   // {".v52.15.118" ,"finYPt_" ,"m55to80","|#phi|<45","y_nn"},
   // {".v52.15.120" ,"finYPt_" ,"m55to80","|#phi|<45","y_nn"},
   //-----
-  {".v52.15.122" ,"finYPt_" ,"5fm","|#phi|<45","y_nn"},
-  //  {".v52.15.123" ,"finYPt_" ,"5fm","|#phi|>135","y_nn"},
-  //  {".v52.15.122.v52.15.123" ,"ut_finYPt_" ,"5fm","ave","y_nn"},
+  //  {".v52.15.122" ,"finYPt_" ,"5fm","|#phi|<45","y_nn"},
+  //
+  //  {".v52.15.128" ,"finYPt_" ,"M52to55","|#phi|<45","y_nn"},
+  //  {".v52.15.129" ,"finYPt_" ,"M56to80","|#phi|<45","y_nn"},
+  //{".v52.15.130" ,"finYPt_" ,"M65to80","|#phi|<45","y_nn"},
+  //  {".v52.15.131" ,"finYPt_" ,"M68to80","|#phi|<45","y_nn"},
+  //  {".v52.15.132" ,"finYPt_" ,"M57to80","|#phi|<45","y_nn"},
+  //  {".v52.15.133" ,"finYPt_" ,"(M3)51to80","|#phi|<45","y_nn"},
+  //  {".v52.15.135" ,"finYPt_" ,"135(M3)55to80","-20<#phi<30","y_nn"},
+  //  {".v52.15.136" ,"finYPt_" ,"136(M3)55to80","|#phi|<45","y_nn"},
+  //  {".v53.0.0" ,"finYPt_" ,"-20<#phi<30","(M3)46to55","y_nn"},
+  {".v53.0.1" ,"finYPt_" ,"(M3)46to55","|#phi|<45","y_nn"}, //<<- best
+  //  {".v53.0.2" ,"finYPt_" ,"(M3)>55","|#phi|<45","y_nn"},
   //-----
 };
+
+Bool_t bCentral = 0;
 
 struct mplot{
   TString Version;
   TString config;
+  Color_t fColor;
+  UInt_t  fStyle;
 };
 
 mplot pBUUname[] = {
-  {"Soft_s030.2L38.7"  ,"pBUU s030.2L38.7"      },
-  {"Soft_s032.9L64"    ,"pBUU s032.9L64"     },
-  {"Soft_s037.4L105.5" ,"pBUU s037.4L105.5"  },
-  {"Stiff_s037.4L105.5","pBUU s037.4L105.5(STF)"}
+  {"Soft_s030.2L38.7"  ,"pBUU s030.2L38.7"      ,kMagenta-9, 3001},
+  {"Soft_s032.9L64"    ,"pBUU s032.9L64"        ,kMagenta-3, 3001},
+  {"Soft_s037.4L105.5" ,"pBUU s037.4L105.5"     ,kMagenta-1, 3001},
+  {"Stiff_s037.4L105.5","pBUU s037.4L105.5(STF)",kMagenta,   3001}
+};
+
+mplot AMDnameText[] = {
+  {"E270-124-112-sly4-l055-mdcorr20-cxAg","sly4-l055-md20-cxAg" , kCyan-7,   3001},
+  //  {"E270-124-112-sly4-l055-mdcorr50-cxAg","sly4-l055-md50-cxAg" , kOrange+8, 3001},
+  // {"E270-124-112-sly4-mdcorr50-cxAq"     ,"sly4-l046-md50-cxAq" , kOrange-2, 3001},
+  // {"Sn124Sn112-sly4-l108-mdcorr50-cxAq"  ,"sly4-l108-md50-cxAq" , kGreen+2,  3001},
+  //{"Sn124Sn112-sly4-l152-mdcorr50-cxAq"  ,"sly4-l152-md50-cxAq" , kViolet-1, 3001},
+  //
+  //{"Sn132Sn124-sly4-l152-mdcorr50-cxAq"  ,"sly4-l152-md50-cxAq" , kViolet-1, 3001},
+  //  {"Sn132Sn124-sly4-mdcorr50-cxAq"       ,"sly4-l046-md50-cxAq" , kOrange-2, 3001}
+};
+
+mplot AMDnameCent[] = {
+  {"h_amd_SLy4_Sn108_ss",              "SLy4_ss"              ,kOrange-2,  3001},
+  {"h_amd_SLy4_Sn132_ss",              "SLy4_ss"              ,kOrange-2,  3001},
+  // {"h_amd_SLy4_sigmul2_Sn108",         "SLy4_sigmul2"         ,kViolet-1,  3001},
+  // {"h_amd_SLy4_sigmul2_Sn132",         "SLy4_sigmul2"         ,kViolet-1,  3001},
+  // {"h_amd_SLy4_gfg_sigmul2_Sn108",     "SLy4_gfg_sigmul2"     ,kMagenta-3, 3001},
+  // {"h_amd_SLy4_gfg_sigmul2_Sn108_ss",  "SLy4_gfg_sigmul2_ss"  ,kMagenta-3, 3001},
+  // {"h_amd_SLy4_gfg_sigmul2_Sn132",     "SLy4_gfg_sigmul2"     ,kMagenta-3, 3001},
+  // {"h_amd_SLy4_L108_Sn108",            "SLy4_L108"            ,kOrange+8,  3001},
+  // {"h_amd_SLy4_L108_Sn132_ss",         "SLy4_L108_ss"         ,kOrange+8,  3001},
+  // {"h_amd_SLy4_L108_sigmul2_Sn108",    "SLy4_L108_sigmul2"    ,kViolet-1,  3001},  
+  // {"h_amd_SLy4_L108_sigmul2_Sn132",    "SLy4_L108_sigmul2"    ,kViolet-1,  3001},  
+  // {"h_amd_SLy4_L108_gfg_sigmul2_Sn108","SLy4_L108_gfg_sigmul2",kGreen+2,   3001},  
+  // {"h_amd_SLy4_L108_gfg_sigmul2_Sn132","SLy4_L108_gfg_sigmul2",kGreen+2,   3001}    
 };
 
 
@@ -102,7 +143,7 @@ void Draw_Ut_ProtonRatioSystemD(UInt_t igname, TString gname);
 void Draw_RPResolutionDM();
 Double_t* GetRPResolution(UInt_t igname, UInt_t isys);
 void Draw_v_y_Model(UInt_t igname, UInt_t isys, UInt_t vn, TString para);
-void Draw_dndy(UInt_t isys, UInt_t ipart, TString gname);
+void Draw_dndy(UInt_t isys, UInt_t ipart, TString gname="");
 void Draw_dndyRatio(UInt_t isys, UInt_t ipart, TString gname);
 void Draw_Ratio(UInt_t igname, TString gname);
 
@@ -117,6 +158,8 @@ void PlotFigure(Bool_t nplot=kFALSE)
 
   gStyle->SetOptStat(0);
   gStyle->SetStatStyle(0);
+  gStyle->SetOptFit(1111);
+  gStyle->SetStatColor(10);
 
   SetStyle();
   SetColor();
@@ -147,7 +190,7 @@ void PlotFigure(Bool_t nplot=kFALSE)
       // if( kFALSE ) 
       // 	Draw_Ut_ParticleSystemD(igname,"g_utv2");
 
-      if( kFALSE )
+      if(0)
 	Draw_DeltaDIndiv(igname, "gu_v1");
       if( kFALSE )
 	Draw_DeltaDIndiv(igname, "gu_v1_v13");
@@ -158,18 +201,22 @@ void PlotFigure(Bool_t nplot=kFALSE)
 	Draw_DeltaDIndiv(igname, "gu_v2");
 
       //v1
-      if( kFALSE ) {
-	Draw_v_y_Model(igname,0,1,"y"); //132
-	// Draw_v_y_Model(igname,1,1,"y"); //108
-	// Draw_v_y_Model(igname,3,1,"y"); //112
-      }
+      if(0)  //JPS2021
+	Draw_v_y_Model(igname,0,1,"y/y_{nn}-1"); //132
+      if(0)  //JPS2021
+	Draw_v_y_Model(igname,1,1,"y/y_{nn}-1"); //108
+      if(1)  //JPS2021
+	Draw_v_y_Model(igname,3,1,"y/y_{nn}-1"); //112
+
 
       //v2
-      if( kFALSE ) {
-	Draw_v_y_Model(igname,0,2,"y"); //132
-	Draw_v_y_Model(igname,1,2,"y"); //108
-	Draw_v_y_Model(igname,3,2,"y"); //112
-      }
+      if(0)  //JPS2021
+	Draw_v_y_Model(igname,0,2,"y/y_{nn}-1"); //132
+      if(0)  //JPS2021
+	Draw_v_y_Model(igname,1,2,"y/y_{nn}-1"); //108
+      if(0)  //JPS2021
+	Draw_v_y_Model(igname,3,2,"y/y_{nn}-1"); //112
+
       
       //      Draw_v_y_Model(igname,0,1,"y"); //132
 
@@ -184,11 +231,11 @@ void PlotFigure(Bool_t nplot=kFALSE)
 	Draw_v_y_Model(igname,1,2,"ut0");  //108 v2
       }
 
-      // if( kFALSE )
-      // 	Draw_Ut_Ratio(igname, "g_utv1_0");
-      // if( kFALSE )
-      // 	Draw_Ut_Ratio(igname, "g_utv2");
 
+      if(1) {
+	for( auto ii : {0,1,2,3,4} ) 
+	  Draw_dndy(3, ii);
+      }
 
       if( kFALSE ) 
 	Draw_Ut_Comparison(igname,0); // Comparison with AMD and pBUU (0:system) 
@@ -198,20 +245,17 @@ void PlotFigure(Bool_t nplot=kFALSE)
 	  Draw_dndyRatio(0, ii, "rapHist_M55_55");
       }
 
-      if( 1 ) {
+      if( kFALSE ) {
 	for( auto ii : {0,1,2,3,4} )
-	  Draw_dndy(3, ii, "rapHist_M55_55");
+	  Draw_dndy(0, ii, "rapHist_M55_55");
       }
 
       if( kFALSE ) {
 	for( auto ii : {0,1,2} )
 	  Draw_dndy(1, ii, "rapHist_M55_55");
       }
-      if( kFALSE ) {
-	for( auto ii : {0,1,2,3,4} )
-	  //  Draw_dndy(3, ii, "rapHist_M43_52");
-	  Draw_dndy(3, ii, "rapHist_M55_55");
-      }
+
+
       if( kFALSE ) {
 	for( auto ii : {0,1,2,3,4} )
 	  Draw_dndy(3, ii, "rapHist_M43_52");
@@ -258,8 +302,11 @@ void PlotFigure(Bool_t nplot=kFALSE)
       if( kFALSE ) 
 	Draw_ParticleD("gu_v2", 0);
 
-      if( kFALSE ) 
-	Draw_v_y_System(igname, 1, "ut0");
+      if(0) 
+	Draw_v_y_System(igname, 1, "y");
+
+      if(0) 
+	Draw_v_y_System(igname, 2, "y");
             
     }
 
@@ -268,6 +315,10 @@ void PlotFigure(Bool_t nplot=kFALSE)
 
   }
 
+  if( kFALSE ) {
+    for( auto ii : {0,1,2,3,4} )
+      Draw_dndy(3, ii);
+  }
   
   //---  Multiplicity dependence
   if( ndata > 3) {
@@ -282,7 +333,7 @@ void PlotFigure(Bool_t nplot=kFALSE)
     if( kFALSE )
       Draw_MultiplicityRatio("gu_v2");
 
-    if( 1 )
+    if( kFALSE )
       Draw_RPResolutionDM();
 
   }
@@ -317,20 +368,9 @@ TGraphErrors* LoadFOPI(UInt_t ipart=0, TString fdir="PRC89/Fig8_v1Ut_0.25", TStr
 }
 
 
-TGraphErrors* LoadAMDText(UInt_t isys, UInt_t ipart, TString dname="v1", TString grname="rapflow", TString eos="")
+TGraphErrors* LoadAMDText(UInt_t isys, UInt_t ipart, TString dname="v1", TString grname="rapflow", TString eos="" )
 {
-  //  if( isys != 3 ) return NULL;
-  TString column[] = {"dndy","dndye","tmp1","tmp1e","tmp2","tmp2e","v1","v1e","v2","v2e"};
-  UInt_t icolumn = 0;
-
-  for( auto scolumn : column ) {
-    if( scolumn == dname )
-      break;
-    else 
-      icolumn++;
-  }
-
-
+  TString column[] = {"y","dndy","dndye","tmp1","tmp1e","tmp2","tmp2e","v1","v1e","v2","v2e"};
   TString pname[] = {"p", "d", "t", "h", "a", "n"};
 
   TGraphErrors *gvt = NULL;
@@ -351,48 +391,54 @@ TGraphErrors* LoadAMDText(UInt_t isys, UInt_t ipart, TString dname="v1", TString
     fread.open(ifile, std::fstream::in);
     gvt = new TGraphErrors();
 
-    Double_t x, y, ye;
     TString sget;
-    TString seget;
-    UInt_t  in = 0;
+    UInt_t in = 0;
     
     while( !fread.eof() ) {
       
       for( auto ict : ROOT::TSeqI(3*5) )
 	fread >> sget;
 
-
       while( !fread.eof() ) {
-	fread >> sget;
-	x = (Double_t)atof(sget);
-      
-	for( auto i : ROOT::TSeqI(5) ) {
+
+	Double_t x, y; 
+	Double_t ye = 0.;
+	for( auto iss : column ) {
+
 	  fread >> sget;
-	  fread >> seget;
-	  if(  i == icolumn ) {
+	  if( iss == "y" ) 
+	    x = (Double_t)atof(sget);
+
+	  if( iss == dname )
 	    y = (Double_t)atof(sget);
-	    ye = (Double_t)atof(seget);
-	  }
+
+	  if( iss == dname+"e" )
+	    ye = (Double_t)atof(sget);
+
+
+	  //	  cout << iss << " " << dname << " " << x << " vs " << y << " +- " << ye << endl;
+
 	}
+	//	cout << " -------- " << endl;
+      
 	///@@@@
       
 	if( ye != 0. ) {
 	  x = x/y_cm[10];
 
-	  if( icolumn == 0 )
+	  if( dname == "dndy" )
 	    y *= y_cm[10]; 
 
 
-	  if( isys == 3 ) {
-	    x *= -1.;
-	    
-	    if( icolumn == 6 )
+	  if( isys == 3 ) {  // reverse 124Sn+112Sn
+	    x *= -1.;	    
+	    if( dname == "v1")
 	      y *= -1;
 	  }
 	  
+
 	  gvt -> SetPoint(in, x, y);
 	  gvt -> SetPointError(in, 0, ye);
-
 	  in++;
 	}
       }
@@ -403,6 +449,53 @@ TGraphErrors* LoadAMDText(UInt_t isys, UInt_t ipart, TString dname="v1", TString
 
 }
 
+
+
+TGraphErrors* LoadAMDHist(UInt_t isys, UInt_t ipart, TString hname="h_dndy", TString inname="")
+{
+  TString dirname  = "ModelData/AMD/bimp0_1.5_highStat/";
+  
+  TString tfile = inname + ".root";
+
+  cout << " amdhist " << " " << tfile << " " << Asys[isys] << endl;
+  if( !tfile.Contains(Form("%d",Asys[isys])) ) return NULL;
+
+
+  TFile *ifile = NULL;
+  if( gSystem -> FindFile(dirname, tfile ) ) {
+
+    cout << " open -> " << tfile << endl;
+
+    ifile = new TFile(tfile,"READ");
+    if( !ifile ) return NULL;
+    LOG(INFO) << tfile << " is opened. " << FairLogger::endl;
+  }
+  else
+    return NULL;
+
+  hname += "_"+lpid[ipart];
+  TH1D* hist = (TH1D*)ifile->Get(hname);
+
+  if( hist == NULL ) return NULL;
+
+  auto grv = new TGraphErrors();
+  UInt_t iibin = 0;
+  for( auto ibin: ROOT::TSeqI(hist->GetXaxis()->GetNbins())) {
+    if( hist->GetBinError(ibin) != 0. ) {
+      grv -> SetPoint(iibin, hist->GetXaxis()->GetBinCenter(ibin), 
+		      hist->GetBinContent(ibin));
+      grv -> SetPointError(iibin, 0., hist->GetBinError(ibin));
+      iibin++;
+    }
+  }
+
+
+  grv -> SetName("g_dndy_"+lpid[ipart]);
+  
+  ifile->Close();
+
+  return grv;
+}
 
 TGraphErrors* LoadAMD(UInt_t isys, UInt_t ipart, TString grname="v1_ut", TString eos="SLy4")
 {
@@ -573,8 +666,26 @@ TGraphErrors* LoadData(UInt_t igname, UInt_t isys, UInt_t ipart, TString gname)
     LOG(INFO) << fname << " is opened. " << FairLogger::endl;
   }
 
-  grv =  (TGraphErrors*)fOpen->Get(gname);
-  if( grv == NULL ) return NULL;
+  if( gname == "h_dndy" ) {
+    TH1D* h_dndy = (TH1D*)fOpen->Get(gname);
+    if( h_dndy == NULL ) return NULL;
+
+    grv = new TGraphErrors();
+    UInt_t iibin = 0;
+    for( auto ibin: ROOT::TSeqI(h_dndy->GetXaxis()->GetNbins())) {
+      if( h_dndy->GetBinError(ibin) != 0. ) {
+	grv -> SetPoint(iibin, h_dndy->GetXaxis()->GetBinCenter(ibin), 
+			h_dndy->GetBinContent(ibin));
+	grv -> SetPointError(iibin, 0., h_dndy->GetBinError(ibin));
+	iibin++;
+      }
+    }
+  }
+   
+  else {
+    grv =  (TGraphErrors*)fOpen->Get(gname);
+    if( grv == NULL ) return NULL;
+  }
 
   gname += "_" + rsys[isys] + "_" + lpid[ipart];
   grv -> SetName(gname);
@@ -875,7 +986,7 @@ Double_t *ReadVfit(TString gname, UInt_t isys, UInt_t iPart, UInt_t imult)
   return vfit;
 }
 
-Double_t* GetV11(UInt_t igname, UInt_t isys, UInt_t ipart, TString sData="DATA", TString eos = "Soft")
+Double_t* GetV11(UInt_t igname, UInt_t isys, UInt_t ipart, TString sData="DATA", TString eos = "Soft", UInt_t ieos=0)
 {
   gStyle->SetOptFit(1111);
   gStyle->SetStatColor(10);
@@ -899,6 +1010,17 @@ Double_t* GetV11(UInt_t igname, UInt_t isys, UInt_t ipart, TString sData="DATA",
     yv1 = LoadImQMD(isys, ipart, "v1", "");
     ft_low  = -0.8;
     ft_high =  0.8;
+  }
+  else if( sData == "AMD" ){
+    if( isys == 0 ) 
+      yv1 = LoadAMDText(isys, ipart, "v1","rapflow",AMDnameText[1].Version);
+    else if( isys == 1) 
+      yv1 = NULL;
+    else if( isys == 3) 
+      yv1 = LoadAMDText(isys, ipart, "v1","rapflow",AMDnameText[0].Version);
+
+    ft_low = -0.8;
+    ft_high = 0.8;
   }
   else
     yv1 = LoadData(igname, isys, ipart, "gu_v1");
@@ -1058,14 +1180,15 @@ TGraphErrors* GetSDGraph(TString gname, UInt_t igname, UInt_t ipart, TString sDa
 
 void Draw_DeltaDIndiv(UInt_t igname, TString gname) 
 {
-  Bool_t bImQMD = 1;
-  Bool_t bpBUU = 1;
+  Bool_t bImQMD = 0;
+  Bool_t bpBUU = 0;
+  Bool_t bAMD  = 1;
 
   ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 512, 840); iccv++;
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
 
-  const Int_t Ny = 4;
+  const Int_t Ny = 5;
 
   Float_t lMargin = 0.02;
   Float_t rMargin = 0.05;
@@ -1121,7 +1244,7 @@ void Draw_DeltaDIndiv(UInt_t igname, TString gname)
 	grp -> SetLineWidth(20);
 	grp -> SetLineColor(CStyle[4+i].fColor);
 	grp -> SetMarkerStyle(0);
-	mv -> Add(grp, "AL");
+	mv -> Add(grp, "3");
 	lg -> AddEntry(grp, pBUUname[i].config);
       }
     }
@@ -1130,13 +1253,26 @@ void Draw_DeltaDIndiv(UInt_t igname, TString gname)
     if( bImQMD ) {
       grp = GetSDGraph(gname,igname,j, "ImQMD");
       if( grp ) {
-	grp -> SetLineWidth(20);
+	grp -> SetLineWidth(1);
 	grp -> SetLineColor(CStyle[6].fColor);
+	grp -> SetFillColor(CStyle[6].fColor);
 	grp -> SetMarkerStyle(0);
-	mv -> Add(grp, "AL");
+	mv -> Add(grp, "3");
 	lg -> AddEntry(grp, "ImQMD");
       }
     }
+
+    if( bAMD ) {
+      grp = GetSDGraph(gname, igname, j, "AMD", AMDnameText[0].Version);
+      if( grp ) {
+	grp -> SetLineWidth( 1 );
+	grp -> SetLineColor( AMDnameText[0].fColor);
+	grp -> SetFillColor( AMDnameText[0].fColor);
+	mv -> Add(grp, "3");
+	lg -> AddEntry(grp, "AMD"+AMDnameText[0].config);
+      }
+    }
+
 
     grp = GetSDGraph(gname,igname,j, "DATA");
     if( grp == NULL ) continue;
@@ -1149,7 +1285,7 @@ void Draw_DeltaDIndiv(UInt_t igname, TString gname)
 
     //    grp -> Print();
 
-    mv -> Add(grp, "AP");
+    mv -> Add(grp, "P");
     lg -> AddEntry(grp, "Data");
 
     
@@ -1160,8 +1296,8 @@ void Draw_DeltaDIndiv(UInt_t igname, TString gname)
 
     Double_t ylow  = Double_t( Int_t((1.-alpha)*ymean*1000.) / 1000. );
     Double_t yhigh = Double_t( Int_t((1.+alpha)*ymean*1000.) / 1000. );
-    mv -> SetMaximum( yhigh );
-    mv -> SetMinimum( ylow );
+    // mv -> SetMaximum( yhigh );
+    // mv -> SetMinimum( ylow );
 
     // mv -> GetYaxis()->SetLabelFont(43);
     // mv -> GetYaxis()->SetLabelSize(20);
@@ -1419,7 +1555,7 @@ void Draw_v_y_System(UInt_t igname, UInt_t vn=1, TString para="y")
   Bool_t bData = 1;
   Bool_t bAMD = 0;
   Bool_t bImQMD = 0;
-  Bool_t bpBUU = 1;
+  Bool_t bpBUU = 0;
 
   TGraphErrors* v_y;
   TString ypara[4];
@@ -1445,6 +1581,10 @@ void Draw_v_y_System(UInt_t igname, UInt_t vn=1, TString para="y")
       yaxis[0] = -0.5;
       yaxis[1] =  0.5;
 
+      if( vn == 2 ){
+	yaxis[0] = -0.1;
+	yaxis[1] =  0.02;
+      }
 
     }
     else if( vn == 1 ) { 
@@ -1466,8 +1606,8 @@ void Draw_v_y_System(UInt_t igname, UInt_t vn=1, TString para="y")
     for( auto isys : {1,3,0} ) {
 
       if( vn == 2 ){
-	lg -> SetY1(0.6);
-	lg -> SetY2(0.9);
+	lg -> SetY1(0.15);
+	lg -> SetY2(0.4);
       }
 
     
@@ -1481,7 +1621,7 @@ void Draw_v_y_System(UInt_t igname, UInt_t vn=1, TString para="y")
 
 
       v_y -> SetMarkerStyle(imark[isys]);
-      v_y -> SetMarkerSize(1.);
+      v_y -> SetMarkerSize(1.2);
       v_y -> SetLineColor(icol[isys]);
       v_y -> SetMarkerColor(icol[isys]);
 
@@ -1489,12 +1629,12 @@ void Draw_v_y_System(UInt_t igname, UInt_t vn=1, TString para="y")
 	auto f1 = v_y -> GetFunction(Form("fv%dfit",vn));
 	if( f1 != NULL )
 	  f1 -> SetLineColor(icol[ipart]);
-	else {
-	  v_y -> Fit(Form("fv%dfit",vn),"","",v1fit[0], v1fit[1]);
-	  f1 = v_y -> GetFunction(Form("fv%dfit",vn));
+	// else {
+	//   v_y -> Fit(Form("fv%dfit",vn),"","",v1fit[0], v1fit[1]);
+	//   f1 = v_y -> GetFunction(Form("fv%dfit",vn));
 	  
-	  f1 -> SetLineColor(icol[ipart]); 
-	}
+	//   f1 -> SetLineColor(icol[ipart]); 
+	// }
       }
 
 
@@ -1733,7 +1873,7 @@ void Draw_v_y(UInt_t igname, UInt_t vn = 1)
     }
 }
 
-void Draw_v_y_Model(UInt_t igname, UInt_t isys, UInt_t vn=1, TString para="y") 
+void Draw_v_y_Model(UInt_t igname, UInt_t isys, UInt_t vn=1, TString para="y_{cm}") 
 {
   if( vn > 2) vn = 1;
 
@@ -1748,17 +1888,15 @@ void Draw_v_y_Model(UInt_t igname, UInt_t isys, UInt_t vn=1, TString para="y")
 
   for(auto ipart: {0,1,2,3,4} ) {
 
-    ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 500, 600); iccv++;
-    gStyle->SetOptTitle(0);
 
     TMultiGraph *mv = new TMultiGraph();
     mv -> SetName(Form("mv_%d",ipart));
     mv -> SetTitle(";"+para+Form("; v%d",vn));
 
-    TLegend *lg = new TLegend(0.2,0.7,0.6,0.9,lpid[ipart]);
+    TLegend *lg = new TLegend(0.2,0.5,0.6,0.9,lpid[ipart]);
     lg -> SetFillColor(0);
 
-    if( para == "y" ) 
+    if( para.Contains("y") )
 	ypara = Form("gu_v%d",vn);
     else if( vn == 1 )
       ypara =  "g_utv1_0";
@@ -1766,6 +1904,7 @@ void Draw_v_y_Model(UInt_t igname, UInt_t isys, UInt_t vn=1, TString para="y")
       ypara = "g_utv2";
 	     
 
+    // DATA
     v_y = LoadData(igname, isys, ipart, ypara); 
     if( v_y != NULL ) 
       LOG(INFO) << v_y -> GetName() << " is registred. " << FairLogger::endl;
@@ -1782,36 +1921,30 @@ void Draw_v_y_Model(UInt_t igname, UInt_t isys, UInt_t vn=1, TString para="y")
     v_y -> SetMarkerSize(1.);
     v_y -> SetLineColor( CStyle[0].fColor );
     v_y -> SetMarkerColor( CStyle[0].fColor );
-    
+            
     mv -> Add( v_y, "p" );
     lg -> AddEntry(v_y, "Data : "+lsys[isys]);
+    //---------
 
+    if( bAMD && para.Contains("y") ) {
 
-    if( bAMD && para == "y" ) {
-
-      TString AMD_Config[] = {
-	//"E270-124-112-sly4-l055-mdcorr50-cxAg",
-	//"E270-124-112-sly4-l055-mdcorr20-cxAg",
-	"E270-132-124-sly4-mdcorr50-cxAq"};
-      
-      UInt_t iin = 0;
-      for( auto samd : AMD_Config ) {
+      for( auto samd : AMDnameText ) {
+	
+	if( !samd.Version.Contains(rsys[isys]) ) continue;
 
 	v_y = LoadAMDText(isys, ipart, Form("v%d",vn),  
-			  "rapflow", samd);
+			  "rapflow", samd.Version);
       
 	if( v_y != NULL ) {
 
-	  v_y ->Print();
-	  v_y -> SetMarkerStyle(CStyle[2+iin].mStyle);
-	  v_y -> SetMarkerSize(1.);
-	  v_y -> SetLineColor( CStyle[2+iin].fColor );
-	  v_y -> SetMarkerColor( CStyle[2+iin].fColor );
-	  
-	  mv -> Add( v_y, "p" );
-	  lg -> AddEntry(v_y, "AMD"+samd(18,30));
+	  v_y -> SetFillStyle( samd.fStyle );
+	  v_y -> SetLineColor( samd.fColor );
+	  v_y -> SetFillColorAlpha( samd.fColor, 0.4 );
+
+	  mv -> Add( v_y, "3" );
+
+	  lg -> AddEntry(v_y, "AMD_"+samd.config);
 	}
-	iin++;
       }
     }
 
@@ -1858,9 +1991,9 @@ void Draw_v_y_Model(UInt_t igname, UInt_t isys, UInt_t vn=1, TString para="y")
       }
     }
 
-    if( para == "y" ) {
+    if( para.Contains("y") ) {
       if( vn == 1 ) {
-	mv -> GetYaxis() -> SetRangeUser(-1.2, 1.2);
+	mv -> GetYaxis() -> SetRangeUser(-0.6, 0.6);
 	mv -> GetXaxis() -> SetRangeUser(-1.2 , 1.2);
       }
       else if( vn == 2 ) {
@@ -1876,14 +2009,26 @@ void Draw_v_y_Model(UInt_t igname, UInt_t isys, UInt_t vn=1, TString para="y")
       else if( vn == 2 ) {
 	mv -> GetYaxis() -> SetRangeUser(-0.4, 0.05);
 	mv -> GetXaxis() -> SetRangeUser( 0.   ,2.);
-	lg -> SetY1(0.2);
-	lg -> SetY2(0.4);
 	lg -> SetHeader( header );
       }
     }
 
+
+    if(ipart == 0 ) {
+      ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv)); iccv++;
+      lg  -> Draw();
+    }
+
+
+    ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv), 500, 600); iccv++;
+    gStyle->SetOptTitle(0);
+
     mv->Draw("AP");
-    lg->Draw();
+    plabel.SetTextAlign(13);
+    plabel.DrawLatexNDC(0.15,0.9, fsys[isys]+"_"+lpid[ipart]);
+
+
+    //    lg->Draw();
   }
 }
 
@@ -1912,8 +2057,8 @@ void Draw_RPResolutionDM()
     for( auto igname : ROOT::TSeqI(ndata) ) {
       Double_t *res = GetRPResolution(igname, isys );
       
-      cout << " m " << *(res+2) << " +- " << *(res+3)
-	   << " cos " << *res << " +- " << *(res+1) << endl;
+      // cout << " m " << *(res+2) << " +- " << *(res+3)
+      // 	   << " cos " << *res << " +- " << *(res+1) << endl;
 
       mres -> SetPoint(igname, *(res+2), *res);
       mres -> SetPointError(igname, *(res+3), *(res+1));
@@ -1965,46 +2110,52 @@ void Draw_v20_Edependence()
 }
 
 
-void Draw_dndy(UInt_t isys, UInt_t ipart, TString gname) 
+void Draw_dndy(UInt_t isys, UInt_t ipart, TString gname="") 
 {
 
   gStyle -> SetLegendFillColor(0);
-  Bool_t bAMD = 1;
+  Bool_t bAMD  = 1;
   Bool_t bImQMD = 0;
   Bool_t bpBUU = 0;
-  Bool_t bTommy = 1;
+  Bool_t bTommy = 0;
   Bool_t bKaneko = 0;
+  if( !bCentral ) bKaneko = 0;
 
   auto mgr = new TMultiGraph();
-  mgr -> SetTitle(";y_{cm};dN/dy");
-  auto lg  = new TLegend(0.15, 0.2, 0.55, 0.45,"");
-  lg -> SetHeader(bName[isys]+lpid[ipart]);
+  mgr -> SetTitle(";y_{cm}/y_{prj};dN/dy");
+
+  auto lg  = new TLegend(0.15, 0.2, 0.5, 0.7,"");
+  lg -> SetHeader(lpid[ipart]);
   lg -> SetFillStyle(0);
 
   TGraphErrors *g_dndy = NULL;
-  
+
+  for( auto iisys : {isys} ) {
+    for( auto idata : ROOT::TSeqI( ndata ) ){
+      g_dndy = LoadData(idata,iisys,ipart,"h_dndy"); 
+      if( g_dndy != NULL ) {
+	g_dndy -> SetMarkerStyle(CStyle[0].mStyle);
+	g_dndy -> SetMarkerSize(1.);
+	g_dndy -> SetLineColor( CStyle[0].fColor );
+	g_dndy -> SetMarkerColor( CStyle[0].fColor );
+	g_dndy -> SetMarkerSize(1.);
+	mgr -> Add( g_dndy, "P");
+	lg  -> AddEntry( g_dndy, fsys[0]+gnames[idata].config1);
+      }
+    }
+  }
+
   if( bTommy ) {
-    TString mgname[] = {
-      //"M37_40"
-      //"M34_34"
-      //,"M34_37","M34_40",
-      //      "M40_40"
-      //      "M40_43"
-      //      "M43_43"
-      //      "M46_46"
-      "M52_52"
-      //      "M49_49"
-      //      "M40_52"
-      //,"M40_55"
-      //"M43_43"};
-      //"M43_46","M43_49",
-      //"M43_52",
-      //"M46_52"
-      //,"M49_52","M52_55",
-      //,"M52_58","M55_55","M55_58"};
-    };
+    if( bCentral ) gname = "M55_55";
+    else if( !bCentral ) {
+      if( isys == 0 ) gname = "M46_46";
+      else if( isys == 1 ) gname = "M43_52";
+      else if( isys == 3 ) gname = "M46_52";
+    }
+
 
     UInt_t iclsys[] = {0,0,8,0};
+    TString glbl[]  = {"Data","Data","^{124}Sn(Reverse)","Data"};
 
     std::vector< UInt_t > ivsys;
     ivsys.push_back(isys);
@@ -2013,26 +2164,27 @@ void Draw_dndy(UInt_t isys, UInt_t ipart, TString gname)
       ivsys.push_back(2);
     
 
-      for( auto iisys : ivsys ) {
+    for( auto iisys : ivsys ) {
       UInt_t ii = 0;
-      for( auto imgname : mgname ) {
 
-	TString hname = "rapHist_" + imgname;
-	if( iisys == 2 ) hname = "rapHistflipped_" + imgname;
+      TString hname = "rapHist_" + gname;
+      if( iisys == 2 ) 
+	hname = "rapHistflipped_" + gname;
 
-	g_dndy = LoadTommyData(iisys, ipart, hname);
-	if( g_dndy != NULL ) {
-	  g_dndy -> SetMarkerStyle(CStyle[iclsys[iisys]].mStyle);
-	  g_dndy -> SetMarkerSize(1.);
-	  g_dndy -> SetLineColor( CStyle[iclsys[iisys]].fColor+ii );
-	  g_dndy -> SetMarkerColor( CStyle[iclsys[iisys]].fColor+ii );
-	  ii++;
-	  mgr -> Add( g_dndy, "P");
-	  lg  -> AddEntry( g_dndy, imgname );
-	}
+      g_dndy = LoadTommyData(iisys, ipart, hname);
+      if( g_dndy != NULL ) {
+	g_dndy -> SetMarkerStyle(CStyle[iclsys[iisys]].mStyle);
+	g_dndy -> SetMarkerSize(1.);
+	g_dndy -> SetLineColor( CStyle[iclsys[iisys]].fColor+ii );
+	g_dndy -> SetMarkerColor( CStyle[iclsys[iisys]].fColor+ii );
+	ii++;
+	mgr -> Add( g_dndy, "P");
+	lg  -> AddEntry( g_dndy, fsys[iisys]+"_Tmy" );
       }
     }
   }
+
+
   if( bKaneko ) {
     g_dndy = LoadKanekoData(isys, ipart);
     if( g_dndy != NULL ) {
@@ -2046,36 +2198,60 @@ void Draw_dndy(UInt_t isys, UInt_t ipart, TString gname)
   }
 
   // AMD
-  if( bAMD ) {
+  if( bAMD && !bCentral ) {
 
-    TString AMD_Config[][2] = {
-      {"E270-124-112-sly4-l055-mdcorr50-cxAg","sly4-l055-mc50-cxAg"},
-      {"E270-124-112-sly4-l055-mdcorr20-cxAg","sly4-l055-mc20-cxAg"},
-      //{"E270-132-124-sly4-mdcorr50-cxAq","sly4-mc50-cxAq"}
-    };
-      
     UInt_t iin = 0;
-    for( auto samd : AMD_Config ) {
+    for( auto samd : AMDnameText ) {
 
-      g_dndy = LoadAMDText(isys, ipart, "dndy",  "rapflow", *samd);
+      if( !samd.Version.Contains(rsys[isys]) ) continue;
+
+      g_dndy = LoadAMDText(isys, ipart, "dndy",  "rapflow", samd.Version);
       if( g_dndy != NULL ) {
-	g_dndy -> SetMarkerStyle(CStyle[2+iin].mStyle);
-	g_dndy -> SetMarkerSize(1.);
-	g_dndy -> SetLineColor( CStyle[2+iin].fColor );
-	g_dndy -> SetMarkerColor( CStyle[2+iin].fColor );
-	iin++;
-	mgr -> Add( g_dndy, "lP");
+	g_dndy -> SetFillStyle( samd.fStyle );
+	g_dndy -> SetLineColorAlpha( samd.fColor, 0.4 );
+	g_dndy -> SetFillColorAlpha( samd.fColor, 0.4 );
+	//	g_dndy -> SetFillColor( samd.fColor );
 
-	lg  -> AddEntry( g_dndy, "AMD"+ (TString)*(samd+1));
+	mgr -> Add( g_dndy, "4");
+       	lg  -> AddEntry( g_dndy, "AMD"+ samd.config);
       }   
     }
   }
 
+  if( bAMD && bCentral ) {
+
+    UInt_t iin = 0;
+    for( auto samd : AMDnameCent ) {
+
+      g_dndy = LoadAMDHist(isys, ipart, "h_dndy", samd.Version);
+      if( g_dndy != NULL ) {
+	g_dndy -> SetFillStyle( samd.fStyle );
+	g_dndy -> SetLineColorAlpha( samd.fColor, 0.4 );
+	g_dndy -> SetFillColorAlpha( samd.fColor, 0.4 );
+	//	g_dndy -> SetFillColor( samd.fColor );
+
+	mgr -> Add( g_dndy, "4");
+       	lg  -> AddEntry( g_dndy, "AMD"+ samd.config);
+      }   
+    }
+
+
+  }
+
+  if(ipart == 0 ) {
+    ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv)); iccv++;
+    lg  -> Draw();
+  }
+
+  
   ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv)); iccv++;
   mgr -> GetXaxis() -> SetRangeUser(-2.5, 2.5);
-
   mgr -> Draw("ALP");
-  lg  -> Draw();
+  plabel.SetTextAlign(13);
+  //  plabel.DrawLatexNDC(0.15,0.9, fsys[isys]+"_"+lpid[ipart]);
+  plabel.DrawLatexNDC(0.15,0.9, lpid[ipart]);
+
+  
 }
 
 
@@ -2123,28 +2299,20 @@ void Draw_dndyRatio(UInt_t isys, UInt_t ipart, TString gname)
 
   // AMD
   if( bAMD ) {
-    auto g_dndy = LoadAMDText(isys, ipart, "dndy",  "rapflow", "E270-124-112-sly4-l055-mdcorr50-cxAg");
-    if( g_dndy != NULL ) {
-      g_dndy -> SetMarkerStyle(CStyle[2].mStyle);
-      g_dndy -> SetMarkerSize(1.);
-      g_dndy -> SetLineColor( CStyle[2].fColor );
-      g_dndy -> SetMarkerColor( CStyle[2].fColor );
+    for( auto samd : AMDnameText ) {
+      
+      if( !samd.Version.Contains(rsys[isys]) ) continue;
 
-      mgr -> Add( g_dndy, "lP");
-      lg  -> AddEntry( g_dndy, "AMD_mdcr50");
-    }   
+      auto g_dndy = LoadAMDText(isys, ipart, "dndy",  "rapflow", samd.Version);
+      if( g_dndy != NULL ) {
+	g_dndy -> SetMarkerStyle(samd.fStyle);
+	g_dndy -> SetLineColor( samd.fColor);
+	g_dndy -> SetMarkerColor( samd.fColor );
 
-
-    g_dndy = LoadAMDText(isys, ipart, "dndy",  "rapflow", "E270-124-112-sly4-l055-mdcorr20-cxAg");
-    if( g_dndy != NULL ) {
-      g_dndy -> SetMarkerStyle(CStyle[3].mStyle);
-      g_dndy -> SetMarkerSize(1.);
-      g_dndy -> SetLineColor( CStyle[3].fColor );
-      g_dndy -> SetMarkerColor( CStyle[3].fColor );
-
-      mgr -> Add( g_dndy, "lP");
-      lg  -> AddEntry( g_dndy, "AMD_mdcr20");
-    }   
+	//	mgr -> Add( g_dndy, "4");
+	//	lg  -> AddEntry( g_dndy, "AMD+"+samd.config);
+      }   
+    }
   }
 
   auto g_dndyr = new TGraphErrors();

@@ -3,7 +3,7 @@
 //drawing
 UInt_t selReactionPlanef = 10000;
 UInt_t  phicutID = 1;
-UInt_t  cutndf   = 20;
+UInt_t  cutndf   = 15;
 Float_t cutdist  = 20.;
 
 TFile* fefffile;
@@ -34,6 +34,8 @@ void     GetdNdydPt(Double_t ycm, Double_t pt);
 void     GetdNdydUt( Double_t ycm, Double_t ut, TH2D* h2c);
 void     GetdNdydUt( Int_t ih, Int_t iy, Int_t ipt, TH2D *h2c);
 void     GetYUtCorrection(TH2D &h2, TH2D &h2c);
+TH1D*    GetdNdy(TH2D *h2c, Double_t ntotal);
+TH1D*    GetdNdut(TH2D* h2c, Double_t ntotal, Double_t ylow, Double_t yup);
 
 TFile*        GraphSave;
 TH2D*         hAcpCorr;
@@ -41,6 +43,7 @@ TH2D*         hAcpYUtCorr;
 
 Double_t      fmass;
 Double_t      *acpcorr = new Double_t[2];
+Double_t      phiAcp = 1;
 //-------------------//
 void DoFlow_fin(Int_t isel = 0) 
 {
@@ -62,9 +65,9 @@ void DoFlow_fin(Int_t isel = 0)
   //  TString su = gSystem -> Getenv("TRK");
   // cout << " TRK " << su << endl;
 
-  //UInt_t Seltrk = 0;
+  // UInt_t Seltrk = 0;
   // if( su != "" )
-  //   Seltrk = (UInt_t)atoi(su);
+  //    Seltrk = (UInt_t)atoi(su);
 
   TString su = gSystem -> Getenv("UC");
   if( su != "" ) {
@@ -81,6 +84,14 @@ void DoFlow_fin(Int_t isel = 0)
       Lcent = 0;
   }
 
+  for( auto iu : trkcut ) {
+    if( Lcent == *iu && Ucent == *(iu+1) ) {
+      cout << " Low and Hight - " << *iu << " " << *(iu+1)  << " "	   << endl;
+      break;
+    }
+  }
+  
+  
   Double_t x  = (Lcent + Ucent)/2.;
   Double_t mmean = -0.0002*pow(x,3)+0.0306*pow(x,2)-0.3121*x+19.0;
 
@@ -98,7 +109,8 @@ void DoFlow_fin(Int_t isel = 0)
   }
   UInt_t Seltrk = m_save;
 
-  //  if( Seltrk >= 8 ) Seltrk = 3;
+  if( Seltrk == 14 )
+    Seltrk = 13;
 
   LOG(INFO) << "Multiplicity :: " << Lcent << " to " << Ucent << " Seltrk = " << Seltrk <<  FairLogger::endl;
 
@@ -127,7 +139,9 @@ void DoFlow_fin(Int_t isel = 0)
 			 "|phi|<45",
 			 "|phi|>135",
 			 "45<|phi|<135",
-			 "all"};
+			 "all",
+			 "-20<phi<30"
+  };
 
   LOG(INFO) << "Phi angle cut " << phicutID << " : "  << PhiCutDef[phicutID]  << FairLogger::endl;
   
@@ -211,7 +225,6 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
   // auto hyutacpcrr = new TH2D("hyutacpcrr", hlabel ,200, -1., 1.4, 100, 0., 1.5);  // corrected y-ut
   auto hyutacp    = new TH2D("hyutacp"   , hlabel , 40, -2., 2., 50, 0., 2.5);
   auto hyutacpcrr = new TH2D("hyutacpcrr", hlabel , 40, -2., 2., 50, 0., 2.5);
-  auto hdndy      = new TH1D("hdndy",      hlabel , 40, -2., 2.);
   auto gdndycrr   = new TGraphErrors();   gdndycrr -> SetName("gdndycrr");
 
   auto hyptacp    = new TH2D("hyptacp"   , hlabel ,200, -1., 1.4, 200, 0., 1100);
@@ -340,7 +353,8 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
 
 
     /// centrality selection
-    Int_t trackselection = aflow->mtrack2;
+    //    Int_t trackselection = aflow->mtrack2;
+    Int_t trackselection = aflow->mtrack3;
     
     if(trackselection > Ucent || trackselection <= Lcent || aflow->mtrack4 < 6) continue;
     hmult->Fill( trackselection );
@@ -381,15 +395,23 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
       switch(phicutID) {
       case 0:
 	if( abs(phi) > 45*TMath::DegToRad() && abs(phi) < 135*TMath::DegToRad()) continue;
+	phiAcp = 2.*45./180.;
 	break;
       case 1:
 	if( abs(phi) > 45*TMath::DegToRad()) continue;
+	phiAcp = 45./180.;
 	break;
       case 2:
 	if( abs(phi) < 135*TMath::DegToRad() ) continue;
+	phiAcp = 45./180.;
 	break;
       case 3:
 	if( abs(phi) < 45*TMath::DegToRad() || abs(phi) > 135*TMath::DegToRad()) continue;
+	phiAcp = 90./180.;
+	break;
+      case 5:
+	if( phi > 30*TMath::DegToRad() || phi < -20*TMath::DegToRad() ) continue;
+	phiAcp = (30.+20.)/360.;
 	break;
       }
 
@@ -578,23 +600,38 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
 
   if( bAcc_corr ) {
     GetYUtCorrection(*hyutacp, *hyutacpcrr);
+    TH1D* h_dndyc = GetdNdy(hyutacpcrr, (Double_t)hmult->GetEntries());
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+    h_dndyc -> Draw("e");
+    h_dndyc -> Write();
+
+    Double_t ylow = 0.;
+    Double_t yup = 0.2;
+    TH1D* h_dndutc = GetdNdut(hyutacpcrr, (Double_t)hmult->GetEntries(),ylow,yup);
+    ic++; cc = new TCanvas(Form("cc%d",ic),Form("cc%d",ic),700,500);
+    h_dndutc -> Draw("e");
+    h_dndutc -> Write();
+
     DrawUt(hyutacpcrr,1);
     DrawUt(hyutacp,1,"same",2);
     DrawUt(hAcpYUtCorr,1,"same",4);
+
+    //    TH1D* dndy_proj = hytacpcrr->ProjectionX();
+    // auto xBin = hyutacpcrr->GetXaxis()->GetNbins();
+    // auto yBin = hyutacpcrr->GetYaxis()->GetNbins();
+    // Double_t err;
+    // UInt_t ii = 0;
+    // for( auto ibin : ROOT::TSeqI( xBin ) ) {
+    //   auto counts = hyutacpcrr -> IntegralAndError(ibin, ibin+1, 0, yBin, err) / (Double_t)hmult->GetEntries() * 
+    // 	hyutacpcrr->GetXaxis()->;
+    //   if(  !std::isnan(counts) ) {
+    // 	gdndycrr -> SetPoint( ii, hyutacpcrr->GetXaxis()->GetBinCenter(ibin), counts);
+    // 	gdndycrr -> SetPointError(ii, 0, err);
+    // 	ii++;
+    //   }
+    // }
+
     
-    auto xBin = hyutacpcrr->GetXaxis()->GetNbins();
-    auto yBin = hyutacpcrr->GetYaxis()->GetNbins();
-    Double_t err;
-    UInt_t ii = 0;
-    for( auto ibin : ROOT::TSeqI( xBin ) ) {
-      auto counts = hyutacpcrr -> IntegralAndError(ibin, ibin+1, 0, yBin, err) / (Double_t)hmult->GetEntries() * 
-	hyutacpcrr->GetXaxis()->;
-      if(  !std::isnan(counts) ) {
-	gdndycrr -> SetPoint( ii, hyutacpcrr->GetXaxis()->GetBinCenter(ibin), counts);
-	gdndycrr -> SetPointError(ii, 0, err);
-	ii++;
-      }
-    }
 
     DrawUt(hyutacpcrr,2);
     DrawUt(hyutacp,2,"same",2);
@@ -1072,13 +1109,17 @@ void PlotPtDependence(UInt_t selid = 2, UInt_t seltrk = 6)       //%% Executable
 Bool_t   LoadAcceptanceCorrection(UInt_t selid, UInt_t seltrk)
 {
 
-  TString phiname[] = { "45or135", "45", "135", "45to135","all"};
+  TString phiname[] = { "45or135", "45", "135", "45to135","all","-20to30"};
 
   //  TString flabel = Form("_ndf%d_dis%d",cutndf, (Int_t)cutdist);           
   //  TString fname = "data/rootfiles/UnfoldedLCPSpectra_"+ phiname[phicutID] + flabel + trklabel[seltrk]+".slim.root";
 
   TString trklabel = Form("_%dto%02d",trkcut[seltrk][0],trkcut[seltrk][1]);
-  TString fname = "data/rootfiles/UnfoldedLCPSpectra_"+ phiname[phicutID] + trklabel+".slim.root";
+  TString fname = "data/rootfiles/UnfoldedLCPSpectra_"+ phiname[phicutID] + trklabel+".slim.root";  
+
+
+  //@@@@@@@@@ temporal
+  //  fname = "data/rootfiles/UnfoldedLCPSpectra_45_55to80.slim.root";
 
   LOG(INFO) << fname << " is selected for efficiency correction. " << trklabel << " : " << seltrk << FairLogger::endl;
   
@@ -1179,7 +1220,9 @@ void GetYUtCorrection(TH2D &h2, TH2D &h2c)
   TString hname = h2c.GetName(); 
   h2c = h2;
   h2c.SetName(hname);
+  h2c.Sumw2();
   h2c.Divide(hAcpYUtCorr);
+
 
   // auto xnbins = h2.GetXaxis()->GetNbins();
   // auto ynbins = h2.GetYaxis()->GetNbins();
@@ -1202,6 +1245,45 @@ void GetYUtCorrection(TH2D &h2, TH2D &h2c)
   // 	  h2c.Fill(xcenter, ycenter, binCont/crf);
   //     }
   // }
+}
+
+TH1D* GetdNdy(TH2D* h2c, Double_t ntotal)
+{
+  TH1D* h_dndy = new TH1D();
+  h_dndy -> SetName("h_dndy");
+  h_dndy -> Sumw2();
+
+  h_dndy  = h2c->ProjectionX("h_dndy",0,46);
+  if( h_dndy == NULL ) return NULL;
+
+  Double_t rnorm  = phiAcp * (h_dndy->GetXaxis()->GetBinWidth(0))/y_cm[isys+6];
+
+  cout << h2c->GetName()
+       << " phiacp = " << phiAcp 
+       << " binwidth = " << h_dndy->GetXaxis()->GetBinWidth(0)
+       << " total = " << ntotal
+       << " y_cm = " << y_cm[isys+6]
+       << endl;
+  h_dndy -> Scale(1./(rnorm*ntotal));
+  return h_dndy;
+}
+
+TH1D* GetdNdut(TH2D* h2c, Double_t ntotal, Double_t ylow, Double_t yup)
+{
+  TH1D* h_dndut = new TH1D();
+  h_dndut -> Sumw2();
+
+  Double_t lbin = h2c->GetXaxis()->FindBin(ylow);
+  Double_t ubin = h2c->GetXaxis()->FindBin(yup);
+  h_dndut  = h2c->ProjectionY("h_dndut",lbin,ubin);
+  h_dndut -> SetTitle(Form("y%3.1f-%3.1f;U_{t0};dN/dydU_{t0}",ylow,yup));
+
+  if( h_dndut == NULL ) return NULL;
+
+  Double_t rnorm  = (yup-ylow)*h_dndut->GetXaxis()->GetBinWidth(0);
+
+  h_dndut -> Scale(1./(rnorm*ntotal*phiAcp));
+  return h_dndut;
 }
 
 void GetdNdydUt( Int_t ih, Int_t ixbin, Int_t iybin, TH2D *h2c)

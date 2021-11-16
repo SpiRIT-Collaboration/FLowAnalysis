@@ -50,7 +50,7 @@ void run_analysis(Int_t nevt = -1)
   anaRun->AddTask(TPCTask);
 
   TPCTask->SetRunInfo(tDir, tVer, dVer);
-  TPCTask->SetFlowAnalysis(kFALSE);  // Flow analysis is activated.
+  TPCTask->SetFlowAnalysis(1);  // Flow analysis is activated.
 
   anaRun->Init();
   

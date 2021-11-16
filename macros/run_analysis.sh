@@ -9,7 +9,7 @@ source ../build/config.sh
 
 # TPC data
 #
-VERSION=52
+VERSION=53
 export TPCDIR=/home/recoData/20200529/data
 export RCVER=develop.1988.bf2b00e
 export SUFX=BTt
@@ -48,21 +48,20 @@ export NEULAND=0;
 #--------------
 
 source runList.sh
-
 ##--- for Process1 ------------------------------------
 # *****> <Edit Here>
 # Set RUNNUMBER1 
 DBVERSION=0
 
-export TPCDIR=$TPCDIR/Sn124
+export TPCDIR=$TPCDIR/Sn112
 
 #RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
-RUNNUMBER1=(${RNF124})
-#RUNNUMBER1=(${RNF112})
+#RUNNUMBER1=(${RNF124})
+RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RNFTEMP})
-#RUNNUMBER1=(${RNF132r})
-#RUNNUMBER1=(${RNF132t})
+#RUNNUMBER1=(${RNF132ss})
+#RUNNUMBER1=(${RNF108ss})
 #RUNNUMBER1=(${RNFG4})
 
 
@@ -73,6 +72,7 @@ function execa() { ## Job for the 2841 with maximum event number = MXEVT
 
 function execb() {  ## batch job for the first run with maxium event number = MXEVT
     echo $MXEVT
+    RUN=${RUNNUMBER1[0]} 
     LOG=log/p1_${RUN}_v${VERSION}.log
     RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR  DBVER=$DBVERSION MXEVT=$1 root -b -q run_analysis.C >& $LOG &
 }
