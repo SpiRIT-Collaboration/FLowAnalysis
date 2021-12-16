@@ -9,7 +9,7 @@ source ../build/config.sh
 
 # TPC data
 #
-VERSION=53
+VERSION=55
 export TPCDIR=/home/recoData/20200529/data
 export RCVER=develop.1988.bf2b00e
 export SUFX=BTt
@@ -53,17 +53,18 @@ source runList.sh
 # Set RUNNUMBER1 
 DBVERSION=0
 
-export TPCDIR=$TPCDIR/Sn112
+export TPCDIR=$TPCDIR/Sn124
 
 #RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
-#RUNNUMBER1=(${RNF124})
-RUNNUMBER1=(${RNF112})
+RUNNUMBER1=(${RNF124})
+#RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RNFTEMP})
 #RUNNUMBER1=(${RNF132ss})
 #RUNNUMBER1=(${RNF108ss})
 #RUNNUMBER1=(${RNFG4})
 
+echo $TPCDIR
 
 function execa() { ## Job for the 2841 with maximum event number = MXEVT
     RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR DBVER=$DBVERSION MXEVT=$1 root run_analysis.C 

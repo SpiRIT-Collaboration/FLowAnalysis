@@ -7,8 +7,6 @@
 // output:
 // (c) Mizuki Kurata-Nishimura 
 //----------------------------------------
-
-//
 //----------------------------------------------------------------------
 void DoRPAnalysis()
 {
@@ -39,10 +37,10 @@ void DoRPAnalysis()
   Long64_t nEntry = SetBranch();
 
   for(Long64_t ievt = 0; ievt < nEntry; ievt++){
-
+    
     ShowProcess(ievt);
     rChain->GetEntry(ievt);
-
+    
     //------ Event selection
     aFlowInfo = (STFlowInfo*)aFlowArray->At(0);
     if( aFlowInfo == NULL ) continue;
@@ -55,13 +53,11 @@ void DoRPAnalysis()
     else
       if( beamPID == 0 ) continue;
     
-    if( beamPID == 124 ){
-      if( (aFlowInfo->mtrack1*0.8-20) > aFlowInfo->mtrack4 ) continue;
-    }
+  
     //------ end of event selection
     fflowtask->SetFlowInfo( aFlowInfo );
     fflowtask->SetRPMidRapidityCut(dMct);
-
+    
     fflowtask->SetParticleArray( *aArray );
 
     if( !bRedo ) { 
@@ -84,8 +80,8 @@ void DoRPAnalysis()
     new( aflow[0] ) STFlowInfo( *aFlowInfo );
 
     mflw->Fill();
-
   }
+
 
   
   fout->cd();

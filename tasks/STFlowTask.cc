@@ -50,7 +50,6 @@ void STFlowTask::SetFlowTask()
 {
   sum_omg2 = 0;
   sum_omg  = 0;  
-  ntrack[2] = 0;
   ntrack[4] = 0;
   ntrack[5] = 0;
   ntrack[6] = 0;
@@ -64,10 +63,7 @@ void STFlowTask::SetFlowTask()
   
   while( (aParticle = (STParticle*)next() ) ) {
 
-    if( aParticle->GetDistanceAtVertex() < 20 )
-      ntrack[2]++;
-
-    if( aParticle->GetDistanceAtVertex() <= 25 && aParticle->GetNDF() >=20 )
+    if( aParticle->GetDistanceAtVertex() <= 20 && aParticle->GetNumCluster() >=15 )
       ntrack[6]++;
     
     SetupFlow( *aParticle );
@@ -123,16 +119,14 @@ void STFlowTask::SetFlowInfo(STFlowInfo *aflowinfo)
   ntrack[5] = fflowinfo->mtrack5;
   ntrack[6] = fflowinfo->mtrack6;
 
-  LOG(DEBUG) << "STFlowTask::SetFlowInfo is called. " << ntrack[4] << FairLogger::endl;
+  LOG(DEBUG) << "STFlowTask::SetFlowInfo is called. ntrack[3]=" << ntrack[3] << FairLogger::endl;
 
 }
 
-void   STFlowTask::SetNTrack(UInt_t *nval)
+void   STFlowTask::SetNTrack(UInt_t i, UInt_t val)
 {
-  for(UInt_t i = 0; i < 7; i++) 
-    ntrack[i] = *(nval + i);
+  fflowinfo->SetNTrack(i, val);
 }
-
 Bool_t STFlowTask::SetupParameters()
 {
   Bool_t fstatus = kTRUE;
@@ -142,7 +136,8 @@ Bool_t STFlowTask::SetupParameters()
 
 void STFlowTask::FinishEvent()
 {
-  fflowinfo->SetNTrack(ntrack);
+  for( auto i : {4,5,6}  )
+    fflowinfo->SetNTrack(i,ntrack[i]);
 
   DoIndividualReactionPlaneAnalysis();
 
@@ -473,20 +468,17 @@ void STFlowTask::SetupFlow(STParticle &apart)
 
   else if( iSystem == 5 || // for simulation
 	  ( pid > 2000 &&  
-	    apart.GetGoodTrackFlag() >= 1111 &&
-	    apart.GetNDF() >= 20       &&
-	    apart.GetDistanceAtVertex() <= 20 )) {
+	    apart.GetGoodTrackFlag() >= 1111 )) {
 
     apart.SetReactionPlaneFlag(1001);
-
-    //    ntrack[6]++;    
+    ntrack[6]++;    
   }
   else
     apart.SetReactionPlaneFlag(0);
 
 
   // Pt weight
-  if( apart.GetPID()!=0 || apart.GetPIDLoose() !=0 ) {
+  if( apart.GetPID()!=0 ) {//|| apart.GetPIDLoose() !=0 ) { since v55 out
     TLorentzVector lrnzVec =  apart.GetLorentzVector();
     //@@@@
     //TVector3 boostVec = STLorentzBoostVector::GetBoostVector(iSystem); 

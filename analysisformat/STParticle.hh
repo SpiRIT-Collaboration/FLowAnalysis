@@ -39,6 +39,7 @@ private:
   Int_t    ftrackID;
 
   UInt_t   fPID;
+  UInt_t   fPID_seq;
   UInt_t   fPID_tight;
   UInt_t   fPID_norm;
   UInt_t   fPID_loose;
@@ -59,6 +60,7 @@ private:
   Double_t fP;               // Momentum/Q [MeV/c]
   Double_t fdEdx;            // dEdx
   Double_t fNDF;             // STVertex::GetNDF()
+  Int_t    fnclust;          // number of cluster
   Double_t fclustex;         // expected cluster number
   Double_t fclusterratio;    // rClusterSize/fclustex
 
@@ -97,6 +99,7 @@ private:
   UInt_t   fNDFf            ;
   UInt_t   fmomentumf    ;
   UInt_t   fdedxf           ;
+  UInt_t   fnclustf         ; // number of cluster flag
   UInt_t   fclusterratiof   ; // cluster ratio flag
   UInt_t   fmassf           ;
 
@@ -139,13 +142,17 @@ public:
   void     SetRecoTrack(STRecoTrack *atrack);
   void     SetVATrack(STGenfitVATask *atrack);
 
+  void     SetNumCluster(STRecoTrack *atrack) 
+  {        fnclust = atrack->GetClusterIDArray()->size();}
+  Int_t    GetNumCluster()              {return rClusterSize;}
+
   void     RotateAlongBeamDirection(Double_t valuex, Double_t valuey);
   void     SetP(Double_t value)          {fP = value;}
   void     SetPiPID();
   Int_t    GetPiPID()                    {return fpipid;}
 
-  void     SetPID();
-  void     SetPID(Int_t value)           {fPID = value;} 
+  //  void     SetPID();
+  void     SetPID(Int_t value)           { fPID = value; SetMass(fPID);}
   Int_t    GetPID()                      {return fPID;}
   void     SetPIDTight(Int_t value)      {fPID_tight = value;}           
   Int_t    GetPIDTight()                 {return fPID_tight;}           
@@ -154,10 +161,13 @@ public:
   void     SetPIDLoose(Int_t value)      {fPID_loose = value;}
   Int_t    GetPIDLoose()                 {return fPID_loose;}           
 
+  Int_t    GetPID_seq()                  {return fPID_seq;}
+
+
   Double_t GetPIDProbability()           {return fPIDProbability;}
 
   void     SetMass(Int_t val);
-  void     SetMass(Double_t value)       {fMass = value;}
+  //  void     SetMass(Double_t value)       {fMass = value;}
   Double_t GetMass()                     {return fMass;}
 
   void     SetBBMass(Double_t val);
@@ -249,6 +259,9 @@ public:
 
   void   SetNDFFlag(UInt_t value)               {fNDFf = value; SetGoodTrackFlag();} 
   //  UInt_t GetNDFFlag()                           {return fNDFf;}
+  void   SetNumClusterFlag(UInt_t value)        {fnclustf = value; SetGoodTrackFlag();}
+  UInt_t GetNumClusterFlag()                    {return fnclustf;}
+  
 
   void   SetClusterRatioFlag(UInt_t value)      {fclusterratiof = value;}
   UInt_t GetClusterRatioFlag()                  {return fclusterratiof;}
@@ -306,6 +319,9 @@ public:
     return frdEdxPointSizef;
   }
 
+  void         SetClustNum(Int_t value)          {fnclust = value;}
+  Int_t        GetClustNum()                     {return fnclust;}
+
   void         SetNDF(Int_t val)                  {rNDF = val;} 
   Int_t        GetNDF()                           {return rNDF;}
   Int_t        GetNDFvertex()                     {return fNDF;}
@@ -321,7 +337,7 @@ public:
   TVector3     GetPOCAVertex()                  {return rPOCAVertex;}
 
 
-  ClassDef(STParticle, 21)
+  ClassDef(STParticle, 22)
 
 };
 

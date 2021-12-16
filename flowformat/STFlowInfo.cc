@@ -88,7 +88,10 @@ void STFlowInfo::SetNTrack(UInt_t *nval) {
 
 }
 
-void STFlowInfo::SetNTrack(UInt_t nval, UInt_t idx) {
+void STFlowInfo::SetNTrack( UInt_t idx, UInt_t nval) {
+
+
+  //  LOG(INFO) << " setNtrack " << idx << " " << nval << FairLogger::endl;       
 
   if(idx < 7) ntrack[idx] = nval;
 

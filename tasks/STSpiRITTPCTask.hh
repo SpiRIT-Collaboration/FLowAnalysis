@@ -72,6 +72,8 @@ private:
   TString rootDir; //!       
   TChain *fChain;  //!
   STEventHeader *eventHeader    = NULL;  //!
+  STBeamInfo    *beamInfo       = NULL;
+
   TClonesArray *trackArray     = NULL;  //!
   TClonesArray *trackVAArray   = NULL;  //!
   TClonesArray *vertexArray    = NULL;  //!
@@ -132,7 +134,7 @@ private:
 			  0.98318320}; //112Sn (temp)
 
   Double_t  protonMaxMomentum = 2500.;  //!  
-
+  Double_t  momRange[8][2] = {{0.,1000.},{0.,1000.},{100.,1400.}, {100.,2200.}, {200.,2800.}, {300.,1400.}, {400.,1800.}, {1300.,2500.}};  
 
   Double_t MassRegion[7][4] ={{ 127.2,   21.3,      4.,  4.},            //pi  
 			      { 911.044, 68.4656,   2.,  2.},            //p  685.3 to 1,165.9

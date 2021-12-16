@@ -69,7 +69,7 @@ private:
 public:
   void   Clear();
   UInt_t *RandumPickUp(const UInt_t val, const UInt_t npart);
-  void   SetNTrack(UInt_t *nval);
+  void   SetNTrack(UInt_t i, UInt_t val);
   void   SetupFlow(STParticle &apart);
   void   SetSelectionOfReactionPlaneFlag(UInt_t val) {selReactionPlanef = val;}
   void   SetFlowInfo(STFlowInfo *aflowinfo);

@@ -24,6 +24,7 @@ STParticle::STParticle(const STParticle &cp)
   
   ftrackID      = cp.ftrackID;;
   fPID          = cp.fPID;
+  fPID_seq      = cp.fPID_seq;
   fPID_tight    = cp.fPID_tight;
   fPID_norm     = cp.fPID_norm;
   fPID_loose    = cp.fPID_loose;
@@ -38,6 +39,7 @@ STParticle::STParticle(const STParticle &cp)
   fpipid        = cp.fpipid;
   fvertex       = cp.fvertex;
   fPIDProbability = cp.fPIDProbability;  
+  fnclust       = cp.fnclust;
   fNDF          = cp.fNDF;
   fLzvec        = cp.fLzvec;
 
@@ -70,9 +72,10 @@ STParticle::STParticle(const STParticle &cp)
   fVatTargetf      = cp.fVatTargetf;
   fdistanceatvertexf = cp.fdistanceatvertexf;
   fNDFf            = cp.fNDFf;
+  fnclustf         = cp.fnclustf;
   fmomentumf       = cp.fmomentumf;
   fdedxf           = cp.fdedxf;
-
+  
   fmassf           = cp.fmassf;
   
   fgoodtrackf      = cp.fgoodtrackf;
@@ -139,6 +142,7 @@ void STParticle::Clear(Option_t *option)
   fPID_norm    = 0;
   fPID_loose   = 0;
   fNDF         = 0.;
+  fnclust      = 0;
   fclustex     = -1.;
   fclusterratio= -1.;
 
@@ -156,6 +160,7 @@ void STParticle::Clear(Option_t *option)
   fRapiditycm  = -9.;
 
   fNDFf        = 1;    
+  fnclustf     = 1;
   fclusterratiof = 1;  
   fmassf       = 1;
 
@@ -187,7 +192,9 @@ void STParticle::SetGoodTrackFlag()
     1000*( fBeamonTargetf * fVatTargetf )  + 
     100 *( fmassf * fmomentumf * fdedxf) +
     10*fdistanceatvertexf + 
-    fNDFf : 0;
+    fnclustf : 0;
+  //    fNDFf : 0;
+
 }
 
 
@@ -226,6 +233,7 @@ void STParticle::SetRecoTrack(STRecoTrack *atrack)
   //  if( fGFChar != fChar )               SetMassFlag(0);
 
 }
+
 
 void STParticle::SetVATrack(STGenfitVATask *atrack)
 {
@@ -294,39 +302,46 @@ void STParticle::SetMass(Int_t val)
 
   Double_t mass = 0;
   switch (val) {
-  case 2212:
-    mass = mp;
-    break;
-
-  case 211:
   case -211:
     mass = mpi;
+    fPID_seq = 0;
     break;
-
+  case 211:
+    mass = mpi;
+    fPID_seq = 1;
+    break;
+  case 2212:
+    mass = mp;
+    fPID_seq = 2;
+    break;
   case 1000010020:
     mass = md;
+    fPID_seq = 3;
     break;
-
   case 1000010030:
     mass = mt;
+    fPID_seq = 4;
     break;
-
   case 1000020030:
     mass = mhe3;
     fRotatedP3.SetMag(fP * 2.);
+    fPID_seq = 5;    
     break;
-
   case 1000020040:
     fRotatedP3.SetMag(fP * 2.);
     mass = mhe4;
+    fPID_seq = 6;    
     break;
 
   default:
     mass = 0;
+    fPID_seq = 99;
     break;
   }
 
   fMass = mass;
+
+  //  cout << " PID " << val << " " << fPID << " -seq " << fPID_seq << endl;
 
   SetLorentzVector();
 }

@@ -32,21 +32,29 @@ unset PHICUT
 #export MNLC=0
 #export MNUC=50
 
-#export MNLC=55
-#export MNUC=80
 
-##-->> b3fm
-##-->(132:52> 2.9fm)
-##-->(132:42> 5.2fm)
 
-multL=" 0,20,35,40,50,55,42,42,40,42, 0, 0,52,47,46"
-multU="35,40,45,55,65,80,52,56,54,55,54,55,55,55,54"
-##      0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
+multL=55,46,46
+multU=80,80,55
+##      0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17
+#####" 0,20,35,40,50,55,42,42,40,42, 0, 0,52,47,46,51,52,42,47"
+#####"35,40,45,55,65,80,52,56,54,55,54,55,55,55,54,80,80,80,80"
+###export MNTRK=13
+###export MNTRK=15
 
-export MNTRK=5
-#export PHICUT=2 #phi>135
-#export PHICUT=5 #-20<phi<30
 export PHICUT=1 #phi<45
+#export PHICUT=2 #phi>135
+
+#--/
+export MNTRK=1
+export PHICUT=1 #phi<45
+export MNSUBVERSION=1
+#----///
+#--/
+export MNTRK=0
+export PHICUT=5 #-20<phi<30
+export MNSUBVERSION=0
+#----///
 
 #########----------------------
 MLC=(${multL})
@@ -56,26 +64,38 @@ export MNUC=${MUC[$MNTRK]}
 
 export MNSFX=BTt
 export MDCUT=0. #0.0               ##   <------@@ mid-rapidity cut
-export MNINVERSION=53.0            ##   <------@@ input
-export MNOUTVERSION=53.0           ##   <------@@ output 
+export MNINVERSION=55.1            ##   <------@@ input
+export MNOUTVERSION=55.1           ##   <------@@ output 
 
+function doflow3fm112p() 
+{
+    data112
+    PARTICLES=("2")
+    doflowmulti $MNSUBVERSION
+}
 function doflow3fm132() 
 {
     data132
     PARTICLES=("2" "3" "4" "5" "6" )
-    doflowmulti 2
+    doflowmulti $MNSUBVERSION
 }
 function doflow3fm108() 
 {
     data108
     PARTICLES=("2" "3" "4" "5" "6")
-    doflowmulti 2
+    doflowmulti $MNSUBVERSION
 }
 function doflow3fm112() 
 {
     data112
     PARTICLES=("2" "3" "4" "5" "6" )
-    doflowmulti 2
+    doflowmulti $MNSUBVERSION
+}
+function doflow3fm124() 
+{
+    data124
+    PARTICLES=("2" "3" "4" "5" "6" )
+    doflowmulti $MNSUBVERSION
 }
 ##--
 #
@@ -96,15 +116,50 @@ function data108s()    ##CONFIG
 ##<----
 }
 
+function data108one()    ##CONFIG
+{
+##--
+    export MNSN=108
+    export MNRNF=$RNF108one
+    export MNOSUBV=
+
+    if [ -n "$1" ]; then
+	export MNINVERSION=$1            ##   <------@@ input
+	export MNOUTVERSION=$2           ##   <------@@ output 
+    fi
+
+    commonsetup
+##<----
+}
+
+function data112one()    ##CONFIG
+{
+##--
+    export MNSN=112
+    export MNRNF=$RNF112one
+    export MNOSUBV=
+
+    if [ -n "$1" ]; then
+	export MNINVERSION=$1            ##   <------@@ input
+	export MNOUTVERSION=$2           ##   <------@@ output 
+    fi
+
+    commonsetup
+##<----
+}
+
 function data132()    ##CONFIG
 {
 ##-- 
-    if [ $MNTRK -eq 14 ]; then
-	export MNTRK=13
+    if [ $MNTRK -eq 13 ]; then
+	export MNTRK=14
     fi
+    if [ $MNTRK -eq 15 ]; then
+	export MNTRK=16
+    fi
+
     export MNLC=${MLC[$MNTRK]}
     export MNUC=${MUC[$MNTRK]}
-
     export MNSN=132
     export MNRNF=$RNF132
     export MNMXEVT=
@@ -338,7 +393,7 @@ function doflowmulti()
     fi
 
 
-#    PARTICLES=("2" "3" "4" "5" "6")
+    PARTICLES=("2" "3" "4" "5" "6")
     typeset -i I=0;
     while(( $I < ${#PARTICLES[@]} ))
     do
@@ -425,12 +480,13 @@ function showenv()
     echo "++++++++++++++++++++++++++++++++++++++++"
 }
 
-function showdata()
+function checkdata()
 {
     typeset -i I=0
     while(( $I < ${#RUNNUMBER1[@]} ))
     do    
-	ls -l data/run${RUNNUMBER1[$I]}_$MNSFX.v$MNINVERSION.root
+	ls -l data/run${RUNNUMBER1[I]}_$MNSFX.v$MNINVERSION.root
+	let I++
     done
 }
 

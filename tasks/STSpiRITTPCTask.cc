@@ -266,6 +266,8 @@ Bool_t STSpiRITTPCTask::SetupInputDataFile()
   fChain -> SetBranchAddress("VAVertex"   ,   &vertexVAArray);
   fChain -> SetBranchAddress("BDCVertex"  ,   &vertexBDCArray);
 
+  fChain -> SetBranchAddress("STBeamInfo" ,   &beamInfo);
+
   if( bmA == 100 ) {
     fChain -> SetBranchAddress("STVertex_1" ,   &vertexArray);
     fChain -> SetBranchAddress("STRecoTrack",   &trackVAArray);
@@ -303,10 +305,10 @@ void STSpiRITTPCTask::Exec(Option_t *opt)
 
   }
 
-  if( bfill && BeamPID != 0) 
-    bfill = kTRUE;
-  else
-    bfill = kFALSE;
+  // if( bfill && BeamPID != 0) 
+  //   bfill = kTRUE;
+  // else
+  //   bfill = kFALSE;
 
   if( bmA == 100 )
     bfill = kTRUE;
@@ -357,8 +359,6 @@ void STSpiRITTPCTask::FinishEvent()
     TClonesArray &aflow = *flowAnalysis;
     new( aflow[0] ) STFlowInfo( *fflowinfo );
   }
-
-
 }
 
 
@@ -423,13 +423,26 @@ void STSpiRITTPCTask::SetupTrackQualityFlag(STParticle *apart)
     cout << " vDistance " << apart->GetDistanceAtVertex() << " NDF " << apart->GetNDF() << endl;
     return ;
   }
+  
+  //   if( apart->GetDistanceAtVertex() > 25 )
+  // if( apart->GetDistanceAtVertex() > 20 ) //since v54
+  //    apart->SetDistanceAtVertexFlag(0);
+  
+  if( apart->GetNumCluster() < 15 )  // since v55
+    apart->SetNumClusterFlag(0);
 
-   if( apart->GetDistanceAtVertex() > 25 )
-     apart->SetDistanceAtVertexFlag(0);
+   //   if( apart->GetNDF() < 10) 
+   // if( apart->GetNDF() < 15) // since v54 
+   //   apart->SetNDFFlag(0);
 
 
-   if( apart->GetNDF() < 10) 
-     apart->SetNDFFlag(0);
+   UInt_t pids = apart->GetPID_seq();
+
+   if( pids < 7 ) {
+     if( apart->GetP() < momRange[pids][0] ) {
+       apart->SetMomentumFlag(0);
+     }
+   }
 
 }
 
@@ -452,10 +465,13 @@ void STSpiRITTPCTask::Clear()
   }
 }
 
+
 Bool_t STSpiRITTPCTask::ProceedEvent()
 {
 
-  ntrack[0] = trackVAArray -> GetEntries(); // after 20191214
+  ntrack[0] = trackArray -> GetEntries(); // after 20191214
+
+  //  cout << " trackarray " << ntrack[0] << " RECO / VA " << trackVAArray->GetEntries() << endl;;
                  
   auto vertex = (STVertex *) vertexArray -> At(0);
 
@@ -467,24 +483,31 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
 
   if( !vflag ) return kFALSE;
 
-  //  TIter next(trackArray);
+
   TIter next(trackVAArray);
-  STRecoTrack *trackFromArray = NULL;
+  STRecoTrack *atrackVA = NULL;
+
+  TIter nextReco(trackArray);
+  STRecoTrack *atrackReco = NULL;
+
   TClonesArray &ptpcParticle = *tpcParticle;
 
-  while( (trackFromArray = (STRecoTrack*)next()) ) {
-
-    ntrack[1]++;
+  while( (atrackReco = (STRecoTrack*)nextReco()) ) {
 
     STParticle *aParticle = new STParticle();
-    aParticle->SetRecoTrack(trackFromArray);
 
-    //    cout << " ndf --> " << aParticle->GetNDFvertex() << endl;
+    aParticle->SetRecoTrack(atrackReco);
 
     //--- Set event and track quality ---;  
     aParticle->SetVertex(vertex);
+    
+    if( aParticle->GetDistanceAtVertex() <= 20 ) 
+      ntrack[1]++;
+    else
+      aParticle->SetDistanceAtVertexFlag(0);
+
+
     aParticle->SetVertexAtTargetFlag((Int_t)vflag);
-    SetupTrackQualityFlag( aParticle );
 
     //--- Rotate tracks along beam direction ---;                    
     if( vflag ) 
@@ -523,17 +546,18 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
     aParticle->SetPIDTight(pid_tight);
     aParticle->SetPIDNorm(pid_normal);
     aParticle->SetPIDLoose(pid_loose);
-    aParticle->SetMass(pid_loose);
+    //    aParticle->SetMass(pid_loose);
 
     aParticle->SetPID(pid_kaneko);
-    if( pid_kaneko != 0 )
-      aParticle->SetMass(pid_kaneko);
-    else if( pid_kaneko == 0 && pid_loose == 211 ) {
-      aParticle->SetPID(pid_loose);
-      aParticle->SetMass(pid_loose);
+    //-- for v55
+    if( pid_kaneko == 0 && pid_loose == 211 ) {
+       aParticle->SetPID(pid_loose);
+       aParticle->SetMass(pid_loose);
     }
 
 
+    SetupTrackQualityFlag( aParticle );
+    
     LOG(DEBUG) << " mass H "  << mass[0]  << " & pid " << pid_loose << " : " << pid_tight << ": " << dEdx << FairLogger::endl;
     LOG(DEBUG) << " mass He"  << mass[1]  << " & pid " << pid_loose << " : " << pid_tight << ": " << dEdx << FairLogger::endl;
 
@@ -545,21 +569,23 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
       //--- Set theoretical number of cluster
       aParticle->SetExpectedClusterNumber(clustNum);
     }
-      
+
+
     if( aParticle->GetGoodTrackFlag() >= 1111 )
       ntrack[3]++;
     
     aParticle->SetTrackID(ntrack[2]);
     new(ptpcParticle[ntrack[2]]) STParticle(*aParticle);
-    ntrack[2]++;
-    
+    ntrack[2]++;    
+
   }
   
   //--- Set up for flow ---;
   if( fIsFlowAnalysis ) {
     fflowtask->SetGoodEventFlag((UInt_t)vflag);
-    fflowtask->SetNTrack(ntrack);
     fflowtask->SetFlowTask( ptpcParticle  );
+    for( auto i : {0,1,2,3,4,5,6} )
+      fflowtask->SetNTrack(i,ntrack[i]);
   }
 
   return kTRUE;
@@ -683,7 +709,7 @@ Int_t STSpiRITTPCTask::GetPIDFit(Double_t mass[2], Double_t fMom, Int_t mbin)
     Bool_t roughCut =  m >= MassRange_Fit[i][0] && m <= MassRange_Fit[i][1]; 
 
     if( i == 2 )
-      roughCut = roughCut * mass[0] <= 0.6* fMom+2650.;
+      roughCut = roughCut * mass[0] <= 0.6* fMom+2650. ;
 
     STPID::PID pid = static_cast<STPID::PID>(i+1);
       
@@ -694,6 +720,9 @@ Int_t STSpiRITTPCTask::GetPIDFit(Double_t mass[2], Double_t fMom, Int_t mbin)
       Bool_t fitCut =  m >= f1MassGate[i][mbin][0][fitSigmaID]->Eval(fMom) && m <= f1MassGate[i][mbin][1][fitSigmaID]->Eval(fMom);
     
       fpid = STPID::GetPDG(pid) * fitCut;
+
+      if( fpid > 1000000000 && fMom < 100)
+	fpid = 0;
 
       if( fitCut )
 	break;
