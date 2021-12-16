@@ -13,5 +13,16 @@ $ make -j
 $ source config.sh
 
 $ cd macros
-$ soruce flw_process1.sh
+$ source run_analysis.sh <- Edit before 
+
+----------
+Acceptance correction
+>>> Step 1.
+$ source DoAna.sh
+$ data108
+$ root PlotTrackQuality.C
+---> in data, data/Acceptance_108Sn_%%%%.root will be created and will be used unfoldLCPSpectra.C
+Acceptance correction macros are provied by Kaneko.
+----------
+
 
