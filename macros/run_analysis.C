@@ -5,7 +5,6 @@
 //----------------------------------------
 // Assemble TPC reconstructed data, Kyoto,  Katana, BigRIPS, and NeuLAND
 //----------------------------------------------------------------------
-
 void run_analysis(Int_t nevt = -1)
 {
   //Reset ROOT and connect tree file
@@ -31,7 +30,8 @@ void run_analysis(Int_t nevt = -1)
 
 
   FairRunAna* anaRun = new FairRunAna();
-  anaRun->SetRunId(atoi(sRun));
+  UInt_t vRun = atoi(sRun);
+  anaRun->SetRunId(vRun);
 
   TString foutname = "data/run" + sRun + "_" + ssfx + ".v" + sVer + ".root";
   anaRun->SetOutputFile(foutname);
@@ -43,8 +43,11 @@ void run_analysis(Int_t nevt = -1)
 
   cout << sRun << endl;
 
-  auto BDCTask     = new STBigRIPSTask();  // This should be called earlier than TPC
-  anaRun->AddTask(BDCTask);
+  // UInt_t SnA = STRunToBeamA::GetBeamA(iRun);
+  // tDir += Form("/Sn%d",SnA);
+
+  // auto BDCTask     = new STBigRIPSTask();  // This should be called earlier than TPC
+  // anaRun->AddTask(BDCTask);
 
   auto TPCTask     = new STSpiRITTPCTask();
   anaRun->AddTask(TPCTask);
@@ -56,11 +59,6 @@ void run_analysis(Int_t nevt = -1)
   
   Long64_t maxevt = TPCTask->GetEntries();    
 
-  TString sMAX = gSystem->Getenv("MXEVT");
-  if( sMAX != "" ) 
-    maxevt = (Long64_t)atoi(sMAX);
-  LOG(INFO) << " >>> Event number >>>  " << maxevt << FairLogger::endl;
-    
   TPCTask->SetProcessingNumberOfEvent(maxevt);
 
   anaRun->Run(0, maxevt);

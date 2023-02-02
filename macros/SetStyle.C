@@ -31,4 +31,6 @@ void SetStyle()
   gStyle -> SetLegendTextSize(0.06);
   gStyle -> SetLegendBorderSize(0);
 
+
+  //  gStyle -> SetCanvasPreferGL(kTRUE);
 }

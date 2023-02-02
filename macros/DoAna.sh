@@ -7,7 +7,7 @@
 
 source setup.sh
 source runList.sh
-export MNMACRO=DoFlow_fin.C          ##<--- Flow analysis MACRO name
+export MNMACRO=DoAna_phys.C          ##<--- Flow analysis MACRO name
 
 unset IVER
 unset OVER
@@ -28,33 +28,62 @@ unset MNOUTVERSION
 unset CCPSI
 unset PHICUT
 
+export MDCUT=0. #0.0               ##   <------@@ mid-rapidity cut
 ##------>>> EDIT HERE 
 #export MNLC=0
 #export MNUC=50
 
-
-
-multL=55,46,46
-multU=80,80,55
-##      0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17
+multL=55,46,0,46,28,30,46
+multU=80,55,46,80,49,48,54
+##     0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17
 #####" 0,20,35,40,50,55,42,42,40,42, 0, 0,52,47,46,51,52,42,47"
 #####"35,40,45,55,65,80,52,56,54,55,54,55,55,55,54,80,80,80,80"
 ###export MNTRK=13
 ###export MNTRK=15
 
-export PHICUT=1 #phi<45
-#export PHICUT=2 #phi>135
-
 #--/
-export MNTRK=1
-export PHICUT=1 #phi<45
-export MNSUBVERSION=1
+export MNTRK=1    #mid-central
+export PHICUT=2   #|phi|>140
+export MNSUBVERSION=16
+#--/
+export MNTRK=0    #Central
+export PHICUT=2   #|phi|>140
+export MNSUBVERSION=15
+#----///
+export MNTRK=5    #Tommy mid-central for 132
+export PHICUT=6   #-30<phi<20or|phi|>140 
+export MNSUBVERSION=19
+#----///
+#----///
+export MNTRK=4    #Tommy mid-central for 108
+export PHICUT=6   #-30<phi<20or|phi|>140 
+export MNSUBVERSION=19
 #----///
 #--/
-export MNTRK=0
-export PHICUT=5 #-20<phi<30
-export MNSUBVERSION=0
+export MNTRK=1    #mid-central
+export PHICUT=5   #-30<phi<20
+export MNSUBVERSION=17
 #----///
+#--/
+export MNTRK=0    #central
+export PHICUT=5   #-30<phi<20
+export MNSUBVERSION=18
+#----///
+#--/
+export MNTRK=6    #Tommy2 mid-central
+export PHICUT=6   #-30<phi<20or|phi|>140 
+export MNSUBVERSION=22
+#--/
+#--/
+export MNTRK=6    #Tommy2 mid-central
+export PHICUT=5   #-30<phi<20or|phi|>140 
+export MNSUBVERSION=23
+#--/
+#--/
+export MNTRK=6    #Tommy2 mid-central
+export PHICUT=5   #-30<phi<20or|phi|>140 
+export MNSUBVERSION=24
+#--/
 
 #########----------------------
 MLC=(${multL})
@@ -62,39 +91,59 @@ MUC=(${multU})
 export MNLC=${MLC[$MNTRK]}
 export MNUC=${MUC[$MNTRK]}
 
-export MNSFX=BTt
-export MDCUT=0. #0.0               ##   <------@@ mid-rapidity cut
-export MNINVERSION=55.1            ##   <------@@ input
-export MNOUTVERSION=55.1           ##   <------@@ output 
+export MNSFX=flow
+export MNINVERSION=1.0           ##   <------@@ input
+export MNOUTVERSION=1.0          ##   <------@@ output 
 
+function doflow3fmFull()
+{
+    doflow3fm112
+    doflow3fm124
+    doflow3fm108
+    doflow3fm132
+}
+
+function doflow3fm108s() 
+{
+    data108s
+    PARTICLES=("0")
+    doflowmulti $MNSUBVERSION
+}
+function doflow3fm112one() 
+{
+    data112one
+    doflow 2 $MNSUBVERSION
+}
 function doflow3fm112p() 
 {
     data112
-    PARTICLES=("2")
-    doflowmulti $MNSUBVERSION
+    doflow 2 $MNSUBVERSION
 }
 function doflow3fm132() 
 {
     data132
-    PARTICLES=("2" "3" "4" "5" "6" )
+#    PARTICLES=("0" "1" "2" "3" "4")
+    PARTICLES=("6")
     doflowmulti $MNSUBVERSION
 }
 function doflow3fm108() 
 {
     data108
-    PARTICLES=("2" "3" "4" "5" "6")
+    PARTICLES=("0" "1" "2" "3" "4")
+#    PARTICLES=("5" "6")
     doflowmulti $MNSUBVERSION
 }
 function doflow3fm112() 
 {
     data112
-    PARTICLES=("2" "3" "4" "5" "6" )
+    PARTICLES=("0" "1" "2" "3" "4" "5" "6")
+#    PARTICLES=("5" "6")
     doflowmulti $MNSUBVERSION
 }
 function doflow3fm124() 
 {
     data124
-    PARTICLES=("2" "3" "4" "5" "6" )
+    PARTICLES=("0" "1" "2" "3" "4" "5" "6")
     doflowmulti $MNSUBVERSION
 }
 ##--
@@ -151,11 +200,11 @@ function data112one()    ##CONFIG
 function data132()    ##CONFIG
 {
 ##-- 
-    if [ $MNTRK -eq 13 ]; then
+    if [ $MNTRK -eq 10 ]; then
 	export MNTRK=14
     fi
-    if [ $MNTRK -eq 15 ]; then
-	export MNTRK=16
+    if [ $MNTRK -eq 11 ]; then
+	export MNTRK=15
     fi
 
     export MNLC=${MLC[$MNTRK]}
@@ -381,7 +430,7 @@ function doflowmultiHeavy()
 
 function doflowmultiall()
 {
-    PARTICLES=("2" "3" "4" "5" "6")
+    PARTICLES=("0" "1" "2" "3" "4" "5" "6")
     doflowmulti $1
 }
 
@@ -393,7 +442,6 @@ function doflowmulti()
     fi
 
 
-    PARTICLES=("2" "3" "4" "5" "6")
     typeset -i I=0;
     while(( $I < ${#PARTICLES[@]} ))
     do
@@ -445,16 +493,18 @@ function anahelp()
     echo " Step 0 > corr 1 OR allcorr 1 :: Re-caluculate reaction plane "
     echo " Step 1 > flattening OR flattenandcorrection "
     echo " Step 2 > corr(the first run) OR restcorr(excpt the first run) OR  allcorr(full)"
-#    echo " Step 3 > dorpres 0 "
-#    echo "          dorpres 0   :: Get centrality and Psi dependent correction"
-#    echo "          dorpres 1   :: Get Psi dependent correction parameter"
-#    echo "          dorpres 2   :: Get overall correction factor"
     echo " Step 3 > doflow       :: open files "
     echo "          doflow 2  0(output version#) 1(Corretion versoin)::" $MNMACRO
     echo "                  -1:pi- 1:pi+, 2:p, 3:d, 4:t, 5:3He, 6: 4He, 7:n, 8:H" 
     echo "                  run #(partid) #(Output version)"
     echo "++++++++++++++++++++++++++++++++++++++++"
     echo "Change runnumber : export MNRNF=\$RNF132s then commonsetup"
+    echo "------ Setup for temporarly ------------"
+    echo export MNSFX=$MNSFX
+    echo export MNINVERSION=$MNINVERSION    ##   <------@@ input
+    echo export MNOUTVERSION=$MNOUTVERSION  ##   <------@@ output 
+    echo "Then >commonsetup "
+    echo "----------------------------------------"
 }
 
 function showenv()
@@ -470,14 +520,19 @@ function showenv()
     echo "Input            ::"  $IVER
     echo "Output           ::"  $OVER
     echo "DataBase         ::"  $DBVER
-    echo "Output subVer    ::"  $RPBS
+    echo "Output subVer    ::"  $MNSUBVERSION
     echo "Selected track   ::"  $TRK
     echo "Number of event  ::"  $MXEVT
     echo "Mid-Y cut        ::"  $MDCUT
     echo "Min multiplicity ::"  $LC
     echo "Max maltiplicity ::"  $UC
     echo "Phi Angle cut    ::"  $PHICUT
+
     echo "++++++++++++++++++++++++++++++++++++++++"
+    echo export MNINVERSION=$IVER            ##   <------@@ input
+    echo export MNOUTVERSION=$OVER           ##   <------@@ output 
+    echo "++++++++++++++++++++++++++++++++++++++++"
+
 }
 
 function checkdata()
@@ -486,11 +541,13 @@ function checkdata()
     while(( $I < ${#RUNNUMBER1[@]} ))
     do    
 	ls -l data/run${RUNNUMBER1[I]}_$MNSFX.v$MNINVERSION.root
+#	echo $I	
+#	ls -l data/run${RUNNUMBER1[I]}_'s_Proton'.v$MNINVERSION.root
 	let I++
     done
 }
 
-
-grep "CONFIG"  DoAna.sh 
+#showenv
+#grep "function" DoAna.sh
+grep "CONFIG"   DoAna.sh 
 anahelp
-

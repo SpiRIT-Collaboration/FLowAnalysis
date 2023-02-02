@@ -219,7 +219,7 @@ void Flatten_Psi_ntrack(UInt_t isel)
     
     switch(isel){
     case 10:
-      seltrack = aFlow->mtrack4;
+      seltrack = aFlow->mtrack6;
       vec      = aFlow->unitP;
       break;
     case 11:
@@ -227,7 +227,7 @@ void Flatten_Psi_ntrack(UInt_t isel)
       vec      = aFlow->unitP_1;
       break;
     case 12:
-      seltrack = aFlow->mtrack4;
+      seltrack = aFlow->mtrack6;
       vec      = aFlow->unit2P;
       break;
     case 13:

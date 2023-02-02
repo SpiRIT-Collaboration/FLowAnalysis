@@ -245,9 +245,9 @@ void Open()
     LOG(ERROR) << " Particle is not active " << FairLogger::endl;
 
   
-  if( isys < 4)
-    rChain->SetBranchAddress("STBDC"     ,&aBDC);
-  else if( isys == 5 ) { 
+  //  if( isys < 4)
+    //    rChain->SetBranchAddress("STBDC"     ,&aBDC);
+  if( isys == 5 ) { 
     rChain->SetBranchAddress("RPPsi"     ,&RPPsi);
     auto fin = TFile::Open(fn);
     fv1y = (TF1*)fin->Get("fv1y");

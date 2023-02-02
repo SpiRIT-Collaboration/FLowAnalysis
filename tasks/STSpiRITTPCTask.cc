@@ -4,13 +4,13 @@ ClassImp(STSpiRITTPCTask);
 
 STSpiRITTPCTask::STSpiRITTPCTask() 
   : fIsPersistence(kTRUE),
-    fIsFlowAnalysis(kTRUE),
-    fIsFlowCorrection(kTRUE),
+    fIsFlowAnalysis(kFALSE),
+    fIsFlowCorrection(kFALSE),
     fIsBootStrap(kFALSE),
-    fIsSubeventAnalysis(kTRUE),
+    fIsSubeventAnalysis(kFALSE),
     selReactionPlanef(100),
     fEventID(0),
-    massCal(new STMassCalculator()),
+    massCal(),
     massCalH(new STMassCalSimpleBB("EmpiricalBB")),
     massCalHe(new STMassCalSimpleBB("EmpiricalBB")),
     massGateFile(NULL)
@@ -24,7 +24,9 @@ STSpiRITTPCTask::STSpiRITTPCTask()
   bmA   = STRunToBeamA::GetBeamA(iRun);
   if( bmA == 100 )
     BeamPID = 100;
-
+  
+  
+  
   //------------------------//
   // initial setup
   fChain = nullptr;
@@ -84,16 +86,8 @@ InitStatus STSpiRITTPCTask::Init()
     return kERROR;
   }
 
-  auto fBDCArray = (TClonesArray *)fRootManager->GetObject("STBDC");
-  if( fBDCArray == nullptr ) {
-    LOG(ERROR) << "Register STBDC in advance! " << FairLogger::endl;
-    //    return kERROR;
-  }
-  else
-    LOG(INFO) << "STBDC is found. " << FairLogger::endl;
-
-  tpcParticle = new TClonesArray("STParticle",100);
-  fRootManager -> Register("STParticle","flow",tpcParticle, fIsPersistence);
+  tpcParticle = new TClonesArray("STKParticle",100);
+  fRootManager -> Register("STKParticle","flow",tpcParticle, fIsPersistence);
 
 
   if( fIsFlowAnalysis ) {
@@ -127,14 +121,10 @@ Bool_t STSpiRITTPCTask::SetupParameters()
   //--- angle dependeing mass fitter //
   //  massCal->SetParameter("db/BBFitter.root");
 
-
   if( bmA == 124 )
-    bmA = 132;  
-
+    bmA = 132;
+  
   if( bmA != 100 ) {
-    //    massCal->LoadCalibrationParameters("db/PIDCalib.root",bmA);
-    massCal->LoadCalibrationParameters("db/FlattenPID.root",bmA);
-    
 
     auto calFile = TFile::Open(Form("db/PIDCalib_%dSn.root",bmA));
     TH2D *h2ParamH[7], *h2ParamHe[7];
@@ -216,6 +206,7 @@ Bool_t STSpiRITTPCTask::SetupInputDataFile()
   LOG(INFO) << "STSpiRITTPCTask::SetupInputDataFile() is called " << FairLogger::endl;
 
   fChain = new TChain("cbmsim");
+  rootDir += Form("/Sn%d",bmA);
 
   UInt_t i = 0;
   while(kTRUE){
@@ -301,6 +292,7 @@ void STSpiRITTPCTask::Exec(Option_t *opt)
     if( ProceedEvent() ) {
       bfill = kTRUE;
       FinishEvent();
+
     }
 
   }
@@ -373,21 +365,11 @@ Bool_t STSpiRITTPCTask::SetupEventInfo()
 
   rEventID = eventHeader -> GetEventID() - 1;
   
-  auto fBDCArray = (TClonesArray *)fRootManager->GetObject("STBDC");
-  auto fBDC = (STBDC*)fBDCArray->At(0);
-
-  LOG(DEBUG) << " TPC vs BDC " << rEventID << " vs " << fBDC->GetEventID() << FairLogger::endl;
-
-  if( rEventID != fBDC->GetEventID() ) {
-    LOG(ERROR) << " not match TPC and BDC event ID " << rEventID << " vs " << fBDC->GetEventID() << FairLogger::endl;
-    return kFALSE;
-  }
-
-  ProjA   = fBDC->ProjA;
-  ProjB   = fBDC->ProjB;  
-  ProjX   = fBDC->ProjX;
-  ProjY   = fBDC->ProjY;
-  BeamPID = fBDC->GetBeamPID();
+  ProjA   = beamInfo->fRotationAngleATargetPlane;//fBDC->ProjA;
+  ProjB   = beamInfo->fRotationAngleBTargetPlane;//fBDC->ProjB;  
+  ProjX   = beamInfo->fXTargetPlane;
+  ProjY   = beamInfo->fYTargetPlane;
+  BeamPID = bmA;
 
   return kTRUE;
 
@@ -417,7 +399,7 @@ Bool_t STSpiRITTPCTask::GetVertexQuality(TVector3 vert)
   return kTRUE;
 }
 
-void STSpiRITTPCTask::SetupTrackQualityFlag(STParticle *apart) 
+void STSpiRITTPCTask::SetupTrackQualityFlag(STKParticle *apart) 
 {
   if( bmA == 100 ) {
     cout << " vDistance " << apart->GetDistanceAtVertex() << " NDF " << apart->GetNDF() << endl;
@@ -428,8 +410,8 @@ void STSpiRITTPCTask::SetupTrackQualityFlag(STParticle *apart)
   // if( apart->GetDistanceAtVertex() > 20 ) //since v54
   //    apart->SetDistanceAtVertexFlag(0);
   
-  if( apart->GetNumCluster() < 15 )  // since v55
-    apart->SetNumClusterFlag(0);
+  if( apart->GetNCL() < 15 )  // since v55
+    apart->SetNCLFlag(0);
 
    //   if( apart->GetNDF() < 10) 
    // if( apart->GetNDF() < 15) // since v54 
@@ -457,7 +439,7 @@ void STSpiRITTPCTask::Clear()
 
   for (Int_t m = 0; m < 7; m++) ntrack[m] = 0;
 
-  tpcParticle->Clear();
+  tpcParticle->Clear("C");
 
   if( fIsFlowAnalysis ) {
     fflowtask->Clear();
@@ -469,122 +451,148 @@ void STSpiRITTPCTask::Clear()
 Bool_t STSpiRITTPCTask::ProceedEvent()
 {
 
+  Bool_t bprint = kFALSE;
+  if( bprint ) {
+    LOG(INFO) << " ProceedEvent ... " << fEventID-1 << FairLogger::endl;
+    bprint = kTRUE;
+  }
+
   ntrack[0] = trackArray -> GetEntries(); // after 20191214
 
-  //  cout << " trackarray " << ntrack[0] << " RECO / VA " << trackVAArray->GetEntries() << endl;;
-                 
   auto vertex = (STVertex *) vertexArray -> At(0);
+  if( !vertex ) return kFALSE;
+  TVector3 vert  = vertex->GetPos();
+
+  if( !GetVertexQuality( vert ) ) return kFALSE;
 
   Bool_t vflag = kFALSE;
-  if( vertex != NULL ) 
-    vflag = GetVertexQuality(vertex->GetPos());
-  else
-    return kFALSE;
-
-  if( !vflag ) return kFALSE;
-
-
-  TIter next(trackVAArray);
-  STRecoTrack *atrackVA = NULL;
 
   TIter nextReco(trackArray);
   STRecoTrack *atrackReco = NULL;
+  STRecoTrack *atrackVA = NULL;
 
-  TClonesArray &ptpcParticle = *tpcParticle;
+  while( (atrackReco = (STRecoTrack*)nextReco() ) ) {
 
-  while( (atrackReco = (STRecoTrack*)nextReco()) ) {
-
-    STParticle *aParticle = new STParticle();
-
-    aParticle->SetRecoTrack(atrackReco);
-
-    //--- Set event and track quality ---;  
-    aParticle->SetVertex(vertex);
-    
-    if( aParticle->GetDistanceAtVertex() <= 20 ) 
+    TVector3 dist = atrackReco->GetPOCAVertex() - vert;
+    if( dist.Mag() <= 20 )
       ntrack[1]++;
-    else
-      aParticle->SetDistanceAtVertexFlag(0);
+  }
 
+  STKParticle *aParticle    = new STKParticle();
+  STKParticle *aParticle_He = new STKParticle();
 
-    aParticle->SetVertexAtTargetFlag((Int_t)vflag);
+  for( auto it : ROOT::TSeqL( ntrack[0] ) ) {
+
+    atrackReco = (STRecoTrack*)trackArray->At(it);
+    auto helixID = atrackReco->GetHelixID();
+    
+    if( !(atrackVA = (STRecoTrack*)trackVAArray->At(it) ) ) break;
+    auto helixIDVA = atrackVA->GetHelixID();
+      
+    Int_t diffID = helixIDVA - helixID;
+    if( diffID > 0  ) {
+      while( 1 ) {
+	it++;
+	if( !(atrackReco = (STRecoTrack*)trackArray->At(it) ) ) break;
+	helixID = atrackReco->GetHelixID(); 
+	
+	diffID = helixIDVA - helixID;
+	if( diffID == 0 ) break;
+      }
+    }
+
+    aParticle->SetRecoTrack(atrackReco, atrackVA);
 
     //--- Rotate tracks along beam direction ---;                    
-    if( vflag ) 
-      aParticle->RotateAlongBeamDirection(ProjA/1000., ProjB/1000.);
-    else
-      aParticle->SetBeamonTargetFlag(0);
+    aParticle->RotateAlongBeamDirection(ProjA/1000., ProjB/1000.);
 
+    //--- Set event and track quality ---;  
+    aParticle->SetVertex(vert);
+      
     Int_t    Charge   = aParticle->GetCharge();
-    //    TVector3 VMom     = aParticle->GetRotatedMomentum();
     TVector3 VMom     = aParticle->GetMomentumAtTarget();
-    Double_t fMom     = VMom.Mag();
     Double_t dEdx     = aParticle->GetdEdx();
 
     //--- Set MassFitter      
-    Double_t mass[2] = {0.,0.};
+    Double_t mass[2] = {-1.,-1.};
 
     // updated for 20191214
-    mass[0] = massCalH -> CalcMass(1., VMom, dEdx);
-    mass[1] = massCalHe-> CalcMass(2., VMom, dEdx);
+    mass[0] = massCalH -> CalcMass(1., VMom, dEdx, kTRUE);
+    mass[1] = massCalHe-> CalcMass(2., VMom, dEdx, kTRUE);
 
-    LOG(DEBUG) << " mass H " << mass[0] 
-	       << " mass He " << mass[1]
-	       << " p = " << VMom.Mag()
-	       << " dEdx = " << dEdx
-	       << FairLogger::endl;
+    UInt_t nPID[2] = {0, 0};
+    nPID[0] = GetPIDFit(1, mass[0], VMom, ntrack[1]);
+    nPID[1] = GetPIDFit(2, mass[1], VMom, ntrack[1]);
 
-    aParticle->SetBBMass(mass[0]);      
-    aParticle->SetBBMassHe(mass[1]);
+    Int_t  pid_loose  = GetPIDLoose(mass, VMom.Mag(), dEdx);
 
-    Int_t    pid_kaneko = GetPIDFit  (mass, fMom, 3);
-    Int_t    pid_tight  = GetPIDTight(mass, fMom, dEdx);
-    Int_t    pid_normal = GetPIDNorm (mass, fMom, dEdx);
-    Int_t    pid_loose  = GetPIDLoose(mass, fMom, dEdx);
-    
-    //      massFitter->GetBBMass(VMom, dEdx, Charge, massH, massHe, pid_tight, pid_loose); 
-    aParticle->SetPIDTight(pid_tight);
-    aParticle->SetPIDNorm(pid_normal);
-    aParticle->SetPIDLoose(pid_loose);
-    //    aParticle->SetMass(pid_loose);
+    if( 1 ) 
+      LOG(INFO) 
+	<< "ntrack[1] "<< setw(3) << ntrack[1]
+	<< " dEdx = "  << setw(8)  << dEdx
+	<< " p =   "   << setw(10) << VMom.Mag()
+	<< " mass H "  << setw(8)  << mass[0] 
+	<< " nPID[0] " << setw(8)  << nPID[0]
+	<< " mass He " << setw(8)  << mass[1]
+	<< " nPID[1] " << setw(8)  << nPID[1]
+	<< " dist "    << setw(5)  << aParticle->GetDistanceAtVertex()
+	<< FairLogger::endl;
+      
 
-    aParticle->SetPID(pid_kaneko);
-    //-- for v55
-    if( pid_kaneko == 0 && pid_loose == 211 ) {
-       aParticle->SetPID(pid_loose);
-       aParticle->SetMass(pid_loose);
+    Bool_t bdouble = kFALSE;
+    if( nPID[0] != 0 ) {
+      aParticle->SetPID(nPID[0]);
+      aParticle->SetBBMass(mass[0]);      
+      bdouble = kTRUE;
     }
-
+    else if( nPID[1] != 0 ) {
+      aParticle->SetPID(nPID[1]);
+      aParticle->SetBBMass(mass[1]);
+    }
+    else if( nPID[0] == 0 && pid_loose == 211 ) {
+      aParticle->SetPID(pid_loose);
+      aParticle->SetMass(pid_loose);
+    }
+    else{
+      aParticle->SetPID(0);
+      aParticle->SetBBMass(0);      
+      aParticle->SetPIDFlag(0);
+    }
 
     SetupTrackQualityFlag( aParticle );
-    
-    LOG(DEBUG) << " mass H "  << mass[0]  << " & pid " << pid_loose << " : " << pid_tight << ": " << dEdx << FairLogger::endl;
-    LOG(DEBUG) << " mass He"  << mass[1]  << " & pid " << pid_loose << " : " << pid_tight << ": " << dEdx << FairLogger::endl;
-
-    //--- number cluster ratio
-    if( kFALSE ) {
-      Double_t clustNum = VMom.Mag()>4000.?
-	db->GetClusterNum(Charge, VMom.Theta(), VMom.Phi(), 4000.):
-	db->GetClusterNum(Charge, VMom.Theta(), VMom.Phi(), VMom.Mag());
-      //--- Set theoretical number of cluster
-      aParticle->SetExpectedClusterNumber(clustNum);
-    }
-
-
-    if( aParticle->GetGoodTrackFlag() >= 1111 )
-      ntrack[3]++;
-    
+  
     aParticle->SetTrackID(ntrack[2]);
-    new(ptpcParticle[ntrack[2]]) STParticle(*aParticle);
+    new( (*tpcParticle)[ntrack[2]] ) STKParticle(*aParticle);
     ntrack[2]++;    
 
+    if( aParticle->GetGoodTrackFlag() == 111111 ) {
+      ntrack[3]++;
+      vflag = kTRUE;
+    }
+    
+    if( bdouble && nPID[1] != 0 ) {
+      aParticle_He = aParticle;
+      aParticle_He -> SetDoubleFlag(0);
+
+      aParticle_He->SetTrackID(ntrack[2]);
+      new( (*tpcParticle)[ntrack[2]] ) STKParticle(*aParticle_He);
+      ntrack[2]++;    	
+    }
+
+    if( aParticle_He->GetGoodTrackFlag() == 11111 ) {
+      ntrack[3]++;
+      vflag = kTRUE;
+    }
   }
+
+
+  LOG(DEBUG) << " event : " << fEventID-1 << " mtrack1 " << ntrack[1] << endl;
   
   //--- Set up for flow ---;
   if( fIsFlowAnalysis ) {
     fflowtask->SetGoodEventFlag((UInt_t)vflag);
-    fflowtask->SetFlowTask( ptpcParticle  );
-    for( auto i : {0,1,2,3,4,5,6} )
+    fflowtask->SetFlowTask( *tpcParticle  );
+    for( auto i : {0,1,2,3} )
       fflowtask->SetNTrack(i,ntrack[i]);
   }
 
@@ -593,7 +601,7 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
 
 Int_t STSpiRITTPCTask::GetPID(Double_t mass[2], Double_t fMom,  Double_t dedx)
 {
-  // p, d, t                                                                                                                               
+  // p, d, t 
   if( mass[0] == 0 )
     return 0;
 
@@ -663,32 +671,41 @@ Bool_t STSpiRITTPCTask::SetupPIDFit()
 {
   if( bmA == 100 ) return kTRUE;
 
-  TString massFitName = Form("data/MassFit_%dSn.left.root",bmA);
-  massGateFile = TFile::Open(massFitName);
-  if( massGateFile == NULL ) {
-    LOG(ERROR) << massFitName << " is not found. " << FairLogger::endl;
-    return kFALSE;
-  }    
-
-  LOG(INFO) << massFitName << " is loaded. " << FairLogger::endl;
-
   TString pidName[]={"Proton","Deuteron","Triton","Helium3","Alpha"}; 
-  for(auto pid: ROOT::MakeSeq(5)) 
-    for(auto mbin: ROOT::MakeSeq(4)) 
-      for(auto i: ROOT::TSeqI(2)) 
-	for(auto j: ROOT::TSeqI(4)) { 
-	  TString f1name = Form("f1MassGate_%dSn_"+pidName[pid]+"_mbin%d_%d_%d",bmA,mbin,i,j);
-	  massGateFile->GetObject(f1name,  f1MassGate[pid][mbin][i][j]);
 
-	  if( f1MassGate[pid][mbin][i][j] == NULL ) {
-	    LOG(ERROR) << f1name << " is not found. " << FairLogger::endl;
-	    return kFALSE;
+  std::vector< TString > label_rl = {"left","right"};
+
+  UInt_t k = 0;
+  for( auto il : label_rl ) {
+    TString massFitName = Form("db/MassFit_%dSn.%s.root",bmA,il.Data());
+    massGateFile = TFile::Open(massFitName);
+    if( massGateFile == NULL ) {
+      LOG(ERROR) << massFitName << " is not found. " << FairLogger::endl;
+      return kFALSE;
+    }    
+
+    LOG(INFO) << massFitName << " is loaded. " << FairLogger::endl;
+
+    for(auto pid: ROOT::MakeSeq(5)) 
+      for(auto mbin: ROOT::MakeSeq(4)) 
+	for(auto i: ROOT::TSeqI(2)) 
+	  for(auto j: ROOT::TSeqI(4)) { 
+	    TString f1name = Form("f1MassGate_%dSn_"+pidName[pid]+"_mbin%d_%d_%d",bmA,mbin,i,j);
+	    massGateFile->GetObject(f1name,  f1MassGate[pid][mbin][i][j][k]);
+
+	    if( f1MassGate[pid][mbin][i][j][k] == NULL ) {
+	      LOG(ERROR) << f1name << " is not found. " << FairLogger::endl;
+	      return kFALSE;
+	    }
 	  }
-	}
+    massGateFile->Close();
+    k++;
+  }
   return kTRUE;
 }
 
-Int_t STSpiRITTPCTask::GetPIDFit(Double_t mass[2], Double_t fMom, Int_t mbin)
+Int_t STSpiRITTPCTask::GetPIDFit(Int_t z, Double_t mass, TVector3 vMom, Int_t mult)
+//Double_t mass[2], Double_t fMom, Int_t mbin, Int_t phibin)
 {
   // coded by Kaneko 20200418
   // pid: p=0, d=1, t=2, 3he=3, 4he=4. 
@@ -696,39 +713,79 @@ Int_t STSpiRITTPCTask::GetPIDFit(Double_t mass[2], Double_t fMom, Int_t mbin)
   // fMom: rigidity magnitude of track
   // mbin: centrality bin, mbin=0: M>=56, mbin=1: 50<=M<56, mbin=2: 40<=M<50, mbin=3: no selection
 
-  TString pidName[]={"Proton","Deuteron","Triton","Helium3","Alpha"}; 
-
   Int_t fpid = 0;
-  if( mass[0] <= 0 && mass[1] <= 0 ) return 0;
+  if( mass <= 0 ) return 0;
 
-  
-  for(Int_t i = 0; i < 5; i++ ) {
+  Double_t fMom = vMom.Mag();
+  if( fMom < 100) return 0;
 
-    Double_t m = i < 3 ? mass[0] : mass[1];
+  Double_t phi  = vMom.Phi()*TMath::RadToDeg();
+  UInt_t phibin = 1;
+  if( phi <= 20 && phi >= -30 ) phibin = 0;
 
-    Bool_t roughCut =  m >= MassRange_Fit[i][0] && m <= MassRange_Fit[i][1]; 
+  UInt_t mbin = 0;
+  if( mult >= 56 ) mbin = 0;
+  else if( mult >= 50 && mult < 56 ) mbin = 1;
+  else if( mult >= 40 && mult < 50 ) mbin = 2;
+  else mbin = 3;
 
-    if( i == 2 )
-      roughCut = roughCut * mass[0] <= 0.6* fMom+2650. ;
+  Bool_t bfind = kFALSE;
 
-    STPID::PID pid = static_cast<STPID::PID>(i+1);
-      
-    if( roughCut ) {
+  if( z == 1 ) {
+    for(auto i : {0,1,2} ) {
+
+      Bool_t roughCut =  mass >= MassRange_Fit[i][0] && mass <= MassRange_Fit[i][1]; 
+
+      if( roughCut ) {
     
-      Int_t fitSigmaID = i <= 2 ? 3 - i : 2;
-      
-      Bool_t fitCut =  m >= f1MassGate[i][mbin][0][fitSigmaID]->Eval(fMom) && m <= f1MassGate[i][mbin][1][fitSigmaID]->Eval(fMom);
+	Int_t fitSigmaID =  3 ;
+	Bool_t fitCut = mass >= f1MassGate[i][mbin][0][fitSigmaID][phibin]->Eval(fMom) && mass <= f1MassGate[i][mbin][1][fitSigmaID][phibin]->Eval(fMom);
     
-      fpid = STPID::GetPDG(pid) * fitCut;
+	if( fitCut ) {
+	  fpid = i;
+	  //	  cout << " fpid " << fpid << " mass " << mass << endl;
+	  bfind = kTRUE;
+	  Break;
+	}
+	else if ( 0 ) {
+	  cout << " mass " << mass 
+	       << " p " << fMom
+	       << " fitSigmaID " << fitSigmaID
+	       << " mbin " << mbin
+	       << " mult " << mult
+	       << " " << f1MassGate[i][mbin][0][fitSigmaID][phibin]->Eval(fMom)
+	       << " " << f1MassGate[i][mbin][1][fitSigmaID][phibin]->Eval(fMom)
+	       << " phi " << phi
+	       << " phibin " << phibin
+	       << endl;
+	}
 
-      if( fpid > 1000000000 && fMom < 100)
-	fpid = 0;
-
-      if( fitCut )
-	break;
+      }
     }
   }
+  else if( z == 2 ) {
+    fMom *= 2.;
+    for(auto i : {3,4} ) {
+      Bool_t roughCut =  mass >= MassRange_Fit[i][0] && mass <= MassRange_Fit[i][1];
+      if( roughCut ) {
     
+	Int_t fitSigmaID =  2 ;
+	Bool_t fitCut = mass >= f1MassGate[i][mbin][0][fitSigmaID][phibin]->Eval(fMom) && mass <= f1MassGate[i][mbin][1][fitSigmaID][phibin]->Eval(fMom);
+    
+	if( fitCut ) {
+	  fpid = i;
+	  bfind = kTRUE;
+	  Break;
+	}
+      }
+    }
+  }
+
+  LOG(INFO) << " GetPIDFit " << mass  << " fpid " << fpid << FairLogger::endl;
+
+  STPID::PID pid = static_cast<STPID::PID>(fpid+1);
+  Int_t rpid = STPID::GetPDG(pid) * bfind;
+        
   return fpid;
 }
 
@@ -765,30 +822,3 @@ Int_t STSpiRITTPCTask::GetPIDTight(Double_t mass[2], Double_t fMom, Double_t ded
   return 0;
 }
 
-Int_t STSpiRITTPCTask::GetPIDNorm(Double_t mass[2], Double_t fMom, Double_t dedx)
-{
-  if( mass[0] == 0 )
-    return 0;
-
-  // p, d, t   
-  else if( mass[1] < MassRegionLU_N[4][0] ) {
-    for(UInt_t i = 0; i < 4; i++) {
-      if( mass[0] >= MassRegionLU_N[i][0] && mass[0] < MassRegionLU_N[i][1] ) {
-
-	if( i == 1 && fMom > protonMaxMomentum ) continue;
-	STPID::PID pid = static_cast<STPID::PID>(i);
-        return STPID::GetPDG(pid);
-      }
-    }
-  }
-  // He3, He4, He6
-  else if( mass[0] >= 3100 && dedx <= 700) {
-    for( UInt_t i = 4; i < 7; i++ ){
-      if( mass[1] >= MassRegionLU_N[i][0] && mass[1] < MassRegionLU_N[i][1] ) {
-	STPID::PID pid = static_cast<STPID::PID>(i);
-        return STPID::GetPDG(pid);
-      }
-    }
-  }
-  return 0;
-}

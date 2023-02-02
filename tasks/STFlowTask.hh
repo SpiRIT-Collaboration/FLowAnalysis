@@ -16,6 +16,7 @@
 class STFlowTask
 {
 public:
+  STFlowTask(Bool_t bfltn, Bool_t bsub);
   STFlowTask(Bool_t bfltn, Bool_t bsub, Bool_t bbst);
 
   virtual ~STFlowTask();

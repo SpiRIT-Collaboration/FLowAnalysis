@@ -1,7 +1,7 @@
 #include "openRunAna.h"
 #include  "../analysisformat/STRunToBeamA.hh"
 
-FairRootManager* fman = FairRootManager::Instance();
+//FairRootManager* fman = FairRootManager::Instance();
 
 
 void openRunAna(Bool_t bopen=kTRUE)
@@ -129,7 +129,6 @@ void SaveCanvas(TString fopt = "", Int_t isel=-1)
   }
 }
 
-
 Long64_t SetBranch()
 {
   if(rChain == NULL) {
@@ -142,6 +141,8 @@ Long64_t SetBranch()
 
   rChain->SetBranchAddress("STParticle",&aArray);
   rChain->SetBranchAddress("STFlow"    ,&aFlowArray);
+  // rChain->SetBranchAddress("Particle",&aArray);
+  // rChain->SetBranchAddress("FlowInfo",&aFlowArray);
 
   if( isys == 5 )
     rChain->SetBranchAddress("RPPsi",&RPPsi);

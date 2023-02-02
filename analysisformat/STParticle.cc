@@ -189,36 +189,44 @@ void STParticle::Clear(Option_t *option)
 void STParticle::SetGoodTrackFlag()
 {
   fgoodtrackf = fgoodtrackf != 0 ?  
-    1000*( fBeamonTargetf * fVatTargetf )  + 
-    100 *( fmassf * fmomentumf * fdedxf) +
+    1000*( fmomentumf * fdedxf )  + 
+    100 *( fmassf ) +
     10*fdistanceatvertexf + 
     fnclustf : 0;
+
+  // before 2022 Jan. 19
+  // fgoodtrackf = fgoodtrackf != 0 ?  
+  //   1000*( fVatTargetf )  + 
+  //   100 *( fmassf * fmomentumf * fdedxf) +
+  //   10*fdistanceatvertexf + 
+  //   fnclustf : 0;
   //    fNDFf : 0;
+
 
 }
 
 
-void STParticle::SetRecoTrack(STRecoTrack *atrack)
+void STParticle::SetRecoTrack(STRecoTrack *atrack, STRecoTrack *atrackva)
 {    
   Clear();
 
-  fRTrack = atrack;
+  fRTrack  = atrack;
+  fVATrack = atrackva;
 
-  forigP3 = fRTrack->GetMomentumTargetPlane(); //v35
+  fdEdx   = fVATrack -> GetdEdxWithCut(0, 0.7);
+  forigP3 = fVATrack -> GetMomentumTargetPlane(); //v56
   // forigP3 = fRTrack->GetMomentum();          // v36
   fRotatedP3 = forigP3;
-
   fRotatedPt = TVector2( fRotatedP3.X(), fRotatedP3.Y());
   fPxz       = TVector2( fRotatedP3.Z(), fRotatedP3.X());
   fPyz       = TVector2( fRotatedP3.Z(), fRotatedP3.Y());
 
   fP    = forigP3.Mag();
-  fdEdx = fRTrack->GetdEdxWithCut(0, 0.7);
-  fChar = fRTrack->GetCharge();
-  fGFChar = fRTrack->GetGenfitCharge();
+  fChar = fVATrack->GetCharge();
+  fGFChar = fVATrack->GetGenfitCharge();
 
-  fPID  = STPID::GetPDG(fRTrack->GetPID());
-  fPIDProbability = fRTrack->GetPIDProbability();
+  fPID  = STPID::GetPDG(fVATrack->GetPID());
+  fPIDProbability = fVATrack->GetPIDProbability();
 
   rVertexID      =  fRTrack -> GetVertexID();
   rdEdxPointSize = (fRTrack -> GetdEdxPointArray()) -> size();
@@ -232,18 +240,19 @@ void STParticle::SetRecoTrack(STRecoTrack *atrack)
   if( fdEdx > maxdEdx  || fdEdx <= 0 ) SetdEdxFlag(0);
   //  if( fGFChar != fChar )               SetMassFlag(0);
 
+  // vertex pos
+  Bool_t bgtrack = 
+    (abs(fRTrack->GetPOCAVertex().Z() + 14.85 ) <= 3.* 1.33) &&
+    (abs(fRTrack->GetPOCAVertex().X()) <= 15.) &&
+    (abs(fRTrack->GetPOCAVertex().Y() + 205.) <= 20. );
+  if( !bgtrack ) 
+    SetVertexAtTargetFlag(0);
+  else
+
+
+    SetGoodTrackFlag();
+  
 }
-
-
-void STParticle::SetVATrack(STGenfitVATask *atrack)
-{
-  fVATrack = atrack;
-
-  SetRecoTrack( (STRecoTrack*)fVATrack );
-
-  std::cout << "SetVATrack " << std::endl;
-}
-
 
 
 
@@ -276,15 +285,15 @@ void STParticle::SetBBMass(Double_t val)
 {
   if( val > 0 ) 
     fBBMass   = val;
-  else
-    SetMassFlag(0);
+  //  else
+  //    SetMassFlag(0);
 }
 
 void STParticle::SetBBMassHe(Double_t val)       
 {
   if( val > 0) {
     fBBMassHe   = val;
-    fmassf = 1;
+    //    fmassf = 1;
   }
 }
 
@@ -335,6 +344,7 @@ void STParticle::SetMass(Int_t val)
 
   default:
     mass = 0;
+    SetMassFlag(0);
     fPID_seq = 99;
     break;
   }
@@ -399,3 +409,5 @@ void STParticle::SetPiPID()
   //   fpipid = 0;
 
 }
+
+

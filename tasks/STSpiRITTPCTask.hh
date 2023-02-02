@@ -6,7 +6,7 @@
 #include "FairRunAna.h"
 #include "FairRootManager.h"
 #include "STRecoTrack.hh"
-#include "STParticle.hh"
+#include "STKParticle.hh"
 #include "STMassCalculator.hh"
 #include "ST_ClusterNum_DB.hh"
 #include "STBDC.hh"
@@ -40,7 +40,8 @@ public:
   void       Finish(){fActive = kFALSE;}
 
   void   SetPersistence(Bool_t value = kTRUE);
-  void   SetRunInfo(TString vDir, TString tver, TString sver){rootDir = vDir, tVer = tver, sVer=sver;
+  void   SetRunInfo(TString vDir, TString tver, TString sver)
+  {rootDir = vDir, tVer = tver, sVer=sver;
     LOG(INFO) << " setruninfor " << sVer << FairLogger::endl;}  
 
   Long64_t GetEventID()  {return fEventIDLast;}
@@ -135,6 +136,7 @@ private:
 
   Double_t  protonMaxMomentum = 2500.;  //!  
   Double_t  momRange[8][2] = {{0.,1000.},{0.,1000.},{100.,1400.}, {100.,2200.}, {200.,2800.}, {300.,1400.}, {400.,1800.}, {1300.,2500.}};  
+  Double_t  momCut[7] = {1000, 1000, 2000., 4000., 4200., 4200.,4500.};
 
   Double_t MassRegion[7][4] ={{ 127.2,   21.3,      4.,  4.},            //pi  
 			      { 911.044, 68.4656,   2.,  2.},            //p  685.3 to 1,165.9
@@ -176,7 +178,7 @@ private:
 				   {3250.,4200.},
 				   {5200.,6000.} };   //!
 
-  TF1 *f1MassGate[5][4][2][4];//!
+  TF1 *f1MassGate[5][4][2][4][2];//!
   TFile *massGateFile; //!
 
 
@@ -187,12 +189,11 @@ private:
 
   Bool_t ProceedEvent();
   Bool_t SetupEventInfo();
-  void   SetupTrackQualityFlag(STParticle *apart);
+  void   SetupTrackQualityFlag(STKParticle *apart);
   Int_t  GetPID(Double_t mass[2], Double_t fMom,  Double_t dedx);
   Int_t  GetPIDTight(Double_t mass[2], Double_t fMom, Double_t dedx);
-  Int_t  GetPIDNorm (Double_t mass[2], Double_t fMom, Double_t dedx);
   Int_t  GetPIDLoose(Double_t mass[2], Double_t fMom, Double_t dedx);
-  Int_t  GetPIDFit  (Double_t mass[2], Double_t fMom, Int_t    mbin);
+  Int_t  GetPIDFit  (Int_t z, Double_t mass, TVector3 vMom, Int_t mult);
   Bool_t SetupPIDFit();
   void   ShowProcessTime();
   Bool_t GetVertexQuality(TVector3 vert);

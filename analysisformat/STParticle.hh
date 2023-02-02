@@ -110,7 +110,7 @@ private:
 
   //STRecoTrack parameters
   STRecoTrack *fRTrack; //!
-  STGenfitVATask *fVATrack; //!
+  STRecoTrack *fVATrack; //!
   Int_t     rVertexID;  
   Int_t     rdEdxPointSize;
   Int_t     rdEdxPointSize_thr = 1;
@@ -139,8 +139,7 @@ private:
 
 public:
   void     Clean()                       {Clear();}
-  void     SetRecoTrack(STRecoTrack *atrack);
-  void     SetVATrack(STGenfitVATask *atrack);
+  void     SetRecoTrack(STRecoTrack *atrack, STRecoTrack *atrackva=NULL);
 
   void     SetNumCluster(STRecoTrack *atrack) 
   {        fnclust = atrack->GetClusterIDArray()->size();}
@@ -156,7 +155,7 @@ public:
   Int_t    GetPID()                      {return fPID;}
   void     SetPIDTight(Int_t value)      {fPID_tight = value;}           
   Int_t    GetPIDTight()                 {return fPID_tight;}           
-  void     SetPIDNorm(Int_t value)       {fPID_norm = value;}           
+  void     SetPIDNorm(Int_t value)       {fPID_norm = value; SetMass(fPID_norm);}           
   Int_t    GetPIDNorm()                  {return fPID_norm;}           
   void     SetPIDLoose(Int_t value)      {fPID_loose = value;}
   Int_t    GetPIDLoose()                 {return fPID_loose;}           

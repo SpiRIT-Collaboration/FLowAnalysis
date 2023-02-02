@@ -9,10 +9,10 @@ source ../build/config.sh
 
 # TPC data
 #
-VERSION=55
+VERSION=1
 export TPCDIR=/home/recoData/20200529/data
 export RCVER=develop.1988.bf2b00e
-export SUFX=BTt
+export SUFX=ph
 
 ##g4 data
 #export TPCDIR=/home/isobe/20200909MizukiGeant4/recoData.20200910/
@@ -53,7 +53,7 @@ source runList.sh
 # Set RUNNUMBER1 
 DBVERSION=0
 
-export TPCDIR=$TPCDIR/Sn124
+#export TPCDIR=$TPCDIR
 
 #RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
@@ -64,7 +64,53 @@ RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF108ss})
 #RUNNUMBER1=(${RNFG4})
 
+#RUNNUMBER1="2595"
+
 echo $TPCDIR
+
+function makeflow(){   ## batch job from the second to the end.
+    typeset -i I=0
+    while(( $I < ${#RUNNUMBER1[@]} ))
+    do
+
+	RUN=${RUNNUMBER1[I]} 
+	echo RUN=${RUN} VER=$VERSION root -b -q makeFlowBranch.C
+	RUN=${RUN} VER=$VERSION root -b -q makeFlowBranch.C >& log/error_${RUN}.log
+	let I++
+	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
+            break;
+        fi
+    done
+}
+function makephys(){   ## batch job from the second to the end.
+    typeset -i I=0
+    while(( $I < ${#RUNNUMBER1[@]} ))
+    do
+
+	RUN=${RUNNUMBER1[I]} 
+	echo RUN=${RUN} root -b -q makePhysicsTree.C
+	RUN=${RUN} root -b -q makePhysicsTree.C >& log/error_${RUN}.log
+	let I++
+	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
+            break;
+        fi
+    done
+}
+
+function exe3(){   ## batch job from the second to the end.
+    typeset -i I=2
+    while(( $I < ${#RUNNUMBER1[@]} ))
+    do
+
+	RUN=${RUNNUMBER1[I]} 
+	echo RUN=${RUN} root -b -q exe3.C
+	RUN=${RUN} root -b -q exe3.C
+	let I++
+	if [ $I -ge ${#RUNNUMBER1[@]} ]; then
+            break;
+        fi
+    done
+}
 
 function execa() { ## Job for the 2841 with maximum event number = MXEVT
     RUN=${RUNNUMBER1[0]} VER=$VERSION TPCDIR=$TPCDIR DBVER=$DBVERSION MXEVT=$1 root run_analysis.C 

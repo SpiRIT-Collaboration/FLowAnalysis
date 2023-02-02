@@ -13,8 +13,6 @@ void SetColor()
   fcol -> SetRGB(256./256., 215./256., 0.);
 
   
-
-
   UInt_t i = 11;
   fcol =  gROOT->GetColor(i); i++;
   fcol -> SetRGB(255./256, 165./355., 0./256.);

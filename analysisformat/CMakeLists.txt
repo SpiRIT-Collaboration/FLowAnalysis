@@ -47,15 +47,17 @@ set(SRCS
 # Add all the source files below this line. Those must have cc for their extension.
 STKatana.cc
 STParticle.cc
+STKParticle.cc
 STTriggerArray.cc
 STNeuLANDCluster.cc
 STNeuLANDHit.cc
 STBetheBlochFittingFunction.cc
-KatanaRoot.cc
-STMassFunction.cc
 STBDC.cc
+KatanaRoot.cc
 STBBFunction.cc
-STMassCalculator.cc
+STMassFunction.cc
+#STMassCalculator.cc
+STMassCalSimpleBB.cc
 )
 
 CHANGE_FILE_EXTENSION(*.cc *.hh HEADERS "${SRCS}")
