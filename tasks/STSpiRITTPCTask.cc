@@ -21,12 +21,20 @@ STSpiRITTPCTask::STSpiRITTPCTask()
 
   fRunAna = FairRunAna::Instance();
   iRun  = fRunAna->getRunId();
+
+  fBeam         = new STBDC();
   bmA   = STRunToBeamA::GetBeamA(iRun);
+  fBeam -> SetRun(iRun);
+  
   if( bmA == 100 )
     BeamPID = 100;
-  
-  
-  
+  else {
+    if( !SetupBeamCut(bmA) ) {
+      LOG(ERROR) << " Beam cut file is not found. " << FairLogger::endl; 
+      exit(0);
+    }
+  }
+
   //------------------------//
   // initial setup
   fChain = nullptr;
@@ -35,9 +43,40 @@ STSpiRITTPCTask::STSpiRITTPCTask()
   vertexArray   = new TClonesArray("STVertex",1);
 }
 
+Bool_t STSpiRITTPCTask::SetupBeamCut(UInt_t SnA)
+{
+  TString gcutFileName;
+
+  if(SnA == 132)
+    gcutFileName = "gcut132Sn.ROOT";
+  else if(SnA == 108)
+    gcutFileName = "gcut108Sn.ROOT";
+  else if(SnA == 124)
+    gcutFileName = "gcut124Sn.ROOT";
+  else if(SnA == 112)
+    gcutFileName = "gcut112Sn.ROOT";
+
+  if( gcutFileName == "" )
+    return kFALSE;
+
+
+  auto gcutFile = new TFile( "data/"+gcutFileName );
+  gBeamCut = (TCutG*)gcutFile->Get("sigma20");
+  gcutFile->Close();
+
+  if(gBeamCut == NULL) {
+    LOG(ERROR) << " Beam Cut " << gcutFileName << " is not opened. " <<FairLogger::endl;
+    return kFALSE;
+  }
+
+  return kTRUE;
+}
+
+
 
 STSpiRITTPCTask::~STSpiRITTPCTask()
 {
+  delete fBeam;           //!
 
   delete db;
   delete fChain;  //!
@@ -86,13 +125,15 @@ InitStatus STSpiRITTPCTask::Init()
     return kERROR;
   }
 
+  fRootManager -> RegisterAny("BeamInfo", fBeam, kTRUE);
+
   tpcParticle = new TClonesArray("STKParticle",100);
   fRootManager -> Register("STKParticle","flow",tpcParticle, fIsPersistence);
 
 
   if( fIsFlowAnalysis ) {
-    flowAnalysis = new TClonesArray("STFlowInfo",1);
-    fRootManager -> Register("STFlow","flow",flowAnalysis, fIsPersistence);
+    //    flowAnalysis = new TClonesArray("STFlowInfo",1);
+    fRootManager -> RegisterAny("STFlow", fflowinfo, fIsPersistence);
 
     fflowtask = new STFlowTask(kTRUE, kTRUE, kFALSE); //(flattening, subevent, bootstrap)
     fIsFlowAnalysis = fflowtask->Init(iRun, sVer);
@@ -283,31 +324,18 @@ void STSpiRITTPCTask::Exec(Option_t *opt)
   fChain -> GetEntry(fEventID);  
 
   ShowProcessTime();
+  fEventID++;
 
-  Bool_t bfill = kFALSE;
-  if(SetupEventInfo()) {
-    fEventID++;
+  Bool_t bfill = SetupEventInfo();
+  if( bfill ) {
 
-
-    if( ProceedEvent() ) {
-      bfill = kTRUE;
+    if( ProceedEvent() ) 
       FinishEvent();
-
-    }
-
+    else
+      bfill = kFALSE;
   }
 
-  // if( bfill && BeamPID != 0) 
-  //   bfill = kTRUE;
-  // else
-  //   bfill = kFALSE;
-
-  if( bmA == 100 )
-    bfill = kTRUE;
-
-
   anaRun->MarkFill(bfill);
-
 
   if( fEventID >= prcEntry )  {
       LOG(INFO) << "STSpiRITTPC:: Finishing analysis. " << FairLogger::endl;
@@ -335,12 +363,11 @@ void STSpiRITTPCTask::ShowProcessTime()
 }
 
 void STSpiRITTPCTask::FinishEvent()
-{
+{ 
   LOG(DEBUG) << "STSpiRITTPCTask::FinishEvent is called. " << BeamPID << FairLogger::endl;
 
 
   if( fIsFlowAnalysis ) {
-    LOG(DEBUG) << "beam " << BeamPID << " event " << rEventID << FairLogger::endl;
 
     fflowtask->SetupEventInfo(rEventID, BeamPID);
     fflowtask->FinishEvent();
@@ -348,8 +375,8 @@ void STSpiRITTPCTask::FinishEvent()
     if( bmA != 100 )
       fflowinfo = fflowtask->GetFlowInfo();
     
-    TClonesArray &aflow = *flowAnalysis;
-    new( aflow[0] ) STFlowInfo( *fflowinfo );
+    // TClonesArray &aflow = *flowAnalysis;
+    // new( aflow[0] ) STFlowInfo( *fflowinfo );
   }
 }
 
@@ -364,15 +391,48 @@ Bool_t STSpiRITTPCTask::SetupEventInfo()
   }
 
   rEventID = eventHeader -> GetEventID() - 1;
-  
+
+  LOG(DEBUG) << " eventHeader " << rEventID << FairLogger::endl;
+
   ProjA   = beamInfo->fRotationAngleATargetPlane;//fBDC->ProjA;
   ProjB   = beamInfo->fRotationAngleBTargetPlane;//fBDC->ProjB;  
   ProjX   = beamInfo->fXTargetPlane;
   ProjY   = beamInfo->fYTargetPlane;
-  BeamPID = bmA;
 
-  return kTRUE;
+  fBeam->evt   = rEventID;
+  fBeam->ProjA = ProjA;
+  fBeam->ProjB = ProjA;
+  fBeam->ProjX = ProjX;
+  fBeam->ProjY = ProjY;
+  fBeam->aoq   = beamInfo->fBeamAoQ; 
+  fBeam->z     = beamInfo->fBeamZ; 
 
+  BeamPID      = GetBeamPID(bmA, fBeam->aoq, fBeam->z);
+  fBeam->SnA   = BeamPID;
+
+  if( BeamPID > 0 )
+    return kTRUE;
+
+  return kFALSE;
+
+}
+
+Int_t STSpiRITTPCTask::GetBeamPID(Int_t SnA, Double_t aoq, Double_t z)
+{
+
+  Int_t pid = 0;
+  if( SnA == 132){
+    if( gBeamCut -> IsInside(aoq,z) && z < 50.536)
+      pid = 132;
+  }
+  else {
+    if( gBeamCut -> IsInside(aoq,z) )
+      pid = SnA;
+    else 
+      pid = 0;
+  }
+
+  return pid;
 }
 
 
@@ -381,7 +441,7 @@ Bool_t STSpiRITTPCTask::GetVertexQuality(TVector3 vert)
 {
   if( bmA == 100 ) return kTRUE; 
 
-  if( ProjA < -99 || ProjA > 100) return kFALSE;
+  if( ProjA < -99 || ProjA > 0) return kFALSE;
   
   if( ProjB < -99 ) return kFALSE;
   
@@ -436,14 +496,15 @@ void STSpiRITTPCTask::Clear()
   ProjB = 0;
   ProjX = -999.;
   ProjY = -999.;
-
+  fBeam -> Clear();
+  
   for (Int_t m = 0; m < 7; m++) ntrack[m] = 0;
 
   tpcParticle->Clear("C");
 
   if( fIsFlowAnalysis ) {
     fflowtask->Clear();
-    flowAnalysis->Clear();
+    //    flowAnalysis->Clear();
   }
 }
 
@@ -451,9 +512,9 @@ void STSpiRITTPCTask::Clear()
 Bool_t STSpiRITTPCTask::ProceedEvent()
 {
 
-  Bool_t bprint = kFALSE;
+  Bool_t bprint = 1;
   if( bprint ) {
-    LOG(INFO) << " ProceedEvent ... " << fEventID-1 << FairLogger::endl;
+    LOG(DEBUG) << " ProceedEvent ... " << fEventID-1 << FairLogger::endl;
     bprint = kTRUE;
   }
 
@@ -468,38 +529,55 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
   Bool_t vflag = kFALSE;
 
   TIter nextReco(trackArray);
+  TIter nextVA(trackVAArray);
   STRecoTrack *atrackReco = NULL;
   STRecoTrack *atrackVA = NULL;
 
+
+  UInt_t ii = 0;
   while( (atrackReco = (STRecoTrack*)nextReco() ) ) {
+    ii++;
 
     TVector3 dist = atrackReco->GetPOCAVertex() - vert;
-    if( dist.Mag() <= 20 )
+    if( dist.Mag() <= 20 ) 
       ntrack[1]++;
   }
 
+   LOG(DEBUG) << "-----------------" << FairLogger::endl;
+
   STKParticle *aParticle    = new STKParticle();
-  STKParticle *aParticle_He = new STKParticle();
 
-  for( auto it : ROOT::TSeqL( ntrack[0] ) ) {
-
-    atrackReco = (STRecoTrack*)trackArray->At(it);
-    auto helixID = atrackReco->GetHelixID();
+  //  for( auto it : ROOT::TSeqL( ntrack[0] ) ) {
+  nextReco.Reset();
+  while( (atrackReco = (STRecoTrack*)nextReco() ) ) {
     
-    if( !(atrackVA = (STRecoTrack*)trackVAArray->At(it) ) ) break;
+    auto helixID = atrackReco->GetHelixID();
+
+    LOG(DEBUG) << " reco id " << helixID;
+    
+    if( !(atrackVA = (STRecoTrack*)nextVA() ) ) break;
     auto helixIDVA = atrackVA->GetHelixID();
-      
+
+    LOG(DEBUG) << " vaid " << helixIDVA;
+
     Int_t diffID = helixIDVA - helixID;
+
+    LOG(DEBUG) << " diff " << diffID ;
     if( diffID > 0  ) {
       while( 1 ) {
-	it++;
-	if( !(atrackReco = (STRecoTrack*)trackArray->At(it) ) ) break;
+
+	if( !(atrackReco = (STRecoTrack*)nextReco() ) ) break;
 	helixID = atrackReco->GetHelixID(); 
+
+	LOG(DEBUG) << " helixid again " << helixID;
 	
 	diffID = helixIDVA - helixID;
-	if( diffID == 0 ) break;
+
+	LOG(DEBUG) << " diff again " << diffID <<" ->> " ;
+	if( diffID <= 0 ) break;
       }
     }
+  
 
     aParticle->SetRecoTrack(atrackReco, atrackVA);
 
@@ -513,6 +591,8 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
     TVector3 VMom     = aParticle->GetMomentumAtTarget();
     Double_t dEdx     = aParticle->GetdEdx();
 
+
+
     //--- Set MassFitter      
     Double_t mass[2] = {-1.,-1.};
 
@@ -520,13 +600,17 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
     mass[0] = massCalH -> CalcMass(1., VMom, dEdx, kTRUE);
     mass[1] = massCalHe-> CalcMass(2., VMom, dEdx, kTRUE);
 
+    if( mass[0] > 0 )
+      aParticle->SetBBMass(mass[0]);      
+
+
     UInt_t nPID[2] = {0, 0};
     nPID[0] = GetPIDFit(1, mass[0], VMom, ntrack[1]);
     nPID[1] = GetPIDFit(2, mass[1], VMom, ntrack[1]);
 
     Int_t  pid_loose  = GetPIDLoose(mass, VMom.Mag(), dEdx);
 
-    if( 1 ) 
+    if( 0 ) 
       LOG(INFO) 
 	<< "ntrack[1] "<< setw(3) << ntrack[1]
 	<< " dEdx = "  << setw(8)  << dEdx
@@ -537,56 +621,57 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
 	<< " nPID[1] " << setw(8)  << nPID[1]
 	<< " dist "    << setw(5)  << aParticle->GetDistanceAtVertex()
 	<< FairLogger::endl;
-      
 
-    Bool_t bdouble = kFALSE;
-    if( nPID[0] != 0 ) {
-      aParticle->SetPID(nPID[0]);
-      aParticle->SetBBMass(mass[0]);      
-      bdouble = kTRUE;
-    }
-    else if( nPID[1] != 0 ) {
+    LOG(DEBUG) << " dEdx " << dEdx 
+	 << " P " << VMom.Mag()
+	 << " rDist " << aParticle->GetDistanceAtVertex() 
+	 << " PID " << nPID[0] << " : " << nPID[1] << " : " << pid_loose << FairLogger::endl;;
+
+    if( nPID[1] != 0 ) {
       aParticle->SetPID(nPID[1]);
       aParticle->SetBBMass(mass[1]);
     }
-    else if( nPID[0] == 0 && pid_loose == 211 ) {
+    else if( nPID[0] != 0 ) 
+      aParticle->SetPID(nPID[0]);
+
+    else if( pid_loose == 211 ){
       aParticle->SetPID(pid_loose);
+      aParticle->SetMassFlag(0);
+    }
+    else if( nPID[0] == 0 && nPID[1] == 0 && pid_loose > 0 ) {
+      aParticle->SetPIDLoose(pid_loose);
       aParticle->SetMass(pid_loose);
+      aParticle->SetMassFlag(0);
     }
-    else{
+    else
       aParticle->SetPID(0);
-      aParticle->SetBBMass(0);      
-      aParticle->SetPIDFlag(0);
-    }
+
+    if( nPID[0] != 0 && nPID[1] != 0 )
+      aParticle->SetDoubleFlag(0);
+
 
     SetupTrackQualityFlag( aParticle );
-  
-    aParticle->SetTrackID(ntrack[2]);
-    new( (*tpcParticle)[ntrack[2]] ) STKParticle(*aParticle);
-    ntrack[2]++;    
+  //@@@@
 
-    if( aParticle->GetGoodTrackFlag() == 111111 ) {
-      ntrack[3]++;
-      vflag = kTRUE;
-    }
+    //    if( aParticle->GetGoodTrackFlag() >= 0 ) {
+    if( aParticle->GetGoodTrackFlag() >= 100000 ) {
+      aParticle->SetTrackID(ntrack[2]);
+      new( (*tpcParticle)[ntrack[2]] ) STKParticle(*aParticle);
+      ntrack[2]++;    
     
-    if( bdouble && nPID[1] != 0 ) {
-      aParticle_He = aParticle;
-      aParticle_He -> SetDoubleFlag(0);
+      if( aParticle->GetGoodTrackFlag() == 111111 ){
+	ntrack[3]++;
+	vflag = kTRUE;
+      }
 
-      aParticle_He->SetTrackID(ntrack[2]);
-      new( (*tpcParticle)[ntrack[2]] ) STKParticle(*aParticle_He);
-      ntrack[2]++;    	
+      LOG(DEBUG) << " good " << aParticle->GetTrackID()<< " :: " << ntrack[2] << " dist " << aParticle->GetDistanceAtVertex() << FairLogger::endl; 
     }
-
-    if( aParticle_He->GetGoodTrackFlag() == 11111 ) {
-      ntrack[3]++;
-      vflag = kTRUE;
-    }
+    else
+      LOG(DEBUG) << aParticle->GetTrackID() << " : " << ntrack[2] << " / " << ntrack[0] << " " << aParticle->GetDistanceAtVertex()	<< FairLogger::endl;
   }
 
 
-  LOG(DEBUG) << " event : " << fEventID-1 << " mtrack1 " << ntrack[1] << endl;
+  LOG(DEBUG) << " event : " << fEventID-1 << " mtrack1 " << ntrack[1] << " mtrack2 " << ntrack[2] << FairLogger::endl;
   
   //--- Set up for flow ---;
   if( fIsFlowAnalysis ) {
@@ -713,7 +798,7 @@ Int_t STSpiRITTPCTask::GetPIDFit(Int_t z, Double_t mass, TVector3 vMom, Int_t mu
   // fMom: rigidity magnitude of track
   // mbin: centrality bin, mbin=0: M>=56, mbin=1: 50<=M<56, mbin=2: 40<=M<50, mbin=3: no selection
 
-  Int_t fpid = 0;
+  Int_t fpid = -1;
   if( mass <= 0 ) return 0;
 
   Double_t fMom = vMom.Mag();
@@ -739,7 +824,8 @@ Int_t STSpiRITTPCTask::GetPIDFit(Int_t z, Double_t mass, TVector3 vMom, Int_t mu
       if( roughCut ) {
     
 	Int_t fitSigmaID =  3 ;
-	Bool_t fitCut = mass >= f1MassGate[i][mbin][0][fitSigmaID][phibin]->Eval(fMom) && mass <= f1MassGate[i][mbin][1][fitSigmaID][phibin]->Eval(fMom);
+	Bool_t fitCut = mass >= f1MassGate[i][mbin][0][fitSigmaID][phibin]->Eval(fMom) && 
+	  mass <= f1MassGate[i][mbin][1][fitSigmaID][phibin]->Eval(fMom);
     
 	if( fitCut ) {
 	  fpid = i;
@@ -781,12 +867,14 @@ Int_t STSpiRITTPCTask::GetPIDFit(Int_t z, Double_t mass, TVector3 vMom, Int_t mu
     }
   }
 
-  LOG(INFO) << " GetPIDFit " << mass  << " fpid " << fpid << FairLogger::endl;
+
 
   STPID::PID pid = static_cast<STPID::PID>(fpid+1);
   Int_t rpid = STPID::GetPDG(pid) * bfind;
+
+  LOG(DEBUG) << " GetPIDFit " << mass  << " fpid " << pid << " " << rpid <<FairLogger::endl;
         
-  return fpid;
+  return rpid;
 }
 
 Int_t STSpiRITTPCTask::GetPIDTight(Double_t mass[2], Double_t fMom, Double_t dedx)

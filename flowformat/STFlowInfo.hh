@@ -18,10 +18,10 @@ public:
   virtual ~STFlowInfo(){};
   
 public:
-  Int_t    run;
-  Long64_t evt;
-  Int_t    SnA;
-  Int_t    beamPID;
+  Int_t    run;  //!
+  Long64_t evt;  //!
+  Int_t    SnA;  //!
+  Int_t    beamPID; //!
 
   UInt_t   ntrack[7];
   UInt_t   mtrack0;
@@ -99,7 +99,7 @@ public:
 
 
 
-  ClassDef(STFlowInfo,8);
+  ClassDef(STFlowInfo,9);
 };
 
 #endif

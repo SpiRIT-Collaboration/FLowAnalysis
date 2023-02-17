@@ -57,13 +57,13 @@ void DoAna_phys(Int_t isel = -2)
   openRunAna();
 
   if(rChain != NULL) 
-    LOG(INFO) << " DoFLow_adv: System " << isys << "  -> " << sysName << FairLogger::endl; 
+    LOG(INFO) << " DoAna_phys: System " << isys << "  -> " << sysName << FairLogger::endl; 
 
   else
     exit(0);
 
 
-  gROOT->ProcessLine(".! grep -i void DoFlow_adv.C ");
+  gROOT->ProcessLine(".! grep -i void DoAna_phys.C ");
 
 
   //@@@@@ Configure ++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -136,6 +136,7 @@ void DoAna_phys(Int_t isel = -2)
 //@@@@@ main ++++++++++++++++++++++++++++++++++++++++++++++++++
 void makePhysicsPlot(UInt_t selid = 0)       //%% Executable :
 {
+  LOG(INFO) << "makePhysicsPlot(" << selid << ")" << FairLogger::endl;
 
   TDatime beginTime;
   gStyle->SetOptStat(0);
@@ -146,10 +147,10 @@ void makePhysicsPlot(UInt_t selid = 0)       //%% Executable :
   std::map< Long64_t, Int_t > PDGtoIDX{{2212, 0},{1000010020,1},{1000010030,2},{1000020030,3},{1000020040,4},{2112,7}};
   std::vector<Long64_t> nclPDG = {2212,1000010020,1000010030,1000020030,1000020040,2122};
 
-  beamAToSys[132] = 0;
-  beamAToSys[108] = 1;
-  beamAToSys[124] = 2;
-  beamAToSys[112] = 3;
+  // beamAToSys[132] = 0;
+  // beamAToSys[108] = 1;
+  // beamAToSys[124] = 2;
+  // beamAToSys[112] = 3;
 
   ///------>>>> Acceptance Correction Option: --------
   ///$$$$$/
@@ -164,11 +165,12 @@ void makePhysicsPlot(UInt_t selid = 0)       //%% Executable :
     bAcc_corr = kFALSE;
   }
 
-  LOG(INFO) << "makePhysicsPlot(" << selid << ")" << FairLogger::endl;
 
+  LOG(INFO) << sysName << " Particle is " << ncls[selid].name << " " << sVer << FairLogger::endl;
   //-- Define Output file name 
   TString fHeader = "phys_"+ sysName + "_" + ncls[selid].name+".v"+sVer+".";
   auto fName = SetupOutputFile( fHeader );
+  LOG(INFO) << " output file is " << fName << FairLogger::endl;
   
   GraphSave  = new TFile(fName,"recreate");
 
@@ -338,7 +340,8 @@ void makePhysicsPlot(UInt_t selid = 0)       //%% Executable :
     ShowProcess(i);
 
     rChain->GetEntry(i);
-    STFlowInfo *aflow = (STFlowInfo*)aFlowArray->At(0);
+    //    STFlowInfo *aflow = (STFlowInfo*)aFlowArray->At(0);
+
 
     /// for reaction plane resolution
     Bool_t bFill = kFALSE;
@@ -346,21 +349,21 @@ void makePhysicsPlot(UInt_t selid = 0)       //%% Executable :
 
 
     //@@@@@ centrality selection ++++++++++++++++++++++++++++++++++++++++++++++++++
-    //    Int_t trackselection = aflow->mtrack2;
-    Int_t trackselection = aflow->mtrack1;
+    //    Int_t trackselection = aFlowInfo->mtrack2;
+    Int_t trackselection = aFlowInfo->mtrack1;
     
     if(trackselection > Ucent || trackselection < Lcent ) continue; //v56.0.0
 
     hmult->Fill( trackselection );
 
-    ///    auto RPangle = GetRPBaseAngle(aflow);
-    auto RPangle = aflow->unitP_fc.Phi();
+    ///    auto RPangle = GetRPBaseAngle(aFlowInfo);
+    auto RPangle = aFlowInfo->unitP_fc.Phi();
     hPsinc->Fill(RPangle);
 
     bRes = kTRUE; //@1
 
-    Double_t subevt_phi = abs(TVector2::Phi_mpi_pi((aflow->unitP_1fc).Phi()-
-						   (aflow->unitP_2fc).Phi()));
+    Double_t subevt_phi = abs(TVector2::Phi_mpi_pi((aFlowInfo->unitP_1fc).Phi()-
+						   (aFlowInfo->unitP_2fc).Phi()));
    
  
     Double_t rnd_Phi = 2.*TMath::Pi()*(grnd.Rndm() - 0.5);
@@ -369,17 +372,17 @@ void makePhysicsPlot(UInt_t selid = 0)       //%% Executable :
     Double_t sumPt = 0;
 
     TIter next(aArray);
-    STParticle *aPart = NULL;
+    STKParticle *aPart = NULL;
 
     //--------------------------------------------------
     //----- Main loop 
     //--------------------------------------------------
     UInt_t mtk = 0;
 
-    while( (aPart = (STParticle*)next()) ) {
+    while( (aPart = (STKParticle*)next()) ) {
 
       //&&&&&
-      if( !( isys == 5 || aPart->GetGoodTrackFlag() == 1111 ) ) continue;
+      if( !( isys == 5 || aPart->GetGoodTrackFlag() >= 111110 ) ) continue;
 
       mtk++;
 
@@ -417,8 +420,6 @@ void makePhysicsPlot(UInt_t selid = 0)       //%% Executable :
 
       //------------------------------
 
-      auto yaw   = aPart->GetYawAngle();
-      auto pitch = aPart->GetPitchAngle();
       auto bmass = aPart->GetBBMass();
       auto theta = aPart->GetRotatedMomentum().Theta();
       auto charge= aPart->GetCharge();
@@ -489,7 +490,8 @@ void makePhysicsPlot(UInt_t selid = 0)       //%% Executable :
       }
 
       hmass    ->Fill(aPart->GetRotatedMomentum().Mag(), bmass);
-      hmassHe  ->Fill(aPart->GetRotatedMomentum().Mag(), aPart->GetBBMassHe());
+      if( aPart->GetPID() > 100002000 )
+	hmassHe  ->Fill(aPart->GetRotatedMomentum().Mag(), aPart->GetBBMass());
 
       hPsi     ->Fill(RPangle);
       hRPPsi   ->Fill(rpphi);
@@ -508,7 +510,7 @@ void makePhysicsPlot(UInt_t selid = 0)       //%% Executable :
       hycos2am ->Fill(rapidn, cos(2.*dphi)*(Double_t)ncls[PDGtoIDX[ipid]].Z);
       hyanum   ->Fill(rapidn, (Double_t)ncls[PDGtoIDX[ipid]].Z);
 
-      cout << "ncls[PDGtoIDX[ipid]].Z " << ncls[PDGtoIDX[ipid]].Z << " PID " << ipid << " " << cos(2.*dphi)*(Double_t)ncls[PDGtoIDX[ipid]].Z <<endl;
+      //      cout << "ncls[PDGtoIDX[ipid]].Z " << ncls[PDGtoIDX[ipid]].Z << " PID " << ipid << " " << cos(2.*dphi)*(Double_t)ncls[PDGtoIDX[ipid]].Z <<endl;
 
       Double_t Ek   = lrnzVec.E()-fmass;
       Double_t btgm = lrnzVec.Pt()/fmass; 
@@ -1536,17 +1538,15 @@ void DetectorBias()
   for(Int_t i = 0; i < nEntry; i++){
 
     rChain->GetEntry(i);
-    STFlowInfo *aflow = (STFlowInfo*)aFlowArray->At(0);
-
     
-    if(aflow->mtrack1 > Ucent || aflow->mtrack1 < Lcent ) continue;
+    if(aFlowInfo->mtrack1 > Ucent || aFlowInfo->mtrack1 < Lcent ) continue;
     count++;
 
-    cosphi += cos( (aflow->unitP_fc).Phi());      
-    sinphi += sin( (aflow->unitP_fc).Phi());
+    cosphi += cos( (aFlowInfo->unitP_fc).Phi());      
+    sinphi += sin( (aFlowInfo->unitP_fc).Phi());
 
-    cos2phi += cos(2.*(aflow->unitP_fc).Phi());      
-    sin2phi += sin(2.*(aflow->unitP_fc).Phi());
+    cos2phi += cos(2.*(aFlowInfo->unitP_fc).Phi());      
+    sin2phi += sin(2.*(aFlowInfo->unitP_fc).Phi());
 
   }
   
@@ -1572,7 +1572,7 @@ void PlotSubEvent(Double_t ml=30, Double_t mu=80)
   // Double_t mlt[2] = {32., 40.};
   // Double_t mlt[2] = {40., 100.};
 
-  TCut mcrot = Form("aFlow->mtrack4>%f&&aFlow->mtrack4<%f",mlt[0]*2.,mlt[1]*2.);
+  TCut mcrot = Form("mtrack4>%f&&mtrack4<%f",mlt[0]*2.,mlt[1]*2.);
   TCut mc1r  = Form("mtrack_1>%f&&mtrack_1<%f"  ,mlt[0],mlt[1]);
   TCut mc2r  = Form("mtrack_2>%f&&mtrack_2<%f"  ,mlt[0],mlt[1]);
 

@@ -1,5 +1,5 @@
 #include "FlowFunctions.h"
-#include "../flowformat/STFlowInfo.hh"
+//#include "../flowformat/STFlowInfo.hh"
 #include "openRunAna.C"
 
 Int_t  seltrackID = 4;
@@ -100,7 +100,7 @@ void ReCentering(UInt_t isel = 10, Int_t nmin=0, Int_t nmax=100) //%% Executable
   hQy->SetTitle(htitle);
 
   TString cutdef = Form(ltrack+">=%d&&"+ltrack+"<%d",nmin,nmax); 
-  if( isys != 5 ) cutdef += "&&beamPID>0";
+  if( isys != 5 ) cutdef += "&&SnA>0";
 
   TCut   multcut = TCut(cutdef);
   multcut.Print();
@@ -199,7 +199,6 @@ void Flatten_Psi_ntrack(UInt_t isel)
 
   // process
     
-  //  Int_t nevt = rChain->GetEntries();
   cout << " Number of events " << nevt << endl;
 
   Int_t icout = 0;
@@ -208,31 +207,31 @@ void Flatten_Psi_ntrack(UInt_t isel)
   for(UInt_t i = 0; i < nevt; i++){
     rChain->GetEntry(i);
 
-    STFlowInfo *aFlow = (STFlowInfo*)aFlowArray->At(0);
-    if( aFlow == NULL ) continue;
+    //    STFlowInfo *aFlow = (STFlowInfo*)aFlowArray->At(0); _flow.v1
+    if( aFlowInfo == NULL ) continue;
 
-    if( aFlow->goodEventf == 0 || aFlow->beamPID == 0 ) continue;
-    if( aFlow->mtrack4 < 5 ) continue;
+    if( aFlowInfo->goodEventf == 0 || aFlowInfo->beamPID == 0 ) continue;
+    if( aFlowInfo->mtrack4 < 5 ) continue;
       
     Int_t seltrack;
     TVector3 vec;
     
     switch(isel){
     case 10:
-      seltrack = aFlow->mtrack6;
-      vec      = aFlow->unitP;
+      seltrack = aFlowInfo->mtrack6;
+      vec      = aFlowInfo->unitP;
       break;
     case 11:
-      seltrack = aFlow->mtrack_1;
-      vec      = aFlow->unitP_1;
+      seltrack = aFlowInfo->mtrack_1;
+      vec      = aFlowInfo->unitP_1;
       break;
     case 12:
-      seltrack = aFlow->mtrack6;
-      vec      = aFlow->unit2P;
+      seltrack = aFlowInfo->mtrack6;
+      vec      = aFlowInfo->unit2P;
       break;
     case 13:
-      seltrack = aFlow->mtrack_1;
-      vec      = aFlow->unit2P_1;
+      seltrack = aFlowInfo->mtrack_1;
+      vec      = aFlowInfo->unit2P_1;
     }
 
     UInt_t intrk  = 0;

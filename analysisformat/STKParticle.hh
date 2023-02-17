@@ -32,7 +32,7 @@ public:
 
   virtual ~STKParticle(){};
 
-private:
+public:
 
   Int_t    ftrackID;
   UInt_t   fPID;
@@ -109,7 +109,8 @@ public:
   void     Clean()                       {Clear();}
   void     SetRecoTrack(STRecoTrack *atrack, STRecoTrack *atrackva=NULL);
 
-  Int_t    GetNCL()                      {return fncl;}
+  Int_t    GetNCL()                      {return rncl;}
+  Int_t    GetHelixID()                  {return rHelixID;}
 
   void     RotateAlongBeamDirection(Double_t valuex, Double_t valuey);
   void     SetP(Double_t value)          {fP = value;}
@@ -184,6 +185,7 @@ public:
   UInt_t GetNCLFlag()                           {return fnclf;}
 
   void   SetMassFlag(UInt_t value)              {fmassf = value; SetGoodTrackFlag(); }
+  UInt_t GetMassFlag()                          {return fmassf;}
 
   void   SetdEdxFlag(UInt_t value)              {fdedxf = value; SetGoodTrackFlag(); }
   UInt_t GetdEdxFlag()                          {return fdedxf;}
@@ -243,7 +245,7 @@ public:
   TVector3     GetPOCAVertex()                    {return rPOCAVertex;}
 
 
-  ClassDef(STKParticle, 0)
+  ClassDef(STKParticle, 1)
 
 };
 

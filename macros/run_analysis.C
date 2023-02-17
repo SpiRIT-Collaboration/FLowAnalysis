@@ -20,6 +20,9 @@ void run_analysis(Int_t nevt = -1)
   TString tVer = gSystem -> Getenv("RCVER");
   TString bDir = gSystem -> Getenv("BDCDIR");
   TString ssfx = gSystem -> Getenv("SUFX");
+  TString mxevt= gSystem -> Getenv("MXEVT");
+
+
 
   FairLogger* fLogger = FairLogger::GetLogger();
   if( sRun=="" || sVer=="" || tDir=="" ) {
@@ -54,10 +57,16 @@ void run_analysis(Int_t nevt = -1)
 
   TPCTask->SetRunInfo(tDir, tVer, dVer);
   TPCTask->SetFlowAnalysis(1);  // Flow analysis is activated.
+  //  TPCTask->SetFlowAnalysis(0);
 
   anaRun->Init();
   
   Long64_t maxevt = TPCTask->GetEntries();    
+  if( mxevt != "" ) {
+    nevt = atoi( mxevt );
+    maxevt = nevt;
+  }
+  LOG(INFO) << " maxevent " << maxevt << FairLogger::endl;
 
   TPCTask->SetProcessingNumberOfEvent(maxevt);
 

@@ -44,12 +44,22 @@ std::vector<gplot> gnames = {
   //  {".v1.0.22"        ,"phys_" ,"b0 2-4fm" ,"-Tommy" ," Tommy",    1, 6, 0},
   //  {".v1.0.19"        ,"phys_" ,"b0 2-4fm" ,"-Tommy" ," Tommy",    1, 6, 0},
   // {".v1.0.16"      ,"phys_" ,"b0 2~4fm" ,"|phi|>140"   ," 46<M<55", 1, 2, 0},
-  // {".v1.0.15"      ,"phys_" ,"b0 0-2fm" ,"|phi|>140"   ," M>55",    0, 2, 1},
+  // {".v1.0.15"      ,"phYs_" ,"B0 0-2fm" ,"|phi|>140"   ," M>55",    0, 2, 1},
   // {".v1.0.14"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30&&|phi|>140" ," 46<M<55", 1, 6, 0},
   // {".v1.0.13"      ,"phys_" ,"b0 0-2fm" ,"-20<#phi<30&&|phi|>140" ,"M>55"    , 0, 6, 1}
   //
-  {".v1.0.17"     ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
+  //  {".v1.0.17"     ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
   {".v1.0.18"     ,"phys_" ,"b0 0~2fm" ,"-20<#phi<30" ,"    M>55", 0, 5, 1}, //_left
+  //  {".v2.0.0"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
+  {".v2.0.1"      ,"phys_" ,"b0 2-4fm" ,"-20<#phi<30&&|phi|>140" ,"46<M<55" , 1, 6, 0},
+  //{".v2.3.0"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
+  //{".v2.3.1"      ,"phys_" ,"b0 2-4fm" ,"-20<#phi<30&&|phi|>140" ,"46<M<55" , 1, 6, 0},
+  //{".v2.0.3"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
+  //  {".v2.0.4"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
+  //{".v2.0.5"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
+  //{".v2.1.0"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
+  //  {".v2.0.7"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
+
 };
 //@gdata
 
@@ -162,6 +172,7 @@ TFile *outFile;
 TCanvas *ccv; UInt_t iccv = 0;
 TLatex  plabel;
 TString xlabel;
+Bool_t bsaveData    = 0;
 
 #include "PhysData.C"
 
@@ -245,7 +256,7 @@ TObject* ReversePlot(TObject* obj, TString opt="")
 //@loaddata
 TObject* LoadData(UInt_t isys, UInt_t ipart, TString grname, gplot gname, Int_t ylim = -1.)
 {
-  LOG(INFO) << "[LoadData] Opening.. " << grname << FairLogger::endl;
+  LOG(INFO) << "[LoadData] Opening.. " << grname << " in " << gname.Version << FairLogger::endl;
 
   TFile* fOpen;
 
@@ -253,7 +264,7 @@ TObject* LoadData(UInt_t isys, UInt_t ipart, TString grname, gplot gname, Int_t 
   if( fileEffCor[gname.mtconfig] == NULL )
     fileEffCor[gname.mtconfig] = GetAcceptanceCorrectionFile(gname.mtconfig, gname.phiconfig, mcphicut);
 
-  if( fileDATA[isys][ipart][gname.centrality] == NULL ) {
+  if( (bsaveData && fileDATA[isys][ipart][gname.centrality] == NULL) || !bsaveData ) {
 
     TString fname = gname.fileHeader + bName[isys] + ncls[ipart].name + gname.Version + ".root";
     LOG(INFO) << "[LoadData] Opening file is " << fname << FairLogger::endl;
@@ -504,6 +515,7 @@ TObject* LoadData(UInt_t isys, UInt_t ipart, TString grname, gplot gname, Int_t 
 	Double_t rape= hyv1 -> GetXaxis()->GetBinWidth(ix)/sqrt(12);
 	hyprj = hyv1->ProjectionY(Form("hyv1_%d",ix), ix, ix);
 	auto v1 = hyprj -> GetMean();
+
 	v1 /= rpresall[0];
 	auto v1error = hyprj -> GetMeanError();
 	v1error = GetError(v1, rpresall[0], v1error, rpresall[1]);
@@ -2772,8 +2784,8 @@ void Draw_meanpx(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart, std::vec
 	if( grph != NULL ) {
 	  grph -> SetMarkerStyle(DStyle[iisys].mStyle+ig);
 	  grph -> SetMarkerSize( DStyle[iisys].mSize);
-	  grph -> SetLineColor(  DStyle[iisys].fColor );
-	  grph -> SetMarkerColor(DStyle[iisys].fColor );
+	  grph -> SetLineColor(  DStyle[iisys].fColor+2*ig );
+	  grph -> SetMarkerColor(DStyle[iisys].fColor+2*ig );
 
 	  if( 0 ) {
 	    if(!bsaveData && grname == "hypx" ) {
@@ -2804,8 +2816,8 @@ void Draw_meanpx(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart, std::vec
 
 	  mgr[ipart] -> Add( grph, "P");
 	  if( ipart == 0 )
-	    lg  -> AddEntry( grph, fsys[iisys]+" "+igname.config1);
-	  //lg  -> AddEntry( grph, fsys[iisys]+" "+igname.Version);
+	    // lg  -> AddEntry( grph, fsys[iisys]+" "+igname.config1);
+	    lg  -> AddEntry( grph, fsys[iisys]+" "+igname.Version);
 	    
 	  //@@@ 
 	  if( bsaveData ) {	    
@@ -7464,25 +7476,25 @@ void PlotFigure(Bool_t nplot=kTRUE)
   SetColor();
 
   //##main#
-  //  std::vector< UInt_t > sqsys = {0,1};
+  std::vector< UInt_t > sqsys = {0,1};
   //std::vector< UInt_t > sqsys = {0,3,1};
-  std::vector< UInt_t > sqsys = {0};
+  //  std::vector< UInt_t > sqsys = {0};
   //std::vector< UInt_t > sqsys = {1};
   //std::vector< UInt_t > sqsys = {3};
   bCentral = 1;
   //  std::vector<gplot>    gname = {gnames[bCentral]};
   std::vector<gplot>    gname =  gnames;
   TString sVersion    = gname[0].Version;
-  //std::vector< UInt_t > sqpart = {0,1};
-  //  std::vector< UInt_t > sqpart = {0,1,2,3,4};
-  std::vector< UInt_t > sqpart = {7,0,1,2,3,4};
+  //  std::vector< UInt_t > sqpart = {0};
+  std::vector< UInt_t > sqpart = {0,1,2,3,4};
+  //std::vector< UInt_t > sqpart = {7,0,1,2,3,4};
   UInt_t ycutid = 3;
 
   //SAVEDATA
   //main
-  Bool_t bsaveData    = 0;
+  bsaveData    = 0;
   //++------------------
-  Bool_t bcorrelation = 1;
+  Bool_t bcorrelation = 0;
   //++-------------------
   //  bCentral = 1;
   Bool_t bdndydx      = 0; //dN/dy, dN/dpt, dN/d(beta*gamma) 
@@ -7496,10 +7508,10 @@ void PlotFigure(Bool_t nplot=kTRUE)
   Bool_t bdnintegral  = 0;
   Bool_t bcluster     = 0; // Text ouput for multipliicity of clusters in AMD
   Bool_t bdndptratio  = 0;
-  Bool_t bv1y         = 0;
-  Bool_t bv2y         = 0;
+  Bool_t bv1y         = 1;
+  Bool_t bv2y         = 1;
   Bool_t bympx        = 0;
-  Bool_t bpaper       = 1;
+  Bool_t bpaper       = 0;
   Bool_t bTommy       = 0;
   //++------------------
 
@@ -7601,16 +7613,18 @@ void PlotFigure(Bool_t nplot=kTRUE)
 
     if( bv1y ) {
       bCentral = 0;
-      //Draw_meanpx(sqsys, spart, gname, "gu_v1",41,bsaveData); //corrected.
+      Draw_meanpx(sqsys, sqpart, gname, "gyv1",42,bsaveData); //corrected.
+      //      Draw_meanpx(sqsys, spart, gname, "gu_v1",42,bsaveData); //corrected.
       //    Draw_meanpx(ssys, sqpart, gname, "gy_v1",41,bsaveData); //corrected.
-      //      Draw_meanpx(sqsys, sqpart, gname, "gyv1",42,bsaveData); //corrected.
-      Draw_meanpx(sqsys, sqpart, gname, "gyv1A",42,bsaveData); //corrected.
+      Draw_meanpx(sqsys, sqpart, gname, "hypx",42,bsaveData); //corrected.
+      ////      Draw_meanpx(sqsys, sqpart, gname, "gyv1",42,bsaveData); //corrected.
+      //Draw_meanpx(sqsys, sqpart, gname, "gyv1A",42,bsaveData); //corrected.
       bCentral = 1;
 
     }
     if( bv2y ) {
       bCentral = 0;
-      Draw_meanpx(sqsys, sqpart, gname, "gyv2",42,bsaveData); //corrected.
+      Draw_meanpx(sqsys, sqpart, gnames, "gyv2",42,bsaveData); //corrected.
       //      Draw_meanpx(sqsys, sqpart, gname, "gyv2A",42,bsaveData); //corrected.
       bCentral = 1;
     }

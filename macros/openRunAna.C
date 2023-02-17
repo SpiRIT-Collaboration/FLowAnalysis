@@ -139,8 +139,21 @@ Long64_t SetBranch()
   if(aArray != NULL)
     aArray->Clear();
 
-  rChain->SetBranchAddress("STParticle",&aArray);
-  rChain->SetBranchAddress("STFlow"    ,&aFlowArray);
+  //---- _flow.v2
+  aArray    = new TClonesArray("STKParticle",100);
+  aBeamInfo = new STBDC();
+  aFlowInfo = new STFlowInfo();
+  // oFlowInfo = new STFlowInfo();
+
+
+  rChain->SetBranchAddress("STKParticle",&aArray);
+  rChain->SetBranchAddress("STFlow"     ,&aFlowInfo); //_flow.v2
+  rChain->SetBranchAddress("BeamInfo"   ,&aBeamInfo);
+
+  //----- _flow.v1 
+  //  rChain->SetBranchAddress("STParticle",&aArray);
+  //  rChain->SetBranchAddress("STFlow"    ,&aFlowArray); _flow.v1
+  //-------
   // rChain->SetBranchAddress("Particle",&aArray);
   // rChain->SetBranchAddress("FlowInfo",&aFlowArray);
 

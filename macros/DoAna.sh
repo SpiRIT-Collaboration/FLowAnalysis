@@ -41,11 +41,6 @@ multU=80,55,46,80,49,48,54
 ###export MNTRK=13
 ###export MNTRK=15
 
-#--/
-export MNTRK=1    #mid-central
-export PHICUT=2   #|phi|>140
-export MNSUBVERSION=16
-#--/
 export MNTRK=0    #Central
 export PHICUT=2   #|phi|>140
 export MNSUBVERSION=15
@@ -58,11 +53,6 @@ export MNSUBVERSION=19
 export MNTRK=4    #Tommy mid-central for 108
 export PHICUT=6   #-30<phi<20or|phi|>140 
 export MNSUBVERSION=19
-#----///
-#--/
-export MNTRK=1    #mid-central
-export PHICUT=5   #-30<phi<20
-export MNSUBVERSION=17
 #----///
 #--/
 export MNTRK=0    #central
@@ -84,6 +74,39 @@ export MNTRK=6    #Tommy2 mid-central
 export PHICUT=5   #-30<phi<20or|phi|>140 
 export MNSUBVERSION=24
 #--/
+#--/
+export MNTRK=1    #mid-central
+export PHICUT=5   #-30<phi<20
+export MNSUBVERSION=0
+#----///
+#--/
+export MNTRK=1    #mid-central
+export PHICUT=6   #-30<phi<20or|phi|>140 
+export MNSUBVERSION=1
+#--/
+export MNTRK=1    #mid-central
+export PHICUT=5   #-30<phi<20
+export MNSUBVERSION=4
+#----///
+#--/
+export MNTRK=1    #mid-central
+export PHICUT=5   #-30<phi<20
+export MNSUBVERSION=6
+#----///
+#--/
+export MNTRK=1    #mid-central
+export PHICUT=5   #-30<phi<20
+export MNSUBVERSION=5
+#----///
+#--/
+export MNTRK=1    #mid-central
+export PHICUT=5   #-30<phi<20
+export MNSUBVERSION=0
+#----///
+export MNTRK=1    #mid-central
+export PHICUT=6   #-30<phi<20or|phi|>140  
+export MNSUBVERSION=1
+#--/
 
 #########----------------------
 MLC=(${multL})
@@ -92,8 +115,8 @@ export MNLC=${MLC[$MNTRK]}
 export MNUC=${MUC[$MNTRK]}
 
 export MNSFX=flow
-export MNINVERSION=1.0           ##   <------@@ input
-export MNOUTVERSION=1.0          ##   <------@@ output 
+export MNINVERSION=2.3             ##   <------@@ input
+export MNOUTVERSION=2.3            ##   <------@@ output 
 
 function doflow3fmFull()
 {
@@ -122,15 +145,15 @@ function doflow3fm112p()
 function doflow3fm132() 
 {
     data132
-#    PARTICLES=("0" "1" "2" "3" "4")
-    PARTICLES=("6")
+    PARTICLES=("1" "2" "3" "4")
+#    PARTICLES=("0")
     doflowmulti $MNSUBVERSION
 }
 function doflow3fm108() 
 {
     data108
-    PARTICLES=("0" "1" "2" "3" "4")
-#    PARTICLES=("5" "6")
+#    PARTICLES=("0" "1" "2" "3" "4")
+    PARTICLES=("0")
     doflowmulti $MNSUBVERSION
 }
 function doflow3fm112() 
@@ -211,6 +234,7 @@ function data132()    ##CONFIG
     export MNUC=${MUC[$MNTRK]}
     export MNSN=132
     export MNRNF=$RNF132
+#    export MNRNF=$RNF132_LH
     export MNMXEVT=
     export MNOSUBV=
 

@@ -2,7 +2,8 @@
 #define STFlowTask_hh
 
 #include <TMath.h>
-#include "STParticle.hh"
+//#include "STParticle.hh"
+#include "STKParticle.hh"
 #include "STBDC.hh"
 #include "STFlowInfo.hh"
 #include "STBootStrap.hh"
@@ -46,8 +47,8 @@ private:
   Bool_t SetupInputDataFile();
   Bool_t SetupFlowDataBase();
 
-  void   SetupTrackQualityFlag(STParticle *apart);
-  void   SetupTrackExtraQualityFlag(STParticle *apart);
+  void   SetupTrackQualityFlag(STKParticle *apart);
+  void   SetupTrackExtraQualityFlag(STKParticle *apart);
 
 
   // for flow analysis
@@ -71,10 +72,10 @@ public:
   void   Clear();
   UInt_t *RandumPickUp(const UInt_t val, const UInt_t npart);
   void   SetNTrack(UInt_t i, UInt_t val);
-  void   SetupFlow(STParticle &apart);
+  void   SetupFlow(STKParticle &apart);
   void   SetSelectionOfReactionPlaneFlag(UInt_t val) {selReactionPlanef = val;}
   void   SetFlowInfo(STFlowInfo *aflowinfo);
-  void   DoFlowAnalysis(STParticle &apart);
+  void   DoFlowAnalysis(STKParticle &apart);
 
   Bool_t DoFlattening();
   Bool_t DoFlatteningSub();
@@ -85,8 +86,8 @@ public:
   TVector3 Psi_FlatteningCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
   TVector3 Psi_ReCenteringCorrection(UInt_t isel, Int_t ival, TVector3 Pvec);
   void     DoIndividualReactionPlaneAnalysis();
-  void     SetIndividualReactionPlane( STParticle &apart );
-  void     SetIndividualReactionPlane_recal( STParticle &apart );
+  void     SetIndividualReactionPlane( STKParticle &apart );
+  void     SetIndividualReactionPlane_recal( STKParticle &apart );
 
   void   SetupEventInfo(Long64_t eventid, UInt_t val);
   void   SetFlowTask( TClonesArray &atpcParticle );

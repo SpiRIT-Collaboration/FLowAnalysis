@@ -166,22 +166,13 @@ void STKParticle::Clear(Option_t *option)
 void STKParticle::SetGoodTrackFlag()
 {
   fgoodtrackf = fgoodtrackf != 0 ?  
-    100000* fdoublef    +
-    10000 * fVatTargetf +
-    1000  * fmomentumf  + 
+    1     * fdoublef    +
+    10    * fmomentumf  + 
     100   * fmassf      +
-    10    * fdistanceatvertexf + 
-    1     * fnclf       : 0;
-
-  // before 2022 Jan. 19
-  // fgoodtrackf = fgoodtrackf != 0 ?  
-  //   1000*( fVatTargetf )  + 
-  //   100 *( fmassf * fmomentumf * fdedxf) +
-  //   10*fdistanceatvertexf + 
-  //   fnclf : 0;
-  //    fNDFf : 0;
-
-
+    1000  * fnclf       +
+    10000 * fVatTargetf +
+    100000* fdistanceatvertexf
+    : 0;
 }
 
 
@@ -201,8 +192,8 @@ void STKParticle::SetRecoTrack(STRecoTrack *atrack, STRecoTrack *atrackva)
   fChar = fVATrack->GetCharge();
   fGFChar = fVATrack->GetGenfitCharge();
 
-  fPID  = STPID::GetPDG(fVATrack->GetPID());
-  fPIDProbability = fVATrack->GetPIDProbability();
+  //  fPID  = STPID::GetPDG(fVATrack->GetPID());
+  //  fPIDProbability = fVATrack->GetPIDProbability();
 
   rVertexID      =  fRTrack -> GetVertexID();
   rHelixID       =  fRTrack -> GetHelixID();
@@ -258,8 +249,6 @@ void STKParticle::SetBBMass(Double_t val)
 {
   if( val > 0 ) 
     fBBMass   = val;
-  else
-    SetMassFlag(0);
 }
 
 
@@ -272,7 +261,6 @@ void STKParticle::SetMass(Int_t val)
   auto mt   =   2808.921112;
   auto mhe3 =   2808.39132;
   auto mhe4 =   3727.379378;
-
 
   Double_t mass = 0;
   switch (val) {
@@ -315,8 +303,9 @@ void STKParticle::SetMass(Int_t val)
 
   fMass = mass;
 
-  if( fMass > 0 )
+  if( fMass > 0 ) 
     SetLorentzVector();
+
   else {
     SetMassFlag(0);
     SetPIDFlag(0);

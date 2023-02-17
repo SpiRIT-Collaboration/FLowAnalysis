@@ -9,10 +9,11 @@ source ../build/config.sh
 
 # TPC data
 #
-VERSION=1
+VERSION=3
 export TPCDIR=/home/recoData/20200529/data
 export RCVER=develop.1988.bf2b00e
-export SUFX=ph
+export SUFX=flow
+###export SUFX=ph
 
 ##g4 data
 #export TPCDIR=/home/isobe/20200909MizukiGeant4/recoData.20200910/
@@ -55,9 +56,10 @@ DBVERSION=0
 
 #export TPCDIR=$TPCDIR
 
-#RUNNUMBER1=(${RNF132})
+RNF132="2894"
+RUNNUMBER1=(${RNF132})
 #RUNNUMBER1=(${RNF108})
-RUNNUMBER1=(${RNF124})
+#RUNNUMBER1=(${RNF124})
 #RUNNUMBER1=(${RNF112})
 #RUNNUMBER1=(${RNFTEMP})
 #RUNNUMBER1=(${RNF132ss})

@@ -1,6 +1,8 @@
 #ifndef  DORPANALYSIS_HH
 #define  DORPANALYSIS_HH
 
+#include "../flowformat/STFlowInfo.hh"
+
 //@@@@ 
 Int_t  seltrackID = 4;
 UInt_t selReactionPlanef = 10;
@@ -24,9 +26,6 @@ void      OutputTree();
 TString    finname;
 TString    foutname;
 
-TClonesArray   *anewFlow;
-STFlowTask     *aFlowTask;
-STFlowInfo     *aFlowInfo;
 
 TTree    *mflw;
 TFile    *fout;

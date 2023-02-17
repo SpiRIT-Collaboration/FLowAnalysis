@@ -10,6 +10,7 @@
 //----------------------------------------------------------------------
 void DoRPAnalysis()
 {
+
   openRunAna(0);
 
   SetEnvironment();
@@ -31,28 +32,31 @@ void DoRPAnalysis()
     exit(0);
   }
   
+  Long64_t nEntry = SetBranch();
 
   OutputTree();
 
-  Long64_t nEntry = SetBranch();
+
+  if( aArray == NULL ) 
+    LOG(ERROR) << " Particle is not active " << FairLogger::endl;
+
+
+  LOG(INFO) << " Entry " << nEntry << FairLogger::endl;
 
   for(Long64_t ievt = 0; ievt < nEntry; ievt++){
     
-    ShowProcess(ievt);
-    rChain->GetEntry(ievt);
-    
-    //------ Event selection
-    aFlowInfo = (STFlowInfo*)aFlowArray->At(0);
-    if( aFlowInfo == NULL ) continue;
-    beamPID = aFlowInfo->beamPID;
 
-    if( iVer[0] > 38 ) {
-      if( aFlowInfo->goodEventf == 0 || beamPID == 0 )
-	continue;
-    }
-    else
-      if( beamPID == 0 ) continue;
-    
+    rChain->GetEntry(ievt);
+    ShowProcess(ievt);
+
+    //------ Event selection
+    if( aFlowInfo == NULL || aBeamInfo == NULL ) continue;
+    beamPID = aBeamInfo->SnA;
+
+    if( beamPID == 0 ) continue;
+
+    // cout << " beam " << beamPID << " " << aBeamInfo << endl;
+    // cout << " mtrack3 " << aFlowInfo << " " << aFlowInfo->unitP.Phi() << endl;
   
     //------ end of event selection
     fflowtask->SetFlowInfo( aFlowInfo );
@@ -76,9 +80,7 @@ void DoRPAnalysis()
   
     aFlowInfo = fflowtask->GetFlowInfo();
 
-    TClonesArray &aflow = *anewFlow;
-    new( aflow[0] ) STFlowInfo( *aFlowInfo );
-
+    
     mflw->Fill();
   }
 
@@ -197,10 +199,10 @@ void OutputTree()
 
 
   //-- output                                                                                                              
-  if( aBDC != NULL && beamPID != 100)  mflw->Branch("STBDC",&aBDC);
-  if( aArray != NULL)   mflw->Branch("STParticle",&aArray);
-  if( anewFlow != NULL) mflw->Branch("STFlow",&anewFlow);
-  if( isys  == 5 )      mflw->Branch("RPPsi" ,&RPPsi);
+  mflw->Branch("BeamInfo",&aBeamInfo);
+  mflw->Branch("STFlow"     ,&aFlowInfo);
+  mflw->Branch("STKParticle",&aArray);
+  if( isys  == 5 )          mflw->Branch("RPPsi"      ,&RPPsi);
     
  
 }
@@ -233,20 +235,9 @@ void Open()
   }
   cout << "Input file is " << fn << endl;
 
-  aBDC     = new TClonesArray("STBDC", 1);
-  aArray   = new TClonesArray("STParticle",100);
-  anewFlow = new TClonesArray("STFlowInfo",1);
+  rChain->ls();
+   
 
-  
-  rChain->SetBranchAddress("STParticle",&aArray);
-  rChain->SetBranchAddress("STFlow",    &aFlowArray);
-
-  if( aArray == NULL ) 
-    LOG(ERROR) << " Particle is not active " << FairLogger::endl;
-
-  
-  //  if( isys < 4)
-    //    rChain->SetBranchAddress("STBDC"     ,&aBDC);
   if( isys == 5 ) { 
     rChain->SetBranchAddress("RPPsi"     ,&RPPsi);
     auto fin = TFile::Open(fn);

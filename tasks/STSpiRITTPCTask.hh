@@ -50,6 +50,9 @@ public:
     LOG(INFO) << " process number " << prcEntry << FairLogger::endl;
   }
 
+  Bool_t SetupBeamCut(UInt_t SnA);
+  Int_t  GetBeamPID(Int_t SnA, Double_t aoq, Double_t z);
+
 private:
   Bool_t fIsPersistence;         ///< Persistence check variable
   Bool_t fIsFlowAnalysis;        ///< flow analysis flag
@@ -96,11 +99,13 @@ private:
 
   UInt_t  ntrack[7]; //!
   
+  STBDC   *fBeam;  //!
   Int_t    BeamPID;//!
   Double_t ProjA;  //!
   Double_t ProjB;  //!
   Double_t ProjX;  //!
   Double_t ProjY;  //!
+  TCutG    *gBeamCut; 
 
 private:
   Long64_t rEventID;      //! read event ID from recotrack data  

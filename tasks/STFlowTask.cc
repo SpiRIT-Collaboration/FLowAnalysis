@@ -65,9 +65,9 @@ void STFlowTask::SetFlowTask()
 
   TIter next(tpcParticle);
 
-  STParticle* aParticle = NULL;
+  STKParticle* aParticle = NULL;
   
-  while( (aParticle = (STParticle*)next() ) ) {
+  while( (aParticle = (STKParticle*)next() ) ) {
 
     // if( aParticle->GetDistanceAtVertex() <= 20 && aParticle->GetNumCluster() >=15 )
     //   ntrack[6]++;
@@ -240,13 +240,13 @@ void STFlowTask::DoSubeventAnalysis()
   rndArray = RandomDivide2(npart);
 
   TIter next(tpcParticle);
-  STParticle *apart = NULL;
+  STKParticle *apart = NULL;
 
   UInt_t itrack = 0;
 
   LOG(DEBUG) << " ntrack[4] " << ntrack[4] << FairLogger::endl;
 
-  while( (apart = (STParticle*)next() ) ) {
+  while( (apart = (STKParticle*)next() ) ) {
     
     if( apart->GetReactionPlaneFlag() %2 == 1 ) {
       Double_t wgt = apart->GetRPWeight();
@@ -325,13 +325,13 @@ void STFlowTask::DoSubeventAnalysisFixedMultiplicity(UInt_t val)
   UInt_t *rndArray = new UInt_t[npart];
   rndArray = RandomDivide2(npart);
 
-  STParticle *apart = NULL;
+  STKParticle *apart = NULL;
 
   UInt_t itrack = 0;
   
   for( UInt_t i = 0; i < (UInt_t)totaltrack; i++ ) {
   
-    apart = (STParticle*)tpcParticle->At( *(index+i) );
+    apart = (STKParticle*)tpcParticle->At( *(index+i) );
     
     if( apart->GetReactionPlaneFlag() %2 == 1 ) {
 
@@ -449,7 +449,7 @@ void STFlowTask::SetupEventInfo(Long64_t eventid, UInt_t val)
   }
 }
 
-void STFlowTask::SetupTrackExtraQualityFlag(STParticle *apart)
+void STFlowTask::SetupTrackExtraQualityFlag(STKParticle *apart)
 {
 
   // if( apart->GetClusterRatio() < 0.7 || apart->GetClusterRatio() > 2 ) 
@@ -457,34 +457,34 @@ void STFlowTask::SetupTrackExtraQualityFlag(STParticle *apart)
 }
 
 
-void STFlowTask::SetupFlow(STParticle &apart)
+void STFlowTask::SetupFlow(STKParticle &apart)
 {
   // Setup for flow analysis
-
+  double yNN[]   = {0.3696, 0.3697, 0.3705, 0.3706};
   auto pid    =  apart.GetPID();
 
   
   if( pid == 211 )
     apart.SetReactionPlaneFlag(10);
 
+  ///@@@@@@check
   else if( iSystem == 5 || // for simulation
-	  ( pid > 2000 &&  
-	    apart.GetGoodTrackFlag() >= 1000 )) {
+	   // ( apart.GetBBMass() > 500 &&
+	   //   apart.GetMass() > 0 ) ) {
+
+	   ( apart.GetBBMass() > 500 &&
+	     apart.GetMass() > 0 &&
+	     apart.GetGoodTrackFlag() >= 111000 ) ){
 
     apart.SetReactionPlaneFlag(1001);
     ntrack[6]++;    
-  }
-  else
-    apart.SetReactionPlaneFlag(0);
 
-
-  double yNN[]   = {0.3696, 0.3697, 0.3705, 0.3706};
-  // Pt weight
-  if( apart.GetPID()!=0 ) {//|| apart.GetPIDLoose() !=0 ) { since v55 out
+    // Pt weight
     auto rapidity =  apart.GetRapidity();
+
     auto rapiditycm = rapidity/yNN[iSystem]-1.;
     apart.SetRapiditycm( rapiditycm );
-  
+    
     if( rapiditycm  <  0 )
       apart.SetRPWeight(-1);
     else
@@ -492,10 +492,14 @@ void STFlowTask::SetupFlow(STParticle &apart)
     
     if( abs( rapiditycm ) < fRPMidCut ) 
       apart.AddReactionPlaneFlag(3);
+
   }
+  else
+    apart.SetReactionPlaneFlag(0);
+
 }
 
-void STFlowTask::DoFlowAnalysis(STParticle &apart)
+void STFlowTask::DoFlowAnalysis(STKParticle &apart)
 {
   
   //  SetupFlow( apart );
@@ -524,9 +528,9 @@ void STFlowTask::DoFlowAnalysis(STParticle &apart)
 void STFlowTask::DoIndividualReactionPlaneAnalysis( )
 {
   TIter orgnext(tpcParticle);
-  STParticle *apart = NULL;
+  STKParticle *apart = NULL;
 
-  while( (apart = (STParticle*)orgnext()) ) {
+  while( (apart = (STKParticle*)orgnext()) ) {
 
     //    SetIndividualReactionPlane_recal( *apart );
     SetIndividualReactionPlane( *apart );
@@ -534,7 +538,7 @@ void STFlowTask::DoIndividualReactionPlaneAnalysis( )
   }
 }
  
-void STFlowTask::SetIndividualReactionPlane( STParticle &apart )
+void STFlowTask::SetIndividualReactionPlane( STKParticle &apart )
 {
   Double_t wgt = apart.GetRPWeight();
   TVector3 rMom = apart.GetRotatedMomentum();
@@ -571,17 +575,17 @@ void STFlowTask::SetIndividualReactionPlane( STParticle &apart )
   
 }
 
-void STFlowTask::SetIndividualReactionPlane_recal( STParticle &apart )
+void STFlowTask::SetIndividualReactionPlane_recal( STKParticle &apart )
 {
   UInt_t itraex = 0;
   TVector3 mExcRP(0.,0.,0.);
   TVector3 mExc2RP(0.,0.,0.);
   TIter next(tpcParticle);
-  STParticle *restpart = NULL;
+  STKParticle *restpart = NULL;
 
   auto befv = apart.GetIndividualRPAngle();
 
-  while( (restpart = (STParticle*)next() ) ){
+  while( (restpart = (STKParticle*)next() ) ){
 
     //    if( restpart->GetTrackID() != apart.GetTrackID() && restpart->GetReactionPlaneFlag()%2 == 1 ) {
     if( restpart->GetReactionPlaneFlag()%2 == 1 ) {
@@ -638,6 +642,7 @@ void STFlowTask::SetIndividualReactionPlane_recal( STParticle &apart )
 
 void STFlowTask::Clear()
 {
+  fflowinfo->Clear();
 }
 
 TVector3 STFlowTask::Psi_FlatteningCorrection(UInt_t isel, Int_t ival, TVector3 Pvec)

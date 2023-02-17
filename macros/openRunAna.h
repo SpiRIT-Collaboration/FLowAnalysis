@@ -20,6 +20,8 @@ TClonesArray   *aArray;
 TClonesArray   *aFlowArray;
 TClonesArray   *aNLClusterArray;
 TClonesArray   *aBDC;
+STBDC          *aBeamInfo;
+STFlowInfo     *aFlowInfo;
 UInt_t          beamPID;
 
 Double_t RPPsi;
@@ -29,5 +31,8 @@ void OpenChain();
 Long64_t SetBranch();
 void ShowProcess(Long64_t ievt);
 void SaveCanvas(TString fopt = "", Int_t isel=-1);
+
+#include "../flowformat/STFlowInfo.hh"
+//#include "../flowformat/STBDC.hh"
 
 #endif
