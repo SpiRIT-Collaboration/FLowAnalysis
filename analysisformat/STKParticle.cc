@@ -30,6 +30,7 @@ STKParticle::STKParticle(const STKParticle &cp)
   fGFChar       = cp.fGFChar;
   fMass         = cp.fMass;
   fBBMass       = cp.fBBMass;
+  fBBMassHe     = cp.fBBMassHe;
   fPIDProbability = cp.fPIDProbability;  
 
   fvertex       = cp.fvertex;
@@ -112,6 +113,7 @@ void STKParticle::Clear(Option_t *option)
   fGFChar      = 0;
   fMass        = 0.;
   fBBMass      = 0.;
+  fBBMassHe    = 0.;
   fPIDProbability = 0.;
 
   fvertex      = TVector3(-9999,-9999,-9999);
@@ -249,6 +251,11 @@ void STKParticle::SetBBMass(Double_t val)
 {
   if( val > 0 ) 
     fBBMass   = val;
+}
+void STKParticle::SetBBMassHe(Double_t val)       
+{
+  if( val > 0 && val < 1.e+8) 
+    fBBMassHe   = val;
 }
 
 

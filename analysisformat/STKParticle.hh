@@ -44,6 +44,7 @@ public:
   Int_t    fGFChar;
   Double_t fMass;
   Double_t fBBMass;
+  Double_t fBBMassHe;
   Double_t fPIDProbability  ;
 
   TVector3 fvertex;
@@ -138,6 +139,8 @@ public:
 
   void     SetBBMass(Double_t val);
   Double_t GetBBMass()                   {return fBBMass;}
+  void     SetBBMassHe(Double_t val);
+  Double_t GetBBMassHe()                 {return fBBMassHe;}
 
   Double_t GetRapidity()                 {return fRapidity;}
 
@@ -194,6 +197,7 @@ public:
   //  UInt_t GetNDFFlag()                           {return fNDFf;}
 
   void   SetDoubleFlag(UInt_t value)            {fdoublef = value; SetGoodTrackFlag();} 
+  UInt_t GetDoubleFlag()                        {return fdoublef;}
 
   // --end
   void     SetRPWeight(Double_t value)  {fwgt = value;}
@@ -245,7 +249,7 @@ public:
   TVector3     GetPOCAVertex()                    {return rPOCAVertex;}
 
 
-  ClassDef(STKParticle, 1)
+  ClassDef(STKParticle, 2)
 
 };
 

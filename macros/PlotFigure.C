@@ -42,24 +42,17 @@ std::vector<gplot> gnames = {
   //  {".v1.0.24"        ,"phys_" ,"b0 2-4fm" ,"-Tommy" ," Tommy",    1, 6, 0},
   //  {".v1.0.23"        ,"phys_" ,"b0 2-4fm" ,"-Tommy" ," Tommy",    1, 6, 0},
   //  {".v1.0.22"        ,"phys_" ,"b0 2-4fm" ,"-Tommy" ," Tommy",    1, 6, 0},
-  //  {".v1.0.19"        ,"phys_" ,"b0 2-4fm" ,"-Tommy" ," Tommy",    1, 6, 0},
+
   // {".v1.0.16"      ,"phys_" ,"b0 2~4fm" ,"|phi|>140"   ," 46<M<55", 1, 2, 0},
   // {".v1.0.15"      ,"phYs_" ,"B0 0-2fm" ,"|phi|>140"   ," M>55",    0, 2, 1},
   // {".v1.0.14"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30&&|phi|>140" ," 46<M<55", 1, 6, 0},
   // {".v1.0.13"      ,"phys_" ,"b0 0-2fm" ,"-20<#phi<30&&|phi|>140" ,"M>55"    , 0, 6, 1}
   //
   //  {".v1.0.17"     ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
-  {".v1.0.18"     ,"phys_" ,"b0 0~2fm" ,"-20<#phi<30" ,"    M>55", 0, 5, 1}, //_left
+  //  {".v1.0.18"     ,"phys_" ,"b0 0~2fm" ,"-20<#phi<30" ,"    M>55", 0, 5, 1}, //_left
   //  {".v2.0.0"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
   {".v2.0.1"      ,"phys_" ,"b0 2-4fm" ,"-20<#phi<30&&|phi|>140" ,"46<M<55" , 1, 6, 0},
-  //{".v2.3.0"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
-  //{".v2.3.1"      ,"phys_" ,"b0 2-4fm" ,"-20<#phi<30&&|phi|>140" ,"46<M<55" , 1, 6, 0},
-  //{".v2.0.3"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
-  //  {".v2.0.4"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
-  //{".v2.0.5"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
-  //{".v2.1.0"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
-  //  {".v2.0.7"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
-
+    {".v2.0.2"      ,"phys_" ,"b0 2-4fm" ,"-20<#phi<30&&|phi|>140" ," Tommy",    1, 6, 0},
 };
 //@gdata
 
@@ -7476,10 +7469,10 @@ void PlotFigure(Bool_t nplot=kTRUE)
   SetColor();
 
   //##main#
-  std::vector< UInt_t > sqsys = {0,1};
+  //  std::vector< UInt_t > sqsys = {0,1};
   //std::vector< UInt_t > sqsys = {0,3,1};
-  //  std::vector< UInt_t > sqsys = {0};
-  //std::vector< UInt_t > sqsys = {1};
+  //std::vector< UInt_t > sqsys = {0};
+  std::vector< UInt_t > sqsys = {1};
   //std::vector< UInt_t > sqsys = {3};
   bCentral = 1;
   //  std::vector<gplot>    gname = {gnames[bCentral]};

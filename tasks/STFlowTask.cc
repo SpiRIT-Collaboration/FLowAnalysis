@@ -474,7 +474,7 @@ void STFlowTask::SetupFlow(STKParticle &apart)
 
 	   ( apart.GetBBMass() > 500 &&
 	     apart.GetMass() > 0 &&
-	     apart.GetGoodTrackFlag() >= 111000 ) ){
+	     apart.GetGoodTrackFlag() >= 100000 ) ){
 
     apart.SetReactionPlaneFlag(1001);
     ntrack[6]++;    

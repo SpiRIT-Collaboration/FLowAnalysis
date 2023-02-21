@@ -185,60 +185,6 @@ Bool_t STSpiRITTPCTask::SetupParameters()
 
   fstatus *= SetupPIDFit();
 
-
-  // no longer used. ------------------------------
-
-  if( kFALSE ) {
-    //--- Single mass fitter
-    TString bbfitter = gSystem->Getenv("STBBFITTER");
-    auto fitFile = new TFile(bbfitter);
-    auto fit = (TF1 *) fitFile -> Get("fit_proton");
-
-    Double_t fitterPara[2];    
-    if( fit ) {
-
-      fitterPara[0] = fit -> GetParameter(0);
-      fitterPara[1] = fit -> GetParameter(1);
-
-      LOG(INFO) << "single BetheBloch fitter is loaded from a file. "
-		<< " para 0 " << fitterPara[0]
-		<< " 1 " << fitterPara[1]
-		<< FairLogger::endl;
-    }
-    else {
-      fitterPara[0] = -0.0040786335;
-      fitterPara[1] = 10007.475;
-
-      LOG(INFO) << "single BetheBloch fitter is setup. "
-		<< " para 0 " << fitterPara[0]
-		<< " 1 " << fitterPara[1]
-		<< FairLogger::endl;
-    }
-
-    fitFile->Close();
-    delete fitFile;
-    //------------------------------
-
-    //--- Load theoretical cluster number
-    string dir = gSystem->Getenv("SPIRITROOT");
-    //  string dir1 = "../../"+dir+"/ana/Momentum.config";
-    string dir1 = "../../"+dir+"/ana/Momentum_tb_edge_ellipsoid_cut_clusternum_DB_4GeV_theta90_phi180.config";
-
-    LOG(INFO) << "db file " << dir1 << endl;
-
-    db = new ST_ClusterNum_DB();
-    db->Initial_Config( dir1 );
-    //  dir1 = "../../"+dir+"/ana/f1_DB_ClusterNum.root";
-    dir1 ="../../"+ dir+"/ana/f1_tb_edge_ellipsoid_cut_clusternum_DB_theta90_phi180.root";
-    db->ReadDB( dir1 );
-
-    double Momentum_Range_Plus[2]  = {50,4000};
-    double Momentum_Range_Minus[2] = {50,4000};
-    db->Set_MomentumRange_Plus(Momentum_Range_Plus);
-    db->Set_MomentumRange_Minus(Momentum_Range_Minus);
-    //------------------------------
-  }
-
   return fstatus;
 }
 
@@ -595,37 +541,26 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
 
     //--- Set MassFitter      
     Double_t mass[2] = {-1.,-1.};
+    UInt_t   nPID[2] = {0, 0};
 
     // updated for 20191214
     mass[0] = massCalH -> CalcMass(1., VMom, dEdx, kTRUE);
     mass[1] = massCalHe-> CalcMass(2., VMom, dEdx, kTRUE);
 
-    if( mass[0] > 0 )
+    if( mass[0] > 0 ) {
       aParticle->SetBBMass(mass[0]);      
+      nPID[0] = GetPIDFit(1, mass[0], VMom, ntrack[1]);
+    }
 
-
-    UInt_t nPID[2] = {0, 0};
-    nPID[0] = GetPIDFit(1, mass[0], VMom, ntrack[1]);
-    nPID[1] = GetPIDFit(2, mass[1], VMom, ntrack[1]);
+    if( mass[1] > 0 ) {
+      aParticle->SetBBMassHe(mass[1]);      
+      nPID[1] = GetPIDFit(2, mass[1], VMom, ntrack[1]);
+    }
 
     Int_t  pid_loose  = GetPIDLoose(mass, VMom.Mag(), dEdx);
 
-    if( 0 ) 
-      LOG(INFO) 
-	<< "ntrack[1] "<< setw(3) << ntrack[1]
-	<< " dEdx = "  << setw(8)  << dEdx
-	<< " p =   "   << setw(10) << VMom.Mag()
-	<< " mass H "  << setw(8)  << mass[0] 
-	<< " nPID[0] " << setw(8)  << nPID[0]
-	<< " mass He " << setw(8)  << mass[1]
-	<< " nPID[1] " << setw(8)  << nPID[1]
-	<< " dist "    << setw(5)  << aParticle->GetDistanceAtVertex()
-	<< FairLogger::endl;
-
-    LOG(DEBUG) << " dEdx " << dEdx 
-	 << " P " << VMom.Mag()
-	 << " rDist " << aParticle->GetDistanceAtVertex() 
-	 << " PID " << nPID[0] << " : " << nPID[1] << " : " << pid_loose << FairLogger::endl;;
+    // if( nPID[0] != 0 && nPID[1] != 0 )
+    //   aParticle->SetDoubleFlag(0);
 
     if( nPID[1] != 0 ) {
       aParticle->SetPID(nPID[1]);
@@ -646,12 +581,26 @@ Bool_t STSpiRITTPCTask::ProceedEvent()
     else
       aParticle->SetPID(0);
 
-    if( nPID[0] != 0 && nPID[1] != 0 )
-      aParticle->SetDoubleFlag(0);
+
+    if( 0 ) 
+      LOG(INFO) 
+	<< "ntrack[1] "<< setw(3) << ntrack[1]
+	<< " dEdx = "  << setw(8)  << dEdx
+	<< " p =   "   << setw(10) << VMom.Mag()
+	<< " mass H "  << setw(8)  << mass[0] 
+	<< " nPID[0] " << setw(8)  << nPID[0]
+	<< " mass He " << setw(8)  << mass[1]
+	<< " nPID[1] " << setw(8)  << nPID[1]
+	<< " dist "    << setw(5)  << aParticle->GetDistanceAtVertex()
+	<< FairLogger::endl;
+
+    LOG(DEBUG) << " dEdx " << dEdx 
+	 << " P " << VMom.Mag()
+	 << " rDist " << aParticle->GetDistanceAtVertex() 
+	 << " PID " << nPID[0] << " : " << nPID[1] << " : " << pid_loose << FairLogger::endl;;
 
 
     SetupTrackQualityFlag( aParticle );
-  //@@@@
 
     //    if( aParticle->GetGoodTrackFlag() >= 0 ) {
     if( aParticle->GetGoodTrackFlag() >= 100000 ) {
@@ -857,9 +806,15 @@ Int_t STSpiRITTPCTask::GetPIDFit(Int_t z, Double_t mass, TVector3 vMom, Int_t mu
     
 	Int_t fitSigmaID =  2 ;
 	Bool_t fitCut = mass >= f1MassGate[i][mbin][0][fitSigmaID][phibin]->Eval(fMom) && mass <= f1MassGate[i][mbin][1][fitSigmaID][phibin]->Eval(fMom);
+
+	if( i == 3 )
+	  fitCut *= mass >= 2850.-0.35*fMom/2.;
+
     
 	if( fitCut ) {
 	  fpid = i;
+	  
+
 	  bfind = kTRUE;
 	  Break;
 	}

@@ -61,11 +61,6 @@ export MNSUBVERSION=18
 #----///
 #--/
 export MNTRK=6    #Tommy2 mid-central
-export PHICUT=6   #-30<phi<20or|phi|>140 
-export MNSUBVERSION=22
-#--/
-#--/
-export MNTRK=6    #Tommy2 mid-central
 export PHICUT=5   #-30<phi<20or|phi|>140 
 export MNSUBVERSION=23
 #--/
@@ -107,6 +102,11 @@ export MNTRK=1    #mid-central
 export PHICUT=6   #-30<phi<20or|phi|>140  
 export MNSUBVERSION=1
 #--/
+#--/
+export MNTRK=6    #Tommy2 mid-central
+export PHICUT=6   #-30<phi<20or|phi|>140 
+export MNSUBVERSION=2
+#--/
 
 #########----------------------
 MLC=(${multL})
@@ -115,8 +115,8 @@ export MNLC=${MLC[$MNTRK]}
 export MNUC=${MUC[$MNTRK]}
 
 export MNSFX=flow
-export MNINVERSION=2.3             ##   <------@@ input
-export MNOUTVERSION=2.3            ##   <------@@ output 
+export MNINVERSION=3             ##   <------@@ input
+export MNOUTVERSION=3.0            ##   <------@@ output 
 
 function doflow3fmFull()
 {
@@ -145,7 +145,7 @@ function doflow3fm112p()
 function doflow3fm132() 
 {
     data132
-    PARTICLES=("1" "2" "3" "4")
+    PARTICLES=("0" "1" "2" "3" "4")
 #    PARTICLES=("0")
     doflowmulti $MNSUBVERSION
 }
@@ -234,7 +234,7 @@ function data132()    ##CONFIG
     export MNUC=${MUC[$MNTRK]}
     export MNSN=132
     export MNRNF=$RNF132
-#    export MNRNF=$RNF132_LH
+    export MNRNF=$RNF132_BH
     export MNMXEVT=
     export MNOSUBV=
 
