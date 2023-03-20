@@ -32,9 +32,9 @@ export MDCUT=0. #0.0               ##   <------@@ mid-rapidity cut
 ##------>>> EDIT HERE 
 #export MNLC=0
 #export MNUC=50
-
-multL=55,46,0,46,28,30,46
-multU=80,55,46,80,49,48,54
+##     0  1 2  3  4  5  6  7  8
+multL=55,46,0,46,28,30,46,35,34
+multU=80,55,46,80,49,48,54,46,48
 ##     0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17
 #####" 0,20,35,40,50,55,42,42,40,42, 0, 0,52,47,46,51,52,42,47"
 #####"35,40,45,55,65,80,52,56,54,55,54,55,55,55,54,80,80,80,80"
@@ -59,53 +59,30 @@ export MNTRK=0    #central
 export PHICUT=5   #-30<phi<20
 export MNSUBVERSION=18
 #----///
-#--/
-export MNTRK=6    #Tommy2 mid-central
-export PHICUT=5   #-30<phi<20or|phi|>140 
-export MNSUBVERSION=23
-#--/
-#--/
-export MNTRK=6    #Tommy2 mid-central
-export PHICUT=5   #-30<phi<20or|phi|>140 
-export MNSUBVERSION=24
-#--/
-#--/
-export MNTRK=1    #mid-central
-export PHICUT=5   #-30<phi<20
-export MNSUBVERSION=0
 #----///
-#--/
-export MNTRK=1    #mid-central
-export PHICUT=6   #-30<phi<20or|phi|>140 
-export MNSUBVERSION=1
-#--/
-export MNTRK=1    #mid-central
-export PHICUT=5   #-30<phi<20
-export MNSUBVERSION=4
-#----///
-#--/
-export MNTRK=1    #mid-central
-export PHICUT=5   #-30<phi<20
-export MNSUBVERSION=6
-#----///
-#--/
-export MNTRK=1    #mid-central
-export PHICUT=5   #-30<phi<20
-export MNSUBVERSION=5
-#----///
-#--/
-export MNTRK=1    #mid-central
-export PHICUT=5   #-30<phi<20
-export MNSUBVERSION=0
-#----///
-export MNTRK=1    #mid-central
+export MNTRK=0    #central
 export PHICUT=6   #-30<phi<20or|phi|>140  
-export MNSUBVERSION=1
+export MNSUBVERSION=0
 #--/
 #--/
 export MNTRK=6    #Tommy2 mid-central
 export PHICUT=6   #-30<phi<20or|phi|>140 
 export MNSUBVERSION=2
+#--/
+#--/
+export MNTRK=7  ##(7:108Sn and 8:132Sn)  #Tommy2 mid-central
+export PHICUT=6
+export MNSUBVERSION=4
+#--/
+#--/
+export MNTRK=0    #central
+export PHICUT=6   #-30<phi<20or|phi|>140 
+export MNSUBVERSION=0
+#--/
+#--/
+export MNTRK=1    #mid-central
+export PHICUT=6   #-30<phi<20or|phi|>140 
+export MNSUBVERSION=6
 #--/
 
 #########----------------------
@@ -115,7 +92,7 @@ export MNLC=${MLC[$MNTRK]}
 export MNUC=${MUC[$MNTRK]}
 
 export MNSFX=flow
-export MNINVERSION=3             ##   <------@@ input
+export MNINVERSION=3.0             ##   <------@@ input
 export MNOUTVERSION=3.0            ##   <------@@ output 
 
 function doflow3fmFull()
@@ -146,14 +123,14 @@ function doflow3fm132()
 {
     data132
     PARTICLES=("0" "1" "2" "3" "4")
-#    PARTICLES=("0")
+#    PARTICLES=("6")
     doflowmulti $MNSUBVERSION
 }
 function doflow3fm108() 
 {
     data108
-#    PARTICLES=("0" "1" "2" "3" "4")
-    PARTICLES=("0")
+    PARTICLES=("0" "1" "2" "3" "4")
+#    PARTICLES=("6")
     doflowmulti $MNSUBVERSION
 }
 function doflow3fm112() 
@@ -234,7 +211,7 @@ function data132()    ##CONFIG
     export MNUC=${MUC[$MNTRK]}
     export MNSN=132
     export MNRNF=$RNF132
-    export MNRNF=$RNF132_BH
+###    export MNRNF=$RNF132_BH
     export MNMXEVT=
     export MNOSUBV=
 

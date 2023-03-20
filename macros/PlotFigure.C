@@ -49,10 +49,11 @@ std::vector<gplot> gnames = {
   // {".v1.0.13"      ,"phys_" ,"b0 0-2fm" ,"-20<#phi<30&&|phi|>140" ,"M>55"    , 0, 6, 1}
   //
   //  {".v1.0.17"     ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
-  //  {".v1.0.18"     ,"phys_" ,"b0 0~2fm" ,"-20<#phi<30" ,"    M>55", 0, 5, 1}, //_left
+  //{".v1.0.18"     ,"phys_" ,"b0 0~2fm" ,"-20<#phi<30" ,"    M>55", 0, 5, 1}, //_left
   //  {".v2.0.0"      ,"phys_" ,"b0 2~4fm" ,"-20<#phi<30" ," 46<M<55", 1, 5, 0}, //_left
-  {".v2.0.1"      ,"phys_" ,"b0 2-4fm" ,"-20<#phi<30&&|phi|>140" ,"46<M<55" , 1, 6, 0},
-    {".v2.0.2"      ,"phys_" ,"b0 2-4fm" ,"-20<#phi<30&&|phi|>140" ," Tommy",    1, 6, 0},
+  {".v3.0.1"      ,"phys_" ,"b0 2-4fm" ,"-20<#phi<30&&|phi|>140" ,"46<M<=56",  1, 6, 0},
+  {".v3.0.0"      ,"phys_" ,"b0 0-2fm" ,"-20<#phi<30&&|phi|>140" ,"55<M<=81" , 0, 6, 1},
+  //  {".v3.0.4"      ,"phys_" ,"b0 2-4fm" ,"-20<#phi<30&&|phi|>140" ," Tommy",    1, 6, 0},
 };
 //@gdata
 
@@ -64,8 +65,9 @@ std::vector< std::pair< Double_t, TString> > fphysdatafile = {
   {-0.4,"_fit04to05"},
   {-0.5,"_fit05to05"}
 };
-UInt_t fphysdataid = 3;
-
+UInt_t fphysdataid = 5;
+TString physdataName = Form("physData%s_LR.dat",fphysdatafile[fphysdataid].second.Data());
+//TString physdataName = Form("physData%s_left.dat",fphysdatafile[fphysdataid].second.Data());
 
 Double_t phiacp[] = {180./90., 180./45., 180./45., 180./90., 1., 360./50. };
 
@@ -97,31 +99,33 @@ std::vector<mplot> pBUUname = {
 //         : 4 Draw_meanpx, Draw_dndydX
 //----  
 //AMDDATA 
+//2022.cxBs: first draft version
+//
 std::vector<mplot> AMD2022={
-  // { 0,"2022.cxBs/","amd_Sn108Sn112_SLy4_gfg_sgml2",                    "bxXp_gfg"          ,"SLy4_gfg_sgm12"            ,kOrange   ,kOrange   ,3101, 14},
-  // { 1,"2022.cxBs/","amd_Sn132Sn124_SLy4_gfg_sgml2",                    "bxXp_gfg"          ,"SLy4_gfg_sgm12"            ,kOrange   ,kOrange   ,3101, 14},
-  { 0,"2022.cxBs/","amd_Sn132Sn124-cxBs-rhoxdep10-gd",                 "md50_rhx10_gd"     ,"L46_md50_rhx10_gd"    ,kGray+2   ,kGray+2   ,3001, 142},
-  { 1,"2022.cxBs/","amd_Sn124Sn112-cxBs-rhoxdep10-gd",                 "md50_rhx10_gd"     ,"L46_md50_rhx10_gd"    ,kGray+2   ,kGray+2   ,3001, 142},
-  { 2,"2022.cxBs/","amd_Sn108Sn112-cxBs-rhoxdep10-gd",                 "md50_rhx10_gd"     ,"L46_md50_rhx10_gd"    ,kGray+2   ,kGray+2   ,3001, 142},
+  // { 0,"2022.paper/","amd_Sn108Sn112_SLy4_gfg_sgml2",                    "bxXp_gfg"          ,"SLy4_gfg_sgm12"            ,kOrange   ,kOrange   ,3101, 14},
+  // { 1,"2022.paper/","amd_Sn132Sn124_SLy4_gfg_sgml2",                    "bxXp_gfg"          ,"SLy4_gfg_sgm12"            ,kOrange   ,kOrange   ,3101, 14},
+  { 0,"2022.paper/","amd_Sn132Sn124-cxBs-rhoxdep10-gd",                 "md50_rhx10_gd"     ,"L46_md50_rhx10_gd"    ,kGray+2   ,kGray+2   ,3001, 142},
+  { 1,"2022.paper/","amd_Sn124Sn112-cxBs-rhoxdep10-gd",                 "md50_rhx10_gd"     ,"L46_md50_rhx10_gd"    ,kGray+2   ,kGray+2   ,3001, 142},
+  { 2,"2022.paper/","amd_Sn108Sn112-cxBs-rhoxdep10-gd",                 "md50_rhx10_gd"     ,"L46_md50_rhx10_gd"    ,kGray+2   ,kGray+2   ,3001, 142},
   //
-  { 3,"2022.cxBs/","amd_Sn132Sn124-sly4-mdcorr50-cxBs-skms",           "md50_rhx10_skms"   ,"L108_sksm"  ,kYellow   ,kYellow   ,3001, 14},
-  { 4,"2022.cxBs/","amd_Sn124Sn112-sly4-mdcorr50-cxBs-skms",           "md50_rhx10_skms"   ,"L108_sksm"  ,kYellow   ,kYellow   ,3001, 14},
-  { 5,"2022.cxBs/","amd_Sn108Sn112-sly4-mdcorr50-cxBs-skms",           "md50_rhx10_skms"   ,"L108_sksm"  ,kYellow   ,kYellow   ,3001, 14},
+  { 3,"2022.paper/","amd_Sn132Sn124-sly4-mdcorr50-cxBs-skms",           "md50_rhx10_skms"   ,"L108_sksm"  ,kYellow   ,kYellow   ,3001, 14},
+  { 4,"2022.paper/","amd_Sn124Sn112-sly4-mdcorr50-cxBs-skms",           "md50_rhx10_skms"   ,"L108_sksm"  ,kYellow   ,kYellow   ,3001, 14},
+  { 5,"2022.paper/","amd_Sn108Sn112-sly4-mdcorr50-cxBs-skms",           "md50_rhx10_skms"   ,"L108_sksm"  ,kYellow   ,kYellow   ,3001, 14},
   //
-  { 6,"2022.cxBs/","amd_Sn132Sn124-sly4-mdcorr50-b04-cxBs",            "md50"         ,"md50"             ,kOrange   ,kOrange   ,3001, 41},
-  { 7,"2022.cxBs/","amd_Sn108Sn112-sly4-mdcorr50-b04-cxBs",            "md50"         ,"md50"             ,kOrange   ,kOrange   ,3001, 41},
+  { 6,"2022.paper/","amd_Sn132Sn124-sly4-mdcorr50-b04-cxBs",            "md50"         ,"md50"             ,kOrange   ,kOrange   ,3001, 41},
+  { 7,"2022.paper/","amd_Sn108Sn112-sly4-mdcorr50-b04-cxBs",            "md50"         ,"md50"             ,kOrange   ,kOrange   ,3001, 41},
   //														           
-  { 8,"2022.cxBs/","amd_Sn132Sn124-cxBs-b04-sly4-mdcorr20",            "md20"         ,"md20"             ,kGreen    ,kGreen    ,3014, 42},
-  { 9,"2022.cxBs/","amd_Sn124Sn112-cxBs-b04-sly4-mdcorr20",            "md20"         ,"md20"             ,kGreen    ,kGreen    ,3014, 42},
-  {10,"2022.cxBs/","amd_Sn108Sn112-cxBs-b04-sly4-mdcorr20",            "md20"         ,"md20"             ,kGreen    ,kGreen    ,3014, 42},
+  { 8,"2022.paper/","amd_Sn132Sn124-cxBs-b04-sly4-mdcorr20",            "md20"         ,"md20"             ,kGreen    ,kGreen    ,3014, 42},
+  { 9,"2022.paper/","amd_Sn124Sn112-cxBs-b04-sly4-mdcorr20",            "md20"         ,"md20"             ,kGreen    ,kGreen    ,3014, 42},
+  {10,"2022.paper/","amd_Sn108Sn112-cxBs-b04-sly4-mdcorr20",            "md20"         ,"md20"             ,kGreen    ,kGreen    ,3014, 42},
   //
-  {11,"2022.cxBs/","amd_Sn132Sn124-cxBs-rhoxdep10",                    "md50"    ,"md50_L46"       ,kPink-2   ,kPink-2   ,3002, 42}, 
-  {12,"2022.cxBs/","amd_Sn124Sn112-cxBs-rhoxdep10",                    "md50"    ,"md50_L46"       ,kPink-2   ,kPink-2   ,3014, 42},
-  {13,"2022.cxBs/","amd_Sn108Sn112-cxBs-rhoxdep10",                    "md50"    ,"md50_L46"       ,kPink-2   ,kPink-2   ,3014, 42},
+  {11,"2022.paper/","amd_Sn132Sn124-cxBs-rhoxdep10",                    "md50"    ,"md50_L46"              ,kPink-2   ,kPink-2   ,3008, 43},//40 
+  {12,"2022.paper/","amd_Sn124Sn112-cxBs-rhoxdep10",                    "md50"    ,"md50_L46"              ,kPink-2   ,kPink-2   ,3008, 43},//40
+  {13,"2022.paper/","amd_Sn108Sn112-cxBs-rhoxdep10",                    "md50"    ,"md50_L46"              ,kPink-2   ,kPink-2   ,3008, 43},//40
   //										   
-  {14,"2022.cxBs/","amd_Sn132Sn124-cxBs-rhoxdep10-l108",               "md50_rhx10_L108"   ,"md50_L108"      ,kBlue+2   ,kBlue     ,3003, 40},
-  {15,"2022.cxBs/","amd_Sn124Sn112-cxBs-rhoxdep10-l108",               "md50_rhx10_L108"   ,"md50_L108"      ,kBlue+2   ,kBlue     ,3003, 40},
-  {16,"2022.cxBs/","amd_Sn108Sn112-cxBs-rhoxdep10-l108",               "md50_rhx10_L108"   ,"md50_L108"      ,kBlue+2   ,kBlue     ,3003, 40},
+  {14,"2022.paper/","amd_Sn132Sn124-cxBs-rhoxdep10-l108",               "md50_rhx10_L108"   ,"md50_L108"   ,kBlue+2   ,kBlue     ,3017, 40},
+  {15,"2022.paper/","amd_Sn124Sn112-cxBs-rhoxdep10-l108",               "md50_rhx10_L108"   ,"md50_L108"   ,kBlue+2   ,kBlue     ,3017, 40},
+  {16,"2022.paper/","amd_Sn108Sn112-cxBs-rhoxdep10-l108",               "md50_rhx10_L108"   ,"md50_L108"   ,kBlue+2   ,kBlue     ,3017, 40},
   //														        
 };
 
@@ -162,6 +166,7 @@ Double_t FOPI_AuAu_v11y[4]={0.384, 0.641, 0.800, 1.032};
 Double_t FOPI_AuAu_v20[4]={0.048, 0.105, 0.170, 0.247720};
 
 TFile *outFile;
+TFile *outGraph;
 TCanvas *ccv; UInt_t iccv = 0;
 TLatex  plabel;
 TString xlabel;
@@ -463,7 +468,7 @@ TObject* LoadData(UInt_t isys, UInt_t ipart, TString grname, gplot gname, Int_t 
       LOG(INFO) << hypx->GetName() << " is corrected." << FairLogger::endl;
     }
 
-    hypx->RebinX(2);
+    hypx->RebinX(1);
     grv = new TGraphErrors();
 
     for(auto iy : ROOT::TSeqI(hypx->GetXaxis()->GetNbins()) ) {
@@ -562,6 +567,50 @@ TObject* LoadData(UInt_t isys, UInt_t ipart, TString grname, gplot gname, Int_t 
       return gyv2;
     }
     delete hyv2;
+  }
+  else if( grname=="gyv1ave"){
+    Double_t rpresall[2] ={ 1.,0.};
+    auto hdphi0_180 = (TH1D*)fOpen->Get("hdphi0_180");
+    auto hdphi90_180 = (TH1D*)fOpen->Get("hdphi90_180");
+    
+    if( hdphi0_180 && hdphi90_180 ) 
+      GetRPResolutionwChi(rpresall, hdphi0_180, hdphi90_180, 2.);
+
+    TH2D* hyv1 = (TH2D*)fOpen->Get("hycos1am");
+    TH2D* hyanum = (TH2D*)fOpen->Get("hyanum");
+    if( hyv1 && hyanum ) {
+      TGraphErrors* gyv1 = new TGraphErrors();
+      UInt_t nbin = 10;
+      
+      hyv1->RebinX(nbin);
+      hyanum->RebinX(nbin);
+
+      TH1D* hyprj;
+      TH1D* hynprj;
+      for( auto ix : ROOT::TSeqI( hyv1->GetXaxis()->GetNbins() ) ){
+	if( ix == 0 ) continue;
+
+	Double_t rap = hyv1 -> GetXaxis()->GetBinCenter(ix);
+       	Double_t rape= hyv1 -> GetXaxis()->GetBinWidth(ix)/sqrt(12);
+	hyprj = hyv1->ProjectionY(Form("hyv1_%d",ix), ix, ix);
+	auto v1 = hyprj -> GetMean();
+	//rpcorre
+	v1 /= rpresall[0];
+	auto v1error = hyprj -> GetMeanError();//hyprj -> GetStdDev()/sqrt(hyprj -> GetEntries();
+	v1error = GetError(v1, rpresall[0], v1error, rpresall[1]);
+	
+	hynprj = hyanum->ProjectionY(Form("hyanum_%d",ix), ix, ix);
+	auto anum  = hynprj -> GetMean();
+	auto anume = hynprj -> GetMeanError();
+	
+	v1 /= anum;
+	v1error = GetError(v1, anum, v1error, anume);
+
+	gyv1->SetPoint     ( gyv1->GetN()  ,  rap, v1 );
+	gyv1->SetPointError( gyv1->GetN()-1, rape, v1error );
+      }
+      return gyv1;
+    }
   }
   else if( grname=="gyv2ave"){
     Double_t rpresall[2] ={ 1.,0.};
@@ -789,7 +838,6 @@ TObject* LoadAMDRoot(UInt_t isys, UInt_t ipart, mplot mdata, TString grname="h_d
 	  gr -> SetPointError(nx, 0, yea );
 	}
       }
-
 
       if( bReverse )
 	return ReversePlot(obj);
@@ -1350,21 +1398,23 @@ Double_t* Getv2FitParameters(TGraphErrors *grph, Double_t ft_low=-0.5, Double_t 
   for( auto i : ROOT::TSeqI(8) )
     vfit[i] = 0.;
 
-  fv2fit->SetParameter(0,-0.03);
-  fv2fit->SetParameter(1,0.1);
-  fv2fit->SetParameter(2,0.);
+  fv2fit->SetParameter(0,-0.035);
+  fv2fit->SetParameter(1,0.02);
+  //  fv2fit->SetParameter(2,0.);
 
-  grph -> Fit("fv2fit","Q0","", ft_low, ft_high); //"Q0","");     
+  grph -> Fit("fv2fit","","", ft_low, ft_high); //"Q0","");     
   
   vfit[0] = fv2fit->GetParameter(0);
   vfit[1] = fv2fit->GetParError(0); 
   vfit[2] = fv2fit->GetParameter(1);
   vfit[3] = fv2fit->GetParError(1); 
-  vfit[4] = fv2fit->GetParameter(2);
-  vfit[5] = fv2fit->GetParError(2); 
+  // vfit[4] = fv2fit->GetParameter(2);
+  // vfit[5] = fv2fit->GetParError(2); 
+  vfit[4] = 0.;//fv2fit->GetParameter(2);
+  vfit[5] = 0.;//fv2fit->GetParError(2); 
 
-  vfit[6] = fv1fit->GetChisquare();
-  vfit[7] = fv1fit->GetNDF();
+  vfit[6] = fv2fit->GetChisquare();
+  vfit[7] = fv2fit->GetNDF();
 
   return vfit;
 }
@@ -2656,7 +2706,7 @@ void Draw_varxz(UInt_t isys, std::vector<gplot> gname, Int_t ylim=2)
   legend -> Draw();
 
 }
-
+//@meanpx
 void Draw_meanpx(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart, std::vector<gplot> gname, TString grname="hypx", UInt_t icateg=4, Bool_t bsaveData=0)
 {
   LOG(INFO) << "[Draw_meanpx] .......... "<< fsys[ivsys.at(0)] 
@@ -2695,7 +2745,6 @@ void Draw_meanpx(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart, std::vec
   for( auto iisys : ivsys ) {
     for( auto ipart : sqpart) {
 
-
       // AMD
       if( bAMD ) {
 
@@ -2722,7 +2771,7 @@ void Draw_meanpx(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart, std::vec
 	      grph -> SetFillStyle( 3001 );
 	      grph -> SetLineWidth( 5002);
 
-	      if(!bsaveData && grname == "gyv1") {
+	      if(!bsaveData && ( grname == "gyv1" || grname == "hypx" ) ) {
 		GetSlopeParameter(grph, -0.5, 0.5,0,0.4);
 	      }
 	      else if(!bsaveData &&  grname == "gyv2") {
@@ -2773,6 +2822,7 @@ void Draw_meanpx(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart, std::vec
 	if( !bsaveData && igname.centrality != bCentral ) continue; 
 
 	grph =(TGraphErrors*)LoadData(iisys,ipart,grname,igname); // acceptance corrected
+
 	
 	if( grph != NULL ) {
 	  grph -> SetMarkerStyle(DStyle[iisys].mStyle+ig);
@@ -2780,32 +2830,10 @@ void Draw_meanpx(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart, std::vec
 	  grph -> SetLineColor(  DStyle[iisys].fColor+2*ig );
 	  grph -> SetMarkerColor(DStyle[iisys].fColor+2*ig );
 
-	  if( 0 ) {
-	    if(!bsaveData && grname == "hypx" ) {
-	      auto ffit = (TF1*)gROOT->FindObject("fv1fit");
-	      if( ffit ) {
-		gStyle->SetOptFit(0);
-		ffit->SetLineColor(DStyle[iisys].fColor );
-	      }
-	      GetSlopeParameter(grph, fphysdatafile[fphysdataid].first, 0.5,0.,0.6);
-	    }
-	    else if(!bsaveData && grname == "gyv1" ) {
-	      auto ffit = (TF1*)gROOT->FindObject("fv1fit");
-	      if( ffit ) {
-		gStyle->SetOptFit(0);
-		ffit->SetLineColor(DStyle[iisys].fColor );
-	      }
-	      GetSlopeParameter(grph, fphysdatafile[fphysdataid].first, 0.5,0.,0.4);
-	    }
-	    else if(!bsaveData && grname == "gyv2" ) {
-	      auto ffit = (TF1*)gROOT->FindObject("fv2fit");
-	      if( ffit ) {
-		gStyle->SetOptFit(0);
-		ffit->SetLineColor(DStyle[iisys].fColor );
-	      }
-	      Getv2FitParameters(grph, -1., 1.);
-	    }
-	  }
+	  if( grname == "gu_v1" || grname == "gy_v1" || grname == "gyv1" || grname == "hypx") 
+	    GetSlopeParameter(grph, fphysdatafile[fphysdataid].first, 0.5,0,0.6);
+	  else if(grname == "gyv2" ) 
+	    Getv2FitParameters(grph, -1.0, 1.0);
 
 	  mgr[ipart] -> Add( grph, "P");
 	  if( ipart == 0 )
@@ -2840,10 +2868,17 @@ void Draw_meanpx(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart, std::vec
 		sData->v2widthError  =*(para+3);
 		sData->v2offset      =*(para+4);
 		sData->v2offsetError =*(para+5);
-		cout << " v20 " << sData->v2minimum << " +- " << sData->v2minimumError << endl;
+		cout << iisys << " " << ncls[ipart].sName << " v20 " << sData->v2minimum << " +- " << sData->v2minimumError << endl;
 	      }
 	    }
 	  }
+
+	  if(  outGraph && grph ) {
+	    outGraph->cd();
+	    grph->SetName(grname+"_"+ig+"_"+rsys[iisys]+"Sn_"+ncls[ipart].sName);
+	    grph->Write();
+	  }
+
 	}
 	ig++;
       }
@@ -2856,12 +2891,16 @@ void Draw_meanpx(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart, std::vec
   // glist->Print();
 
 
-  if( grname == "gyv2ave" ){
+  if( grname == "gyv2ave" || grname == "gyv1ave" ){
     ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv)); iccv++;
     auto pad = ccv->cd(1);
     pad -> SetGrid(1);
 
-    mgr[6] -> GetYaxis()->SetRangeUser(-0.05,0.05);
+    if(  grname == "gyv1ave" ) 
+      mgr[6] -> GetYaxis()->SetRangeUser(-1.0,1.0);
+    else if(  grname == "gyv2ave" ) 
+      mgr[6] -> GetYaxis()->SetRangeUser(-0.05,0.05);
+
     mgr[6] -> GetXaxis()->SetLimits(-0.9, 1.3);
 
     mgr[6] -> GetXaxis()->SetNdivisions(5,5,0,kTRUE);
@@ -3871,6 +3910,7 @@ void Draw_dndydX(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart, std::vec
 	    h_dndy = (TH1D*)LoadData(iisys,ipart,histname,igname,ylim); 
 	    //	  h_dndy = NULL;
 
+
 	    cout << igname.config1 << " " << ipart << " " << histname << " ->  ";
 
 	    if( h_dndy != NULL ) {
@@ -3887,6 +3927,12 @@ void Draw_dndydX(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart, std::vec
 	      h_dndy -> SetMarkerSize( DStyle[iisys].mSize-0.6);
 	      h_dndy -> SetLineColor(  DStyle[iisys].fColor);//+ic*5);
 	      h_dndy -> SetMarkerColor(DStyle[iisys].fColor);//+ic*5);
+	      
+	      if( outGraph ) {
+		outGraph->cd();
+		h_dndy->Write();
+	      }
+
 	      
 	      if( j == 0 && ipart == 0 )
 		//		lg  -> AddEntry( h_dndy, "DATA");//+fsys[iisys]+" "+igname.config1);
@@ -4455,8 +4501,8 @@ void Draw_compCorrelation(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart,
   TString fname;
   Bool_t fload = kTRUE;
 
-  fname = Form("physData%s.dat",fphysdatafile[fphysdataid].second.Data());
-  fload *= Load_physDATA(fname);
+  //  fname = Form("physData%s.dat",fphysdatafile[fphysdataid].second.Data());
+  fload *= Load_physDATA(physdataName);
 
   if( !fload ) return;
 
@@ -4562,7 +4608,7 @@ void Draw_compCorrelation(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart,
  
 
   if( bAMD ) {
-    fname = Form("physAMD%s.dat",fphysdatafile[fphysdataid].second.Data());
+    TString fname = Form("physAMD%s.dat",fphysdatafile[fphysdataid].second.Data());
     fload *= Load_physAMD(fname, sqpart);
     if( !fload ) return;      
 
@@ -4700,6 +4746,7 @@ void Draw_compCorrelation(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart,
 
     f1func->SetLineColor( DStyle[3].fColor );
     f1func->SetLineStyle( 9);
+    f1func->SetLineWidth( 4);
 
     if( bnrm ) {
       mtotal->Draw("A");
@@ -4820,8 +4867,8 @@ void Draw_compCorrelation(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart,
   }
 }
 
-
-void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart, gplot gname, UInt_t isg=0, TString phys="xRapiditystdDev", UInt_t idiv = 0 , UInt_t ndiv = 2, Double_t min=-1, Double_t max=-1, UInt_t icateg=41, UInt_t icateg1=41)
+//@particledep
+void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart, gplot gname, UInt_t isg=0, TString phys="xRapiditystdDev", UInt_t idiv = 0 , UInt_t ndiv = 2, Double_t min=-1, Double_t max=-1, UInt_t icateg=40, UInt_t icateg1=1, UInt_t icateg2=1)
 {
   Bool_t bRATIO = 0;
 
@@ -4841,13 +4888,10 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
   lgd -> SetFillStyle(0);
   lgr -> SetFillStyle(0);
 
-  //TString fname = Form("physData%s_both.dat",fphysdatafile[fphysdataid].second.Data());
-  TString fname = Form("physData%s_left.dat",fphysdatafile[fphysdataid].second.Data());
-  //  TString fname = Form("physData%s_3.dat",fphysdatafile[fphysdataid].second.Data());
-  Load_physDATA(fname);
 
+  Load_physDATA(physdataName);
 
-  fname = Form("physAMD%s.dat",fphysdatafile[fphysdataid].second.Data());
+  TString fname = Form("physAMD%s.dat",fphysdatafile[fphysdataid].second.Data());
   Load_physAMD(fname, sqpart);
 
   const UInt_t ngrph = 3;
@@ -4874,7 +4918,7 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
       Bool_t bfill = kFALSE;
 
       for( auto iisys : ivsys ){
-	if( physAMD[iisys][0][ig][isg].system != 0 && (AMDnames.at(ig).category == icateg || AMDnames.at(ig).category == icateg1 ) ) {
+	if( physAMD[iisys][0][ig][isg].system != 0 && (AMDnames.at(ig).category == icateg || AMDnames.at(ig).category == icateg1 || AMDnames.at(ig).category == icateg2) ) {
 	  LOG(INFO) << "[AMD compare] " << physAMD[iisys][0][ig][isg].version << " " << physAMD[iisys][0][ig][isg].system << FairLogger::endl;
 
 
@@ -4917,9 +4961,9 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
 	    else if( phys == "meanpxSlope" ) {
 	      grph[0] -> SetPoint     (iin, iin+1, physAMD[iisys][ipart][ig][isg].meanpxSlope );
 	      grph[0] -> SetPointError(iin,   0, physAMD[iisys][ipart][ig][isg].meanpxSlopeError );
-	      mgr[0]->SetTitle(";;slope<px>");
+	      mgr[0]->SetTitle(";;F");
 
-	      cout << " AMD slope<px> " << iin << " " << physAMD[iisys][ipart][ig][isg].meanpxSlope << endl;
+	      //	      cout << " AMD slope<px> " << iin << " " << physAMD[iisys][ipart][ig][isg].meanpxSlope << endl;
 	
 	      grph[1] -> SetPoint     (iin, iin+1, physAMD[iisys][ipart][ig][isg].meanpxSlope / physAMD[iisys][0][ig][isg].meanpxSlope );
 	      Double_t error = GetError( physAMD[iisys][ipart][ig][isg].meanpxSlope,      physAMD[iisys][0][ig][isg].meanpxSlope, 
@@ -4930,7 +4974,8 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
 
 	      if ( physAMD[1][ipart][ig][isg].meanpxSlope != 0 ) {
 		bfill = kTRUE;
-		grph[2] -> SetPoint     (iin, iin+1, physAMD[iisys][ipart][ig][isg].meanpxSlope / physAMD[1][ipart][ig][isg].meanpxSlope );
+		grph[2] -> SetPoint     (iin, iin+1, physAMD[iisys][ipart][ig][isg].meanpxSlope / physAMD[1][ipart][ig][isg].meanpxSlope + 
+					 physAMD[1][ipart][ig][isg].meanpxSlope );
 		error = GetError( physAMD[iisys][ipart][ig][isg].meanpxSlope,      physAMD[1][ipart][ig][isg].meanpxSlope, 
 				  physAMD[iisys][ipart][ig][isg].meanpxSlopeError, physAMD[1][ipart][ig][isg].meanpxSlopeError );
 		grph[2] -> SetPointError(iin,   0, error);	
@@ -4953,11 +4998,26 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
 	      grph[0] -> SetPoint     (iin, iin+1, physAMD[iisys][ipart][ig][isg].v1Slope );
 	      grph[0] -> SetPointError(iin,     0, physAMD[iisys][ipart][ig][isg].v1SlopeError );
 	      mgr[0]->SetTitle(";;v11");
+	      grph[1] -> SetPoint     (iin, iin+1, physAMD[iisys][ipart][ig][isg].v1Slope / physAMD[iisys][0][ig][isg].v1Slope + 
+				       physAMD[iisys][0][ig][isg].v1Slope);
+	      Double_t error = GetError( physAMD[iisys][ipart][ig][isg].v1Slope,      physAMD[iisys][0][ig][isg].v1Slope, 
+					 physAMD[iisys][ipart][ig][isg].v1SlopeError, physAMD[iisys][0][ig][isg].v1SlopeError );
+	      grph[1] -> SetPointError(iin,   0, error);
+	      mgr[1]->SetTitle(";;R(v_{11}/v_{11_proton})");
+
 	    }
 	    else if( phys == "v2minimum") {
 	      grph[0] -> SetPoint     (iin, iin+1, physAMD[iisys][ipart][ig][isg].v2minimum );
 	      grph[0] -> SetPointError(iin,     0, physAMD[iisys][ipart][ig][isg].v2minimumError );
 	      mgr[0]->SetTitle(";;v20");
+	      grph[1] -> SetPoint     (iin, iin+1, physAMD[iisys][ipart][ig][isg].v2minimum / physAMD[iisys][0][ig][isg].v2minimum +
+				       physAMD[iisys][0][ig][isg].v2minimum );
+	      
+	      Double_t error = GetError( physAMD[iisys][ipart][ig][isg].v2minimum,      physAMD[iisys][0][ig][isg].v2minimum, 
+					 physAMD[iisys][ipart][ig][isg].v2minimumError, physAMD[iisys][0][ig][isg].v2minimumError );
+	      grph[1] -> SetPointError(iin,   0, error);
+	      mgr[1]->SetTitle(";;R(v_{20}/v_{20_proton})");
+
 	    }
 	    else if( phys == "v2width") {
 	      grph[0] -> SetPoint     (iin, iin+1, physAMD[iisys][ipart][ig][isg].v2width );
@@ -5011,10 +5071,10 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
 
 	Double_t x0,x1,y0,y1,x0e,x1e,y0e,y1e;
 	for( auto np : ROOT::TSeqI(gr132A->GetN()) ) {
-	  gr132A->GetPoint(np, x0, y0);
-	  gr108A->GetPoint(np, x1, y1);
-	  y0e = gr132A->GetErrorY(np);
-	  y1e = gr108A->GetErrorY(np);
+	  gr108A->GetPoint(np, x0, y0);
+	  gr132A->GetPoint(np, x1, y1);
+	  y1e = gr132A->GetErrorY(np);
+	  y0e = gr108A->GetErrorY(np);
 
 	  if( y0 != 0 ) {
 	    grRatio -> SetPoint(np, x0, y1/y0);
@@ -5039,33 +5099,38 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
   }
 
 
-  // data
+  // data --------------------------------------------------
+  TGraphErrors* grvms[4];
+
   for( auto iisys : ivsys ) {
 
     for( auto i : ROOT::TSeqI(ngrph) ) {
       grph[i] = new TGraphErrors();
       grph[i] -> SetName(Form("phpara_%s_%d_%d",phys.Data(),iisys,i) );
     }
+    
+    grvms[iisys] = new TGraphErrors();
+    grvms[iisys] -> SetName(Form("grvms_%d",iisys));
 
     if( bRATIO && (iisys == 0 || iisys == 1 ) )
       sDire -> GetList()->Add( grph[0] );
 
-    UInt_t iin = 2;
+    UInt_t iin = 0;
     for( auto ipart : sqpart ) {
       if( ipart == 7 ) continue;
 
       if( phys == "xRapiditystdDev" ) {
-	grph[0] -> SetPoint     (iin, iin, physData[iisys][ipart][isg].xRapiditystdDev );
+	grph[0] -> SetPoint     (iin, iin+2, physData[iisys][ipart][isg].xRapiditystdDev );
 	grph[0] -> SetPointError(iin,   0, physData[iisys][ipart][isg].xRapiditystdDevError );
 	mgr[0]->SetTitle(";;#sigma(Transvese)");
 
-	grph[1] -> SetPoint     (iin, iin, physData[iisys][ipart][isg].xRapiditystdDev / physData[iisys][0][isg].xRapiditystdDev );
+	grph[1] -> SetPoint     (iin, iin+2, physData[iisys][ipart][isg].xRapiditystdDev / physData[iisys][0][isg].xRapiditystdDev );
 	Double_t error = GetError( physData[iisys][ipart][isg].xRapiditystdDev,      physData[iisys][0][isg].xRapiditystdDev, 
 				   physData[iisys][ipart][isg].xRapiditystdDevError, physData[iisys][0][isg].xRapiditystdDevError );
 	grph[1] -> SetPointError(iin,   0, error);
 	mgr[1]->SetTitle(";;R(yx_std/yx_std_{proton})");
 
-	grph[2] -> SetPoint     (iin, iin, physData[iisys][ipart][isg].xRapiditystdDev / physData[1][ipart][isg].xRapiditystdDev );
+	grph[2] -> SetPoint     (iin, iin+2, physData[iisys][ipart][isg].xRapiditystdDev / physData[1][ipart][isg].xRapiditystdDev );
 	error = GetError( physData[iisys][ipart][isg].xRapiditystdDev,      physData[1][ipart][isg].xRapiditystdDev, 
 			  physData[iisys][ipart][isg].xRapiditystdDevError, physData[1][ipart][isg].xRapiditystdDevError );
 	grph[2] -> SetPointError(iin,   0, error);	
@@ -5073,17 +5138,17 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
       }
 
       else if( phys == "RapiditystdDev" ){
-	grph[0] -> SetPoint     (iin, iin, physData[iisys][ipart][isg].RapiditystdDev );
+	grph[0] -> SetPoint     (iin, iin+2, physData[iisys][ipart][isg].RapiditystdDev );
 	grph[0] -> SetPointError(iin,   0, physData[iisys][ipart][isg].RapiditystdDevError );
 	mgr[0]->SetTitle(";;#sigma(Longigudinal)");
 
-	grph[1] -> SetPoint     (iin, iin, physData[iisys][ipart][isg].RapiditystdDev / physData[iisys][0][isg].RapiditystdDev );
+	grph[1] -> SetPoint     (iin, iin+2, physData[iisys][ipart][isg].RapiditystdDev / physData[iisys][0][isg].RapiditystdDev );
 	Double_t error = GetError( physData[iisys][ipart][isg].RapiditystdDev,      physData[iisys][0][isg].RapiditystdDev, 
 				   physData[iisys][ipart][isg].RapiditystdDevError, physData[iisys][0][isg].RapiditystdDevError );
 	grph[1] -> SetPointError(iin,   0, error);
 	mgr[1]->SetTitle(";;R(y_std/y_std_{proton})");
 
-	grph[2] -> SetPoint     (iin, iin, physData[iisys][ipart][isg].RapiditystdDev / physData[1][ipart][isg].RapiditystdDev );
+	grph[2] -> SetPoint     (iin, iin+2, physData[iisys][ipart][isg].RapiditystdDev / physData[1][ipart][isg].RapiditystdDev );
 	error = GetError( physData[iisys][ipart][isg].RapiditystdDev,      physData[1][ipart][isg].RapiditystdDev, 
 			  physData[iisys][ipart][isg].RapiditystdDevError, physData[1][ipart][isg].RapiditystdDevError );
 	grph[2] -> SetPointError(iin,   0, error);	
@@ -5091,18 +5156,18 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
 
       }
       else if( phys == "pxstdDev" ) {
-	grph[0] -> SetPoint     (iin, iin, physData[iisys][ipart][isg].pxstdDev );
+	grph[0] -> SetPoint     (iin, iin+2, physData[iisys][ipart][isg].pxstdDev );
 	grph[0] -> SetPointError(iin,   0, physData[iisys][ipart][isg].pxstdDevError );
 	mgr[0]->SetTitle(";;px_std");
 	
-	grph[1] -> SetPoint     (iin, iin, physData[iisys][ipart][isg].pxstdDev / physData[iisys][0][isg].pxstdDev );
+	grph[1] -> SetPoint     (iin, iin+2, physData[iisys][ipart][isg].pxstdDev / physData[iisys][0][isg].pxstdDev );
 	Double_t error = GetError( physData[iisys][ipart][isg].pxstdDev,      physData[iisys][0][isg].pxstdDev, 
 				   physData[iisys][ipart][isg].pxstdDevError, physData[iisys][0][isg].pxstdDevError );
 	grph[1] -> SetPointError(iin,   0, error);
 	mgr[1]->SetTitle(";;R(px_std/px_std_{proton})");
 
 	if( iisys != 1 ){
-	  grph[2] -> SetPoint     (iin, iin, physData[iisys][ipart][isg].pxstdDev / physData[1][ipart][isg].pxstdDev );
+	  grph[2] -> SetPoint     (iin, iin+2, physData[iisys][ipart][isg].pxstdDev / physData[1][ipart][isg].pxstdDev );
 	  error = GetError( physData[iisys][ipart][isg].pxstdDev,      physData[1][ipart][isg].pxstdDev, 
 			    physData[iisys][ipart][isg].pxstdDevError, physData[1][ipart][isg].pxstdDevError );
 	  grph[2] -> SetPointError(iin,   0, error);	
@@ -5110,58 +5175,118 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
 	}
       }
       else if( phys == "meanpxSlope" ) {
-	cout << " meanpxslope " << ipart << " "<< iisys << " " << isg << " " << physData[iisys][ipart][isg].meanpxSlope << endl;
+	LOG(DEBUG) << " meanpxslope " << ipart << " "<< iisys << " " << isg << " " << physData[iisys][ipart][isg].meanpxSlope << FairLogger::endl;
 
-	grph[0] -> SetPoint     (iin, iin, physData[iisys][ipart][isg].meanpxSlope );	grph[0] -> SetPointError(iin,   0, physData[iisys][ipart][isg].meanpxSlopeError );
-	mgr[0]->SetTitle(";;slope<px>");
+	grph[0] -> SetPoint(iin, iin+2, physData[iisys][ipart][isg].meanpxSlope );
+	grph[0] -> SetPointError(iin,   0, physData[iisys][ipart][isg].meanpxSlopeError );
+	mgr[0]->SetTitle(";;F");
 	
-	grph[1] -> SetPoint     (iin, iin, physData[iisys][ipart][isg].meanpxSlope / physData[iisys][0][isg].meanpxSlope );
-	Double_t error = GetError( physData[iisys][ipart][isg].meanpxSlope,      physData[iisys][0][isg].meanpxSlope, 
-				   physData[iisys][ipart][isg].meanpxSlopeError, physData[iisys][0][isg].meanpxSlopeError );
-	grph[1] -> SetPointError(iin,   0, error);
-	mgr[1]->SetTitle(";;R(slope<px>/slope<px>_{proton})");
+	// grph[1] -> SetPoint     (iin, iin+2, physData[iisys][0][isg].meanpxSlope * (1.+ (ncls[iin].A-1.)* 0.15) );
+	Double_t error;// = GetError( physData[iisys][ipart][isg].meanpxSlope,      physData[iisys][0][isg].meanpxSlope, 
+	// 			   physData[iisys][ipart][isg].meanpxSlopeError, physData[iisys][0][isg].meanpxSlopeError );
+	// //	grph[1] -> SetPointError(iin,   0, error);
+	// grph[1] -> SetPointError(iin,   0, 0.);
 
+	mgr[1]->SetTitle(";;R(F/F_{proton})");
+	mgr[1]->GetYaxis()->SetRangeUser(0.5, 2.5);
+
+	grvms[iisys] -> SetPoint( grvms[iisys]->GetN(),         ncls[iin].A, physData[iisys][ipart][isg].meanpxSlope );
+	grvms[iisys] -> SetPointError( grvms[iisys]->GetN()-1,           0., physData[iisys][ipart][isg].meanpxSlopeError );
 
 	if( iisys != 1 ) {
-	  grph[2] -> SetPoint     (iin, iin, physData[iisys][ipart][isg].meanpxSlope / physData[1][ipart][isg].meanpxSlope );
+	  grph[2] -> SetPoint     (iin, iin+2, physData[iisys][ipart][isg].meanpxSlope / physData[1][ipart][isg].meanpxSlope );
 	  error = GetError( physData[iisys][ipart][isg].meanpxSlope,      physData[1][ipart][isg].meanpxSlope, 
 			    physData[iisys][ipart][isg].meanpxSlopeError, physData[1][ipart][isg].meanpxSlopeError );
 	  grph[2] -> SetPointError(iin,   0, error);	
-	  mgr[2]->SetTitle(";;R(slope<px>/slope<px>_{108Sn+112Sn})");
+	  mgr[2]->SetTitle(";;R(F/F_{108Sn+112Sn})");
+
 	}
       }
       else if( phys == "meanbtgm" ) {
-	grph[0] -> SetPoint     (iin, iin, physData[iisys][ipart][isg].meanbtgm );
+	grph[0] -> SetPoint     (iin, iin+2, physData[iisys][ipart][isg].meanbtgm );
 	grph[0] -> SetPointError(iin,   0, physData[iisys][ipart][isg].meanbtgmError );
 	mgr[0] -> SetTitle(";; <#beta#gamma>");
 
-	grph[1] -> SetPoint     (iin, iin, 0.5*pow(physData[iisys][ipart][isg].meanbtgm,2)*mass[ipart] );
+	grph[1] -> SetPoint     (iin, iin+2, 0.5*pow(physData[iisys][ipart][isg].meanbtgm,2)*mass[ipart] );
 	grph[1] -> SetPointError(iin,   0, physData[iisys][ipart][isg].meanbtgmError );
 	mgr[1]  -> SetTitle(";; <K_{T}>");
 	mgr[1]  -> GetYaxis()->SetRangeUser(40.,100.);
       }
       else if( phys == "meanKt" ) {
-	grph[0] -> SetPoint     (iin, iin, 0.5*pow(physData[iisys][ipart][isg].meanbtgm,2)*mass[ipart] );
+	grph[0] -> SetPoint     (iin, iin+2, 0.5*pow(physData[iisys][ipart][isg].meanbtgm,2)*mass[ipart] );
 	grph[0] -> SetPointError(iin,   0, physData[iisys][ipart][isg].meanbtgmError );
 	mgr[0]  -> SetTitle(";; <K_{T}>");
       }
       else if( phys == "v1Slope") {
-	grph[0] -> SetPoint     (iin, iin, physData[iisys][ipart][isg].v1Slope );
+	grph[0] -> SetPoint     (iin, iin+2, physData[iisys][ipart][isg].v1Slope );
 	grph[0] -> SetPointError(iin,   0, physData[iisys][ipart][isg].v1SlopeError );
 	mgr[0]->SetTitle(";;v11");
+
+	grph[1] -> SetPoint     (iin, iin+2, physData[iisys][0][isg].v1Slope * (ncls[iin].A));
+	Double_t error = GetError( physData[iisys][ipart][isg].v1Slope,      physData[iisys][0][isg].v1Slope, 
+				   physData[iisys][ipart][isg].v1SlopeError, physData[iisys][0][isg].v1SlopeError );
+	//	grph[1] -> SetPointError(iin,   0, error);
+	grph[1] -> SetPointError(iin,   0, 0.);
+	mgr[1]->SetTitle(";;R(v_{11}/v_{11_proton})");
+	mgr[1]->GetYaxis()->SetRangeUser(0.5, 5.5);
+
+	grvms[iisys] -> SetPoint( grvms[iisys]->GetN(),         ncls[iin].A, physData[iisys][ipart][isg].v1Slope );
+	grvms[iisys] -> SetPointError( grvms[iisys]->GetN()-1,           0., physData[iisys][ipart][isg].v1SlopeError );
+
       }
       else if( phys == "v2minimum") {
-	grph[0] -> SetPoint     (iin, iin, physData[iisys][ipart][isg].v2minimum );
+	grph[0] -> SetPoint     (iin, iin+2, physData[iisys][ipart][isg].v2minimum );
 	grph[0] -> SetPointError(iin,   0, physData[iisys][ipart][isg].v2minimumError );
+	//	cout << " v20 " << physData[iisys][ipart][isg].v2minimum << endl;
 	mgr[0]->SetTitle(";;v20");
+
+	grph[1] -> SetPoint     (iin, iin+2, physData[iisys][0][isg].v2minimum * (ncls[iin].A)); 
+	Double_t error = GetError( physData[iisys][ipart][isg].v2minimum,      physData[iisys][0][isg].v2minimum, 
+				   physData[iisys][ipart][isg].v2minimumError, physData[iisys][0][isg].v2minimumError );
+	//	grph[1] -> SetPointError(iin,   0, error);
+	grph[1] -> SetPointError(iin,   0, 0.);
+	mgr[1]->SetTitle(";;R(v_{20}/v_{20_proton})");
+	mgr[1]->GetYaxis()->SetRangeUser(0.5, 5.5);
+
+	grvms[iisys] -> SetPoint( grvms[iisys]->GetN(),         ncls[iin].A, physData[iisys][ipart][isg].v2minimum );
+	grvms[iisys] -> SetPointError( grvms[iisys]->GetN()-1,           0., physData[iisys][ipart][isg].v2minimumError );
+
       }
       else if( phys == "v2width") {
-	grph[0] -> SetPoint     (iin, iin, physData[iisys][ipart][isg].v2width );
+	grph[0] -> SetPoint     (iin, iin+2, physData[iisys][ipart][isg].v2width );
 	grph[0] -> SetPointError(iin,   0, physData[iisys][ipart][isg].v2widthError );
 	mgr[0]->SetTitle(";;v21");
       }
       
       iin++;
+    }
+  
+    //@@@@@@@@@@ mass scaling @@@
+    if( phys == "v1Slope" || phys == "v2minimum" ) {
+
+      grvms[iisys] -> Fit("pol1","Q0","",1.,4.);      
+      TF1* pol1 = (TF1*)gROOT->FindObject("pol1");
+      Double_t off = pol1->GetParameter(0);
+      Double_t offe= pol1->GetParError(0);
+      Double_t slp = pol1->GetParameter(1);
+      Double_t slpe= pol1->GetParError(1);
+
+      cout << fsys[iisys] << " "  << phys << " :::  " << slp << " *x + " << off <<  endl; 
+      cout << " chi2/n " << pol1->GetChisquare()/pol1->GetNDF();
+      cout << " prob " << pol1->GetProb() << endl;
+      for( auto i : sqpart ) {
+	if( i == 7 ) continue;
+	cout << i << " " << slp*ncls[i].A+off << " " << grph[2]->GetN() << endl;
+	grph[2] -> SetPoint(grph[2]->GetN(),    i+2, slp*ncls[i].A + off );
+	Double_t er = sqrt( slpe*slpe + offe*offe );
+	grph[2] -> SetPointError(grph[2]->GetN()-1,   0., er );
+      }						     
+
+    //    mgr[0] -> Add(grph[1], "l");
+      mgr[0] -> Add(grph[2], "l");
+      grph[2]->SetLineStyle( 9 );
+      grph[2]->SetLineWidth( 2 );
+      grph[2]->Print();
     }
 
     for( auto i : ROOT::TSeqI(ngrph) ) {
@@ -5172,6 +5297,8 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
       
       mgr[i] ->Add(grph[i], "p");
     }
+    grph[1]->SetMarkerStyle(111);    
+
 
     if( !bRATIO )
       lgd  ->AddEntry(grph[0],fsys[iisys]);//+"_"+physData[iisys][0][isg].version); 
@@ -5188,17 +5315,18 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
     if( gr132D && gr108D ) {
       auto grRatio = new TGraphErrors();
 
-
+      // cout << " print " << phys <<  endl;
       // gr132D->Print();
+      // cout << " 108 " << endl;
       // gr108D->Print();
 
       Double_t x0,x1,y0,y1,x0e,x1e,y0e,y1e;
       UInt_t iin = 0;
       for( auto np : ROOT::TSeqI(gr132D->GetN()) ) {
-	gr132D->GetPoint(np, x0, y0);
-	gr108D->GetPoint(np, x1, y1);
-	y0e = gr132D->GetErrorY(np);
-	y1e = gr108D->GetErrorY(np);
+	gr108D->GetPoint(np, x0, y0);
+	gr132D->GetPoint(np, x1, y1);
+	y1e = gr132D->GetErrorY(np);
+	y0e = gr108D->GetErrorY(np);
 	auto err = GetError(y1, y0, y1e, y0e);
 	
 	if( y0 != 0 ) {
@@ -5212,13 +5340,13 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
       }
       
       // data
-      grRatio->Print();
+      //      grRatio->Print();
       
-      grRatio -> SetMarkerStyle( 25);
-      grRatio -> SetMarkerColor( 1 );
+      grRatio -> SetMarkerStyle(20);
+      grRatio -> SetMarkerColor( 1);
       
       mgrRatio -> Add(grRatio, "pY+");
-      TString slabel =";;R_"+(TString)mgr[0]->GetYaxis()->GetTitle()+"("+fsys[1]+"/"+fsys[0]+")";
+      TString slabel =";;R("+(TString)mgr[0]->GetYaxis()->GetTitle()+")"; //+"("+fsys[1]+"/"+fsys[0]+")";
       mgrRatio -> SetTitle( slabel );
 
       lgd  ->AddEntry(grRatio,"DATA");//fsys[1]+"/"+fsys[0]);//+"_"+physData[iisys][0][isg].version); 
@@ -5228,32 +5356,63 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
   
 
   SetXTextLabel(*mgr[0], sqpart);
+  SetXTextLabel(*mgr[1], sqpart);
   if( bRATIO )
     SetXTextLabel(*mgrRatio, sqpart);
   if( max != -1 && min != -1) {
     mgr[0]->GetYaxis()->SetRangeUser(min,max);
     mgr[0]->GetYaxis()->SetNdivisions(5,5,0,kTRUE);
 
+    mgr[1]->GetYaxis()->SetNdivisions(5,5,0,kTRUE);
+
     if( bRATIO )
       mgrRatio->GetYaxis()->SetRangeUser(min, max);
   }
 
 
-  //----------------- plot --------------------
-  //-- draft 
-
-  std::vector< std::pair<Int_t,Int_t>> pmap = {{0,1},{1,1},{0,0},{1,0}};
-  if( idiv == 0) {
-    ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv),800,1000); iccv++;
+  //----------------- plot -- 3x3 ----------------
+  // division
+  // 0 | 1 | 2
+  //----------
+  // 3 | 4 | 5
+  //----------
+  // 6 | 7 | 8
+  std::vector< std::pair<Int_t,Int_t>> pmap;
+  if( ndiv == 9 )  {
+    pmap = {{0,2},{1,2},{2,2},{0,1},{1,1},{2,1},{0,0},{1,0},{2,0}};
     
-    const Int_t Ny = 2;
-    const Int_t Nx = 2;
-    Float_t lMargin = 0.13;
-    Float_t rMargin = 0.02;
-    Float_t bMargin = 0.1;
-    Float_t tMargin = 0.02;
-    Float_t midMargin = 0.08;
-    CanvasPartitionTwoColumn( ccv, Nx, Ny, lMargin, rMargin, bMargin, tMargin, midMargin );
+    if( idiv == 0 ) {
+      ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv),800,1000); iccv++;
+    
+      const Int_t Ny = 3;
+      const Int_t Nx = 3;
+      Float_t lMargin = 0.13;
+      Float_t rMargin = 0.02;
+      Float_t bMargin = 0.1;
+      Float_t tMargin = 0.02;
+      Float_t midMargin[Nx] = {0.,0.,0.08}; //<- left margin
+      CanvasPartitionM( ccv, Nx, Ny, lMargin, rMargin, bMargin, tMargin, midMargin );
+    }
+  }
+  //----------------- plot -- 2x2 ----------------
+  // division
+  // 0 | 1
+  //-------
+  // 2 | 3
+  else if( ndiv == 4 ) {
+    pmap = {{0,1},{1,1},{0,0},{1,0}};
+    if( idiv == 0) {
+      ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv),800,1000); iccv++;
+    
+      const Int_t Ny = 2;
+      const Int_t Nx = 2;
+      Float_t lMargin = 0.13;
+      Float_t rMargin = 0.02;
+      Float_t bMargin = 0.1;
+      Float_t tMargin = 0.02;
+      Float_t midMargin = 0.08;
+      CanvasPartitionTwoColumn( ccv, Nx, Ny, lMargin, rMargin, bMargin, tMargin, midMargin );
+    }
   }
   
   TPad* pad0 = (TPad*)gROOT->FindObject("pad_0_0");
@@ -5270,43 +5429,34 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
   Float_t yFactor = pad0->GetAbsHNDC()/pad->GetAbsHNDC();
   
   
-  
-
-  // division
-  // 0 | 1
-  //-------
-  // 2 | 3
-  
   if( bRATIO ) {
-    if( idiv == 1 || idiv == 3 ) {
-      //format for x axis
-      mgrRatio ->GetXaxis()->SetLabelFont(43);
-      mgrRatio ->GetXaxis()->SetLabelSize(20);
-      mgrRatio ->GetXaxis()->SetLabelOffset(0.01);
-      mgrRatio ->GetXaxis()->SetTitleFont(43);
-      mgrRatio ->GetXaxis()->SetTitleSize(20);
-      mgrRatio ->GetXaxis()->SetTitleOffset(4);
-      mgrRatio ->GetXaxis()->CenterTitle();
-      mgrRatio ->GetXaxis()->SetNdivisions(505);
-      mgrRatio ->GetXaxis()->SetTickLength(yFactor*0.06/xFactor);
+    //format for x axis
+    mgrRatio ->GetXaxis()->SetLabelFont(43);
+    mgrRatio ->GetXaxis()->SetLabelSize(20);
+    mgrRatio ->GetXaxis()->SetLabelOffset(0.01);
+    mgrRatio ->GetXaxis()->SetTitleFont(43);
+    mgrRatio ->GetXaxis()->SetTitleSize(20);
+    mgrRatio ->GetXaxis()->SetTitleOffset(4);
+    mgrRatio ->GetXaxis()->CenterTitle();
+    mgrRatio ->GetXaxis()->SetNdivisions(505);
+    mgrRatio ->GetXaxis()->SetTickLength(yFactor*0.06/xFactor);
   
-      //format for y axis
-      mgrRatio ->GetYaxis()->SetLabelFont(43);
-      mgrRatio ->GetYaxis()->SetLabelSize(20);
-      mgrRatio ->GetYaxis()->SetLabelOffset(0.02);
-      mgrRatio ->GetYaxis()->SetTitleFont(43);
-      mgrRatio ->GetYaxis()->SetTitleSize(20);
-      mgrRatio ->GetYaxis()->SetTitleOffset(3.5);
-      mgrRatio ->GetYaxis()->CenterTitle();
-      mgrRatio ->GetYaxis()->SetNdivisions(505);
-      mgrRatio ->GetYaxis()->SetTickLength(xFactor*0.04/yFactor);
+    //format for y axis
+    mgrRatio ->GetYaxis()->SetLabelFont(43);
+    mgrRatio ->GetYaxis()->SetLabelSize(20);
+    mgrRatio ->GetYaxis()->SetLabelOffset(0.02);
+    mgrRatio ->GetYaxis()->SetTitleFont(43);
+    mgrRatio ->GetYaxis()->SetTitleSize(20);
+    mgrRatio ->GetYaxis()->SetTitleOffset(3.5);
+    mgrRatio ->GetYaxis()->CenterTitle();
+    mgrRatio ->GetYaxis()->SetNdivisions(505);
+    mgrRatio ->GetYaxis()->SetTickLength(xFactor*0.04/yFactor);
   
-      mgrRatio -> GetXaxis() -> SetNdivisions(5,5,0,kTRUE);
-      mgrRatio -> GetYaxis() -> SetNdivisions(5,5,0,kTRUE);
+    mgrRatio -> GetXaxis() -> SetNdivisions(5,5,0,kTRUE);
+    mgrRatio -> GetYaxis() -> SetNdivisions(5,5,0,kTRUE);
 
-      mgrRatio -> Draw("A");      
-      cout << " bratio " << bRATIO << " idiv " << idiv << endl;
-    }
+    mgrRatio -> Draw("A");      
+    cout << " bratio " << bRATIO << " idiv " << idiv << endl;
   }
   else {
     //format for x axis
@@ -5326,7 +5476,7 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
     mgr[0] ->GetYaxis()->SetLabelOffset(0.02);
     mgr[0] ->GetYaxis()->SetTitleFont(43);
     mgr[0] ->GetYaxis()->SetTitleSize(20);
-    mgr[0] ->GetYaxis()->SetTitleOffset(3.5);
+    mgr[0] ->GetYaxis()->SetTitleOffset(4.5);
     mgr[0] ->GetYaxis()->CenterTitle();
     mgr[0] ->GetYaxis()->SetNdivisions(505);
     mgr[0] ->GetYaxis()->SetTickLength(xFactor*0.04/yFactor);
@@ -5335,28 +5485,25 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
     mgr[0] -> GetYaxis() -> SetNdivisions(5,5,0,kTRUE);
 
     mgr[0] -> Draw("alp");      
+    //    mgr[1] -> Draw("alp");      
   }
 
   if( idiv == 0 ) {
-    lgd -> SetX1(0.3);
+    lgd -> SetX1(0.4);
     lgd -> SetX2(0.8);
     lgd -> SetY1(0.8);
     lgd -> SetY2(0.9);
 
-    lg  -> SetX1(0.3);
+    lg  -> SetX1(0.4);
     lg  -> SetX2(0.8);
-    lg  -> SetY1(0.6);
-    lg  -> SetY2(0.8);
+    lg  -> SetY1(0.05);
+    lg  -> SetY2(0.2);
 
-    lgd  -> Draw();
+    plabel.SetTextColor(DStyle[ivsys[0]].fColor);
+    plabel.SetTextSize(0.08*xFactor/yFactor);
+    plabel.DrawLatexNDC(0.4,0.82,Form("%s",fsys[0].Data()));
     lg   -> Draw();
 
-    TString ssys = "";
-    for( auto iisys : ivsys ) {
-      ssys += rsys[iisys]+"Sn";
-    }
-    ssys += lbCentral[isg];
-    ccv->SaveAs(Form("partdep_%s_%s.png",phys.Data(),ssys.Data()));  
 
   }
   else if( idiv == 1 ) {
@@ -5369,201 +5516,33 @@ void Draw_ParticleDependence(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpa
     lg  -> SetY1(0.6);
     lg  -> SetY2(0.8);
       
-    lgd -> Draw();
-    lg  -> Draw();
+    plabel.SetTextColor(DStyle[ivsys[0]].fColor);
+    plabel.SetTextSize(0.08*xFactor/yFactor);
+    plabel.DrawLatexNDC(0.2,0.82,Form("%s",fsys[1].Data()));
+    //    lgd -> Draw();
+    //lg  -> Draw();
+  }
+  else if( idiv == 2 ) {
+
+    plabel.SetTextSize(0.08*xFactor/yFactor);
+    plabel.SetTextColor(DStyle[ivsys[0]].fColor);    
+    plabel.DrawLatexNDC(0.3,0.82,Form("#frac{%s}{%s}",fsys[0].Data(),""));
+    plabel.SetTextColor(DStyle[ivsys[1]].fColor);    
+    plabel.DrawLatexNDC(0.3,0.82,Form("#frac{%s}{%s}","",fsys[1].Data()));
+    plabel.SetTextColor(1);    
+    plabel.DrawLatexNDC(0.3,0.82,Form("#frac{%s}{%s}","","          "));
   }
 
 
-  // else if( ivsys.size() <= 2) {
-
-  //   SetXTextLabel(*mgr[0], sqpart);
-
-  //   if( ndiv == 1 ){
-  //     ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv),500,400); iccv++;
-  //     mgr[0]->Draw("ALP");
-
-
-  //     lg -> Draw();
-  //     lgd-> Draw();
-
-  //     //      plabel.DrawLatexNDC(0.25,0.85, lbCentral[isg]);
-  //     TString ssys = "";
-  //     for( auto iisys : ivsys ) {
-  // 	ssys += rsys[iisys]+"Sn";
-  //     }
-  //     ssys += lbCentral[isg];
-  //     ccv->SaveAs(Form("pdep1_%s_%s.png",phys.Data(),ssys.Data()));
-  //   }
-
-  //   else if( ndiv == 2) {
-
-  //     if( idiv == 0) {
-  // 	ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv),700,500); iccv++;
-  // 	ccv -> Divide(ndiv,1);
-  //     }
-
-  //     ccv -> cd(idiv+1);
-  //     mgr[0]->Draw("ALP");
-
-
-  //     if( idiv == 0) { 
-  // 	lg -> Draw();
-  // 	lgd-> Draw();
-  //     }
-  //     else if( idiv == 1) {
-  // 	//	plabel.DrawLatexNDC(0.25,0.85, lbCentral[isg]);
-  // 	TString ssys = "";
-  // 	for( auto iisys : ivsys ) {
-  // 	  ssys += rsys[iisys]+"Sn";
-  // 	}
-  // 	ssys += lbCentral[isg];
-  // 	ccv->SaveAs(Form("pdep2_%s_%s.png",phys.Data(),ssys.Data()));
-  //     }
-  //   }
-  
-
-  //   //-- presen
-  //   else if( ndiv == 4 ) {
-      
-  //     std::vector< std::pair<Int_t,Int_t>> pmap = {{0,1},{1,1},{0,0},{1,0}};
-  //     if( idiv == 0) {
-  // 	ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv),500,600); iccv++;
-      
-  // 	const Int_t Ny = 2;
-  // 	const Int_t Nx = 2;
-  // 	Float_t lMargin = 0.13;
-  // 	Float_t rMargin = 0.01;
-  // 	Float_t bMargin = 0.10;
-  // 	Float_t tMargin = 0.02;
-  // 	Float_t midMargin = 0.0;
-  // 	CanvasPartitionTwoColumn( ccv, Nx, Ny, lMargin, rMargin, bMargin, tMargin, midMargin );
-  //     }
-          
-  //     TPad* pad0 = (TPad*)gROOT->FindObject("pad_0_0");
-      
-  //     TString pname = Form("pad_%i_%i",pmap[idiv].first,pmap[idiv].second); 
-  //     TPad* pad = (TPad*)gROOT->FindObject(pname);
-      
-  //     if( !pad || !pad0 ) return;
-      
-  //     pad -> SetFillStyle(4000);
-  //     pad -> SetFrameFillStyle(4000);
-  //     pad -> cd();
-  //     Float_t xFactor = pad0->GetAbsWNDC()/pad->GetAbsWNDC();
-  //     Float_t yFactor = pad0->GetAbsHNDC()/pad->GetAbsHNDC();
-      
-
-  //     //format for x axis
-  //     mgr[0] ->GetXaxis()->SetLabelFont(43);
-  //     mgr[0] ->GetXaxis()->SetLabelSize(20);
-  //     mgr[0] ->GetXaxis()->SetLabelOffset(0.01);
-  //     mgr[0] ->GetXaxis()->SetTitleFont(43);
-  //     mgr[0] ->GetXaxis()->SetTitleSize(20);
-  //     mgr[0] ->GetXaxis()->SetTitleOffset(4);
-  //     mgr[0] ->GetXaxis()->CenterTitle();
-  //     mgr[0] ->GetXaxis()->SetNdivisions(505);
-  //     mgr[0] ->GetXaxis()->SetTickLength(yFactor*0.06/xFactor);
-      
-  //     //format for y axis
-  //     mgr[0] ->GetYaxis()->SetLabelFont(43);
-  //     mgr[0] ->GetYaxis()->SetLabelSize(18);
-  //     mgr[0] ->GetYaxis()->SetLabelOffset(0.02);
-  //     mgr[0] ->GetYaxis()->SetTitleFont(43);
-  //     mgr[0] ->GetYaxis()->SetTitleSize(20);
-  //     mgr[0] ->GetYaxis()->SetTitleOffset(3.5);
-  //     mgr[0] ->GetYaxis()->CenterTitle();
-  //     mgr[0] ->GetYaxis()->SetNdivisions(505);
-  //     mgr[0] ->GetYaxis()->SetTickLength(xFactor*0.04/yFactor);
-    
-  //     mgr[0] -> GetXaxis() -> SetNdivisions(5,5,0,kTRUE);
-  //     mgr[0] -> GetYaxis() -> SetNdivisions(5,5,0,kTRUE);
-
-
-  //     // division
-  //     // 0 | 1
-  //     //-------
-  //     // 2 | 3
-      
-  //     if( idiv == 0 )
-  // 	mgr[0] -> Draw("alp");      
-  //     else if( idiv == 1 ) {
-  // 	mgr[0] -> Draw("alp");
-  // 	//	mgrRatio -> Draw("alp");      
-
-  //     }      
-  //     else if( idiv == 3 ) {
-  // 	mgr[0] -> Draw("alp");
-  // 	//	mgrRatio -> Draw("alp");
-  // 	lgd -> SetX1(0.1);
-  // 	lgd -> SetX2(0.8);
-  // 	lgd -> SetY1(0.35);
-  // 	lgd -> SetY2(0.45);
-  // 	lg  -> SetX1(0.1);
-  // 	lg  -> SetX2(0.8);
-  // 	lg  -> SetY1(0.2);
-  // 	lg  -> SetY2(0.35);
-
-  // 	lgd  -> Draw();
-  // 	lg   -> Draw();
-  //     }
-  //     else if( idiv == 2 ) {
-  // 	mgr[0] -> Draw("alp");      
-
-  // 	lgd -> SetX1(0.25);
-  // 	lgd -> SetX2(0.8);
-  // 	lgd -> SetY1(0.35);
-  // 	lgd -> SetY2(0.5);
-  // 	lg  -> SetX1(0.25);
-  // 	lg  -> SetX2(0.8);
-  // 	lg  -> SetY1(0.2);
-  // 	lg  -> SetY2(0.35);
-
-  // 	lgd -> Draw();
-  // 	lg  -> Draw();
-  //     }
-
-	
-  //     if( idiv == 3 ) {
-  // 	TString ssys = "";
-  // 	for( auto iisys : ivsys ) {
-  // 	  ssys += rsys[iisys]+"Sn";
-  // 	}
-  // 	ssys += lbCentral[isg];
-  // 	ccv->SaveAs(Form("partdep_%s_%s.png",phys.Data(),ssys.Data()));  
-  //     }
-  //   }
-  // }
-
-  // if( ivsys.size() > 2 ) {
-  //   ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv),1000,500); iccv++;
-  //   ccv->Divide(3,1);
-  //   ccv->cd(1);
-  //   lg ->Draw();
-
-  //   for( auto i : {0,1} ){
-  //     ccv->cd(i+2);
-  //     SetXTextLabel(*mgr[i], sqpart);
-  //     mgr[i]->Draw("ALP");
-  //   }
-
-  //   TString ssys = "";
-  //   for( auto iisys : ivsys ) {
-  //     ssys += rsys[iisys]+"Sn";
-  //   }
-  //   ssys += lbCentral[isg];
-  //   ccv->SaveAs(Form("partratio_%s_%s_1.png",phys.Data(),ssys.Data()));  
-    
-  //   ccv = new TCanvas(Form("ccv%d",iccv),Form("ccv%d",iccv),700,500); iccv++;
-  //   ccv->Divide(2,1);
-  //   ccv->cd(1);
-  //   lgr ->Draw();
-    
-  //   ccv->cd(2);
-  //   SetXTextLabel(*mgr[2], sqpart);
-
-  //   mgr[2]->Draw("ALP");
-  //   ccv->SaveAs(Form("partratio_%s_%s_2.png",phys.Data(),ssys.Data()));  
-  // }
+  if( idiv == ndiv-1 ) {
+    TString ssys = "";
+    for( auto iisys : ivsys ) {
+      ssys += rsys[iisys]+"Sn";
+    }
+    ssys += lbCentral[isg];
+    ccv->SaveAs(Form("partdep_%s_%s.png",phys.Data(),ssys.Data()));  
+    ccv->SaveAs(Form("partdep_%s_%s.eps",phys.Data(),ssys.Data()));  
+  }
 }
 
 void Draw_compAMD(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart)
@@ -5575,9 +5554,9 @@ void Draw_compAMD(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart)
     LOG(INFO) << " >> " << ncls[ipart].sName ;
   LOG(INFO)<< FairLogger::endl; 
 
-  TString fname = Form("physData%s.dat",fphysdatafile[fphysdataid].second.Data());
-  Load_physDATA(fname);
-  fname = Form("physAMD%s.dat",fphysdatafile[fphysdataid].second.Data());
+  //  TString fname = Form("physData%s.dat",fphysdatafile[fphysdataid].second.Data());
+  Load_physDATA(physdataName);
+  TString fname = Form("physAMD%s.dat",fphysdatafile[fphysdataid].second.Data());
   Load_physAMD(fname, sqpart);
 
 
@@ -5851,10 +5830,10 @@ void Draw_compParameter(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart, U
   Bool_t bAMD = 1;
   if( ivsys.size() > 1 ) bAMD=0;
 
-  TString fname = Form("physData%s.dat",fphysdatafile[fphysdataid].second.Data());
-  Load_physDATA(fname);
+  //  TString fname = Form("physData%s.dat",fphysdatafile[fphysdataid].second.Data());
+  Load_physDATA(physdataName);
   if( bAMD ) {
-    fname = Form("physAMD%s.dat",fphysdatafile[fphysdataid].second.Data());
+    TString fname = Form("physAMD%s.dat",fphysdatafile[fphysdataid].second.Data());
     Load_physAMD(fname,sqpart);
   }
 
@@ -6037,8 +6016,8 @@ void Draw_compIntegral(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart, UI
   TString fname;
   Bool_t fload = kTRUE;
 
-  fname = Form("physData%s_left.dat",fphysdatafile[fphysdataid].second.Data());
-  fload *= Load_physDATA(fname);
+  //  fname = Form("physData%s_left.dat",fphysdatafile[fphysdataid].second.Data());
+  fload *= Load_physDATA(physdataName);
   if( !fload ) return;
 
   fname = Form("physAMD%s.dat",fphysdatafile[fphysdataid].second.Data());
@@ -6917,7 +6896,7 @@ void Draw_compIntegral(std::vector<UInt_t> ivsys, std::vector<UInt_t> sqpart, UI
 // paper plots
 //-----
 
-void Draw_PaperHistgram(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=1, UInt_t hplt=0, Int_t icateg=1) 
+void Draw_PaperHistgram(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=1, UInt_t hplt=0, Int_t icateg1=1, Int_t icateg2=1) 
 {
   LOG(INFO) << "[Draw_PaperHistgram] .......... Centrality " << bCentral ;
 
@@ -6999,7 +6978,7 @@ void Draw_PaperHistgram(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=
 
 	  for( auto samd : AMDnames ) {
 
-	    if( samd.category != icateg ) continue;
+	    if( samd.category != icateg1 && samd.category != icateg2 ) continue;
 
 	    hPlot = (TH1D*)LoadAMD(iisys, ipart, samd, histname, ic, ylim);
 
@@ -7141,7 +7120,7 @@ void Draw_PaperHistgram(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=
   }
 
 }
-void Draw_PaperGraph(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=1, UInt_t hplt=0, Int_t icateg=1) 
+void Draw_PaperGraph(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=1, UInt_t hplt=0, Int_t icateg1=1, Int_t icateg2=1) 
 {
   LOG(INFO) << "[Draw_PaperGraph] .......... Centrality " << bCentral ;
 
@@ -7165,7 +7144,7 @@ void Draw_PaperGraph(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=1, 
 
   TMultiGraph*     mplt[nsys][npart];
   TLegend*         lg[nsys];
-  TString          sysName[nsys];
+  UInt_t           sysID[nsys];
   auto lgAMD = new TLegend();
 
   TString histname = phist[hplt].second;
@@ -7198,7 +7177,7 @@ void Draw_PaperGraph(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=1, 
 
 	  for( auto samd : AMDnames ) {
 
-	    if( samd.category != icateg ) continue;
+	    if( samd.category != icateg1 && samd.category != icateg2 ) continue;
 
 	    TString ahistname = histname;
 	    if( histname == "hypx" ) ahistname = "gy_px";
@@ -7225,7 +7204,7 @@ void Draw_PaperGraph(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=1, 
 	      mplt[ksys][ipart] -> Add( hPlot,"3");
 		  
 	      if( ipart == 0 && ksys == 0 ) 
-		lgAMD  -> AddEntry( hPlot, "AMD"+ samd.config);
+		lgAMD  -> AddEntry( hPlot, samd.config);
 
 	    }
 	  }
@@ -7252,16 +7231,23 @@ void Draw_PaperGraph(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=1, 
 	    if( hplt == 8 ) {
 	      auto fv2fit = (TF1*)gROOT->FindObject("fv2fit");
 	      if( fv2fit ) {
-		gStyle->SetOptFit(0);
+		gStyle->SetOptFit(0);//1111);
 		fv2fit->SetLineColor(DStyle[iisys].fColor );
+		Getv2FitParameters(hPlot, -1., 1.);
 	      }
-	      Getv2FitParameters(hPlot, -1., 1.);
 	    }
-	    
+	    else if( hplt == 7 ) {
+	      auto fv1fit = (TF1*)gROOT->FindObject("fv1fit");
+	      if( fv1fit ) {
+		gStyle->SetOptStat(0);//11111);
+		fv1fit->SetLineColor(DStyle[iisys].fColor );
+		GetSlopeParameter(hPlot, fphysdatafile[fphysdataid].first, 0.8, 0., 0.4 );
+	      }
+	    }
 	      
 	    if( ipart == 0 ) {
 	      lg[ksys]  -> AddEntry( hPlot, "DATA" );//+fsys[iisys]);
-	      sysName[ksys] = fsys[iisys];
+	      sysID[ksys] = iisys;
 
 	    }
 	    mplt[ksys][ipart] -> Add( hPlot, "P" );
@@ -7330,7 +7316,7 @@ void Draw_PaperGraph(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=1, 
 	mplt[ipady][*ipx] ->GetXaxis()->SetLabelOffset(0.02);
 	mplt[ipady][*ipx] ->GetXaxis()->SetTitleFont(43);
 	mplt[ipady][*ipx] ->GetXaxis()->SetTitleSize(20);
-	mplt[ipady][*ipx] ->GetXaxis()->SetTitleOffset(3);
+	mplt[ipady][*ipx] ->GetXaxis()->SetTitleOffset(2.6);
 	mplt[ipady][*ipx] ->GetXaxis()->CenterTitle();
 	mplt[ipady][*ipx] ->GetXaxis()->SetNdivisions(505);
 	mplt[ipady][*ipx] ->GetXaxis()->SetTickLength(yFactor*0.05/xFactor);
@@ -7347,7 +7333,7 @@ void Draw_PaperGraph(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=1, 
 
 	mplt[ipady][*ipx] ->GetYaxis()->SetTickLength(xFactor*0.04/yFactor);
 
-	mplt[ipady][*ipx] -> GetXaxis() -> SetRangeUser(-0.9,1.3);
+	mplt[ipady][*ipx] -> GetXaxis() -> SetRangeUser(-0.9,1.2);
 	mplt[ipady][*ipx] -> GetYaxis() -> SetRangeUser(umax[hplt][0], umax[hplt][1]);
 	mplt[ipady][*ipx] -> GetXaxis() -> SetNdivisions(5,5,0,kTRUE);
 	mplt[ipady][*ipx] -> GetYaxis() -> SetNdivisions(5,5,0,kTRUE);
@@ -7357,7 +7343,8 @@ void Draw_PaperGraph(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=1, 
 	if( ipady == Ny-1 ) {
 	  plabel.SetTextAlign(15);
 	  plabel.SetTextSize(0.1*xFactor);
-	  plabel.DrawLatexNDC(XtoPad(0.1),YtoPad(0.85), ncls[sqpart.at(ipadx)].pLabel);
+	  plabel.SetTextColor(1);	  
+	  plabel.DrawLatexNDC(XtoPad(0.7),YtoPad(0.05), ncls[sqpart.at(ipadx)].pLabel);
 	}
 
 	if( ipadx == 0 && ipady == 0) {
@@ -7366,24 +7353,25 @@ void Draw_PaperGraph(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=1, 
 	  lgAMD -> SetTextSize(18);	
 	  lgAMD -> SetX1(0.28);
 	  lgAMD -> SetX2(0.9);
-	  lgAMD -> SetY1(YtoPad(0.05));
-	  lgAMD -> SetY2(YtoPad(0.18));
-	  lgAMD -> Draw();
+	  lgAMD -> SetY1(YtoPad(0.045));
+	  lgAMD -> SetY2(YtoPad(0.16));
 	  lgAMD -> Draw();
 	}
 
 	if( ipadx == 0 ){
           plabel.SetTextAlign(15);
-          plabel.SetTextSize(0.1*xFactor);
-	  plabel.DrawLatexNDC(XtoPad(0.1),YtoPad(0.7),sysName[ipady]);
+	  plabel.SetTextSize(0.1*xFactor);
+	  plabel.SetTextColor(DStyle[sysID[ipady]].fColor);
+	  plabel.DrawLatexNDC(XtoPad(0.1),YtoPad(0.9),fsys[sysID[ipady]]);
 	  
+
 	  lg[ipady]->SetFillStyle(0);
 	  lg[ipady]->SetTextFont(43);
 	  lg[ipady]->SetTextSize(18);	
 	  lg[ipady]->SetX1(0.28);
 	  lg[ipady]->SetX2(0.9);
-	  lg[ipady]->SetY1(YtoPad(0.2));
-	  lg[ipady]->SetY2(YtoPad(0.25));
+	  lg[ipady]->SetY1(YtoPad(0.18));
+	  lg[ipady]->SetY2(YtoPad(0.23));
 	  lg[ipady]->Draw();
 	}
       }
@@ -7416,13 +7404,13 @@ void Draw_PaperGraph(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=1, 
 
 }
 
-void Draw_PaperPlots(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=1, UInt_t hplt=0, Int_t icateg=1) 
+void Draw_PaperPlots(std::vector<gplot> gname,  Int_t ylim=-1.,  Bool_t bAMD=1, UInt_t hplt=0, Int_t icateg1=1, Int_t icateg2=1) 
 {
   if( hplt < 6 )
-    Draw_PaperHistgram( gname, ylim,  bAMD, hplt, icateg);  
+    Draw_PaperHistgram( gname, ylim,  bAMD, hplt, icateg1, icateg2);  
   else {
     bCentral = 0;
-    Draw_PaperGraph(gname,  ylim, bAMD, hplt, icateg);  
+    Draw_PaperGraph(gname,  ylim, bAMD, hplt, icateg1, icateg2);  
     bCentral = 1;
   }
 }
@@ -7462,17 +7450,17 @@ void PlotFigure(Bool_t nplot=kTRUE)
   gStyle->SetLegendFillColor(0);
   gStyle->SetOptStat(0);
   gStyle->SetStatStyle(0);
-  gStyle->SetOptFit(1111);
+  gStyle->SetOptFit(0);//1111);
   gStyle->SetStatColor(10);
 
   SetStyle();
   SetColor();
 
   //##main#
-  //  std::vector< UInt_t > sqsys = {0,1};
+  std::vector< UInt_t > sqsys = {0,1};
   //std::vector< UInt_t > sqsys = {0,3,1};
-  //std::vector< UInt_t > sqsys = {0};
-  std::vector< UInt_t > sqsys = {1};
+  //  std::vector< UInt_t > sqsys = {0};
+  //std::vector< UInt_t > sqsys = {1};
   //std::vector< UInt_t > sqsys = {3};
   bCentral = 1;
   //  std::vector<gplot>    gname = {gnames[bCentral]};
@@ -7487,7 +7475,7 @@ void PlotFigure(Bool_t nplot=kTRUE)
   //main
   bsaveData    = 0;
   //++------------------
-  Bool_t bcorrelation = 0;
+  Bool_t bcorrelation = 1;
   //++-------------------
   //  bCentral = 1;
   Bool_t bdndydx      = 0; //dN/dy, dN/dpt, dN/d(beta*gamma) 
@@ -7501,10 +7489,10 @@ void PlotFigure(Bool_t nplot=kTRUE)
   Bool_t bdnintegral  = 0;
   Bool_t bcluster     = 0; // Text ouput for multipliicity of clusters in AMD
   Bool_t bdndptratio  = 0;
-  Bool_t bv1y         = 1;
-  Bool_t bv2y         = 1;
+  Bool_t bv1y         = 0;
+  Bool_t bv2y         = 0;
   Bool_t bympx        = 0;
-  Bool_t bpaper       = 0;
+  Bool_t bpaper       = 1;
   Bool_t bTommy       = 0;
   //++------------------
 
@@ -7531,6 +7519,7 @@ void PlotFigure(Bool_t nplot=kTRUE)
     bCentral   = 1;
   }
 
+
   for( auto i : ROOT::TSeqI(4) ) {
     physData[i].resize(npart);
     for( auto j : ROOT::TSeqI(npart) ) {
@@ -7554,8 +7543,19 @@ void PlotFigure(Bool_t nplot=kTRUE)
       bCentral = 0;
       std::vector< UInt_t > sqsys1={0};
       std::vector< UInt_t > sqpart1={6};
+
+      outGraph = TFile::Open("flow_"+asys[sqsys1[0]]+gname[0].Version+".root","recreate");
+
+      Draw_meanpx(sqsys1, sqpart1, gname, "gyv1ave",1,bsaveData); //corrected.
       Draw_meanpx(sqsys1, sqpart1, gname, "gyv2ave",1,bsaveData); //corrected.
+
+      Draw_meanpx(sqsys1, sqpart, gname, "gyv1",1,bsaveData); //corrected.      
+      Draw_meanpx(sqsys1, sqpart, gname, "gyv2",1,bsaveData); //corrected.      
+      
+
       bCentral = 1;
+      
+      outGraph->Close();
     }
 
 
@@ -7563,8 +7563,9 @@ void PlotFigure(Bool_t nplot=kTRUE)
       //   {{0, "h_dndy"},{1,"h_dndEt"},{2,"h_dndbtgm"},{3,"h_dndyx"},{4,"h_dndpx"},{5,"h_dndpt"},
       //    {6,"hypx"}   ,{7,"gyv1"}  ,{8,"gyv2"}};
 
-      Draw_PaperPlots(gname, -1, 1, 7, 42);  
-      Draw_PaperPlots(gname, -1, 1, 8, 42); //v2
+      //      Draw_PaperPlots(gname, -1, 1, 6, 42, 43);  
+      Draw_PaperPlots(gname, -1, 1, 7, 42, 43);  
+      Draw_PaperPlots(gname, -1, 1, 8, 42, 43); //v2
 
     }
 
@@ -7599,8 +7600,10 @@ void PlotFigure(Bool_t nplot=kTRUE)
     }
 
     if( bympx ) {
+      outGraph = TFile::Open("mpx_"+asys[sqsys[0]]+gname[0].Version+".root","recreate");
+
       bCentral = 0;
-      Draw_meanpx(sqsys, sqpart, gname, "hypx",41,bsaveData); //corrected.
+      Draw_meanpx(sqsys, sqpart, gname, "hypx",42,bsaveData); //corrected.
       bCentral = 1;
     }
 
@@ -7609,7 +7612,6 @@ void PlotFigure(Bool_t nplot=kTRUE)
       Draw_meanpx(sqsys, sqpart, gname, "gyv1",42,bsaveData); //corrected.
       //      Draw_meanpx(sqsys, spart, gname, "gu_v1",42,bsaveData); //corrected.
       //    Draw_meanpx(ssys, sqpart, gname, "gy_v1",41,bsaveData); //corrected.
-      Draw_meanpx(sqsys, sqpart, gname, "hypx",42,bsaveData); //corrected.
       ////      Draw_meanpx(sqsys, sqpart, gname, "gyv1",42,bsaveData); //corrected.
       //Draw_meanpx(sqsys, sqpart, gname, "gyv1A",42,bsaveData); //corrected.
       bCentral = 1;
@@ -7660,37 +7662,56 @@ void PlotFigure(Bool_t nplot=kTRUE)
 	Draw_ypt(isys, gname);
     }
   }
-  //----- SAVE DATA ------------------
+  //----- SAVEDATA ------------------
   else if( bsaveData ) {
-    sqsys  = {0,1,2,3};
+    sqsys  = {0,1};
     gname  = gnames;
     sqpart = sqPart;
 
+    outGraph = TFile::Open("Fit"+gname[0].Version+".root","recreate");
+
     bCentral = 0;
-    Draw_meanpx(sqsys, sqpart, gname, "gyv1",42,bsaveData); //corrected.
-    Draw_meanpx(sqsys, sqpart, gname, "gyv2",42,bsaveData); //corrected.
+    Draw_meanpx(sqsys, sqpart, gname, "hypx",1,bsaveData); //corrected.      
+    Draw_meanpx(sqsys, sqpart, gname, "gyv1",1,bsaveData); //corrected.
+    Draw_meanpx(sqsys, sqpart, gname, "gyv2",1,bsaveData); //corrected.
     bCentral = 1;
     Draw_dndydX(sqsys,sqpart,gname,ycutid, bsaveData,{0},42); 
 
 
-    TString fname = Form("physData%s_left.dat",fphysdatafile[fphysdataid].second.Data());
+    SavePhysData( physdataName, sqpart );
+
+    TString fname = Form("physAMD%s.dat",fphysdatafile[fphysdataid].second.Data());
     SavePhysData( fname, sqpart );
 
-    fname = Form("physAMD%s.dat",fphysdatafile[fphysdataid].second.Data());
-    SavePhysData( fname, sqpart );
+    outGraph->Close();
   }
  
 
   //----- CORRELATION -----------------
   if( bcorrelation ) {
 
-    if( 1 ) { //paper2022
-      std::vector< UInt_t > ssys = {0};
-      Draw_ParticleDependence(ssys, sqpart, gnames[0], 0, "v1Slope"        ,0,4,   0., 1.2, 42, 40);
-      Draw_ParticleDependence(ssys, sqpart, gnames[0], 0, "v2minimum"      ,2,4, -0.1, 0.,  42, 40);
+    if( 0 ) { //paper2022
+      std::vector< UInt_t > ssys = {0}; 
+      std::vector< UInt_t > sqpartf = {7,0,1,2,3,4};
+      Draw_ParticleDependence(ssys, sqpartf, gnames[0], 0, "v1Slope"        ,0,4,   0., 1.2, 42, 40);
+      Draw_ParticleDependence(ssys, sqpartf, gnames[0], 0, "v2minimum"      ,2,4, -0.1, 0.,  42, 40);
       ssys = {0,1};
-      Draw_ParticleDependence(ssys, sqpart, gnames[0], 0, "v1Slope"        ,1,4,   0.45, 1.6, 40, 1);
-      Draw_ParticleDependence(ssys, sqpart, gnames[0], 0, "v2minimum"      ,3,4,   0.,  1.8,  40, 1);
+      Draw_ParticleDependence(ssys, sqpartf, gnames[0], 0, "v1Slope"        ,1,4,   0.45, 1.6, 40, 1);
+      Draw_ParticleDependence(ssys, sqpartf, gnames[0], 0, "v2minimum"      ,3,4,   0.,  1.8,  40, 1);
+    }
+
+
+    if( 1 ) {
+      std::vector< UInt_t > sqpartf = {7,0,1,2,3,4};
+      Draw_ParticleDependence({0}, sqpartf, gnames[0], 0, "v2minimum"      ,0,9, -0.095, 0.01,  42, 40, 43);
+      Draw_ParticleDependence({1}, sqpartf, gnames[0], 0, "v2minimum"      ,1,9, -0.095, 0.01,  42, 40, 43);
+      Draw_ParticleDependence({0}, sqpartf, gnames[0], 0, "v1Slope"        ,3,9,  0.1,   1.05,  42, 40, 43);
+      Draw_ParticleDependence({1}, sqpartf, gnames[0], 0, "v1Slope"        ,4,9,  0.1,   1.05,  42, 40, 43);
+      Draw_ParticleDependence({0}, sqpartf, gnames[0], 0, "meanpxSlope"    ,6,9,  0.,    148.,  42, 40, 43);
+      Draw_ParticleDependence({1}, sqpartf, gnames[0], 0, "meanpxSlope"    ,7,9,  0.,    148.,  42, 40, 43);
+      Draw_ParticleDependence({0,1}, sqpartf, gnames[0], 0, "v2minimum"    ,2,9,  0.1,    2.1,  40, 43,  1);
+      Draw_ParticleDependence({0,1}, sqpartf, gnames[0], 0, "v1Slope"      ,5,9,  0.68,  1.35,  40, 43,  1);
+      Draw_ParticleDependence({0,1}, sqpartf, gnames[0], 0, "meanpxSlope"  ,8,9,  0.68,  1.35,  40, 43,  1);
     }
 
     UInt_t ig = 0;
@@ -7773,7 +7794,8 @@ void PlotFigure(Bool_t nplot=kTRUE)
       bCentral = 0;
       Draw_systematicError(sqsys,sqpart, gnames[0]);
     }
-  }
+
+  } // end of bcorrelation
 
 
   // Draw function
@@ -7883,6 +7905,12 @@ void PlotFigure(Bool_t nplot=kTRUE)
 
   if( kFALSE ) 
     Draw_v20_Edependence();
+
+
+
+
+  if( 0 )
+    Load_physDATA("physData_fit03to05_left.dat");
 
 }
 

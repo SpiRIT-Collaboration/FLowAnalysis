@@ -231,9 +231,10 @@ void makePhysicsPlot(UInt_t selid = 0)       //%% Executable :
   auto hphi       = new TH1D("hphi",     ";#phi"  ,100,-180.,180.);
   auto hcostm     = new TH1D("hcostm", ";cosphi", 100,-TMath::Pi(),TMath::Pi());
   auto h_vartl    = new TH1D("h_vartl",";vartl;",100,0.,5.);
-  auto hycos1     = new TH2D("hycos1", ";y_{cm}/y_{proj}; cos(dphi)" ,100,-1.,1.8, 100.,-1., 1.);
-  auto hycos2     = new TH2D("hycos2", ";y_{cm}/y_{proj}; cos(2dphi)",100,-1.,1.8, 100.,-1., 1.);
-  auto hycos2am   = new TH2D("hycos2am",";y_{cm}/y_{proj}; cos(2dphi)AM",100,-1.,1.8, 100.,-2.2, 2.2);
+  auto hycos1     = new TH2D("hycos1",  ";y_{cm}/y_{proj}; cos(dphi)" ,100,-1.,1.8, 100.,-1., 1.);
+  auto hycos1am   = new TH2D("hycos1am",";y_{cm}/y_{proj}; cos(dphi)" ,100,-1.,1.8, 100.,-2.2, 2.2);
+  auto hycos2     = new TH2D("hycos2",  ";y_{cm}/y_{proj}; cos(2dphi)",100,-1.,1.8, 100.,-1., 1.);
+  auto hycos2am   = new TH2D("hycos2am" ,";y_{cm}/y_{proj}; cos(2dphi)AM",100,-1.,1.8, 100.,-2.2, 2.2);
   auto hyanum     = new TH2D("hyanum", ";y_{cm}/y_{proj}; Atmic Number" ,100,-1.,1.8, 100.,-2.2, 2.2);
 
   TH2D *hirap1 = new TH2D("hirap1",";Rapidity; irap1",100,-1.0,1.5, 12,0,12);  
@@ -358,6 +359,10 @@ void makePhysicsPlot(UInt_t selid = 0)       //%% Executable :
 
     ///    auto RPangle = GetRPBaseAngle(aFlowInfo);
     auto RPangle = aFlowInfo->unitP_fc.Phi();
+
+    //    if( abs(RPangle) > 45.*TMath::DegToRad() ) continue;  
+    if( abs(RPangle) < 135.*TMath::DegToRad() ) continue;  
+
     hPsinc->Fill(RPangle);
 
     bRes = kTRUE; //@1
@@ -507,6 +512,7 @@ void makePhysicsPlot(UInt_t selid = 0)       //%% Executable :
       hycos1   ->Fill(rapidn, cos(dphi));
       hycos2   ->Fill(rapidn, cos(2.*dphi)); 
 
+      hycos1am ->Fill(rapidn, cos(dphi)*(Double_t)ncls[PDGtoIDX[ipid]].Z);
       hycos2am ->Fill(rapidn, cos(2.*dphi)*(Double_t)ncls[PDGtoIDX[ipid]].Z);
       hyanum   ->Fill(rapidn, (Double_t)ncls[PDGtoIDX[ipid]].Z);
 
